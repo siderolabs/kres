@@ -1,0 +1,78 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+package golang
+
+import (
+	"fmt"
+	"path/filepath"
+
+	"github.com/talos-systems/kres/internal/dag"
+	"github.com/talos-systems/kres/internal/output/dockerfile"
+	"github.com/talos-systems/kres/internal/output/dockerfile/step"
+	"github.com/talos-systems/kres/internal/output/golangci"
+	"github.com/talos-systems/kres/internal/output/makefile"
+	"github.com/talos-systems/kres/internal/project/meta"
+)
+
+// GolangciLint provides golangci-lint.
+type GolangciLint struct {
+	dag.BaseNode
+
+	meta *meta.Options
+
+	Version string
+}
+
+// NewGolangciLint builds golangci-lint node.
+func NewGolangciLint(meta *meta.Options) *GolangciLint {
+	meta.SourceFiles = append(meta.SourceFiles, ".golangci.yml")
+
+	return &GolangciLint{
+		BaseNode: dag.NewBaseNode("lint-golangci-lint"),
+
+		meta: meta,
+
+		Version: "v1.30.0",
+	}
+}
+
+// CompileGolangci implements golangci.Compiler.
+func (lint *GolangciLint) CompileGolangci(output *golangci.Output) error {
+	output.Enable()
+	output.CanonicalPath(lint.meta.CanonicalPath)
+
+	return nil
+}
+
+// CompileMakefile implements makefile.Compiler.
+func (lint *GolangciLint) CompileMakefile(output *makefile.Output) error {
+	output.Target("lint-golangci-lint").Description("Run golangci-lint").
+		Script("@$(MAKE) target-$@")
+
+	return nil
+}
+
+// ToolchainBuild implements common.ToolchainBuilder hook.
+func (lint *GolangciLint) ToolchainBuild(stage *dockerfile.Stage) error {
+	stage.
+		Step(step.Script(fmt.Sprintf("curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s -- -b %s %s", lint.meta.BinPath, lint.Version)))
+
+	return nil
+}
+
+// CompileDockerfile implements dockerfile.Compiler.
+func (lint *GolangciLint) CompileDockerfile(output *dockerfile.Output) error {
+	output.Stage("lint-golangci-lint").
+		Description("runs golangci-lint").
+		From("base").
+		Step(step.Copy(".golangci.yml", ".")).
+		Step(step.Env("GOGC", "50")).
+		Step(step.Run("golangci-lint", "run", "--config", ".golangci.yml").
+			MountCache(filepath.Join(lint.meta.CachePath, "go-build")).
+			MountCache(filepath.Join(lint.meta.CachePath, "golangci-lint")),
+		)
+
+	return nil
+}
