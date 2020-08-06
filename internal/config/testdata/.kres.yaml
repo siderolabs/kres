@@ -1,0 +1,35 @@
+---
+kind: config_test.Foo
+name: Bar
+spec:
+    contents: xyz
+    len: 5
+---
+kind: config_test.Foo
+spec:
+    extra: same
+---
+kind: config_test.Bar
+name: Bar
+spec:
+    len: 8
+---
+kind: pkg.Other
+---
+kind: config_test.Foo
+name: Bad
+spec:
+    field: no-no
+---
+kind: config_test.Other
+name: blah
+spec:
+    something: something
+---
+kind: config_test.Foo
+name: ReallyBad
+spec:
+    len: infinite
+---
+kind: config_test.Foo
+name: NoSpec
