@@ -1,7 +1,7 @@
 ---
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2020-08-11T15:54:06Z by kres dbf2a57-dirty.
+# Generated on 2020-08-11T21:28:45Z by kres 2fe6e2d-dirty.
 
 kind: pipeline
 type: kubernetes
@@ -164,6 +164,37 @@ steps:
       - pull_request
   depends_on:
   - image-kres
+
+- name: push-kres-latest
+  pull: always
+  image: autonomy/build-container:latest
+  commands:
+  - docker login --username "$${DOCKER_USERNAME}" --password "$${DOCKER_PASSWORD}"
+  - make image-kres
+  environment:
+    DOCKER_PASSWORD:
+      from_secret: docker_password
+    DOCKER_USERNAME:
+      from_secret: docker_username
+    PUSH: true
+    TAG: latest
+  volumes:
+  - name: outer-docker-socket
+    path: /var/outer-run
+  - name: docker-socket
+    path: /var/run
+  - name: ssh
+    path: /root/.ssh
+  - name: buildx
+    path: /root/.docker/buildx
+  when:
+    branch:
+    - master
+    event:
+      exclude:
+      - pull_request
+  depends_on:
+  - push-kres
 
 services:
 - name: docker

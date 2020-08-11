@@ -56,6 +56,13 @@ func (step *Step) ExceptPullRequest() *Step {
 	return step
 }
 
+// OnlyOnMaster adds condition to run step only on master branch.
+func (step *Step) OnlyOnMaster() *Step {
+	step.container.When.Branch.Include = []string{"master"}
+
+	return step
+}
+
 // LocalRegistry sets up pushing to local registry.
 func (step *Step) LocalRegistry() *Step {
 	step.container.Environment["REGISTRY"] = &yaml.Variable{

@@ -51,6 +51,10 @@ func (build *Build) CompileMakefile(output *makefile.Output) error {
 		Variable(makefile.SimpleVariable("BRANCH", "$(shell git rev-parse --abbrev-ref HEAD)")).
 		Variable(makefile.SimpleVariable("ARTIFACTS", build.ArtifactsPath))
 
+	output.Target("clean").
+		Script("@rm -rf $(ARTIFACTS)").
+		Phony()
+
 	return nil
 }
 

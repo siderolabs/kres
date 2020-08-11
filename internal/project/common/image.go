@@ -24,6 +24,7 @@ type Image struct {
 	ImageName      string   `yaml:"imageName"`
 	Entrypoint     string   `yaml:"entrypoint"`
 	EntrypointArgs []string `yaml:"entrypointArgs"`
+	PushLatest     bool     `yaml:"pushLatest"`
 }
 
 // NewImage initializes Image.
@@ -35,6 +36,7 @@ func NewImage(meta *meta.Options, name string) *Image {
 
 		ImageName:  name,
 		Entrypoint: "/" + name,
+		PushLatest: true,
 	}
 }
 
@@ -51,6 +53,18 @@ func (image *Image) CompileDrone(output *drone.Output) error {
 		DockerLogin().
 		DependsOn(image.Name()),
 	)
+
+	if image.PushLatest {
+		output.Step(drone.MakeStep(image.Name()).
+			Name(fmt.Sprintf("push-%s-latest", image.ImageName)).
+			Environment("PUSH", "true").
+			Environment("TAG", "latest").
+			OnlyOnMaster().
+			ExceptPullRequest().
+			DockerLogin().
+			DependsOn(fmt.Sprintf("push-%s", image.ImageName)),
+		)
+	}
 
 	return nil
 }
