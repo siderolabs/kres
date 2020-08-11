@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2020-08-11T15:54:06Z by kres dbf2a57-dirty.
+# Generated on 2020-08-11T21:25:18Z by kres 6e4c1a3-dirty.
 
 # common variables
 
@@ -37,6 +37,10 @@ COMMON_ARGS += --build-arg=TESTPKGS=$(TESTPKGS)
 TOOLCHAIN ?= docker.io/golang:1.14-alpine
 
 all: lint unit-tests kres image-kres
+
+.PHONY: clean
+clean:
+	@rm -rf $(ARTIFACTS)
 
 target-%:  ## Builds the specified target defined in the Dockerfile. The build result will only remain in the build cache.
 	@$(BUILD) --target=$* $(COMMON_ARGS) $(TARGET_ARGS) $(CI_ARGS) .
