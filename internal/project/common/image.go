@@ -21,9 +21,11 @@ type Image struct {
 
 	meta *meta.Options
 
+	BaseImage      string   `yaml:"baseImage"`
 	ImageName      string   `yaml:"imageName"`
 	Entrypoint     string   `yaml:"entrypoint"`
 	EntrypointArgs []string `yaml:"entrypointArgs"`
+	CustomCommands []string `yaml:"customCommands"`
 	PushLatest     bool     `yaml:"pushLatest"`
 }
 
@@ -34,6 +36,7 @@ func NewImage(meta *meta.Options, name string) *Image {
 
 		meta: meta,
 
+		BaseImage:  "scratch",
 		ImageName:  name,
 		Entrypoint: "/" + name,
 		PushLatest: true,
@@ -85,14 +88,23 @@ func (image *Image) CompileDockerfile(output *dockerfile.Output) error {
 		return fmt.Errorf("no inputs for Image block")
 	}
 
-	rootInput := inputs[0]
-	otherInputs := inputs[1:]
+	stage := output.Stage(image.Name())
 
-	stage := output.Stage(image.Name()).
-		From(rootInput)
+	if image.BaseImage == "scratch" {
+		stage.From(image.BaseImage)
+	} else {
+		output.Stage(fmt.Sprintf("base-%s", image.Name())).
+			From(image.BaseImage)
 
-	for _, input := range otherInputs {
+		stage.From(fmt.Sprintf("base-%s", image.Name()))
+	}
+
+	for _, input := range inputs {
 		stage.Step(step.Copy("/", "/").From(input))
+	}
+
+	for _, command := range image.CustomCommands {
+		stage.Step(step.Script(command))
 	}
 
 	stage.Step(step.Entrypoint(image.Entrypoint, image.EntrypointArgs...))
