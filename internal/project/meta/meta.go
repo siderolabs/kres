@@ -21,14 +21,20 @@ type Options struct {
 	// Directories which contain source code.
 	Directories []string
 
-	// GoDirectories are non-standard directories containing Go source code.
+	// GoDirectories are directories containing Go source code.
 	GoDirectories []string
+
+	// MarkdownDirectories are directories container Markdown files.
+	MarkdownDirectories []string
 
 	// Source files on top level.
 	SourceFiles []string
 
 	// Go source files on top level.
 	GoSourceFiles []string
+
+	// Markdown source files on top level.
+	MarkdownSourceFiles []string
 
 	// Commands are top-level binaries to be built.
 	Commands []string

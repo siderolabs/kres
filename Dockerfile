@@ -2,13 +2,22 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2020-08-12T20:55:10Z by kres 14148f4.
+# Generated on 2020-08-19T15:36:34Z by kres 29f29d8-dirty.
 
 ARG TOOLCHAIN
 
 FROM autonomy/ca-certificates:v0.2.0-29-gdda8024 AS image-ca-certificates
 
 FROM autonomy/fhs:v0.2.0-29-gdda8024 AS image-fhs
+
+# runs markdownlint
+FROM node:14.8.0-alpine AS lint-markdown
+RUN npm i -g markdownlint-cli@0.23.2
+RUN npm i sentences-per-line@0.2.1
+WORKDIR /src
+COPY .markdownlint.json .
+COPY ./README.md ./README.md
+RUN markdownlint --ignore "**/node_modules/**" --ignore '**/hack/chglog/**' --rules /node_modules/sentences-per-line/index.js .
 
 # base toolchain image
 FROM ${TOOLCHAIN} AS toolchain

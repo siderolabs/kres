@@ -126,7 +126,7 @@ func splitIgnoringPreamble(r io.Reader) ([]string, error) {
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		line := scanner.Text()
-		if inPreamble && (strings.HasPrefix(line, "#") || line == "" || line == "---") { // comments, skip it as might be a preamble
+		if inPreamble && (strings.HasPrefix(line, "#") || strings.HasPrefix(line, "<!--") || line == "" || line == "---") { // comments, skip as it might be a preamble
 			continue
 		}
 

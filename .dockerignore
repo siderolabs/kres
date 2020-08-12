@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2020-08-10T17:34:40Z by kres d18440f-dirty.
+# Generated on 2020-08-19T14:52:52Z by kres 29f29d8-dirty.
 
 **
 !internal
@@ -8,3 +8,5 @@
 !go.mod
 !go.sum
 !.golangci.yml
+!README.md
+!.markdownlint.json

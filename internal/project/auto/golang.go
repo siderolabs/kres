@@ -9,23 +9,20 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
 
 	"golang.org/x/mod/modfile"
 
-	"github.com/talos-systems/kres/internal/dag"
 	"github.com/talos-systems/kres/internal/project/common"
 	"github.com/talos-systems/kres/internal/project/golang"
-	"github.com/talos-systems/kres/internal/project/meta"
 	"github.com/talos-systems/kres/internal/project/service"
 	"github.com/talos-systems/kres/internal/project/wrap"
 )
 
-// DetectGolang check if project at rootPath is Go-based project.
+// DetectGolang checks if project at rootPath is Go-based project.
 //
 //nolint: gocognit,gocyclo
-func DetectGolang(rootPath string, options *meta.Options) (bool, error) {
-	gomodPath := filepath.Join(rootPath, "go.mod")
+func (builder *builder) DetectGolang() (bool, error) {
+	gomodPath := filepath.Join(builder.rootPath, "go.mod")
 
 	gomod, err := os.Open(gomodPath)
 	if err != nil {
@@ -43,23 +40,23 @@ func DetectGolang(rootPath string, options *meta.Options) (bool, error) {
 		return true, err
 	}
 
-	options.CanonicalPath = modfile.ModulePath(contents)
+	builder.meta.CanonicalPath = modfile.ModulePath(contents)
 
 	for _, srcDir := range []string{"src", "internal", "pkg", "cmd"} {
-		exists, err := directoryExists(rootPath, srcDir)
+		exists, err := directoryExists(builder.rootPath, srcDir)
 		if err != nil {
 			return true, err
 		}
 
 		if exists {
-			options.Directories = append(options.Directories, srcDir)
-			options.GoDirectories = append(options.GoDirectories, srcDir)
+			builder.meta.Directories = append(builder.meta.Directories, srcDir)
+			builder.meta.GoDirectories = append(builder.meta.GoDirectories, srcDir)
 		}
 	}
 
-	if len(options.GoDirectories) == 0 {
+	if len(builder.meta.GoDirectories) == 0 {
 		// no standard directories found, assume any directory with `.go` files is a source directory
-		topLevel, err := ioutil.ReadDir(rootPath)
+		topLevel, err := ioutil.ReadDir(builder.rootPath)
 		if err != nil {
 			return true, err
 		}
@@ -69,67 +66,58 @@ func DetectGolang(rootPath string, options *meta.Options) (bool, error) {
 				continue
 			}
 
-			result, err := hasGoFiles(filepath.Join(rootPath, item.Name()))
+			result, err := listFilesWithSuffix(filepath.Join(builder.rootPath, item.Name()), ".go")
 			if err != nil {
 				return true, err
 			}
 
-			if result {
-				options.Directories = append(options.Directories, item.Name())
-				options.GoDirectories = append(options.GoDirectories, item.Name())
+			if len(result) > 0 {
+				builder.meta.Directories = append(builder.meta.Directories, item.Name())
+				builder.meta.GoDirectories = append(builder.meta.GoDirectories, item.Name())
 			}
 		}
 	}
 
 	{
-		res, err := hasGoFiles(rootPath)
+		list, err := listFilesWithSuffix(builder.rootPath, ".go")
 		if err != nil {
 			return true, err
 		}
 
-		if res {
-			contents, err := ioutil.ReadDir(rootPath)
-			if err != nil {
-				return true, err
-			}
-
-			for _, item := range contents {
-				if !item.IsDir() && strings.HasSuffix(item.Name(), ".go") {
-					options.SourceFiles = append(options.SourceFiles, item.Name())
-					options.GoSourceFiles = append(options.GoSourceFiles, item.Name())
-				}
-			}
+		for _, item := range list {
+			builder.meta.SourceFiles = append(builder.meta.SourceFiles, item)
+			builder.meta.GoSourceFiles = append(builder.meta.GoSourceFiles, item)
 		}
 	}
 
-	options.SourceFiles = append(options.SourceFiles, "go.mod", "go.sum")
+	builder.meta.SourceFiles = append(builder.meta.SourceFiles, "go.mod", "go.sum")
 
 	for _, candidate := range []string{"pkg/version", "internal/version"} {
-		exists, err := directoryExists(rootPath, candidate)
+		exists, err := directoryExists(builder.rootPath, candidate)
 		if err != nil {
 			return true, err
 		}
 
 		if exists {
-			options.VersionPackage = path.Join(options.CanonicalPath, candidate)
+			builder.meta.VersionPackage = path.Join(builder.meta.CanonicalPath, candidate)
 		}
 	}
 
 	{
-		cmdExists, err := directoryExists(rootPath, "cmd")
+		cmdExists, err := directoryExists(builder.rootPath, "cmd")
 		if err != nil {
 			return true, err
 		}
 
 		if cmdExists {
-			dirs, err := ioutil.ReadDir(filepath.Join(rootPath, "cmd"))
+			dirs, err := ioutil.ReadDir(filepath.Join(builder.rootPath, "cmd"))
 			if err != nil {
 				return true, err
 			}
 
 			for _, dir := range dirs {
 				if dir.IsDir() {
-					options.Commands = append(options.Commands, dir.Name())
+					builder.meta.Commands = append(builder.meta.Commands, dir.Name())
 				}
 			}
 		}
@@ -139,57 +127,40 @@ func DetectGolang(rootPath string, options *meta.Options) (bool, error) {
 }
 
 // BuildGolang builds project structure for Go project.
-func BuildGolang(meta *meta.Options, inputs []dag.Node) ([]dag.Node, error) {
+func (builder *builder) BuildGolang() error {
 	// toolchain as the root of the tree
-	toolchain := golang.NewToolchain(meta)
-	toolchain.AddInput(inputs...)
+	toolchain := golang.NewToolchain(builder.meta)
+	toolchain.AddInput(builder.commonInputs...)
 
 	// linters
-	golangciLint := golang.NewGolangciLint(meta)
-	gofumpt := golang.NewGofumpt(meta)
+	golangciLint := golang.NewGolangciLint(builder.meta)
+	gofumpt := golang.NewGofumpt(builder.meta)
 
 	// linters are input to the toolchain as they inject into toolchain build
 	toolchain.AddInput(golangciLint, gofumpt)
 
-	// common lint target
-	lint := common.NewLint(meta)
-	lint.AddInput(toolchain, golangciLint, gofumpt)
+	builder.lintInputs = append(builder.lintInputs, toolchain, golangciLint, gofumpt)
 
 	// unit-tests
-	unitTests := golang.NewUnitTests(meta)
+	unitTests := golang.NewUnitTests(builder.meta)
 	unitTests.AddInput(toolchain)
 
-	coverage := service.NewCodeCov(meta)
+	coverage := service.NewCodeCov(builder.meta)
 	coverage.InputPath = "coverage.txt"
 	coverage.AddInput(unitTests)
 
-	outputs := []dag.Node{lint, unitTests, coverage}
+	builder.targets = append(builder.targets, unitTests, coverage)
 
 	// process commands
-	for _, cmd := range meta.Commands {
-		build := golang.NewBuild(meta, cmd, filepath.Join("cmd", cmd))
+	for _, cmd := range builder.meta.Commands {
+		build := golang.NewBuild(builder.meta, cmd, filepath.Join("cmd", cmd))
 		build.AddInput(toolchain)
 
-		image := common.NewImage(meta, cmd)
-		image.AddInput(build, common.NewFHS(meta), common.NewCACerts(meta), lint, wrap.Drone(unitTests))
+		image := common.NewImage(builder.meta, cmd)
+		image.AddInput(build, common.NewFHS(builder.meta), common.NewCACerts(builder.meta), builder.lintTarget, wrap.Drone(unitTests))
 
-		outputs = append(outputs, build, image)
+		builder.targets = append(builder.targets, build, image)
 	}
 
-	return outputs, nil
-}
-
-func hasGoFiles(path string) (bool, error) {
-	contents, err := ioutil.ReadDir(path)
-	if err != nil {
-		return false, err
-	}
-
-	for _, item := range contents {
-		if !item.IsDir() && strings.HasSuffix(item.Name(), ".go") {
-			return true, nil
-		}
-	}
-
-	return false, nil
+	return nil
 }

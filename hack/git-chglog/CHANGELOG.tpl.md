@@ -1,6 +1,6 @@
 <!-- THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT. -->
 <!--  -->
-<!-- Generated on 2020-08-18T18:29:05Z by kres 215d1f3-dirty. -->
+<!-- Generated on 2020-08-19T15:40:23Z by kres 29f29d8-dirty. -->
 
 {{ range .Versions }}
 <a name="{{ .Tag.Name }}"></a>
