@@ -15,6 +15,7 @@ type Variable struct {
 	name     string
 	operator string
 	value    string
+	export   string
 }
 
 // RecursiveVariable creates new Variable of recursive (=) flavor.
@@ -44,6 +45,22 @@ func SimpleVariable(name, value string) *Variable {
 	}
 }
 
+// MultilineVariable creates new Variable with multi-line content (define).
+func MultilineVariable(name, value string) *Variable {
+	return &Variable{
+		name:     name,
+		operator: "define",
+		value:    value,
+	}
+}
+
+// Export marks variable as exported.
+func (variable *Variable) Export() *Variable {
+	variable.export = "export "
+
+	return variable
+}
+
 // Push is used to push extra value (+=) to RecursiveVariable.
 func (variable *Variable) Push(line string) *Variable {
 	variable.value += "\n" + line
@@ -53,7 +70,8 @@ func (variable *Variable) Push(line string) *Variable {
 
 // Generate renders variable definition.
 func (variable *Variable) Generate(w io.Writer) error {
-	if variable.operator == "=" && strings.ContainsRune(variable.value, '\n') {
+	switch {
+	case variable.operator == "=" && strings.ContainsRune(variable.value, '\n'):
 		lines := strings.Split(variable.value, "\n")
 
 		for i, line := range lines {
@@ -62,16 +80,20 @@ func (variable *Variable) Generate(w io.Writer) error {
 				operator = variable.operator
 			}
 
-			_, err := fmt.Fprintf(w, "%s %s %s\n", variable.name, operator, line)
+			_, err := fmt.Fprintf(w, "%s%s %s %s\n", variable.export, variable.name, operator, line)
 			if err != nil {
 				return err
 			}
 		}
 
 		return nil
+	case variable.operator == "define":
+		_, err := fmt.Fprintf(w, "%sdefine %s\n%s\nendef\n", variable.export, variable.name, variable.value)
+
+		return err
+	default:
+		_, err := fmt.Fprintln(w, strings.TrimSpace(fmt.Sprintf("%s%s %s %s", variable.export, variable.name, variable.operator, variable.value)))
+
+		return err
 	}
-
-	_, err := fmt.Fprintln(w, strings.TrimSpace(fmt.Sprintf("%s %s %s", variable.name, variable.operator, variable.value)))
-
-	return err
 }

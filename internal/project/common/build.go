@@ -52,6 +52,7 @@ func (build *Build) CompileMakefile(output *makefile.Output) error {
 		Variable(makefile.SimpleVariable("ARTIFACTS", build.ArtifactsPath))
 
 	output.Target("clean").
+		Description("Cleans up all artifacts.").
 		Script("@rm -rf $(ARTIFACTS)").
 		Phony()
 

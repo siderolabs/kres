@@ -70,7 +70,8 @@ func (image *Image) CompileDrone(output *drone.Output) error {
 
 // CompileMakefile implements makefile.Compiler.
 func (image *Image) CompileMakefile(output *makefile.Output) error {
-	output.Target(image.Name()).Description(fmt.Sprintf("build image %s", image.ImageName)).
+	output.Target(image.Name()).
+		Description(fmt.Sprintf("Builds image for %s.", image.ImageName)).
 		Script(fmt.Sprintf(`@$(MAKE) target-$@ TARGET_ARGS="--tag=$(REGISTRY)/$(USERNAME)/%s:$(TAG)"`, image.ImageName)).
 		Phony()
 

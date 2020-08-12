@@ -48,7 +48,7 @@ func (lint *GolangciLint) CompileGolangci(output *golangci.Output) error {
 
 // CompileMakefile implements makefile.Compiler.
 func (lint *GolangciLint) CompileMakefile(output *makefile.Output) error {
-	output.Target("lint-golangci-lint").Description("Run golangci-lint").
+	output.Target("lint-golangci-lint").Description("Runs golangci-lint linter.").
 		Script("@$(MAKE) target-$@")
 
 	return nil

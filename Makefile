@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2020-08-12T13:21:54Z by kres 2849799-dirty.
+# Generated on 2020-08-12T13:57:16Z by kres 2d7355c-dirty.
 
 # common variables
 
@@ -36,10 +36,43 @@ COMMON_ARGS += --build-arg=GOFUMPT_VERSION=$(GOFUMPT_VERSION)
 COMMON_ARGS += --build-arg=TESTPKGS=$(TESTPKGS)
 TOOLCHAIN ?= docker.io/golang:1.14-alpine
 
+# help menu
+
+export define HELP_MENU_HEADER
+# Getting Started
+
+To build this project, you must have the following installed:
+
+- git
+- make
+- docker (19.03 or higher)
+
+## Creating a Builder Instance
+
+The build process makes use of experimental Docker features (buildx).
+To enable experimental features, add 'experimental: "true"' to '/etc/docker/daemon.json' on
+Linux or enable experimental features in Docker GUI for Windows or Mac.
+
+To create a builder instance, run:
+
+	docker buildx create --name local --use
+
+
+If you already have a compatible builder instance, you may use that instead.
+
+## Artifacts
+
+All artifacts will be output to ./$(ARTIFACTS). Images will be tagged with the
+registry "$(REGISTRY)", username "$(USERNAME)", and a dynamic tag (e.g. $(IMAGE):$(TAG)).
+The registry and username can be overridden by exporting REGISTRY, and USERNAME
+respectively.
+
+endef
+
 all: lint unit-tests kres image-kres
 
 .PHONY: clean
-clean:
+clean:  ## Cleans up all artifacts.
 	@rm -rf $(ARTIFACTS)
 
 target-%:  ## Builds the specified target defined in the Dockerfile. The build result will only remain in the build cache.
@@ -48,10 +81,10 @@ target-%:  ## Builds the specified target defined in the Dockerfile. The build r
 local-%:  ## Builds the specified target defined in the Dockerfile using the local output type. The build result will be output to the specified local destination.
 	@$(MAKE) target-$* TARGET_ARGS="--output=type=local,dest=$(DEST) $(TARGET_ARGS)"
 
-lint-golangci-lint:  ## Run golangci-lint
+lint-golangci-lint:  ## Runs golangci-lint linter.
 	@$(MAKE) target-$@
 
-lint-gofumpt:  ## Runs gofumpt
+lint-gofumpt:  ## Runs gofumpt linter.
 	@$(MAKE) target-$@
 
 .PHONY: fmt
@@ -66,29 +99,34 @@ base:  ## Prepare base toolchain
 	@$(MAKE) target-$@
 
 .PHONY: lint
-lint: lint-golangci-lint lint-gofumpt  ## run linters
+lint: lint-golangci-lint lint-gofumpt  ## Run all linters for the project.
 
 .PHONY: unit-tests
-unit-tests:  ## Runs unit-tests
+unit-tests:  ## Performs unit tests
 	@$(MAKE) local-$@ DEST=$(ARTIFACTS)
 
 .PHONY: unit-tests-race
-unit-tests-race:  ## Runs unit-tests with race detector enabled
+unit-tests-race:  ## Performs unit tests with race detection enabled.
 	@$(MAKE) target-$@
 
 .PHONY: $(ARTIFACTS)/kres
-$(ARTIFACTS)/kres:  ## Build kres
+$(ARTIFACTS)/kres:
 	@$(MAKE) local-kres DEST=$(ARTIFACTS)
 
 .PHONY: kres
-kres: $(ARTIFACTS)/kres
+kres: $(ARTIFACTS)/kres  ## Builds executable for kres.
 
 .PHONY: image-kres
-image-kres:  ## build image kres
+image-kres:  ## Builds image for kres.
 	@$(MAKE) target-$@ TARGET_ARGS="--tag=$(REGISTRY)/$(USERNAME)/kres:$(TAG)"
 
 .PHONY: rekres
 rekres:
 	@docker pull $(KRES_IMAGE)
 	@docker run --rm -v $(PWD):/src -w /src $(KRES_IMAGE)
+
+.PHONY: help
+help:  ## This help menu.
+	@echo "$$HELP_MENU_HEADER"
+	@grep -E '^[a-zA-Z%_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 

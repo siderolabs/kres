@@ -38,7 +38,7 @@ func (lint *Lint) CompileDrone(output *drone.Output) error {
 
 // CompileMakefile implements makefile.Compiler.
 func (lint *Lint) CompileMakefile(output *makefile.Output) error {
-	output.Target("lint").Description("run linters").
+	output.Target("lint").Description("Run all linters for the project.").
 		Depends(dag.GatherMatchingInputNames(lint, dag.Not(dag.Implements((*makefile.SkipAsMakefileDependency)(nil))))...).
 		Phony()
 

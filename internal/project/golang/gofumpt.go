@@ -40,7 +40,7 @@ func NewGofumpt(meta *meta.Options) *Gofumpt {
 
 // CompileMakefile implements makefile.Compiler.
 func (lint *Gofumpt) CompileMakefile(output *makefile.Output) error {
-	output.Target("lint-gofumpt").Description("Runs gofumpt").
+	output.Target("lint-gofumpt").Description("Runs gofumpt linter.").
 		Script("@$(MAKE) target-$@")
 
 	output.VariableGroup(makefile.VariableGroupCommon).

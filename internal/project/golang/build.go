@@ -72,11 +72,11 @@ func (build *Build) CompileDrone(output *drone.Output) error {
 // CompileMakefile implements makefile.Compiler.
 func (build *Build) CompileMakefile(output *makefile.Output) error {
 	output.Target(fmt.Sprintf("$(ARTIFACTS)/%s", build.Name())).
-		Description(fmt.Sprintf("Build %s", build.Name())).
 		Script(fmt.Sprintf("@$(MAKE) local-%s DEST=$(ARTIFACTS)", build.Name())).
 		Phony()
 
 	output.Target(build.Name()).
+		Description(fmt.Sprintf("Builds executable for %s.", build.Name())).
 		Depends(fmt.Sprintf("$(ARTIFACTS)/%s", build.Name())).
 		Phony()
 
