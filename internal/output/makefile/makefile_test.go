@@ -35,7 +35,8 @@ func (suite *MakefileSuite) TestGenerateFile() {
 
 	output.VariableGroup(makefile.VariableGroupDocker).
 		Variable(makefile.SimpleVariable("BUILD", "docker buildx build")).
-		Variable(makefile.RecursiveVariable("ARGS", "do it").Push("once").Push("more"))
+		Variable(makefile.RecursiveVariable("ARGS", "do it").Push("once").Push("more")).
+		Variable(makefile.OverridableVariable("CI_ARGS", ""))
 
 	output.Target("all").
 		Depends("foo", "bar")
@@ -66,6 +67,7 @@ BUILD := docker buildx build
 ARGS = do it
 ARGS += once
 ARGS += more
+CI_ARGS ?=
 
 all: foo bar
 

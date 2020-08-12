@@ -71,7 +71,7 @@ func (variable *Variable) Generate(w io.Writer) error {
 		return nil
 	}
 
-	_, err := fmt.Fprintf(w, "%s %s %s\n", variable.name, variable.operator, variable.value)
+	_, err := fmt.Fprintln(w, strings.TrimSpace(fmt.Sprintf("%s %s %s", variable.name, variable.operator, variable.value)))
 
 	return err
 }

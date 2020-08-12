@@ -1,7 +1,7 @@
 ---
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2020-08-11T21:28:45Z by kres 2fe6e2d-dirty.
+# Generated on 2020-08-12T13:22:50Z by kres 2849799-dirty.
 
 kind: pipeline
 type: kubernetes
@@ -170,14 +170,13 @@ steps:
   image: autonomy/build-container:latest
   commands:
   - docker login --username "$${DOCKER_USERNAME}" --password "$${DOCKER_PASSWORD}"
-  - make image-kres
+  - make image-kres TAG=latest
   environment:
     DOCKER_PASSWORD:
       from_secret: docker_password
     DOCKER_USERNAME:
       from_secret: docker_username
     PUSH: true
-    TAG: latest
   volumes:
   - name: outer-docker-socket
     path: /var/outer-run
