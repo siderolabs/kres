@@ -55,10 +55,9 @@ func (image *Image) CompileDrone(output *drone.Output) error {
 	)
 
 	if image.PushLatest {
-		output.Step(drone.MakeStep(image.Name()).
+		output.Step(drone.MakeStep(image.Name(), "TAG=latest").
 			Name(fmt.Sprintf("push-%s-latest", image.ImageName)).
 			Environment("PUSH", "true").
-			Environment("TAG", "latest").
 			OnlyOnMaster().
 			ExceptPullRequest().
 			DockerLogin().

@@ -72,7 +72,7 @@ func (target *Target) Generate(w io.Writer) error {
 	}
 
 	for _, line := range target.script {
-		if _, err := fmt.Fprintf(w, "\t%s\n", line); err != nil {
+		if _, err := fmt.Fprintf(w, "\t%s\n", strings.TrimRight(line, " ")); err != nil {
 			return err
 		}
 	}

@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2020-08-11T21:25:18Z by kres 6e4c1a3-dirty.
+# Generated on 2020-08-12T13:21:54Z by kres 2849799-dirty.
 
 # common variables
 
@@ -22,7 +22,7 @@ BUILD := docker buildx build
 PLATFORM ?= linux/amd64
 PROGRESS ?= auto
 PUSH ?= false
-CI_ARGS ?= 
+CI_ARGS ?=
 COMMON_ARGS = --file=Dockerfile
 COMMON_ARGS += --progress=$(PROGRESS)
 COMMON_ARGS += --platform=$(PLATFORM)

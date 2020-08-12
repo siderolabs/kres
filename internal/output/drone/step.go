@@ -6,6 +6,7 @@ package drone
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/drone/drone-yaml/yaml"
 )
@@ -16,12 +17,12 @@ type Step struct {
 }
 
 // MakeStep creates a step which calls make target.
-func MakeStep(target string) *Step {
+func MakeStep(target string, args ...string) *Step {
 	return &Step{
 		container: yaml.Container{
 			Name: target,
 			Commands: []string{
-				fmt.Sprintf("make %s", target),
+				strings.TrimSpace(fmt.Sprintf("make %s %s", target, strings.Join(args, " "))),
 			},
 			Environment: make(map[string]*yaml.Variable),
 		},
