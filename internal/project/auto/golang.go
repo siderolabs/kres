@@ -16,6 +16,8 @@ import (
 	"github.com/talos-systems/kres/internal/project/common"
 	"github.com/talos-systems/kres/internal/project/golang"
 	"github.com/talos-systems/kres/internal/project/meta"
+	"github.com/talos-systems/kres/internal/project/service"
+	"github.com/talos-systems/kres/internal/project/wrap"
 )
 
 // DetectGolang check if project at rootPath is Go-based project.
@@ -108,7 +110,11 @@ func BuildGolang(meta *meta.Options, inputs []dag.Node) ([]dag.Node, error) {
 	unitTests := golang.NewUnitTests(meta)
 	unitTests.AddInput(toolchain)
 
-	outputs := []dag.Node{lint, unitTests}
+	coverage := service.NewCodeCov(meta)
+	coverage.InputPath = "coverage.txt"
+	coverage.AddInput(unitTests)
+
+	outputs := []dag.Node{lint, unitTests, coverage}
 
 	// process commands
 	for _, cmd := range meta.Commands {
@@ -116,7 +122,7 @@ func BuildGolang(meta *meta.Options, inputs []dag.Node) ([]dag.Node, error) {
 		build.AddInput(toolchain)
 
 		image := common.NewImage(meta, cmd)
-		image.AddInput(build, common.NewFHS(meta), common.NewCACerts(meta), lint)
+		image.AddInput(build, common.NewFHS(meta), common.NewCACerts(meta), lint, wrap.Drone(unitTests))
 
 		outputs = append(outputs, build, image)
 	}

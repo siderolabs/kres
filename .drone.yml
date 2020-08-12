@@ -1,7 +1,7 @@
 ---
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2020-08-12T13:22:50Z by kres 2849799-dirty.
+# Generated on 2020-08-12T20:49:47Z by kres e7b6f9f-dirty.
 
 kind: pipeline
 type: kubernetes
@@ -102,6 +102,26 @@ steps:
   depends_on:
   - base
 
+- name: coverage
+  pull: always
+  image: autonomy/build-container:latest
+  commands:
+  - make coverage
+  environment:
+    CODECOV_TOKEN:
+      from_secret: CODECOV_TOKEN
+  volumes:
+  - name: outer-docker-socket
+    path: /var/outer-run
+  - name: docker-socket
+    path: /var/run
+  - name: ssh
+    path: /root/.ssh
+  - name: buildx
+    path: /root/.docker/buildx
+  depends_on:
+  - unit-tests
+
 - name: kres
   pull: always
   image: autonomy/build-container:latest
@@ -136,6 +156,7 @@ steps:
   depends_on:
   - kres
   - lint
+  - unit-tests
 
 - name: push-kres
   pull: always

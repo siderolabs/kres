@@ -43,6 +43,13 @@ func (step *Step) Environment(name, value string) *Step {
 	return step
 }
 
+// EnvironmentFromSecret appends an environment variable from secret to the step.
+func (step *Step) EnvironmentFromSecret(name, secretName string) *Step {
+	step.container.Environment[name] = &yaml.Variable{Secret: secretName}
+
+	return step
+}
+
 // DependsOn appends to a list of step dependencies.
 func (step *Step) DependsOn(depends ...string) *Step {
 	step.container.DependsOn = append(step.container.DependsOn, depends...)
@@ -52,14 +59,21 @@ func (step *Step) DependsOn(depends ...string) *Step {
 
 // ExceptPullRequest adds condition to skip step on PRs.
 func (step *Step) ExceptPullRequest() *Step {
-	step.container.When.Event.Exclude = []string{"pull_request"}
+	step.container.When.Event.Exclude = append(step.container.When.Event.Exclude, "pull_request")
+
+	return step
+}
+
+// OnlyOnPullRequest adds condition to run step only on PRs.
+func (step *Step) OnlyOnPullRequest() *Step {
+	step.container.When.Event.Include = append(step.container.When.Event.Include, "pull_request")
 
 	return step
 }
 
 // OnlyOnMaster adds condition to run step only on master branch.
 func (step *Step) OnlyOnMaster() *Step {
-	step.container.When.Branch.Include = []string{"master"}
+	step.container.When.Branch.Include = append(step.container.When.Branch.Include, "master")
 
 	return step
 }
