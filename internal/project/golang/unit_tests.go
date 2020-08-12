@@ -64,12 +64,12 @@ func (tests *UnitTests) CompileMakefile(output *makefile.Output) error {
 		Variable(makefile.OverridableVariable("TESTPKGS", "./..."))
 
 	output.Target("unit-tests").
-		Description("Runs unit-tests").
+		Description("Performs unit tests").
 		Script("@$(MAKE) local-$@ DEST=$(ARTIFACTS)").
 		Phony()
 
 	output.Target("unit-tests-race").
-		Description("Runs unit-tests with race detector enabled").
+		Description("Performs unit tests with race detection enabled.").
 		Script("@$(MAKE) target-$@").
 		Phony()
 

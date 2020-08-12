@@ -34,9 +34,12 @@ func (suite *MakefileSuite) TestGenerateFile() {
 		Variable(makefile.OverridableVariable("DEFAULT", "unknown"))
 
 	output.VariableGroup(makefile.VariableGroupDocker).
-		Variable(makefile.SimpleVariable("BUILD", "docker buildx build")).
-		Variable(makefile.RecursiveVariable("ARGS", "do it").Push("once").Push("more")).
+		Variable(makefile.SimpleVariable("BUILD", "docker buildx build").Export()).
+		Variable(makefile.RecursiveVariable("ARGS", "do it").Push("once").Push("more").Export()).
 		Variable(makefile.OverridableVariable("CI_ARGS", ""))
+
+	output.VariableGroup(makefile.VariableGroupHelp).
+		Variable(makefile.MultilineVariable("HELP_MENU", "This is multi-line\nlong\nstring.\n"))
 
 	output.Target("all").
 		Depends("foo", "bar")
@@ -63,11 +66,20 @@ DEFAULT ?= unknown
 
 # docker build settings
 
-BUILD := docker buildx build
-ARGS = do it
-ARGS += once
-ARGS += more
+export BUILD := docker buildx build
+export ARGS = do it
+export ARGS += once
+export ARGS += more
 CI_ARGS ?=
+
+# help menu
+
+define HELP_MENU
+This is multi-line
+long
+string.
+
+endef
 
 all: foo bar
 

@@ -58,8 +58,10 @@ func Build(meta *meta.Options) (*project.Contents, error) {
 
 	rekres := common.NewReKres(meta)
 
+	makeHelp := common.NewMakeHelp(meta)
+
 	proj.AddTarget(outputs...)
-	proj.AddTarget(rekres, all)
+	proj.AddTarget(rekres, all, makeHelp)
 
 	return proj, nil
 }

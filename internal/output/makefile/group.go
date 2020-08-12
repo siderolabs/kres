@@ -13,6 +13,7 @@ import (
 const (
 	VariableGroupCommon = "common variables"
 	VariableGroupDocker = "docker build settings"
+	VariableGroupHelp   = "help menu"
 )
 
 // VariableGroup is a way to group nicely variables in Makefile.
