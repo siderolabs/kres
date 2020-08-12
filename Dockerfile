@@ -2,7 +2,7 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2020-08-11T14:39:54Z by kres ced23da-dirty.
+# Generated on 2020-08-12T20:55:10Z by kres 14148f4.
 
 ARG TOOLCHAIN
 
@@ -71,7 +71,8 @@ COPY --from=kres-build /kres /kres
 FROM scratch AS unit-tests
 COPY --from=unit-tests-run /src/coverage.txt /coverage.txt
 
-FROM kres AS image-kres
+FROM scratch AS image-kres
+COPY --from=kres / /
 COPY --from=image-fhs / /
 COPY --from=image-ca-certificates / /
 ENTRYPOINT ["/kres","gen"]
