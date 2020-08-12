@@ -1,7 +1,7 @@
 ---
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2020-08-12T20:49:47Z by kres e7b6f9f-dirty.
+# Generated on 2020-08-19T14:31:17Z by kres 29f29d8-dirty.
 
 kind: pipeline
 type: kubernetes
@@ -50,23 +50,6 @@ steps:
     path: /root/.docker/buildx
   depends_on:
   - setup-ci
-
-- name: lint
-  pull: always
-  image: autonomy/build-container:latest
-  commands:
-  - make lint
-  volumes:
-  - name: outer-docker-socket
-    path: /var/outer-run
-  - name: docker-socket
-    path: /var/run
-  - name: ssh
-    path: /root/.ssh
-  - name: buildx
-    path: /root/.docker/buildx
-  depends_on:
-  - base
 
 - name: unit-tests
   pull: always
@@ -127,6 +110,23 @@ steps:
   image: autonomy/build-container:latest
   commands:
   - make kres
+  volumes:
+  - name: outer-docker-socket
+    path: /var/outer-run
+  - name: docker-socket
+    path: /var/run
+  - name: ssh
+    path: /root/.ssh
+  - name: buildx
+    path: /root/.docker/buildx
+  depends_on:
+  - base
+
+- name: lint
+  pull: always
+  image: autonomy/build-container:latest
+  commands:
+  - make lint
   volumes:
   - name: outer-docker-socket
     path: /var/outer-run

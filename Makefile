@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2020-08-18T04:07:32Z by kres 66eb135-dirty.
+# Generated on 2020-08-19T15:39:33Z by kres 29f29d8-dirty.
 
 # common variables
 
@@ -69,7 +69,7 @@ respectively.
 
 endef
 
-all: lint unit-tests kres image-kres
+all: unit-tests kres image-kres lint
 
 .PHONY: clean
 clean:  ## Cleans up all artifacts.
@@ -98,9 +98,6 @@ fmt:  ## Formats the source code
 base:  ## Prepare base toolchain
 	@$(MAKE) target-$@
 
-.PHONY: lint
-lint: lint-golangci-lint lint-gofumpt  ## Run all linters for the project.
-
 .PHONY: unit-tests
 unit-tests:  ## Performs unit tests
 	@$(MAKE) local-$@ DEST=$(ARTIFACTS)
@@ -119,6 +116,13 @@ $(ARTIFACTS)/kres:
 
 .PHONY: kres
 kres: $(ARTIFACTS)/kres  ## Builds executable for kres.
+
+.PHONY: lint-markdown
+lint-markdown:  ## Runs markdownlint.
+	@$(MAKE) target-$@
+
+.PHONY: lint
+lint: lint-golangci-lint lint-gofumpt lint-markdown  ## Run all linters for the project.
 
 .PHONY: image-kres
 image-kres:  ## Builds image for kres.
