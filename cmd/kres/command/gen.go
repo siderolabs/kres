@@ -11,6 +11,7 @@ import (
 
 	"github.com/talos-systems/kres/internal/config"
 	"github.com/talos-systems/kres/internal/output"
+	"github.com/talos-systems/kres/internal/output/codecov"
 	"github.com/talos-systems/kres/internal/output/dockerfile"
 	"github.com/talos-systems/kres/internal/output/drone"
 	"github.com/talos-systems/kres/internal/output/gitignore"
@@ -62,6 +63,7 @@ func (c *Gen) Run(args []string) int {
 		license.NewOutput(),
 		gitignore.NewOutput(),
 		drone.NewOutput(),
+		codecov.NewOutput(),
 	}
 
 	var err error
