@@ -151,16 +151,8 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 		Step(step.Run("go", "mod", "download")).
 		Step(step.Run("go", "mod", "verify"))
 
-	goSourceDirectories := map[string]struct{}{
-		"cmd":      {},
-		"pkg":      {},
-		"internal": {},
-	}
-
-	for _, directory := range toolchain.meta.Directories {
-		if _, shouldCopy := goSourceDirectories[directory]; shouldCopy {
-			base.Step(step.Copy("./"+directory, "./"+directory))
-		}
+	for _, directory := range toolchain.meta.GoDirectories {
+		base.Step(step.Copy("./"+directory, "./"+directory))
 	}
 
 	base.Step(step.Script(`go list -mod=readonly all >/dev/null`))

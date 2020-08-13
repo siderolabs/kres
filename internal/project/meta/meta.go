@@ -21,6 +21,9 @@ type Options struct {
 	// Directories which contain source code.
 	Directories []string
 
+	// GoDirectories are non-standard directories containing Go source code.
+	GoDirectories []string
+
 	// Source files on top level.
 	SourceFiles []string
 
