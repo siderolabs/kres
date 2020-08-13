@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 
 	"golang.org/x/mod/modfile"
 
@@ -21,6 +22,8 @@ import (
 )
 
 // DetectGolang check if project at rootPath is Go-based project.
+//
+//nolint: gocognit,gocyclo
 func DetectGolang(rootPath string, options *meta.Options) (bool, error) {
 	gomodPath := filepath.Join(rootPath, "go.mod")
 
@@ -50,6 +53,31 @@ func DetectGolang(rootPath string, options *meta.Options) (bool, error) {
 
 		if exists {
 			options.Directories = append(options.Directories, srcDir)
+			options.GoDirectories = append(options.GoDirectories, srcDir)
+		}
+	}
+
+	if len(options.GoDirectories) == 0 {
+		// no standard directories found, assume any directory with `.go` files is a source directory
+		topLevel, err := ioutil.ReadDir(rootPath)
+		if err != nil {
+			return true, err
+		}
+
+		for _, item := range topLevel {
+			if !item.IsDir() {
+				continue
+			}
+
+			result, err := hasGoFiles(filepath.Join(rootPath, item.Name()))
+			if err != nil {
+				return true, err
+			}
+
+			if result {
+				options.Directories = append(options.Directories, item.Name())
+				options.GoDirectories = append(options.GoDirectories, item.Name())
+			}
 		}
 	}
 
@@ -128,4 +156,19 @@ func BuildGolang(meta *meta.Options, inputs []dag.Node) ([]dag.Node, error) {
 	}
 
 	return outputs, nil
+}
+
+func hasGoFiles(path string) (bool, error) {
+	contents, err := ioutil.ReadDir(path)
+	if err != nil {
+		return false, err
+	}
+
+	for _, item := range contents {
+		if !item.IsDir() && strings.HasSuffix(item.Name(), ".go") {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
