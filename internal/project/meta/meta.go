@@ -27,6 +27,9 @@ type Options struct {
 	// Source files on top level.
 	SourceFiles []string
 
+	// Go source files on top level.
+	GoSourceFiles []string
+
 	// Commands are top-level binaries to be built.
 	Commands []string
 
