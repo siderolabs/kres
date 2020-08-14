@@ -155,6 +155,10 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 		base.Step(step.Copy("./"+directory, "./"+directory))
 	}
 
+	for _, file := range toolchain.meta.GoSourceFiles {
+		base.Step(step.Copy("./"+file, "./"+file))
+	}
+
 	base.Step(step.Script(`go list -mod=readonly all >/dev/null`))
 
 	return nil

@@ -81,6 +81,27 @@ func DetectGolang(rootPath string, options *meta.Options) (bool, error) {
 		}
 	}
 
+	{
+		res, err := hasGoFiles(rootPath)
+		if err != nil {
+			return true, err
+		}
+
+		if res {
+			contents, err := ioutil.ReadDir(rootPath)
+			if err != nil {
+				return true, err
+			}
+
+			for _, item := range contents {
+				if !item.IsDir() && strings.HasSuffix(item.Name(), ".go") {
+					options.SourceFiles = append(options.SourceFiles, item.Name())
+					options.GoSourceFiles = append(options.GoSourceFiles, item.Name())
+				}
+			}
+		}
+	}
+
 	options.SourceFiles = append(options.SourceFiles, "go.mod", "go.sum")
 
 	for _, candidate := range []string{"pkg/version", "internal/version"} {
