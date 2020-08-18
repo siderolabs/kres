@@ -7,8 +7,10 @@ package output
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -18,18 +20,34 @@ type FileWriter interface {
 	GenerateFile(filename string, w io.Writer) error
 }
 
+// FilePermissionsWriter defines the requirements for setting the file
+// permissions of a FileWriter. This interface is optional.
+type FilePermissionsWriter interface {
+	Permissions(filename string) os.FileMode
+}
+
 // FileAdapter implements Writer via FileWriter.
 type FileAdapter struct {
 	FileWriter
 }
 
 // Generate implements outout.Writer.
+//
+//nolint: gocognit
 func (adapter *FileAdapter) Generate() error {
 	// buffer the output before writing it down
 	buffers := map[string]*bytes.Buffer{}
 
 	for _, filename := range adapter.FileWriter.Filenames() {
 		buf := bytes.NewBuffer(nil)
+
+		dir := filepath.Dir(filename)
+
+		if _, err := os.Stat(dir); errors.Is(err, os.ErrNotExist) {
+			if err := os.MkdirAll(dir, 0o755); err != nil {
+				return err
+			}
+		}
 
 		if err := adapter.FileWriter.GenerateFile(filename, buf); err != nil {
 			return err
@@ -82,6 +100,18 @@ func (adapter *FileAdapter) Generate() error {
 			return err
 		}(); err != nil {
 			return err
+		}
+
+		if permsWriter, implements := adapter.FileWriter.(FilePermissionsWriter); implements {
+			perms := permsWriter.Permissions(filename)
+
+			if perms == 0 {
+				perms = 0o644
+			}
+
+			if err := os.Chmod(filename, perms); err != nil {
+				return err
+			}
 		}
 	}
 

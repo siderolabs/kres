@@ -18,6 +18,7 @@ import (
 	"github.com/talos-systems/kres/internal/output/golangci"
 	"github.com/talos-systems/kres/internal/output/license"
 	"github.com/talos-systems/kres/internal/output/makefile"
+	"github.com/talos-systems/kres/internal/output/release"
 	"github.com/talos-systems/kres/internal/project/auto"
 	"github.com/talos-systems/kres/internal/project/meta"
 )
@@ -64,6 +65,7 @@ func (c *Gen) Run(args []string) int {
 		gitignore.NewOutput(),
 		drone.NewOutput(),
 		codecov.NewOutput(),
+		release.NewOutput(),
 	}
 
 	var err error
