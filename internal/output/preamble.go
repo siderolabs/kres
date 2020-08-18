@@ -19,7 +19,7 @@ var PreambleTimestamp time.Time
 var PreambleCreator string
 
 // Preamble returns file auto-generated preamble with specified comment character.
-func Preamble(commentPrefix string) string {
+func Preamble(commentPrefix string, commentPostFixes ...string) string {
 	const preamble = `
 THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 
@@ -39,7 +39,7 @@ Generated on %s by %s.
 	byLines := strings.Split(strings.TrimSpace(preambleStr), "\n")
 
 	for i := range byLines {
-		byLines[i] = strings.TrimSpace(commentPrefix + byLines[i])
+		byLines[i] = strings.TrimSpace(commentPrefix + byLines[i] + strings.Join(commentPostFixes, " "))
 	}
 
 	return strings.Join(byLines, "\n") + "\n\n"
