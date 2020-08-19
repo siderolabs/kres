@@ -21,12 +21,13 @@ type Image struct {
 
 	meta *meta.Options
 
-	BaseImage      string   `yaml:"baseImage"`
-	ImageName      string   `yaml:"imageName"`
-	Entrypoint     string   `yaml:"entrypoint"`
-	EntrypointArgs []string `yaml:"entrypointArgs"`
-	CustomCommands []string `yaml:"customCommands"`
-	PushLatest     bool     `yaml:"pushLatest"`
+	BaseImage        string   `yaml:"baseImage"`
+	AdditionalImages []string `yaml:"additionalImages"`
+	ImageName        string   `yaml:"imageName"`
+	Entrypoint       string   `yaml:"entrypoint"`
+	EntrypointArgs   []string `yaml:"entrypointArgs"`
+	CustomCommands   []string `yaml:"customCommands"`
+	PushLatest       bool     `yaml:"pushLatest"`
 }
 
 // NewImage initializes Image.
@@ -36,10 +37,11 @@ func NewImage(meta *meta.Options, name string) *Image {
 
 		meta: meta,
 
-		BaseImage:  "scratch",
-		ImageName:  name,
-		Entrypoint: "/" + name,
-		PushLatest: true,
+		BaseImage:        "scratch",
+		AdditionalImages: []string{"fhs", "ca-certificates"},
+		ImageName:        name,
+		Entrypoint:       "/" + name,
+		PushLatest:       true,
 	}
 }
 
@@ -83,11 +85,6 @@ func (image *Image) CompileMakefile(output *makefile.Output) error {
 
 // CompileDockerfile implements dockerfile.Compiler.
 func (image *Image) CompileDockerfile(output *dockerfile.Output) error {
-	inputs := dag.GatherMatchingInputNames(image, dag.Implements((*dockerfile.Compiler)(nil)))
-	if len(inputs) == 0 {
-		return fmt.Errorf("no inputs for Image block")
-	}
-
 	stage := output.Stage(image.Name())
 
 	if image.BaseImage == "scratch" {
@@ -99,12 +96,38 @@ func (image *Image) CompileDockerfile(output *dockerfile.Output) error {
 		stage.From(fmt.Sprintf("base-%s", image.Name()))
 	}
 
-	for _, input := range inputs {
-		stage.Step(step.Copy("/", "/").From(input))
-	}
-
 	for _, command := range image.CustomCommands {
 		stage.Step(step.Script(command))
+	}
+
+	inputs := dag.GatherMatchingInputNames(image, dag.Implements((*dockerfile.Compiler)(nil)))
+	if len(inputs) == 0 {
+		return fmt.Errorf("no inputs for Image block")
+	}
+
+	for _, addImage := range image.AdditionalImages {
+		var input dag.Node
+
+		switch addImage {
+		case "fhs":
+			input = NewFHS(image.meta)
+		case "ca-certificates":
+			input = NewCACerts(image.meta)
+		default:
+			return fmt.Errorf("unsupported additional image %q", addImage)
+		}
+
+		if compiler, ok := input.(dockerfile.Compiler); ok {
+			if err := compiler.CompileDockerfile(output); err != nil {
+				return err
+			}
+		}
+
+		inputs = append(inputs, input.Name())
+	}
+
+	for _, input := range inputs {
+		stage.Step(step.Copy("/", "/").From(input))
 	}
 
 	stage.Step(step.Entrypoint(image.Entrypoint, image.EntrypointArgs...))
