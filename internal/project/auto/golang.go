@@ -157,7 +157,7 @@ func (builder *builder) BuildGolang() error {
 		build.AddInput(toolchain)
 
 		image := common.NewImage(builder.meta, cmd)
-		image.AddInput(build, common.NewFHS(builder.meta), common.NewCACerts(builder.meta), builder.lintTarget, wrap.Drone(unitTests))
+		image.AddInput(build, builder.lintTarget, wrap.Drone(unitTests))
 
 		builder.targets = append(builder.targets, build, image)
 	}
