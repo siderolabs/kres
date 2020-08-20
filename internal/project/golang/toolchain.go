@@ -162,7 +162,7 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 		base.Step(step.Copy("./"+file, "./"+file))
 	}
 
-	base.Step(step.Script(`go list -mod=readonly all >/dev/null`))
+	base.Step(step.Script(`go list -mod=readonly all >/dev/null`).MountCache(filepath.Join(toolchain.meta.GoPath, "pkg")))
 
 	return nil
 }
