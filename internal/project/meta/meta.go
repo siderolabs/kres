@@ -45,6 +45,9 @@ type Options struct {
 	// Path to /bin.
 	BinPath string
 
+	// Go's GOPATH.
+	GoPath string
+
 	// Path to ~/.cache.
 	CachePath string
 }

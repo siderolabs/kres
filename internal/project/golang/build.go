@@ -53,7 +53,8 @@ func (build *Build) CompileDockerfile(output *dockerfile.Output) error {
 	}
 
 	stage.Step(step.Script(fmt.Sprintf(`go build -ldflags "%s" -o /%s`, ldflags, build.Name())).
-		MountCache(filepath.Join(build.meta.CachePath, "go-build")))
+		MountCache(filepath.Join(build.meta.CachePath, "go-build")).
+		MountCache(filepath.Join(build.meta.GoPath, "pkg")))
 
 	output.Stage(build.Name()).
 		From("scratch").
