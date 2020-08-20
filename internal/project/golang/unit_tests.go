@@ -40,6 +40,7 @@ func (tests *UnitTests) CompileDockerfile(output *dockerfile.Output) error {
 		Step(step.Arg("TESTPKGS")).
 		Step(step.Script(`go test -v -covermode=atomic -coverprofile=coverage.txt -count 1 ${TESTPKGS}`).
 			MountCache(filepath.Join(tests.meta.CachePath, "go-build")).
+			MountCache(filepath.Join(tests.meta.GoPath, "pkg")).
 			MountCache("/tmp"))
 
 	output.Stage("unit-tests").
@@ -52,6 +53,7 @@ func (tests *UnitTests) CompileDockerfile(output *dockerfile.Output) error {
 		Step(step.Arg("TESTPKGS")).
 		Step(step.Script(`go test -v -race -count 1 ${TESTPKGS}`).
 			MountCache(filepath.Join(tests.meta.CachePath, "go-build")).
+			MountCache(filepath.Join(tests.meta.GoPath, "pkg")).
 			MountCache("/tmp").
 			Env("CGO_ENABLED", "1"))
 

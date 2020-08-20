@@ -6,6 +6,7 @@ package golang
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/talos-systems/kres/internal/dag"
 	"github.com/talos-systems/kres/internal/output/dockerfile"
@@ -50,6 +51,7 @@ func NewToolchain(meta *meta.Options) *Toolchain {
 	meta.BuildArgs = append(meta.BuildArgs, "TOOLCHAIN")
 	meta.BinPath = toolchain.binPath()
 	meta.CachePath = toolchain.cachePath()
+	meta.GoPath = "/go"
 
 	return toolchain
 }
@@ -130,7 +132,8 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 		Description("build tools").
 		From("toolchain").
 		Step(step.Env("GO111MODULE", "on")).
-		Step(step.Env("CGO_ENABLED", "0"))
+		Step(step.Env("CGO_ENABLED", "0")).
+		Step(step.Env("GOPATH", toolchain.meta.GoPath))
 
 	if err := dag.WalkNode(toolchain, func(node dag.Node) error {
 		if builder, ok := node.(common.ToolchainBuilder); ok {
@@ -148,8 +151,8 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 		Step(step.WorkDir("/src")).
 		Step(step.Copy("./go.mod", ".")).
 		Step(step.Copy("./go.sum", ".")).
-		Step(step.Run("go", "mod", "download")).
-		Step(step.Run("go", "mod", "verify"))
+		Step(step.Run("go", "mod", "download").MountCache(filepath.Join(toolchain.meta.GoPath, "pkg"))).
+		Step(step.Run("go", "mod", "verify").MountCache(filepath.Join(toolchain.meta.GoPath, "pkg")))
 
 	for _, directory := range toolchain.meta.GoDirectories {
 		base.Step(step.Copy("./"+directory, "./"+directory))
