@@ -2,7 +2,7 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2020-08-20T18:05:09Z by kres 73f402f-dirty.
+# Generated on 2020-08-20T20:56:03Z by kres 197b72f-dirty.
 
 ARG TOOLCHAIN
 
@@ -44,7 +44,7 @@ RUN --mount=type=cache,target=/go/pkg go mod download
 RUN --mount=type=cache,target=/go/pkg go mod verify
 COPY ./internal ./internal
 COPY ./cmd ./cmd
-RUN go list -mod=readonly all >/dev/null
+RUN --mount=type=cache,target=/go/pkg go list -mod=readonly all >/dev/null
 
 # builds kres
 FROM base AS kres-build
