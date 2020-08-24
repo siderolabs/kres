@@ -7,7 +7,10 @@ package common
 import (
 	"fmt"
 
+	"github.com/drone/drone-yaml/yaml"
+
 	"github.com/talos-systems/kres/internal/dag"
+	"github.com/talos-systems/kres/internal/output/drone"
 	"github.com/talos-systems/kres/internal/output/makefile"
 	"github.com/talos-systems/kres/internal/project/meta"
 )
@@ -17,6 +20,8 @@ type Docker struct {
 	dag.BaseNode
 
 	meta *meta.Options
+
+	DockerImage string `yaml:"dockerImage"`
 }
 
 // NewDocker initializes Docker.
@@ -24,8 +29,47 @@ func NewDocker(meta *meta.Options) *Docker {
 	meta.BuildArgs = append(meta.BuildArgs, "USERNAME")
 
 	return &Docker{
+		BaseNode: dag.NewBaseNode("setup-ci"),
+
 		meta: meta,
+
+		DockerImage: "docker:19.03-dind",
 	}
+}
+
+// CompileDrone implements drone.Compiler.
+func (docker *Docker) CompileDrone(output *drone.Output) error {
+	output.
+		VolumeHostPath("outer-docker-socket", "/var/ci-docker", "/var/outer-run").
+		VolumeTemporary("docker-socket", "/var/run").
+		VolumeTemporary("buildx", "/root/.docker/buildx").
+		VolumeTemporary("ssh", "/root/.ssh")
+
+	output.Service(&yaml.Container{
+		Name:       "docker",
+		Image:      docker.DockerImage,
+		Entrypoint: []string{"dockerd"},
+		Privileged: true,
+		Commands: []string{
+			"--dns=8.8.8.8",
+			"--dns=8.8.4.4",
+			"--mtu=1500",
+			"--log-level=error",
+			"--insecure-registry=http://registry.ci.svc:5000",
+		},
+	})
+
+	output.Step(
+		drone.CustomStep(docker.Name(),
+			"sleep 5",
+			"git fetch --tags",
+			"install-ci-key",
+			"docker buildx create --driver docker-container --platform linux/amd64 --name local --use unix:///var/outer-run/docker.sock",
+			"docker buildx inspect --bootstrap",
+		).EnvironmentFromSecret("SSH_KEY", "ssh_key"),
+	)
+
+	return nil
 }
 
 // CompileMakefile implements makefile.Compiler.

@@ -29,6 +29,17 @@ func MakeStep(target string, args ...string) *Step {
 	}
 }
 
+// CustomStep creates a step which calls some shell script.
+func CustomStep(target string, commands ...string) *Step {
+	return &Step{
+		container: yaml.Container{
+			Name:        target,
+			Commands:    commands,
+			Environment: make(map[string]*yaml.Variable),
+		},
+	}
+}
+
 // Name provides a name to a step.
 func (step *Step) Name(name string) *Step {
 	step.container.Name = name

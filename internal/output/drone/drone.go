@@ -28,12 +28,12 @@ type Output struct {
 	defaultPipeline *yaml.Pipeline
 	notifyPipeline  *yaml.Pipeline
 
-	standardMounts []*yaml.VolumeMount
+	standardMounts  []*yaml.VolumeMount
+	standardVolumes []*yaml.Volume
 
 	PipelineType       string
 	NotifySlackChannel string
 	BuildContainer     string
-	DockerImage        string
 }
 
 // NewOutput creates new .drone.yml output.
@@ -44,94 +44,15 @@ func NewOutput() *Output {
 		PipelineType:       "kubernetes",
 		NotifySlackChannel: "proj-talos-maintainers",
 		BuildContainer:     buildContainer,
-		DockerImage:        "docker:19.03-dind",
 	}
 
-	output.standardMounts = []*yaml.VolumeMount{
-		{
-			Name:      "outer-docker-socket",
-			MountPath: "/var/outer-run",
-		},
-		{
-			Name:      "docker-socket",
-			MountPath: "/var/run",
-		},
-		{
-			Name:      "ssh",
-			MountPath: "/root/.ssh",
-		},
-		{
-			Name:      "buildx",
-			MountPath: "/root/.docker/buildx",
-		},
-	}
+	output.standardMounts = []*yaml.VolumeMount{}
+	output.standardVolumes = []*yaml.Volume{}
 
 	output.defaultPipeline = &yaml.Pipeline{
 		Name: "default",
 		Type: output.PipelineType,
 		Kind: "pipeline",
-		Volumes: []*yaml.Volume{
-			{
-				Name: "outer-docker-socket",
-				HostPath: &yaml.VolumeHostPath{
-					Path: "/var/ci-docker",
-				},
-			},
-			{
-				Name: "docker-socket",
-				EmptyDir: &yaml.VolumeEmptyDir{
-					Medium: "memory",
-				},
-			},
-			{
-				Name: "buildx",
-				EmptyDir: &yaml.VolumeEmptyDir{
-					Medium: "memory",
-				},
-			},
-			{
-				Name: "ssh",
-				EmptyDir: &yaml.VolumeEmptyDir{
-					Medium: "memory",
-				},
-			},
-		},
-		Steps: []*yaml.Container{
-			{
-				Name:  "setup-ci",
-				Image: output.BuildContainer,
-				Pull:  "always",
-				Commands: []string{
-					"sleep 5",
-					"git fetch --tags",
-					"install-ci-key",
-					"docker buildx create --driver docker-container --platform linux/amd64 --name local --use unix:///var/outer-run/docker.sock",
-					"docker buildx inspect --bootstrap",
-				},
-				Environment: map[string]*yaml.Variable{
-					"SSH_KEY": {
-						Secret: "ssh_key",
-					},
-				},
-				Volumes: output.standardMounts,
-			},
-		},
-		Services: []*yaml.Container{
-			{
-				Name:       "docker",
-				Image:      output.DockerImage,
-				Entrypoint: []string{"dockerd"},
-				Privileged: true,
-				Commands: []string{
-					"--dns=8.8.8.8",
-					"--dns=8.8.4.4",
-					"--mtu=1500",
-					"--log-level=error",
-					"--insecure-registry=http://registry.ci.svc:5000",
-				},
-				Volumes: output.standardMounts,
-			},
-		},
 	}
 
 	output.notifyPipeline = &yaml.Pipeline{
@@ -223,6 +144,9 @@ func (o *Output) GenerateFile(filename string, w io.Writer) error {
 }
 
 func (o *Output) drone(w io.Writer) error {
+	// fix up volumes
+	o.defaultPipeline.Volumes = o.standardVolumes
+
 	preamble := output.Preamble("# ")
 
 	var buf bytes.Buffer
