@@ -153,13 +153,21 @@ func (builder *builder) BuildGolang() error {
 
 	// process commands
 	for _, cmd := range builder.meta.Commands {
+		cfg := CommandConfig{NamedConfig: NamedConfig{name: cmd}}
+		if err := builder.meta.Config.Load(&cfg); err != nil {
+			return err
+		}
+
 		build := golang.NewBuild(builder.meta, cmd, filepath.Join("cmd", cmd))
 		build.AddInput(toolchain)
+		builder.targets = append(builder.targets, build)
 
-		image := common.NewImage(builder.meta, cmd)
-		image.AddInput(build, builder.lintTarget, wrap.Drone(unitTests))
+		if !cfg.DisableImage {
+			image := common.NewImage(builder.meta, cmd)
+			image.AddInput(build, builder.lintTarget, wrap.Drone(unitTests))
 
-		builder.targets = append(builder.targets, build, image)
+			builder.targets = append(builder.targets, image)
+		}
 	}
 
 	return nil
