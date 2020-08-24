@@ -1,7 +1,7 @@
 ---
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2020-08-19T14:31:17Z by kres 29f29d8-dirty.
+# Generated on 2020-08-24T14:30:33Z by kres bdd2a39-dirty.
 
 kind: pipeline
 type: kubernetes
@@ -29,10 +29,10 @@ steps:
     path: /var/outer-run
   - name: docker-socket
     path: /var/run
-  - name: ssh
-    path: /root/.ssh
   - name: buildx
     path: /root/.docker/buildx
+  - name: ssh
+    path: /root/.ssh
 
 - name: base
   pull: always
@@ -44,10 +44,10 @@ steps:
     path: /var/outer-run
   - name: docker-socket
     path: /var/run
-  - name: ssh
-    path: /root/.ssh
   - name: buildx
     path: /root/.docker/buildx
+  - name: ssh
+    path: /root/.ssh
   depends_on:
   - setup-ci
 
@@ -61,10 +61,10 @@ steps:
     path: /var/outer-run
   - name: docker-socket
     path: /var/run
-  - name: ssh
-    path: /root/.ssh
   - name: buildx
     path: /root/.docker/buildx
+  - name: ssh
+    path: /root/.ssh
   depends_on:
   - base
 
@@ -78,10 +78,10 @@ steps:
     path: /var/outer-run
   - name: docker-socket
     path: /var/run
-  - name: ssh
-    path: /root/.ssh
   - name: buildx
     path: /root/.docker/buildx
+  - name: ssh
+    path: /root/.ssh
   depends_on:
   - base
 
@@ -98,10 +98,10 @@ steps:
     path: /var/outer-run
   - name: docker-socket
     path: /var/run
-  - name: ssh
-    path: /root/.ssh
   - name: buildx
     path: /root/.docker/buildx
+  - name: ssh
+    path: /root/.ssh
   depends_on:
   - unit-tests
 
@@ -115,10 +115,10 @@ steps:
     path: /var/outer-run
   - name: docker-socket
     path: /var/run
-  - name: ssh
-    path: /root/.ssh
   - name: buildx
     path: /root/.docker/buildx
+  - name: ssh
+    path: /root/.ssh
   depends_on:
   - base
 
@@ -132,10 +132,10 @@ steps:
     path: /var/outer-run
   - name: docker-socket
     path: /var/run
-  - name: ssh
-    path: /root/.ssh
   - name: buildx
     path: /root/.docker/buildx
+  - name: ssh
+    path: /root/.ssh
   depends_on:
   - base
 
@@ -149,10 +149,10 @@ steps:
     path: /var/outer-run
   - name: docker-socket
     path: /var/run
-  - name: ssh
-    path: /root/.ssh
   - name: buildx
     path: /root/.docker/buildx
+  - name: ssh
+    path: /root/.ssh
   depends_on:
   - kres
   - lint
@@ -175,10 +175,10 @@ steps:
     path: /var/outer-run
   - name: docker-socket
     path: /var/run
-  - name: ssh
-    path: /root/.ssh
   - name: buildx
     path: /root/.docker/buildx
+  - name: ssh
+    path: /root/.ssh
   when:
     event:
       exclude:
@@ -203,10 +203,10 @@ steps:
     path: /var/outer-run
   - name: docker-socket
     path: /var/run
-  - name: ssh
-    path: /root/.ssh
   - name: buildx
     path: /root/.docker/buildx
+  - name: ssh
+    path: /root/.ssh
   when:
     branch:
     - master
@@ -233,10 +233,10 @@ services:
     path: /var/outer-run
   - name: docker-socket
     path: /var/run
-  - name: ssh
-    path: /root/.ssh
   - name: buildx
     path: /root/.docker/buildx
+  - name: ssh
+    path: /root/.ssh
 
 volumes:
 - name: outer-docker-socket
