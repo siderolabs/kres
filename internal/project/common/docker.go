@@ -22,6 +22,8 @@ type Docker struct {
 	meta *meta.Options
 
 	DockerImage string `yaml:"dockerImage"`
+
+	DockerResourceRequests *yaml.ResourceObject `yaml:"dockerResourceRequests"`
 }
 
 // NewDocker initializes Docker.
@@ -45,6 +47,13 @@ func (docker *Docker) CompileDrone(output *drone.Output) error {
 		VolumeTemporary("buildx", "/root/.docker/buildx").
 		VolumeTemporary("ssh", "/root/.ssh")
 
+	resources := (*yaml.Resources)(nil)
+	if docker.DockerResourceRequests != nil {
+		resources = &yaml.Resources{
+			Requests: docker.DockerResourceRequests,
+		}
+	}
+
 	output.Service(&yaml.Container{
 		Name:       "docker",
 		Image:      docker.DockerImage,
@@ -57,6 +66,7 @@ func (docker *Docker) CompileDrone(output *drone.Output) error {
 			"--log-level=error",
 			"--insecure-registry=http://registry.ci.svc:5000",
 		},
+		Resources: resources,
 	})
 
 	output.Step(
