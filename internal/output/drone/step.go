@@ -113,3 +113,10 @@ func (step *Step) DockerLogin() *Step {
 
 	return step
 }
+
+// Privileged marks step as privileged.
+func (step *Step) Privileged() *Step {
+	step.container.Privileged = true
+
+	return step
+}
