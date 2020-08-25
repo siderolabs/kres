@@ -20,3 +20,15 @@ type CommandConfig struct {
 
 	DisableImage bool `yaml:"disableImage"`
 }
+
+// CustomSteps defines custom steps to be generated.
+type CustomSteps struct {
+	Steps []CustomStep `yaml:"steps"`
+}
+
+// CustomStep defines a custom step to be built.
+type CustomStep struct {
+	Name     string   `yaml:"name"`
+	Toplevel bool     `yaml:"toplevel"`
+	Inputs   []string `yaml:"inputs"`
+}

@@ -14,6 +14,7 @@ const (
 	VariableGroupCommon = "common variables"
 	VariableGroupDocker = "docker build settings"
 	VariableGroupHelp   = "help menu"
+	VariableGroupExtra  = "extra variables"
 )
 
 // VariableGroup is a way to group nicely variables in Makefile.
