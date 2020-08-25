@@ -24,7 +24,7 @@ set -e
 
 function changelog {
   if [ "$#" -eq 1 ]; then
-    git-chglog --output CHANGELOG.md -c ./hack/git-chglog/config.yaml --tag-filter-pattern "^${1}" "${1}.0-alpha.1.."
+    git-chglog --output CHANGELOG.md -c ./hack/git-chglog/config.yaml --tag-filter-pattern "^${1}" "${1}.0-alpha.0.."
   elif [ "$#" -eq 0 ]; then
     git-chglog --output CHANGELOG.md -c ./hack/git-chglog/config.yaml
   else
