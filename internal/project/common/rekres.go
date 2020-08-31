@@ -37,7 +37,7 @@ func (rekres *ReKres) CompileMakefile(output *makefile.Output) error {
 
 	output.Target(rekres.Name()).
 		Script("@docker pull $(KRES_IMAGE)").
-		Script("@docker run --rm -v $(PWD):/src -w /src $(KRES_IMAGE)").
+		Script("@docker run --rm -v $(PWD):/src -w /src -e GITHUB_TOKEN $(KRES_IMAGE)").
 		Phony()
 
 	return nil
