@@ -12,6 +12,10 @@ type Options struct {
 	// Config provider.
 	Config *config.Provider
 
+	// GitHub settings.
+	GitHubOrganization string
+	GitHubRepository   string
+
 	// CanonicalPath, import path for Go projects.
 	CanonicalPath string
 

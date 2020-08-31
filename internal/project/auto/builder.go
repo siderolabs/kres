@@ -48,6 +48,10 @@ func (builder *builder) build() error {
 		build  buildFunc
 	}{
 		{
+			detect: builder.DetectGit,
+			build:  builder.BuildGit,
+		},
+		{
 			detect: builder.DetectGolang,
 			build:  builder.BuildGolang,
 		},

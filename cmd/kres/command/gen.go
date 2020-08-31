@@ -14,6 +14,7 @@ import (
 	"github.com/talos-systems/kres/internal/output/codecov"
 	"github.com/talos-systems/kres/internal/output/dockerfile"
 	"github.com/talos-systems/kres/internal/output/drone"
+	"github.com/talos-systems/kres/internal/output/github"
 	"github.com/talos-systems/kres/internal/output/gitignore"
 	"github.com/talos-systems/kres/internal/output/golangci"
 	"github.com/talos-systems/kres/internal/output/license"
@@ -68,6 +69,7 @@ func (c *Gen) Run(args []string) int {
 		codecov.NewOutput(),
 		release.NewOutput(),
 		markdownlint.NewOutput(),
+		github.NewOutput(),
 	}
 
 	var err error

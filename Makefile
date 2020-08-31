@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2020-08-19T15:39:33Z by kres 29f29d8-dirty.
+# Generated on 2020-08-31T16:14:19Z by kres 08e8fca-dirty.
 
 # common variables
 
@@ -131,7 +131,7 @@ image-kres:  ## Builds image for kres.
 .PHONY: rekres
 rekres:
 	@docker pull $(KRES_IMAGE)
-	@docker run --rm -v $(PWD):/src -w /src $(KRES_IMAGE)
+	@docker run --rm -v $(PWD):/src -w /src -e GITHUB_TOKEN $(KRES_IMAGE)
 
 .PHONY: help
 help:  ## This help menu.
