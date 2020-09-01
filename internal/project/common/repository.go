@@ -13,6 +13,7 @@ import (
 	"github.com/google/go-github/v32/github"
 
 	"github.com/talos-systems/kres/internal/dag"
+	"github.com/talos-systems/kres/internal/output/conform"
 	"github.com/talos-systems/kres/internal/project/meta"
 )
 
@@ -22,8 +23,13 @@ type Repository struct {
 
 	meta *meta.Options
 
-	MainBranch     string   `yaml:"mainBranch"`
-	EnforeContexts []string `yaml:"enforceContexts"`
+	MainBranch      string   `yaml:"mainBranch"`
+	EnforceContexts []string `yaml:"enforceContexts"`
+
+	EnableConform     bool     `yaml:"enableConform"`
+	ConformWebhookURL string   `yaml:"conformWebhookURL"`
+	ConformTypes      []string `yaml:"conformTypes"`
+	ConformScopes     []string `yaml:"conformScopes"`
 }
 
 // NewRepository initializes Repository.
@@ -34,20 +40,78 @@ func NewRepository(meta *meta.Options) *Repository {
 		meta: meta,
 
 		MainBranch: "master",
-		EnforeContexts: []string{
+		EnforceContexts: []string{
 			"continuous-integration/drone/pr",
 			"status-lgtm",
+		},
+
+		EnableConform:     true,
+		ConformWebhookURL: "https://conform.dev.talos-systems.io/github",
+		ConformTypes: []string{
+			"chore",
+			"docs",
+			"perf",
+			"refactor",
+			"style",
+			"test",
+			"release",
+		},
+		ConformScopes: []string{
+			"*",
 		},
 	}
 }
 
+// CompileConform implements conform.Compiler.
+func (r *Repository) CompileConform(o *conform.Output) error {
+	if !r.EnableConform {
+		return nil
+	}
+
+	o.Enable()
+	o.SetScopes(r.ConformScopes)
+	o.SetTypes(r.ConformTypes)
+
+	return nil
+}
+
 // CompileGitHub implements github.Compiler.
 func (r *Repository) CompileGitHub(client *github.Client) error {
+	if err := r.enableBranchProtection(client); err != nil {
+		return err
+	}
+
+	if r.EnableConform {
+		if err := r.enableConform(client); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (r *Repository) enableBranchProtection(client *github.Client) error {
 	branchProtection, resp, err := client.Repositories.GetBranchProtection(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, r.MainBranch)
 	if err != nil {
 		if resp.StatusCode != http.StatusNotFound {
 			return err
 		}
+	}
+
+	enforceContexts := r.EnforceContexts
+	if r.EnableConform {
+		enforceContexts = append(enforceContexts,
+			"conform/commit/commit-body",
+			"conform/commit/conventional-commit",
+			"conform/commit/dco",
+			"conform/commit/header-case",
+			"conform/commit/header-last-character",
+			"conform/commit/header-length",
+			"conform/commit/imperative-mood",
+			"conform/commit/number-of-commits",
+			"conform/commit/spellcheck",
+			"conform/license/file-header",
+		)
 	}
 
 	req := github.ProtectionRequest{
@@ -63,7 +127,7 @@ func (r *Repository) CompileGitHub(client *github.Client) error {
 
 		RequiredStatusChecks: &github.RequiredStatusChecks{
 			Strict:   true,
-			Contexts: r.EnforeContexts,
+			Contexts: enforceContexts,
 		},
 	}
 
@@ -89,6 +153,40 @@ func (r *Repository) CompileGitHub(client *github.Client) error {
 	}
 
 	fmt.Println("branch protection settings updated")
+
+	return nil
+}
+
+func (r *Repository) enableConform(client *github.Client) error {
+	hooks, _, err := client.Repositories.ListHooks(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, &github.ListOptions{})
+	if err != nil {
+		return err
+	}
+
+	for _, hook := range hooks {
+		if hook.Config["url"].(string) == r.ConformWebhookURL {
+			return nil
+		}
+	}
+
+	_, _, err = client.Repositories.CreateHook(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, &github.Hook{
+		Active: github.Bool(true),
+		Config: map[string]interface{}{
+			"url":          r.ConformWebhookURL,
+			"content_type": "json",
+			"insecure_ssl": "0",
+		},
+		Events: []string{
+			"push",
+			"pull_request",
+		},
+	})
+
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("conform webhook created")
 
 	return nil
 }
