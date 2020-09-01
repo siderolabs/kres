@@ -12,6 +12,7 @@ import (
 	"github.com/talos-systems/kres/internal/config"
 	"github.com/talos-systems/kres/internal/output"
 	"github.com/talos-systems/kres/internal/output/codecov"
+	"github.com/talos-systems/kres/internal/output/conform"
 	"github.com/talos-systems/kres/internal/output/dockerfile"
 	"github.com/talos-systems/kres/internal/output/drone"
 	"github.com/talos-systems/kres/internal/output/github"
@@ -70,6 +71,7 @@ func (c *Gen) Run(args []string) int {
 		release.NewOutput(),
 		markdownlint.NewOutput(),
 		github.NewOutput(),
+		conform.NewOutput(),
 	}
 
 	var err error
