@@ -30,6 +30,8 @@ type Repository struct {
 	ConformWebhookURL string   `yaml:"conformWebhookURL"`
 	ConformTypes      []string `yaml:"conformTypes"`
 	ConformScopes     []string `yaml:"conformScopes"`
+
+	BotName string `yaml:"botName"`
 }
 
 // NewRepository initializes Repository.
@@ -59,6 +61,8 @@ func NewRepository(meta *meta.Options) *Repository {
 		ConformScopes: []string{
 			"*",
 		},
+
+		BotName: "talos-bot",
 	}
 }
 
@@ -85,6 +89,10 @@ func (r *Repository) CompileGitHub(client *github.Client) error {
 		if err := r.enableConform(client); err != nil {
 			return err
 		}
+	}
+
+	if err := r.inviteBot(client); err != nil {
+		return err
 	}
 
 	return nil
@@ -187,6 +195,34 @@ func (r *Repository) enableConform(client *github.Client) error {
 	}
 
 	fmt.Println("conform webhook created")
+
+	return nil
+}
+
+func (r *Repository) inviteBot(client *github.Client) error {
+	users, _, err := client.Repositories.ListCollaborators(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, &github.ListCollaboratorsOptions{})
+	if err != nil {
+		return err
+	}
+
+	for _, user := range users {
+		if user.GetLogin() == r.BotName {
+			return nil
+		}
+	}
+
+	_, resp, err := client.Repositories.AddCollaborator(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, r.BotName, &github.RepositoryAddCollaboratorOptions{
+		Permission: "maintain",
+	})
+	if err != nil {
+		if resp.StatusCode == http.StatusNoContent {
+			return nil
+		}
+
+		return err
+	}
+
+	fmt.Println("invited bot", r.BotName)
 
 	return nil
 }
