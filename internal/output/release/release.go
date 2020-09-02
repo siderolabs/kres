@@ -9,14 +9,16 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"text/template"
 
 	"github.com/talos-systems/kres/internal/output"
+	"github.com/talos-systems/kres/internal/project/meta"
 )
 
 const (
-	release  = "./hack/release.sh"
-	config   = "./hack/git-chglog/config.yaml"
-	template = "./hack/git-chglog/CHANGELOG.tpl.md"
+	release           = "./hack/release.sh"
+	config            = "./hack/git-chglog/config.yaml"
+	changelogTemplate = "./hack/git-chglog/CHANGELOG.tpl.md"
 )
 
 const releaseStr = `
@@ -78,7 +80,7 @@ const configStr = `style: github
 template: CHANGELOG.tpl.md
 info:
   title: CHANGELOG
-  repository_url: https://github.com/talos-systems/talos
+  repository_url: https://github.com/{{ .GitHubOrganization }}/{{ .GitHubRepository }}
 options:
   commits:
     # filters:
@@ -101,7 +103,8 @@ options:
       - Subject
   notes:
     keywords:
-      - BREAKING CHANGE`
+      - BREAKING CHANGE
+`
 
 const templateStr = `{{ range .Versions }}
 <a name="{{ .Tag.Name }}"></a>
@@ -129,6 +132,8 @@ const templateStr = `{{ range .Versions }}
 // Output implements .gitignore generation.
 type Output struct {
 	output.FileAdapter
+
+	meta *meta.Options
 }
 
 // NewOutput creates new Makefile output.
@@ -153,7 +158,12 @@ func (o *Output) Compile(node interface{}) error {
 
 // Filenames implements output.FileWriter interface.
 func (o *Output) Filenames() []string {
-	return []string{release, config, template}
+	return []string{release, config, changelogTemplate}
+}
+
+// SetMeta grabs build options.
+func (o *Output) SetMeta(meta *meta.Options) {
+	o.meta = meta
 }
 
 // GenerateFile implements output.FileWriter interface.
@@ -163,8 +173,8 @@ func (o *Output) GenerateFile(filename string, w io.Writer) error {
 		return o.release(w)
 	case config:
 		return o.config(w)
-	case template:
-		return o.template(w)
+	case changelogTemplate:
+		return o.changelogTemplate(w)
 	default:
 		panic("unexpected filename: " + filename)
 	}
@@ -200,14 +210,19 @@ func (o *Output) config(w io.Writer) error {
 		return err
 	}
 
-	if _, err := fmt.Fprintf(w, "%s\n", configStr); err != nil {
+	tmpl, err := template.New("config").Parse(configStr)
+	if err != nil {
+		return err
+	}
+
+	if err := tmpl.Execute(w, o.meta); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (o *Output) template(w io.Writer) error {
+func (o *Output) changelogTemplate(w io.Writer) error {
 	if _, err := w.Write([]byte(output.Preamble("<!-- ", " -->"))); err != nil {
 		return err
 	}

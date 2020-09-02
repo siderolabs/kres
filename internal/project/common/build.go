@@ -9,6 +9,7 @@ import (
 	"github.com/talos-systems/kres/internal/output/dockerfile"
 	"github.com/talos-systems/kres/internal/output/gitignore"
 	"github.com/talos-systems/kres/internal/output/makefile"
+	"github.com/talos-systems/kres/internal/output/release"
 	"github.com/talos-systems/kres/internal/project/meta"
 )
 
@@ -63,6 +64,13 @@ func (build *Build) CompileMakefile(output *makefile.Output) error {
 func (build *Build) CompileGitignore(output *gitignore.Output) error {
 	output.
 		IgnorePath(build.ArtifactsPath)
+
+	return nil
+}
+
+// CompileRelease implements release.Compiler.
+func (build *Build) CompileRelease(output *release.Output) error {
+	output.SetMeta(build.meta)
 
 	return nil
 }

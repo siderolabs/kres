@@ -1,12 +1,12 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2020-08-18T18:28:33Z by kres 215d1f3-dirty.
+# Generated on 2020-09-02T14:32:01Z by kres e4d45f4-dirty.
 
 style: github
 template: CHANGELOG.tpl.md
 info:
   title: CHANGELOG
-  repository_url: https://github.com/talos-systems/talos
+  repository_url: https://github.com/talos-systems/kres
 options:
   commits:
     # filters:
