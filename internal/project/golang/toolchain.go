@@ -45,7 +45,7 @@ func NewToolchain(meta *meta.Options) *Toolchain {
 		meta: meta,
 
 		Kind:    ToolchainOfficial,
-		Version: "1.14-alpine",
+		Version: "1.15-alpine",
 	}
 
 	meta.BuildArgs = append(meta.BuildArgs, "TOOLCHAIN")
