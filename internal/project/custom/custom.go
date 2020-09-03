@@ -56,8 +56,20 @@ func (step *Step) CompileDrone(output *drone.Output) error {
 		return nil
 	}
 
+	droneMatches := func(node dag.Node) bool {
+		if !dag.Implements((*drone.Compiler)(nil))(node) {
+			return false
+		}
+
+		if nodeStep, ok := node.(*Step); ok {
+			return nodeStep.Drone.Enabled
+		}
+
+		return true
+	}
+
 	droneStep := drone.MakeStep(step.Name()).
-		DependsOn(dag.GatherMatchingInputNames(step, dag.Implements((*drone.Compiler)(nil)))...)
+		DependsOn(dag.GatherMatchingInputNames(step, droneMatches)...)
 
 	if step.Drone.Privileged {
 		droneStep.Privileged()
