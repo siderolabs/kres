@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2020-08-31T16:14:19Z by kres 08e8fca-dirty.
+# Generated on 2020-09-03T21:07:10Z by kres e87a7d8-dirty.
 
 # common variables
 
@@ -34,7 +34,7 @@ COMMON_ARGS += --build-arg=USERNAME=$(USERNAME)
 COMMON_ARGS += --build-arg=TOOLCHAIN=$(TOOLCHAIN)
 COMMON_ARGS += --build-arg=GOFUMPT_VERSION=$(GOFUMPT_VERSION)
 COMMON_ARGS += --build-arg=TESTPKGS=$(TESTPKGS)
-TOOLCHAIN ?= docker.io/golang:1.14-alpine
+TOOLCHAIN ?= docker.io/golang:1.15-alpine
 
 # help menu
 
