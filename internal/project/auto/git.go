@@ -5,6 +5,7 @@
 package auto
 
 import (
+	"fmt"
 	"regexp"
 
 	git "github.com/go-git/go-git/v5"
@@ -25,22 +26,42 @@ func (builder *builder) DetectGit() (bool, error) {
 		return true, err
 	}
 
+	var upstreamRemote *git.Remote
+
 	for _, remote := range remotes {
-		if remote.Config().Name == "origin" {
-			for _, remoteURL := range remote.Config().URLs {
-				matches := regexp.MustCompile(`github\.com[:/]([^/:]+)/([^/]+)\.git$`).FindStringSubmatch(remoteURL)
+		if remote.Config().Name == "upstream" {
+			upstreamRemote = remote
 
-				if len(matches) == 3 {
-					builder.meta.GitHubOrganization = matches[1]
-					builder.meta.GitHubRepository = matches[2]
+			break
+		}
+	}
 
-					break
-				}
+	if upstreamRemote == nil {
+		for _, remote := range remotes {
+			if remote.Config().Name == "origin" {
+				upstreamRemote = remote
+
+				break
 			}
 		}
 	}
 
-	return true, nil
+	if upstreamRemote == nil {
+		return true, fmt.Errorf("neither 'origin' or 'upstream' remote found")
+	}
+
+	for _, remoteURL := range upstreamRemote.Config().URLs {
+		matches := regexp.MustCompile(`github\.com[:/]+([^/:]+)/([^/]+)\.git$`).FindStringSubmatch(remoteURL)
+
+		if len(matches) == 3 {
+			builder.meta.GitHubOrganization = matches[1]
+			builder.meta.GitHubRepository = matches[2]
+
+			return true, nil
+		}
+	}
+
+	return true, fmt.Errorf("failed to parse remote URL: %s", upstreamRemote)
 }
 
 // BuildGit builds steps for Git repository.
