@@ -2,13 +2,13 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2020-08-20T20:56:03Z by kres 197b72f-dirty.
+# Generated on 2020-09-25T18:11:11Z by kres ce6bee5-dirty.
 
 ARG TOOLCHAIN
 
-FROM autonomy/ca-certificates:v0.2.0-29-gdda8024 AS image-ca-certificates
+FROM ghcr.io/talos-systems/ca-certificates:v0.3.0-12-g90722c3 AS image-ca-certificates
 
-FROM autonomy/fhs:v0.2.0-29-gdda8024 AS image-fhs
+FROM ghcr.io/talos-systems/fhs:v0.3.0-12-g90722c3 AS image-fhs
 
 # runs markdownlint
 FROM node:14.8.0-alpine AS lint-markdown

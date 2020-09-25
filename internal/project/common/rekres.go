@@ -26,7 +26,7 @@ func NewReKres(meta *meta.Options) *ReKres {
 
 		meta: meta,
 
-		KresImage: "autonomy/kres:latest",
+		KresImage: "ghcr.io/talos-systems/kres:latest",
 	}
 }
 
