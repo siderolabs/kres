@@ -101,14 +101,14 @@ func (step *Step) LocalRegistry() *Step {
 // DockerLogin sets up login to registry.
 func (step *Step) DockerLogin() *Step {
 	step.container.Commands = append([]string{
-		`docker login --username "$${DOCKER_USERNAME}" --password "$${DOCKER_PASSWORD}"`,
+		`docker login ghcr.io --username "$${GHCR_USERNAME}" --password "$${GHCR_PASSWORD}"`,
 	}, step.container.Commands...)
 
-	step.container.Environment["DOCKER_USERNAME"] = &yaml.Variable{
-		Secret: "docker_username",
+	step.container.Environment["GHCR_USERNAME"] = &yaml.Variable{
+		Secret: "ghcr_username",
 	}
-	step.container.Environment["DOCKER_PASSWORD"] = &yaml.Variable{
-		Secret: "docker_password",
+	step.container.Environment["GHCR_PASSWORD"] = &yaml.Variable{
+		Secret: "ghcr_token",
 	}
 
 	return step

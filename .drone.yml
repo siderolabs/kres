@@ -1,7 +1,7 @@
 ---
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2020-08-24T14:30:33Z by kres bdd2a39-dirty.
+# Generated on 2020-09-25T18:43:10Z by kres cd0fc65-dirty.
 
 kind: pipeline
 type: kubernetes
@@ -162,13 +162,13 @@ steps:
   pull: always
   image: autonomy/build-container:latest
   commands:
-  - docker login --username "$${DOCKER_USERNAME}" --password "$${DOCKER_PASSWORD}"
+  - docker login ghcr.io --username "$${GHCR_USERNAME}" --password "$${GHCR_PASSWORD}"
   - make image-kres
   environment:
-    DOCKER_PASSWORD:
-      from_secret: docker_password
-    DOCKER_USERNAME:
-      from_secret: docker_username
+    GHCR_PASSWORD:
+      from_secret: ghcr_token
+    GHCR_USERNAME:
+      from_secret: ghcr_username
     PUSH: true
   volumes:
   - name: outer-docker-socket
@@ -190,13 +190,13 @@ steps:
   pull: always
   image: autonomy/build-container:latest
   commands:
-  - docker login --username "$${DOCKER_USERNAME}" --password "$${DOCKER_PASSWORD}"
+  - docker login ghcr.io --username "$${GHCR_USERNAME}" --password "$${GHCR_PASSWORD}"
   - make image-kres TAG=latest
   environment:
-    DOCKER_PASSWORD:
-      from_secret: docker_password
-    DOCKER_USERNAME:
-      from_secret: docker_username
+    GHCR_PASSWORD:
+      from_secret: ghcr_token
+    GHCR_USERNAME:
+      from_secret: ghcr_username
     PUSH: true
   volumes:
   - name: outer-docker-socket
