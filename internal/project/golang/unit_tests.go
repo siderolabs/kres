@@ -5,6 +5,7 @@
 package golang
 
 import (
+	"fmt"
 	"path/filepath"
 
 	"github.com/talos-systems/kres/internal/dag"
@@ -18,6 +19,8 @@ import (
 // UnitTests runs unit-tests for Go packages.
 type UnitTests struct {
 	dag.BaseNode
+
+	RequiresInsecure bool `yaml:"requiresInsecure"`
 
 	meta *meta.Options
 }
@@ -34,14 +37,22 @@ func NewUnitTests(meta *meta.Options) *UnitTests {
 
 // CompileDockerfile implements dockerfile.Compiler.
 func (tests *UnitTests) CompileDockerfile(output *dockerfile.Output) error {
+	wrapAsInsecure := func(s *step.RunStep) *step.RunStep {
+		if tests.RequiresInsecure {
+			return s.SecurityInsecure()
+		}
+
+		return s
+	}
+
 	output.Stage("unit-tests-run").
 		Description("runs unit-tests").
 		From("base").
 		Step(step.Arg("TESTPKGS")).
-		Step(step.Script(`go test -v -covermode=atomic -coverprofile=coverage.txt -count 1 ${TESTPKGS}`).
+		Step(wrapAsInsecure(step.Script(`go test -v -covermode=atomic -coverprofile=coverage.txt -count 1 ${TESTPKGS}`).
 			MountCache(filepath.Join(tests.meta.CachePath, "go-build")).
 			MountCache(filepath.Join(tests.meta.GoPath, "pkg")).
-			MountCache("/tmp"))
+			MountCache("/tmp")))
 
 	output.Stage("unit-tests").
 		From("scratch").
@@ -51,11 +62,11 @@ func (tests *UnitTests) CompileDockerfile(output *dockerfile.Output) error {
 		Description("runs unit-tests with race detector").
 		From("base").
 		Step(step.Arg("TESTPKGS")).
-		Step(step.Script(`go test -v -race -count 1 ${TESTPKGS}`).
+		Step(wrapAsInsecure(step.Script(`go test -v -race -count 1 ${TESTPKGS}`).
 			MountCache(filepath.Join(tests.meta.CachePath, "go-build")).
 			MountCache(filepath.Join(tests.meta.GoPath, "pkg")).
 			MountCache("/tmp").
-			Env("CGO_ENABLED", "1"))
+			Env("CGO_ENABLED", "1")))
 
 	return nil
 }
@@ -65,14 +76,20 @@ func (tests *UnitTests) CompileMakefile(output *makefile.Output) error {
 	output.VariableGroup(makefile.VariableGroupCommon).
 		Variable(makefile.OverridableVariable("TESTPKGS", "./..."))
 
+	scriptExtraArgs := ""
+
+	if tests.RequiresInsecure {
+		scriptExtraArgs += `  TARGET_ARGS="--allow security.insecure"`
+	}
+
 	output.Target("unit-tests").
 		Description("Performs unit tests").
-		Script("@$(MAKE) local-$@ DEST=$(ARTIFACTS)").
+		Script(fmt.Sprintf("@$(MAKE) local-$@ DEST=$(ARTIFACTS)%s", scriptExtraArgs)).
 		Phony()
 
 	output.Target("unit-tests-race").
 		Description("Performs unit tests with race detection enabled.").
-		Script("@$(MAKE) target-$@").
+		Script(fmt.Sprintf("@$(MAKE) target-$@%s", scriptExtraArgs)).
 		Phony()
 
 	return nil
