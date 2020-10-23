@@ -6,6 +6,7 @@ package common
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/drone/drone-yaml/yaml"
 
@@ -21,7 +22,8 @@ type Docker struct {
 
 	meta *meta.Options
 
-	DockerImage string `yaml:"dockerImage"`
+	DockerImage   string `yaml:"dockerImage"`
+	AllowInsecure bool   `yaml:"allowInsecure"`
 
 	DockerResourceRequests *yaml.ResourceObject `yaml:"dockerResourceRequests"`
 }
@@ -64,17 +66,25 @@ func (docker *Docker) CompileDrone(output *drone.Output) error {
 			"--dns=8.8.4.4",
 			"--mtu=1500",
 			"--log-level=error",
-			"--insecure-registry=http://registry.ci.svc:5000",
 		},
 		Resources: resources,
 	})
+
+	builderName := "local"
+	extraArgs := []string{""}
+
+	if docker.AllowInsecure {
+		builderName += "-insecure"
+
+		extraArgs = append(extraArgs, "--buildkitd-flags", "'--allow-insecure-entitlement security.insecure'")
+	}
 
 	output.Step(
 		drone.CustomStep(docker.Name(),
 			"sleep 5",
 			"git fetch --tags",
 			"install-ci-key",
-			"docker buildx create --driver docker-container --platform linux/amd64 --name local --use unix:///var/outer-run/docker.sock",
+			fmt.Sprintf("docker buildx create --driver docker-container --platform linux/amd64 --name %s%s --use unix:///var/outer-run/docker.sock", builderName, strings.Join(extraArgs, " ")),
 			"docker buildx inspect --bootstrap",
 		).EnvironmentFromSecret("SSH_KEY", "ssh_key"),
 	)
