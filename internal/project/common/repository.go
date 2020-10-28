@@ -44,7 +44,6 @@ func NewRepository(meta *meta.Options) *Repository {
 		MainBranch: "master",
 		EnforceContexts: []string{
 			"continuous-integration/drone/pr",
-			"status-lgtm",
 		},
 
 		EnableConform:     true,
