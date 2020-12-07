@@ -42,7 +42,7 @@ func (suite *DockerfileSuite) TestGenerateFile() {
 	err := output.GenerateFile("Dockerfile", &buf)
 	suite.Require().NoError(err)
 
-	suite.Assert().Equal(`# syntax = docker/dockerfile-upstream:1.1.7-experimental
+	suite.Assert().Equal(`# syntax = docker/dockerfile-upstream:1.2.0-labs
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #

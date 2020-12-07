@@ -19,7 +19,7 @@ import (
 const (
 	dockerfile   = "Dockerfile"
 	dockerignore = ".dockerignore"
-	syntax       = "docker/dockerfile-upstream:1.1.7-experimental"
+	syntax       = "docker/dockerfile-upstream:1.2.0-labs"
 )
 
 // Output implements Dockerfile and .dockerignore generation.

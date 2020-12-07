@@ -127,6 +127,9 @@ linters:
     - gomnd
     - goerr113
     - nestif
+    - wrapcheck
+    - paralleltest
+    - exhaustivestruct
   disable-all: false
   fast: false
 
