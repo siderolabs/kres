@@ -130,6 +130,7 @@ linters:
     - wrapcheck
     - paralleltest
     - exhaustivestruct
+    - forbidigo
   disable-all: false
   fast: false
 
