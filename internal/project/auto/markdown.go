@@ -9,8 +9,6 @@ import (
 )
 
 // DetectMarkdown checks if project at rootPath contains Markdown files.
-//
-//nolint: gocognit,gocyclo
 func (builder *builder) DetectMarkdown() (bool, error) {
 	for _, srcDir := range []string{"docs"} {
 		exists, err := directoryExists(builder.rootPath, srcDir)
