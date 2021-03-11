@@ -27,7 +27,7 @@ const (
 )
 
 // Toolchain provides Go compiler and common utilities.
-type Toolchain struct {
+type Toolchain struct { //nolint: govet
 	dag.BaseNode
 
 	meta *meta.Options
@@ -45,7 +45,7 @@ func NewToolchain(meta *meta.Options) *Toolchain {
 		meta: meta,
 
 		Kind:    ToolchainOfficial,
-		Version: "1.15-alpine",
+		Version: "1.16-alpine",
 	}
 
 	meta.BuildArgs = append(meta.BuildArgs, "TOOLCHAIN")

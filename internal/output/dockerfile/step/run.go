@@ -19,9 +19,9 @@ type RunStep struct {
 
 	script string
 
+	security string
 	env      []string
 	mounts   []string
-	security string
 }
 
 // Run creates new RunStep from command + args, properly escaping them.

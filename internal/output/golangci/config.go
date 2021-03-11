@@ -77,8 +77,6 @@ linters-settings:
   lll:
     line-length: 200
     tab-width: 4
-  maligned:
-    suggest-new: true
   misspell:
     locale: US
     ignore-words: []
@@ -114,6 +112,9 @@ linters-settings:
     allow-separated-leading-comment: false
   gofumpt:
     extra-rules: false
+  cyclop:
+      # the maximal code complexity to report
+      max-complexity: 20
 
 linters:
   enable-all: true

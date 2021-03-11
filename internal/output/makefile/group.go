@@ -19,8 +19,8 @@ const (
 
 // VariableGroup is a way to group nicely variables in Makefile.
 type VariableGroup struct {
-	variables   []*Variable
 	description string
+	variables   []*Variable
 }
 
 // Variable appends variable to the group.

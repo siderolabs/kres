@@ -29,6 +29,6 @@ type CustomSteps struct {
 // CustomStep defines a custom step to be built.
 type CustomStep struct {
 	Name     string   `yaml:"name"`
-	Toplevel bool     `yaml:"toplevel"`
 	Inputs   []string `yaml:"inputs"`
+	Toplevel bool     `yaml:"toplevel"`
 }

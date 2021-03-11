@@ -19,7 +19,7 @@ type Step struct {
 
 	meta *meta.Options
 
-	Makefile struct {
+	Makefile struct { //nolint: govet
 		Enabled bool     `yaml:"enabled"`
 		Phony   bool     `yaml:"phony"`
 		Depends []string `yaml:"depends"`

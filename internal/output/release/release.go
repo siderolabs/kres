@@ -215,11 +215,7 @@ func (o *Output) config(w io.Writer) error {
 		return err
 	}
 
-	if err := tmpl.Execute(w, o.meta); err != nil {
-		return err
-	}
-
-	return nil
+	return tmpl.Execute(w, o.meta)
 }
 
 func (o *Output) changelogTemplate(w io.Writer) error {

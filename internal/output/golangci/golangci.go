@@ -20,8 +20,8 @@ const (
 type Output struct {
 	output.FileAdapter
 
-	enabled       bool
 	canonicalPath string
+	enabled       bool
 }
 
 // NewOutput creates new Makefile output.
