@@ -18,7 +18,7 @@ import (
 )
 
 // Repository sets up repository settings.
-type Repository struct {
+type Repository struct { //nolint: govet
 	dag.BaseNode
 
 	meta *meta.Options
@@ -90,11 +90,7 @@ func (r *Repository) CompileGitHub(client *github.Client) error {
 		}
 	}
 
-	if err := r.inviteBot(client); err != nil {
-		return err
-	}
-
-	return nil
+	return r.inviteBot(client)
 }
 
 func (r *Repository) enableBranchProtection(client *github.Client) error {

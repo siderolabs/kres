@@ -20,9 +20,9 @@ type CodeCov struct {
 
 	meta *meta.Options
 
-	Enabled         bool   `yaml:"enabled"`
 	InputPath       string `yaml:"inputPath"`
 	TargetThreshold int    `yaml:"targetThreshold"`
+	Enabled         bool   `yaml:"enabled"`
 }
 
 // NewCodeCov initializes CodeCov.

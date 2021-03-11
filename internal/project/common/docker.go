@@ -17,7 +17,7 @@ import (
 )
 
 // Docker provides build infrastructure via docker buildx.
-type Docker struct {
+type Docker struct { //nolint: govet
 	dag.BaseNode
 
 	meta *meta.Options

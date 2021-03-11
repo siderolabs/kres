@@ -20,7 +20,7 @@ const (
 )
 
 // Output implements Drone project config generation.
-type Output struct {
+type Output struct { //nolint: govet
 	output.FileAdapter
 
 	manifest *yaml.Manifest

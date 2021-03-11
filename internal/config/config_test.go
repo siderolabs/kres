@@ -18,7 +18,7 @@ func TestMissingFile(t *testing.T) {
 	assert.NotNil(t, provider)
 }
 
-type Foo struct {
+type Foo struct { //nolint: govet
 	Contents string
 	Len      int
 	Extra    string

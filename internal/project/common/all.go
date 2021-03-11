@@ -11,7 +11,7 @@ import (
 )
 
 // All builds Makefile `all` target.
-type All struct {
+type All struct { //nolint: govet
 	dag.BaseNode
 
 	meta *meta.Options

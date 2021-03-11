@@ -18,7 +18,7 @@ func (builder *builder) DetectGit() (bool, error) {
 	repo, err := git.PlainOpen(".")
 	if err != nil {
 		// not a git repo, ignore
-		return false, nil
+		return false, nil //nolint: nilerr
 	}
 
 	remotes, err := repo.Remotes()

@@ -8,7 +8,7 @@ package meta
 import "github.com/talos-systems/kres/internal/config"
 
 // Options for the project.
-type Options struct {
+type Options struct { //nolint: govet
 	// Config provider.
 	Config *config.Provider
 

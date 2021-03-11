@@ -15,8 +15,8 @@ type Target struct {
 	name        string
 	depends     []string
 	description string
-	phony       bool
 	script      []string
+	phony       bool
 }
 
 // Depends appends target dependency.

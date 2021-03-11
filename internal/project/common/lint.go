@@ -12,7 +12,7 @@ import (
 )
 
 // Lint provides common lint target.
-type Lint struct {
+type Lint struct { //nolint: govet
 	dag.BaseNode
 
 	meta *meta.Options

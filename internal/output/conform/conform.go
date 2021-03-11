@@ -21,10 +21,10 @@ const (
 type Output struct {
 	output.FileAdapter
 
-	enabled bool
-
 	scopes []string
 	types  []string
+
+	enabled bool
 }
 
 // NewOutput creates new conform.yaml output.
@@ -109,11 +109,7 @@ func (o *Output) config(w io.Writer) error {
 		Scopes: string(scopes),
 	}
 
-	if err = tmpl.Execute(w, vars); err != nil {
-		return err
-	}
-
-	return nil
+	return tmpl.Execute(w, vars)
 }
 
 // Compiler is implemented by project blocks which support .conform.yaml generate.
