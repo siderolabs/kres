@@ -21,8 +21,9 @@ const (
 type Output struct {
 	output.FileAdapter
 
-	scopes []string
-	types  []string
+	scopes       []string
+	types        []string
+	licenseCheck bool
 
 	enabled bool
 }
@@ -60,6 +61,11 @@ func (o *Output) SetScopes(scopes []string) {
 // SetTypes sets the conventional commit types.
 func (o *Output) SetTypes(types []string) {
 	o.types = types
+}
+
+// SetLicenseCheck enables license check.
+func (o *Output) SetLicenseCheck(enable bool) {
+	o.licenseCheck = enable
 }
 
 // Filenames implements output.FileWriter interface.
@@ -102,11 +108,13 @@ func (o *Output) config(w io.Writer) error {
 	}
 
 	vars := struct {
-		Types  string
-		Scopes string
+		Types              string
+		Scopes             string
+		EnableLicenseCheck bool
 	}{
-		Types:  string(types),
-		Scopes: string(scopes),
+		Types:              string(types),
+		Scopes:             string(scopes),
+		EnableLicenseCheck: o.licenseCheck,
 	}
 
 	return tmpl.Execute(w, vars)

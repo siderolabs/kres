@@ -14,11 +14,12 @@ import (
 
 	"github.com/talos-systems/kres/internal/dag"
 	"github.com/talos-systems/kres/internal/output/conform"
+	"github.com/talos-systems/kres/internal/output/license"
 	"github.com/talos-systems/kres/internal/project/meta"
 )
 
 // Repository sets up repository settings.
-type Repository struct { //nolint: govet
+type Repository struct { //nolint: govet,maligned
 	dag.BaseNode
 
 	meta *meta.Options
@@ -26,10 +27,13 @@ type Repository struct { //nolint: govet
 	MainBranch      string   `yaml:"mainBranch"`
 	EnforceContexts []string `yaml:"enforceContexts"`
 
-	EnableConform     bool     `yaml:"enableConform"`
-	ConformWebhookURL string   `yaml:"conformWebhookURL"`
-	ConformTypes      []string `yaml:"conformTypes"`
-	ConformScopes     []string `yaml:"conformScopes"`
+	EnableConform       bool     `yaml:"enableConform"`
+	ConformWebhookURL   string   `yaml:"conformWebhookURL"`
+	ConformTypes        []string `yaml:"conformTypes"`
+	ConformScopes       []string `yaml:"conformScopes"`
+	ConformLicenseCheck bool     `yaml:"conformLicenseCheck"`
+
+	EnableLicense bool `yaml:"enableLicense"`
 
 	BotName string `yaml:"botName"`
 }
@@ -60,6 +64,9 @@ func NewRepository(meta *meta.Options) *Repository {
 		ConformScopes: []string{
 			"*",
 		},
+		ConformLicenseCheck: true,
+
+		EnableLicense: true,
 
 		BotName: "talos-bot",
 	}
@@ -74,6 +81,18 @@ func (r *Repository) CompileConform(o *conform.Output) error {
 	o.Enable()
 	o.SetScopes(r.ConformScopes)
 	o.SetTypes(r.ConformTypes)
+	o.SetLicenseCheck(r.ConformLicenseCheck)
+
+	return nil
+}
+
+// CompileLicense implements license.Compiler.
+func (r *Repository) CompileLicense(o *license.Output) error {
+	if !r.EnableLicense {
+		return nil
+	}
+
+	o.Enable()
 
 	return nil
 }
@@ -113,8 +132,13 @@ func (r *Repository) enableBranchProtection(client *github.Client) error {
 			"conform/commit/imperative-mood",
 			"conform/commit/number-of-commits",
 			"conform/commit/spellcheck",
-			"conform/license/file-header",
 		)
+
+		if r.ConformLicenseCheck {
+			enforceContexts = append(enforceContexts,
+				"conform/license/file-header",
+			)
+		}
 	}
 
 	req := github.ProtectionRequest{
