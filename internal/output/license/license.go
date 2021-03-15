@@ -18,6 +18,8 @@ const (
 // Output implements LICENSE generation.
 type Output struct {
 	output.FileAdapter
+
+	enabled bool
 }
 
 // NewOutput creates new Makefile output.
@@ -31,11 +33,26 @@ func NewOutput() *Output {
 
 // Compile implements output.Writer interface.
 func (o *Output) Compile(node interface{}) error {
-	return nil
+	compiler, implements := node.(Compiler)
+
+	if !implements {
+		return nil
+	}
+
+	return compiler.CompileLicense(o)
+}
+
+// Enable should be called to enable config generation.
+func (o *Output) Enable() {
+	o.enabled = true
 }
 
 // Filenames implements output.FileWriter interface.
 func (o *Output) Filenames() []string {
+	if !o.enabled {
+		return nil
+	}
+
 	return []string{filename}
 }
 
@@ -55,4 +72,9 @@ func (o *Output) license(w io.Writer) error {
 	}
 
 	return nil
+}
+
+// Compiler is implemented by project blocks which support LICENSE generation.
+type Compiler interface {
+	CompileLicense(*Output) error
 }
