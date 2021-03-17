@@ -125,7 +125,7 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 
 	if toolchain.Kind == ToolchainOfficial {
 		toolchainStage.
-			Step(step.Run("apk", "--update", "--no-cache", "add", "bash", "curl", "build-base"))
+			Step(step.Run("apk", "--update", "--no-cache", "add", "bash", "curl", "build-base", "protoc", "protobuf-dev"))
 	}
 
 	tools := output.Stage("tools").

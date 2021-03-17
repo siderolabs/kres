@@ -2,9 +2,12 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2021-03-11T13:25:00Z by kres 93ce485-dirty.
+# Generated on 2021-03-17T21:13:39Z by kres 424ae88-dirty.
 
 ARG TOOLCHAIN
+
+# cleaned up specs and compiled versions
+FROM scratch AS generate
 
 FROM ghcr.io/talos-systems/ca-certificates:v0.3.0-12-g90722c3 AS image-ca-certificates
 
@@ -21,7 +24,7 @@ RUN markdownlint --ignore "**/node_modules/**" --ignore '**/hack/chglog/**' --ru
 
 # base toolchain image
 FROM ${TOOLCHAIN} AS toolchain
-RUN apk --update --no-cache add bash curl build-base
+RUN apk --update --no-cache add bash curl build-base protoc protobuf-dev
 
 # build tools
 FROM toolchain AS tools
@@ -48,6 +51,7 @@ RUN --mount=type=cache,target=/go/pkg go list -mod=readonly all >/dev/null
 
 # builds kres
 FROM base AS kres-build
+COPY --from=generate / /
 WORKDIR /src/cmd/kres
 ARG VERSION_PKG="github.com/talos-systems/kres/internal/version"
 ARG SHA
