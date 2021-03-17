@@ -70,6 +70,10 @@ func TestGenerate(t *testing.T) {
 			step.Entrypoint("/bldr", "frontend"),
 			"ENTRYPOINT [\"/bldr\",\"frontend\"]\n",
 		},
+		{
+			step.Add("./src", "/dst"),
+			"ADD ./src /dst\n",
+		},
 	} {
 		var buf bytes.Buffer
 

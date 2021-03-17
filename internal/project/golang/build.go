@@ -38,6 +38,7 @@ func (build *Build) CompileDockerfile(output *dockerfile.Output) error {
 	stage := output.Stage(fmt.Sprintf("%s-build", build.Name())).
 		Description(fmt.Sprintf("builds %s", build.Name())).
 		From("base").
+		Step(step.Copy("/", "/").From("generate")).
 		Step(step.WorkDir(filepath.Join("/src", build.sourcePath)))
 
 	ldflags := "-s -w"

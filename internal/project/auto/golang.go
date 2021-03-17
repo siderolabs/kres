@@ -42,7 +42,7 @@ func (builder *builder) DetectGolang() (bool, error) {
 
 	builder.meta.CanonicalPath = modfile.ModulePath(contents)
 
-	for _, srcDir := range []string{"src", "internal", "pkg", "cmd"} {
+	for _, srcDir := range []string{"src", "internal", "pkg", "cmd", "api"} {
 		exists, err := directoryExists(builder.rootPath, srcDir)
 		if err != nil {
 			return true, err
@@ -138,6 +138,11 @@ func (builder *builder) BuildGolang() error {
 
 	// linters are input to the toolchain as they inject into toolchain build
 	toolchain.AddInput(golangciLint, gofumpt)
+
+	// add protobufs
+	protobuf := golang.NewProtobuf(builder.meta)
+
+	toolchain.AddInput(protobuf)
 
 	builder.lintInputs = append(builder.lintInputs, toolchain, golangciLint, gofumpt)
 
