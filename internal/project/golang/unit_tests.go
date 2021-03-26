@@ -49,7 +49,7 @@ func (tests *UnitTests) CompileDockerfile(output *dockerfile.Output) error {
 		Description("runs unit-tests").
 		From("base").
 		Step(step.Arg("TESTPKGS")).
-		Step(wrapAsInsecure(step.Script(`go test -v -covermode=atomic -coverprofile=coverage.txt -count 1 ${TESTPKGS}`).
+		Step(wrapAsInsecure(step.Script(`go test -v -covermode=atomic -coverprofile=coverage.txt -coverpkg=${TESTPKGS} -count 1 ${TESTPKGS}`).
 			MountCache(filepath.Join(tests.meta.CachePath, "go-build")).
 			MountCache(filepath.Join(tests.meta.GoPath, "pkg")).
 			MountCache("/tmp")))
