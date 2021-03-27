@@ -7,6 +7,7 @@ package golang
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/talos-systems/kres/internal/dag"
 	"github.com/talos-systems/kres/internal/output/dockerfile"
@@ -99,6 +100,7 @@ func (toolchain *Toolchain) CompileMakefile(output *makefile.Output) error {
 		Variable(makefile.OverridableVariable("TOOLCHAIN", toolchain.image()))
 
 	output.Target("base").
+		Depends(dag.GatherMatchingInputNames(toolchain, dag.Implements((*dockerfile.Generator)(nil)))...).
 		Description("Prepare base toolchain").
 		Script("@$(MAKE) target-$@").
 		Phony()
@@ -160,6 +162,14 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 
 	for _, file := range toolchain.meta.GoSourceFiles {
 		base.Step(step.Copy("./"+file, "./"+file))
+	}
+
+	// build chain of gen containers.
+	inputs := dag.GatherMatchingInputs(toolchain, dag.Implements((*dockerfile.Generator)(nil)))
+	for _, input := range inputs {
+		for _, path := range input.(dockerfile.Generator).GetArtifacts() {
+			base.Step(step.Copy(path, "./"+strings.Trim(path, "/")).From(input.Name()))
+		}
 	}
 
 	base.Step(step.Script(`go list -mod=readonly all >/dev/null`).MountCache(filepath.Join(toolchain.meta.GoPath, "pkg")))

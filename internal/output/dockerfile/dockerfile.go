@@ -158,3 +158,8 @@ func (o *Output) dockerignore(w io.Writer) error {
 type Compiler interface {
 	CompileDockerfile(*Output) error
 }
+
+// Generator is implemented by project block which generate code.
+type Generator interface {
+	GetArtifacts() []string
+}
