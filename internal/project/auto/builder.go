@@ -52,6 +52,10 @@ func (builder *builder) build() error {
 			build:  builder.BuildGit,
 		},
 		{
+			detect: builder.DetectJS,
+			build:  builder.BuildJS,
+		},
+		{
 			detect: builder.DetectGolang,
 			build:  builder.BuildGolang,
 		},

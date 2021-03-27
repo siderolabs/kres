@@ -25,6 +25,9 @@ type Options struct { //nolint: govet
 	// Directories which contain source code.
 	Directories []string
 
+	// JSDirectories which contain JS source code.
+	JSDirectories []string
+
 	// GoDirectories are directories containing Go source code.
 	GoDirectories []string
 
@@ -54,4 +57,7 @@ type Options struct { //nolint: govet
 
 	// Path to ~/.cache.
 	CachePath string
+
+	// NpmCachePath path to node_modules.
+	NpmCachePath string
 }

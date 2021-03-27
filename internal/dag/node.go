@@ -47,3 +47,18 @@ func GatherMatchingInputNames(node Node, condition NodeCondition) []string {
 
 	return result
 }
+
+// GatherMatchingInputs scans all the inputs and returns those which match the condition.
+//
+// If direct input doesn't match a condition, search continues up until matching node is found.
+func GatherMatchingInputs(node Node, condition NodeCondition) []Node {
+	result := []Node{}
+
+	for _, input := range node.Inputs() {
+		if condition(input) {
+			result = append(result, input)
+		}
+	}
+
+	return result
+}

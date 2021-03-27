@@ -22,6 +22,7 @@ import (
 	"github.com/talos-systems/kres/internal/output/makefile"
 	"github.com/talos-systems/kres/internal/output/markdownlint"
 	"github.com/talos-systems/kres/internal/output/release"
+	"github.com/talos-systems/kres/internal/output/template"
 	"github.com/talos-systems/kres/internal/project/auto"
 	"github.com/talos-systems/kres/internal/project/meta"
 )
@@ -72,6 +73,7 @@ func (c *Gen) Run(args []string) int {
 		markdownlint.NewOutput(),
 		github.NewOutput(),
 		conform.NewOutput(),
+		template.NewOutput(),
 	}
 
 	var err error
