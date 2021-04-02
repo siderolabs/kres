@@ -40,6 +40,9 @@ type Options struct { //nolint: govet
 	// Go source files on top level.
 	GoSourceFiles []string
 
+	// JS source files on top level.
+	JSSourceFiles []string
+
 	// Markdown source files on top level.
 	MarkdownSourceFiles []string
 

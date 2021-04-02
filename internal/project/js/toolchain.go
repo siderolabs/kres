@@ -121,6 +121,12 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 		base.Step(step.Copy("./"+directory, "./"+strings.Trim(dest, "/")))
 	}
 
+	for _, file := range toolchain.meta.JSSourceFiles {
+		dest := filepath.Base(file)
+
+		base.Step(step.Copy(file, "./"+dest))
+	}
+
 	return nil
 }
 
