@@ -43,6 +43,15 @@ func (builder *builder) DetectJS() (bool, error) {
 			}
 		}
 
+		results, err := listFilesWithSuffix(srcDir, ".js")
+		if err != nil {
+			return false, err
+		}
+
+		for _, item := range results {
+			builder.meta.JSDirectories = append(builder.meta.JSDirectories, filepath.Join(srcDir, item))
+		}
+
 		builder.meta.SourceFiles = append(builder.meta.SourceFiles,
 			filepath.Join(srcDir, "*.json"),
 			filepath.Join(srcDir, "*.js"),
