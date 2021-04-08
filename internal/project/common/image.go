@@ -30,6 +30,9 @@ type Image struct {
 	PushLatest       bool     `yaml:"pushLatest"`
 }
 
+// ImageSourceLabel is a docker image label to specify image source.
+const ImageSourceLabel = "org.opencontainers.image.source"
+
 // NewImage initializes Image.
 func NewImage(meta *meta.Options, name string) *Image {
 	return &Image{
@@ -128,6 +131,10 @@ func (image *Image) CompileDockerfile(output *dockerfile.Output) error {
 
 	for _, input := range inputs {
 		stage.Step(step.Copy("/", "/").From(input))
+	}
+
+	if image.meta.GitHubOrganization != "" && image.meta.GitHubRepository != "" {
+		stage.Step(step.Label(ImageSourceLabel, fmt.Sprintf("https://github.com/%s/%s", image.meta.GitHubOrganization, image.meta.GitHubRepository)))
 	}
 
 	stage.Step(step.Entrypoint(image.Entrypoint, image.EntrypointArgs...))

@@ -74,6 +74,10 @@ func TestGenerate(t *testing.T) {
 			step.Add("./src", "/dst"),
 			"ADD ./src /dst\n",
 		},
+		{
+			step.Label("foo", "bar"),
+			"LABEL foo bar\n",
+		},
 	} {
 		var buf bytes.Buffer
 
