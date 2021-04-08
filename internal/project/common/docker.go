@@ -105,7 +105,7 @@ func (docker *Docker) CompileMakefile(output *makefile.Output) error {
 
 	output.VariableGroup(makefile.VariableGroupCommon).
 		Variable(makefile.OverridableVariable("REGISTRY", "ghcr.io")).
-		Variable(makefile.OverridableVariable("USERNAME", "talos-systems")).
+		Variable(makefile.OverridableVariable("USERNAME", docker.meta.GitHubOrganization)).
 		Variable(makefile.OverridableVariable("REGISTRY_AND_USERNAME", "$(REGISTRY)/$(USERNAME)"))
 
 	output.VariableGroup(makefile.VariableGroupDocker).
