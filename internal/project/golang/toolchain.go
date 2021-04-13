@@ -143,7 +143,7 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 		}
 
 		return nil
-	}, nil); err != nil {
+	}, nil, 1); err != nil {
 		return err
 	}
 

@@ -31,6 +31,9 @@ type Options struct { //nolint: govet
 	// GoDirectories are directories containing Go source code.
 	GoDirectories []string
 
+	// ProtobufDirectories are directories containing .proto files.
+	ProtobufDirectories []string
+
 	// MarkdownDirectories are directories container Markdown files.
 	MarkdownDirectories []string
 

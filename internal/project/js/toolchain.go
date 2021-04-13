@@ -15,6 +15,7 @@ import (
 	"github.com/talos-systems/kres/internal/output/drone"
 	"github.com/talos-systems/kres/internal/output/makefile"
 	"github.com/talos-systems/kres/internal/output/template"
+	"github.com/talos-systems/kres/internal/project/common"
 	"github.com/talos-systems/kres/internal/project/js/templates"
 	"github.com/talos-systems/kres/internal/project/meta"
 )
@@ -38,7 +39,7 @@ func NewToolchain(meta *meta.Options, sourceDir string) *Toolchain {
 		meta:      meta,
 		sourceDir: sourceDir,
 
-		Version: "15.12.0-alpine3.10",
+		Version: "15.14.0-alpine3.13",
 	}
 
 	meta.BuildArgs = append(meta.BuildArgs, "JS_TOOLCHAIN")
@@ -95,7 +96,7 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 	output.Stage("js-toolchain").
 		Description("base toolchain image").
 		From("${JS_TOOLCHAIN}").
-		Step(step.Run("apk", "--update", "--no-cache", "add", "bash", "curl"))
+		Step(step.Run("apk", "--update", "--no-cache", "add", "bash", "curl", "protoc", "protobuf-dev"))
 
 	base := output.Stage("js").
 		Description("tools and sources").
@@ -119,6 +120,16 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 		dest := strings.TrimLeft(directory, toolchain.sourceDir)
 
 		base.Step(step.Copy("./"+directory, "./"+strings.Trim(dest, "/")))
+	}
+
+	if err := dag.WalkNode(toolchain, func(node dag.Node) error {
+		if builder, ok := node.(common.ToolchainBuilder); ok {
+			return builder.ToolchainBuild(base)
+		}
+
+		return nil
+	}, nil, 1); err != nil {
+		return err
 	}
 
 	for _, file := range toolchain.meta.JSSourceFiles {
