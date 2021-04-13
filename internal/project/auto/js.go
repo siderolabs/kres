@@ -5,6 +5,7 @@
 package auto
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -63,12 +64,13 @@ func (builder *builder) DetectJS() (bool, error) {
 
 // BuildJS builds project structure for JS project.
 func (builder *builder) BuildJS() error {
+	name := "frontend"
 	// toolchain as the root of the tree
-	toolchain := js.NewToolchain(builder.meta, "frontend")
+	toolchain := js.NewToolchain(builder.meta, name)
 	toolchain.AddInput(builder.commonInputs...)
 
 	// unit-tests
-	unitTests := js.NewUnitTests(builder.meta, "unit-tests-frontend")
+	unitTests := js.NewUnitTests(builder.meta, fmt.Sprintf("unit-tests-%s", name))
 	unitTests.AddInput(toolchain)
 	builder.targets = append(builder.targets, unitTests)
 
@@ -77,7 +79,12 @@ func (builder *builder) BuildJS() error {
 	esLint.AddInput(toolchain)
 	builder.targets = append(builder.targets, esLint)
 
-	build := js.NewBuild(builder.meta, "frontend")
+	// add protobufs
+	protobuf := js.NewProtobuf(builder.meta, name)
+
+	toolchain.AddInput(protobuf)
+
+	build := js.NewBuild(builder.meta, name)
 	build.AddInput(toolchain)
 	builder.targets = append(builder.targets, build)
 	builder.commonInputs = append(builder.commonInputs, build)

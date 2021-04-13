@@ -14,28 +14,34 @@ type Graph interface {
 type WalkFunc func(node Node) error
 
 // Walk the graph calling function for every node just once.
-func Walk(graph Graph, walkFn WalkFunc, visited map[Node]struct{}) error {
+func Walk(graph Graph, walkFn WalkFunc, visited map[Node]struct{}, depth int) error {
 	if visited == nil {
 		visited = make(map[Node]struct{})
 	}
 
 	targets := graph.Targets()
 
-	return walk(targets, walkFn, visited)
+	return walk(targets, walkFn, visited, depth)
 }
 
 // WalkNode walks the graph starting from the node just once.
-func WalkNode(node Node, walkFn WalkFunc, visited map[Node]struct{}) error {
+func WalkNode(node Node, walkFn WalkFunc, visited map[Node]struct{}, depth int) error {
 	if visited == nil {
 		visited = make(map[Node]struct{})
 	}
 
 	targets := node.Inputs()
 
-	return walk(targets, walkFn, visited)
+	return walk(targets, walkFn, visited, depth)
 }
 
-func walk(targets []Node, walkFn WalkFunc, visited map[Node]struct{}) error {
+func walk(targets []Node, walkFn WalkFunc, visited map[Node]struct{}, depth int) error {
+	if depth == 0 {
+		return nil
+	}
+
+	depth--
+
 	for _, target := range targets {
 		if _, ok := visited[target]; ok {
 			continue
@@ -43,7 +49,7 @@ func walk(targets []Node, walkFn WalkFunc, visited map[Node]struct{}) error {
 
 		visited[target] = struct{}{}
 
-		if err := walk(target.Inputs(), walkFn, visited); err != nil {
+		if err := walk(target.Inputs(), walkFn, visited, depth); err != nil {
 			return err
 		}
 
@@ -65,7 +71,7 @@ func FindByName(name string, targets ...Node) (result Node) {
 		}
 
 		return nil
-	}, visited)
+	}, visited, -1)
 
 	return
 }
