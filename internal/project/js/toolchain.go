@@ -93,17 +93,30 @@ func (toolchain *Toolchain) CompileDrone(output *drone.Output) error {
 func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 	output.Arg(step.Arg("JS_TOOLCHAIN"))
 
+	toolchain.meta.NpmCachePath = "/src/node_modules"
+
 	output.Stage("js-toolchain").
 		Description("base toolchain image").
 		From("${JS_TOOLCHAIN}").
-		Step(step.Run("apk", "--update", "--no-cache", "add", "bash", "curl", "protoc", "protobuf-dev"))
+		Step(step.Run("apk", "--update", "--no-cache", "add", "bash", "curl", "protoc", "protobuf-dev", "go")).
+		Step(step.Copy("./go.mod", ".")).
+		Step(step.Copy("./go.sum", ".")).
+		Step(step.Env("GOPATH", toolchain.meta.GoPath))
 
 	base := output.Stage("js").
 		Description("tools and sources").
 		From("js-toolchain").
 		Step(step.WorkDir("/src"))
 
-	toolchain.meta.NpmCachePath = "/src/node_modules"
+	if err := dag.WalkNode(toolchain, func(node dag.Node) error {
+		if builder, ok := node.(common.ToolchainBuilder); ok {
+			return builder.ToolchainBuild(base)
+		}
+
+		return nil
+	}, nil, 1); err != nil {
+		return err
+	}
 
 	base.Step(step.Copy(filepath.Join(toolchain.sourceDir, "package.json"), "./")).
 		Step(step.Copy(filepath.Join(toolchain.sourceDir, "package-lock.json"), "./")).
@@ -120,16 +133,6 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 		dest := strings.TrimLeft(directory, toolchain.sourceDir)
 
 		base.Step(step.Copy("./"+directory, "./"+strings.Trim(dest, "/")))
-	}
-
-	if err := dag.WalkNode(toolchain, func(node dag.Node) error {
-		if builder, ok := node.(common.ToolchainBuilder); ok {
-			return builder.ToolchainBuild(base)
-		}
-
-		return nil
-	}, nil, 1); err != nil {
-		return err
 	}
 
 	for _, file := range toolchain.meta.JSSourceFiles {

@@ -22,7 +22,8 @@ type Protobuf struct {
 
 	meta *meta.Options
 
-	ProtobufTSVersion string `yaml:"protobufTSVersion"`
+	ProtobufTSVersion        string `yaml:"protobufTSVersion"`
+	ProtobufTSGatewayVersion string `yaml:"protobufTSGatewayVersion"`
 
 	BaseSpecPath string `yaml:"baseSpecPath"`
 
@@ -36,12 +37,14 @@ type ProtoSpec struct {
 	Source          string `yaml:"source"`
 	SubDirectory    string `yaml:"subdirectory"`
 	DestinationRoot string `yaml:"destinationRoot"`
+	GenGateway      bool   `yaml:"genGateway"`
 }
 
 // NewProtobuf builds Protobuf node.
 func NewProtobuf(meta *meta.Options, name string) *Protobuf {
 	meta.BuildArgs = append(meta.BuildArgs,
 		"PROTOBUF_TS_VERSION",
+		"PROTOBUF_GRPC_GATEWAY_TS_VERSION",
 	)
 
 	return &Protobuf{
@@ -49,7 +52,8 @@ func NewProtobuf(meta *meta.Options, name string) *Protobuf {
 
 		meta: meta,
 
-		ProtobufTSVersion: "v1.79.2",
+		ProtobufTSVersion:        "v1.79.2",
+		ProtobufTSGatewayVersion: "v1.1.0",
 
 		BaseSpecPath: "/api",
 	}
@@ -58,7 +62,8 @@ func NewProtobuf(meta *meta.Options, name string) *Protobuf {
 // CompileMakefile implements makefile.Compiler.
 func (proto *Protobuf) CompileMakefile(output *makefile.Output) error {
 	output.VariableGroup(makefile.VariableGroupCommon).
-		Variable(makefile.OverridableVariable("PROTOBUF_TS_VERSION", strings.TrimLeft(proto.ProtobufTSVersion, "v")))
+		Variable(makefile.OverridableVariable("PROTOBUF_TS_VERSION", strings.TrimLeft(proto.ProtobufTSVersion, "v"))).
+		Variable(makefile.OverridableVariable("PROTOBUF_GRPC_GATEWAY_TS_VERSION", strings.TrimLeft(proto.ProtobufTSGatewayVersion, "v")))
 
 	if len(proto.Specs) == 0 {
 		return nil
@@ -78,7 +83,10 @@ func (proto *Protobuf) ToolchainBuild(stage *dockerfile.Stage) error {
 
 	stage.
 		Step(step.Arg("PROTOBUF_TS_VERSION")).
-		Step(step.Script("npm install -g ts-proto@^${PROTOBUF_TS_VERSION}"))
+		Step(step.Script("npm install -g ts-proto@^${PROTOBUF_TS_VERSION}")).
+		Step(step.Arg("PROTOBUF_GRPC_GATEWAY_TS_VERSION")).
+		Step(step.Script("go get github.com/grpc-ecosystem/protoc-gen-grpc-gateway-ts@v${PROTOBUF_GRPC_GATEWAY_TS_VERSION}")).
+		Step(step.Run("mv", filepath.Join(proto.meta.GoPath, "bin", "protoc-gen-grpc-gateway-ts"), proto.meta.BinPath))
 
 	return nil
 }
@@ -113,27 +121,44 @@ func (proto *Protobuf) CompileDockerfile(output *dockerfile.Output) error {
 		From("js").
 		Step(step.Copy("/", "/").From(specsContainer))
 
+	cleanupSteps := []*step.RunStep{}
+
 	for _, spec := range proto.Specs {
 		dir := filepath.Join(rootDir, spec.DestinationRoot)
+		source := filepath.Join(dir, spec.SubDirectory, filepath.Base(spec.Source))
+
+		args := []string{
+			fmt.Sprintf("-I%s", dir),
+		}
+
+		if spec.GenGateway {
+			args = append(args, fmt.Sprintf("--grpc-gateway-ts_out=source_relative:%s", dir))
+		}
+
+		args = append(args,
+			"--plugin=/root/.npm-global/.bin/protoc-gen-ts_proto.cmd",
+			fmt.Sprintf("--ts_proto_out=paths=source_relative:%s", dir),
+		)
+
+		args = append(args, proto.ExperimentalFlags...)
+		args = append(args, source)
+
 		compile.Step(
 			step.Run(
 				"protoc",
-				append(
-					append([]string{
-						fmt.Sprintf("-I%s", dir),
-						fmt.Sprintf("--ts_proto_out=paths=source_relative:%s", dir),
-						"--plugin=/root/.npm-global/.bin/protoc-gen-ts_proto.cmd",
-					},
-						proto.ExperimentalFlags...,
-					),
-					filepath.Join(dir, spec.SubDirectory, filepath.Base(spec.Source)),
-				)...,
+				args...,
 			),
 		)
 
 		if !strings.HasPrefix(spec.Source, "http") {
-			compile.Step(step.Script(fmt.Sprintf("find %s -name \"*.proto\" | xargs rm", dir)))
+			cleanupSteps = append(cleanupSteps,
+				step.Script(fmt.Sprintf("rm %s", source)),
+			)
 		}
+	}
+
+	for _, s := range cleanupSteps {
+		compile.Step(s)
 	}
 
 	generate.Step(step.Copy(filepath.Clean(proto.Name())+"/", filepath.Clean(proto.Name())+"/").
