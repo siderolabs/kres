@@ -87,7 +87,7 @@ func (build *Build) CompileDrone(output *drone.Output) error {
 // CompileMakefile implements makefile.Compiler.
 func (build *Build) CompileMakefile(output *makefile.Output) error {
 	output.Target(fmt.Sprintf("$(ARTIFACTS)/%s-js", build.Name())).
-		Script(fmt.Sprintf("@$(MAKE) local-%s DEST=$(ARTIFACTS)", build.Name())).
+		Script(fmt.Sprintf("@$(MAKE) target-%s", build.Name())).
 		Phony()
 
 	output.Target(build.Name()).

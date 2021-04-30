@@ -22,8 +22,9 @@ type Protobuf struct {
 
 	meta *meta.Options
 
-	ProtobufGoVersion string `yaml:"protobufGoVersion"`
-	GrpcGoVersion     string `yaml:"grpcGoVersion"`
+	ProtobufGoVersion  string `yaml:"protobufGoVersion"`
+	GrpcGoVersion      string `yaml:"grpcGoVersion"`
+	GrpcGatewayVersion string `yaml:"GrpcGatewayVersion"`
 
 	BaseSpecPath string `yaml:"baseSpecPath"`
 
@@ -36,6 +37,7 @@ type Protobuf struct {
 type ProtoSpec struct {
 	Source       string `yaml:"source"`
 	SubDirectory string `yaml:"subdirectory"`
+	GenGateway   bool   `yaml:"genGateway"`
 }
 
 // NewProtobuf builds Protobuf node.
@@ -43,6 +45,7 @@ func NewProtobuf(meta *meta.Options) *Protobuf {
 	meta.BuildArgs = append(meta.BuildArgs,
 		"PROTOBUF_GO_VERSION",
 		"GRPC_GO_VERSION",
+		"GRPC_GATEWAY_VERSION",
 	)
 
 	return &Protobuf{
@@ -50,8 +53,9 @@ func NewProtobuf(meta *meta.Options) *Protobuf {
 
 		meta: meta,
 
-		ProtobufGoVersion: "v1.25.0",
-		GrpcGoVersion:     "v1.1.0",
+		ProtobufGoVersion:  "v1.25.0",
+		GrpcGoVersion:      "v1.1.0",
+		GrpcGatewayVersion: "v2.4.0",
 
 		BaseSpecPath: "/api",
 	}
@@ -61,7 +65,8 @@ func NewProtobuf(meta *meta.Options) *Protobuf {
 func (proto *Protobuf) CompileMakefile(output *makefile.Output) error {
 	output.VariableGroup(makefile.VariableGroupCommon).
 		Variable(makefile.OverridableVariable("PROTOBUF_GO_VERSION", strings.TrimLeft(proto.ProtobufGoVersion, "v"))).
-		Variable(makefile.OverridableVariable("GRPC_GO_VERSION", strings.TrimLeft(proto.GrpcGoVersion, "v")))
+		Variable(makefile.OverridableVariable("GRPC_GO_VERSION", strings.TrimLeft(proto.GrpcGoVersion, "v"))).
+		Variable(makefile.OverridableVariable("GRPC_GATEWAY_VERSION", strings.TrimLeft(proto.GrpcGatewayVersion, "v")))
 
 	if len(proto.Specs) == 0 {
 		return nil
@@ -85,7 +90,10 @@ func (proto *Protobuf) ToolchainBuild(stage *dockerfile.Stage) error {
 		Step(step.Run("mv", filepath.Join(proto.meta.GoPath, "bin", "protoc-gen-go"), proto.meta.BinPath)).
 		Step(step.Arg("GRPC_GO_VERSION")).
 		Step(step.Script("go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v${GRPC_GO_VERSION}")).
-		Step(step.Run("mv", filepath.Join(proto.meta.GoPath, "bin", "protoc-gen-go-grpc"), proto.meta.BinPath))
+		Step(step.Run("mv", filepath.Join(proto.meta.GoPath, "bin", "protoc-gen-go-grpc"), proto.meta.BinPath)).
+		Step(step.Arg("GRPC_GATEWAY_VERSION")).
+		Step(step.Script("go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v${GRPC_GATEWAY_VERSION}")).
+		Step(step.Run("mv", filepath.Join(proto.meta.GoPath, "bin", "protoc-gen-grpc-gateway"), proto.meta.BinPath))
 
 	return nil
 }
@@ -115,26 +123,56 @@ func (proto *Protobuf) CompileDockerfile(output *dockerfile.Output) error {
 		From("tools").
 		Step(step.Copy("/", "/").From("proto-specs"))
 
+	cleanupSteps := []*step.RunStep{}
+
 	for _, spec := range proto.Specs {
+		external := strings.HasPrefix(spec.Source, "http")
+
+		flags := []string{
+			fmt.Sprintf("-I%s", proto.BaseSpecPath),
+		}
+
+		if spec.GenGateway {
+			flags = append(flags,
+				fmt.Sprintf("--grpc-gateway_out=paths=source_relative:%s", proto.BaseSpecPath),
+				"--grpc-gateway_opt=generate_unbound_methods=true",
+			)
+
+			if external {
+				flags = append(flags,
+					"--grpc-gateway_opt=standalone=true",
+				)
+			}
+		}
+
+		if !spec.GenGateway || !external {
+			flags = append(flags,
+				fmt.Sprintf("--go_out=paths=source_relative:%s", proto.BaseSpecPath),
+				fmt.Sprintf("--go-grpc_out=paths=source_relative:%s", proto.BaseSpecPath),
+			)
+		}
+
+		source := filepath.Join(proto.BaseSpecPath, spec.SubDirectory, filepath.Base(spec.Source))
+
+		flags = append(flags, proto.ExperimentalFlags...)
+		flags = append(flags, source)
+
 		compile.Step(
 			step.Run(
 				"protoc",
-				append(
-					append([]string{
-						fmt.Sprintf("-I%s", proto.BaseSpecPath),
-						fmt.Sprintf("--go_out=paths=source_relative:%s", proto.BaseSpecPath),
-						fmt.Sprintf("--go-grpc_out=paths=source_relative:%s", proto.BaseSpecPath),
-					},
-						proto.ExperimentalFlags...,
-					),
-					filepath.Join(proto.BaseSpecPath, spec.SubDirectory, filepath.Base(spec.Source)),
-				)...,
+				flags...,
 			),
 		)
 
-		if !strings.HasPrefix(spec.Source, "http") {
-			compile.Step(step.Script(fmt.Sprintf("find %s -name \"*.proto\" | xargs rm", proto.BaseSpecPath)))
+		if !external {
+			cleanupSteps = append(cleanupSteps,
+				step.Script(fmt.Sprintf("rm %s", source)),
+			)
 		}
+	}
+
+	for _, s := range cleanupSteps {
+		compile.Step(s)
 	}
 
 	generate.Step(step.Copy(filepath.Clean(proto.BaseSpecPath)+"/", filepath.Clean(proto.BaseSpecPath)+"/").

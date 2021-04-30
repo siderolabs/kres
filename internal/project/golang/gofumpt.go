@@ -78,6 +78,7 @@ func (lint *Gofumpt) CompileDockerfile(output *dockerfile.Output) error {
 		Description("runs gofumpt").
 		From("base").
 		Step(step.Script(`find . -name '*.pb.go' | xargs -r rm`)).
+		Step(step.Script(`find . -name '*.pb.gw.go' | xargs -r rm`)).
 		Step(step.Script(
 			fmt.Sprintf(
 				`FILES="$(gofumports -l -local %s .)" && test -z "${FILES}" || (echo -e "Source code is not formatted with 'gofumports -w -local %s .':\n${FILES}"; exit 1)`,
