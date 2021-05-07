@@ -28,7 +28,7 @@ Kres can leverage API access tokens to set up build environment or settings for 
 
 When running Kres for the first time, run it manually via Docker container:
 
-    docker run --rm -v ${PWD}:/src -w /src -e GITHUB_TOKEN autonomy/kres:latest
+    docker run --rm -v ${PWD}:/src -w /src -e GITHUB_TOKEN ghcr.io/talos-systems/kres:latest
 
 To update build instructions:
 
