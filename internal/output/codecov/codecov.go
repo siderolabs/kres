@@ -6,6 +6,7 @@
 package codecov
 
 import (
+	_ "embed" //nolint:gci
 	"fmt"
 	"io"
 
@@ -15,6 +16,9 @@ import (
 const (
 	filename = ".codecov.yml"
 )
+
+//go:embed codecov.yml
+var configTemplate string
 
 // Output implements .codecov.yml generation.
 type Output struct {

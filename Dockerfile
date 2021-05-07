@@ -2,7 +2,7 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2021-03-26T20:26:31Z by kres 9933cd1-dirty.
+# Generated on 2021-05-17T13:11:22Z by kres d88b53b.
 
 ARG TOOLCHAIN
 
@@ -61,6 +61,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/g
 # runs gofumpt
 FROM base AS lint-gofumpt
 RUN find . -name '*.pb.go' | xargs -r rm
+RUN find . -name '*.pb.gw.go' | xargs -r rm
 RUN FILES="$(gofumports -l -local github.com/talos-systems/kres .)" && test -z "${FILES}" || (echo -e "Source code is not formatted with 'gofumports -w -local github.com/talos-systems/kres .':\n${FILES}"; exit 1)
 
 # runs golangci-lint
@@ -89,5 +90,6 @@ FROM scratch AS image-kres
 COPY --from=kres / /
 COPY --from=image-fhs / /
 COPY --from=image-ca-certificates / /
+LABEL org.opencontainers.image.source https://github.com/talos-systems/kres
 ENTRYPOINT ["/kres","gen"]
 
