@@ -138,6 +138,8 @@ func (proto *Protobuf) CompileDockerfile(output *dockerfile.Output) error {
 		args = append(args,
 			"--plugin=/root/.npm-global/.bin/protoc-gen-ts_proto.cmd",
 			fmt.Sprintf("--ts_proto_out=paths=source_relative:%s", dir),
+			"--ts_proto_opt=returnObservable=false",
+			"--ts_proto_opt=outputClientImpl=false",
 		)
 
 		args = append(args, proto.ExperimentalFlags...)
