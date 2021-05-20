@@ -51,7 +51,7 @@ func (tests *UnitTests) CompileMakefile(output *makefile.Output) error {
 
 	output.Target(tests.Name()).
 		Description("Performs unit tests").
-		Script("@$(MAKE) local-$@ DEST=$(ARTIFACTS)").
+		Script("@$(MAKE) target-$@").
 		Phony()
 
 	return nil
