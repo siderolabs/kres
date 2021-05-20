@@ -7,11 +7,15 @@ package dockerfile
 import (
 	"fmt"
 	"io"
+	"regexp"
+	"strings"
 
 	stableToposort "github.com/SOF3/go-stable-toposort"
 
 	"github.com/talos-systems/kres/internal/output/dockerfile/step"
 )
+
+var stripVars = regexp.MustCompile(`\$\{\w*\}`)
 
 // Stage implements Dockerfile stage (between 'FROM ...' and next 'FROM ...'.
 type Stage struct {
@@ -61,6 +65,11 @@ func (stage *Stage) Before(node stableToposort.Node) bool {
 	otherStage := node.(*Stage) //nolint: errcheck,forcetypeassert
 
 	for _, dep := range otherStage.Dependencies() {
+		sanitized := stripVars.ReplaceAllString(dep, "")
+		if sanitized != dep && sanitized != "" {
+			return strings.HasPrefix(stage.name, sanitized)
+		}
+
 		if dep == stage.name {
 			return true
 		}

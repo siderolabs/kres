@@ -8,6 +8,7 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -31,6 +32,9 @@ type FileAdapter struct {
 	FileWriter
 }
 
+// ErrSkip makes file adapter skip the file write.
+var ErrSkip = fmt.Errorf("skip file")
+
 // Generate implements outout.Writer.
 //
 //nolint: gocognit
@@ -50,6 +54,10 @@ func (adapter *FileAdapter) Generate() error {
 		}
 
 		if err := adapter.FileWriter.GenerateFile(filename, buf); err != nil {
+			if errors.Is(err, ErrSkip) {
+				continue
+			}
+
 			return err
 		}
 
@@ -58,6 +66,10 @@ func (adapter *FileAdapter) Generate() error {
 
 	// write everything back to the filesystem
 	for _, filename := range adapter.FileWriter.Filenames() {
+		if _, ok := buffers[filename]; !ok {
+			continue
+		}
+
 		filename := filename
 
 		var oldContents []string

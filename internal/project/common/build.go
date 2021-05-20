@@ -37,6 +37,8 @@ func NewBuild(meta *meta.Options) *Build {
 
 // CompileDockerfile implements dockerfile.Compiler.
 func (build *Build) CompileDockerfile(output *dockerfile.Output) error {
+	build.meta.ArtifactsPath = build.ArtifactsPath
+
 	output.
 		AllowLocalPath(build.meta.Directories...).
 		AllowLocalPath(build.meta.SourceFiles...)

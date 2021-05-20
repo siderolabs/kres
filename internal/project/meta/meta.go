@@ -66,4 +66,7 @@ type Options struct { //nolint: govet
 
 	// NpmCachePath path to node_modules.
 	NpmCachePath string
+
+	// ArtifactsPath binary output path.
+	ArtifactsPath string
 }

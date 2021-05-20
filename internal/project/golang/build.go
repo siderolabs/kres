@@ -7,6 +7,7 @@ package golang
 import (
 	"fmt"
 	"path/filepath"
+	"sort"
 
 	"github.com/talos-systems/kres/internal/dag"
 	"github.com/talos-systems/kres/internal/output/dockerfile"
@@ -20,8 +21,21 @@ import (
 type Build struct {
 	dag.BaseNode
 
+	Outputs map[string]CompileConfig `yaml:"outputs"`
+
 	meta       *meta.Options
 	sourcePath string
+	entrypoint string
+	artifacts  []string
+}
+
+// CompileConfig defines Go cross compile architecture settings.
+type CompileConfig map[string]string
+
+func (c CompileConfig) set(script *step.RunStep) {
+	for key, value := range c {
+		script.Env(key, value)
+	}
 }
 
 // NewBuild initializes Build.
@@ -35,31 +49,53 @@ func NewBuild(meta *meta.Options, name, sourcePath string) *Build {
 
 // CompileDockerfile implements dockerfile.Compiler.
 func (build *Build) CompileDockerfile(output *dockerfile.Output) error {
-	stage := output.Stage(fmt.Sprintf("%s-build", build.Name())).
-		Description(fmt.Sprintf("builds %s", build.Name())).
-		From("base").
-		Step(step.Copy("/", "/").From("generate")).
-		Step(step.WorkDir(filepath.Join("/src", build.sourcePath)))
+	addBuildSteps := func(name string, opts CompileConfig) {
+		stage := output.Stage(fmt.Sprintf("%s-build", name)).
+			Description(fmt.Sprintf("builds %s", name)).
+			From("base").
+			Step(step.Copy("/", "/").From("generate")).
+			Step(step.WorkDir(filepath.Join("/src", build.sourcePath)))
 
-	ldflags := "-s -w"
+		ldflags := "-s -w"
 
-	if build.meta.VersionPackage != "" {
-		stage.
-			Step(step.Arg(fmt.Sprintf("VERSION_PKG=\"%s\"", build.meta.VersionPackage))).
-			Step(step.Arg("SHA")).
-			Step(step.Arg("TAG"))
+		if build.meta.VersionPackage != "" {
+			stage.
+				Step(step.Arg(fmt.Sprintf("VERSION_PKG=\"%s\"", build.meta.VersionPackage))).
+				Step(step.Arg("SHA")).
+				Step(step.Arg("TAG"))
 
-		ldflags += fmt.Sprintf(" -X ${VERSION_PKG}.Name=%s", build.Name())
-		ldflags += " -X ${VERSION_PKG}.SHA=${SHA} -X ${VERSION_PKG}.Tag=${TAG}"
+			ldflags += fmt.Sprintf(" -X ${VERSION_PKG}.Name=%s", build.Name())
+			ldflags += " -X ${VERSION_PKG}.SHA=${SHA} -X ${VERSION_PKG}.Tag=${TAG}"
+		}
+
+		script := step.Script(fmt.Sprintf(`go build -ldflags "%s" -o /%s`, ldflags, name)).
+			MountCache(filepath.Join(build.meta.CachePath, "go-build")).
+			MountCache(filepath.Join(build.meta.GoPath, "pkg"))
+
+		if opts != nil {
+			opts.set(script)
+		}
+
+		stage.Step(script)
+
+		output.Stage(name).
+			From("scratch").
+			Step(step.Copy("/"+name, "/"+name).From(fmt.Sprintf("%s-build", name)))
 	}
 
-	stage.Step(step.Script(fmt.Sprintf(`go build -ldflags "%s" -o /%s`, ldflags, build.Name())).
-		MountCache(filepath.Join(build.meta.CachePath, "go-build")).
-		MountCache(filepath.Join(build.meta.GoPath, "pkg")))
+	if len(build.Outputs) == 0 {
+		build.Outputs = map[string]CompileConfig{
+			fmt.Sprintf("%s-linux-amd64", build.Name()): nil,
+		}
+	}
 
+	for _, name := range build.getArtifacts() {
+		addBuildSteps(name, build.Outputs[name])
+	}
+
+	build.entrypoint = fmt.Sprintf("%s-linux-${TARGETARCH}", build.Name())
 	output.Stage(build.Name()).
-		From("scratch").
-		Step(step.Copy("/"+build.Name(), "/"+build.Name()).From(fmt.Sprintf("%s-build", build.Name())))
+		From(build.entrypoint)
 
 	return nil
 }
@@ -73,14 +109,45 @@ func (build *Build) CompileDrone(output *drone.Output) error {
 
 // CompileMakefile implements makefile.Compiler.
 func (build *Build) CompileMakefile(output *makefile.Output) error {
-	output.Target(fmt.Sprintf("$(ARTIFACTS)/%s", build.Name())).
-		Script(fmt.Sprintf("@$(MAKE) local-%s DEST=$(ARTIFACTS)", build.Name())).
-		Phony()
+	for _, artifact := range build.getArtifacts() {
+		output.Target(fmt.Sprintf("$(ARTIFACTS)/%s", artifact)).
+			Script(fmt.Sprintf("@$(MAKE) local-%s DEST=$(ARTIFACTS)", artifact)).
+			Phony()
+
+		output.Target(artifact).
+			Description(fmt.Sprintf("Builds executable for %s.", artifact)).
+			Depends(fmt.Sprintf("$(ARTIFACTS)/%s", artifact)).
+			Phony()
+	}
 
 	output.Target(build.Name()).
-		Description(fmt.Sprintf("Builds executable for %s.", build.Name())).
-		Depends(fmt.Sprintf("$(ARTIFACTS)/%s", build.Name())).
+		Depends(build.artifacts...).
 		Phony()
 
 	return nil
+}
+
+// Entrypoint implements dockerfile.CmdCompiler.
+func (build *Build) Entrypoint() string {
+	return build.entrypoint
+}
+
+func (build *Build) getArtifacts() []string {
+	if build.artifacts != nil {
+		return build.artifacts
+	}
+
+	if len(build.Outputs) == 0 {
+		build.artifacts = []string{fmt.Sprintf("%s-linux-amd64", build.Name())}
+	} else {
+		build.artifacts = []string{}
+
+		for name := range build.Outputs {
+			build.artifacts = append(build.artifacts, name)
+		}
+
+		sort.Strings(build.artifacts)
+	}
+
+	return build.artifacts
 }

@@ -62,7 +62,7 @@ func NewRepository(meta *meta.Options) *Repository {
 			"release",
 		},
 		ConformScopes: []string{
-			"*",
+			".*",
 		},
 		ConformLicenseCheck: true,
 
