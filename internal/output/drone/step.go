@@ -82,6 +82,13 @@ func (step *Step) OnlyOnPullRequest() *Step {
 	return step
 }
 
+// OnlyOnTag adds condition to run step only on tags.
+func (step *Step) OnlyOnTag() *Step {
+	step.container.When.Event.Include = append(step.container.When.Event.Include, "tag")
+
+	return step
+}
+
 // OnlyOnMaster adds condition to run step only on master branch.
 func (step *Step) OnlyOnMaster() *Step {
 	step.container.When.Branch.Include = append(step.container.When.Branch.Include, "master")
@@ -117,6 +124,36 @@ func (step *Step) DockerLogin() *Step {
 // Privileged marks step as privileged.
 func (step *Step) Privileged() *Step {
 	step.container.Privileged = true
+
+	return step
+}
+
+// Image sets step image.
+func (step *Step) Image(image string) *Step {
+	step.container.Image = image
+
+	return step
+}
+
+// PublishArtifacts publishes artifacts with the default Github settings.
+func (step *Step) PublishArtifacts(note string, artifacts ...string) *Step {
+	step.container.Settings = map[string]*yaml.Parameter{
+		"api_key": {
+			Secret: "github_token",
+		},
+		"checksum": {
+			Value: []string{"sha256", "sha512"},
+		},
+		"draft": {
+			Value: true,
+		},
+		"files": {
+			Value: artifacts,
+		},
+		"note": {
+			Value: note,
+		},
+	}
 
 	return step
 }

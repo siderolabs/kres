@@ -103,7 +103,7 @@ func (image *Image) CompileDockerfile(output *dockerfile.Output) error {
 		stage.Step(step.Script(command))
 	}
 
-	inputs := dag.GatherMatchingInputNames(image, dag.Implements((*dockerfile.Compiler)(nil)))
+	inputs := dag.GatherMatchingInputs(image, dag.Implements((*dockerfile.Compiler)(nil)))
 	if len(inputs) == 0 {
 		return fmt.Errorf("no inputs for Image block")
 	}
@@ -126,11 +126,17 @@ func (image *Image) CompileDockerfile(output *dockerfile.Output) error {
 			}
 		}
 
-		inputs = append(inputs, input.Name())
+		inputs = append(inputs, input)
 	}
 
+	stage.Step(step.Arg("TARGETARCH"))
+
 	for _, input := range inputs {
-		stage.Step(step.Copy("/", "/").From(input))
+		if build, ok := input.(dockerfile.CmdCompiler); ok && build.Entrypoint() != "" {
+			stage.Step(step.Copy(build.Entrypoint(), image.Entrypoint).From(input.Name()))
+		} else {
+			stage.Step(step.Copy("/", "/").From(input.Name()))
+		}
 	}
 
 	if image.meta.GitHubOrganization != "" && image.meta.GitHubRepository != "" {

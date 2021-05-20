@@ -40,7 +40,8 @@ func newBuilder(meta *meta.Options) *builder {
 }
 
 func (builder *builder) build() error {
-	builder.commonInputs = append(builder.commonInputs, common.NewBuild(builder.meta), common.NewDocker(builder.meta))
+	buildTarget := common.NewBuild(builder.meta)
+	builder.commonInputs = append(builder.commonInputs, buildTarget, common.NewDocker(builder.meta))
 	builder.lintTarget = common.NewLint(builder.meta)
 
 	for _, projectType := range []struct {
@@ -92,11 +93,14 @@ func (builder *builder) build() error {
 	all := common.NewAll(builder.meta)
 	all.AddInput(builder.targets...)
 
+	release := common.NewRelease(builder.meta)
 	rekres := common.NewReKres(builder.meta)
 	makeHelp := common.NewMakeHelp(builder.meta)
 
+	release.AddInput(builder.targets...)
+
 	builder.proj.AddTarget(builder.targets...)
-	builder.proj.AddTarget(rekres, all, makeHelp)
+	builder.proj.AddTarget(rekres, all, makeHelp, release)
 
 	return nil
 }

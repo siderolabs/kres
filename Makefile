@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2021-05-20T15:52:00Z by kres 32fc9f5-dirty.
+# Generated on 2021-05-21T14:48:52Z by kres c09e0bc-dirty.
 
 # common variables
 
@@ -116,12 +116,15 @@ unit-tests-race:  ## Performs unit tests with race detection enabled.
 coverage:  ## Upload coverage data to codecov.io.
 	bash -c "bash <(curl -s https://codecov.io/bash) -f $(ARTIFACTS)/coverage.txt -X fix"
 
-.PHONY: $(ARTIFACTS)/kres
-$(ARTIFACTS)/kres:
-	@$(MAKE) local-kres DEST=$(ARTIFACTS)
+.PHONY: $(ARTIFACTS)/kres-linux-amd64
+$(ARTIFACTS)/kres-linux-amd64:
+	@$(MAKE) local-kres-linux-amd64 DEST=$(ARTIFACTS)
+
+.PHONY: kres-linux-amd64
+kres-linux-amd64: $(ARTIFACTS)/kres-linux-amd64  ## Builds executable for kres-linux-amd64.
 
 .PHONY: kres
-kres: $(ARTIFACTS)/kres  ## Builds executable for kres.
+kres: kres-linux-amd64
 
 .PHONY: lint-markdown
 lint-markdown:  ## Runs markdownlint.
@@ -143,4 +146,9 @@ rekres:
 help:  ## This help menu.
 	@echo "$$HELP_MENU_HEADER"
 	@grep -E '^[a-zA-Z%_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+
+.PHONY: release-notes
+release-notes:
+	mkdir -p $(ARTIFACTS)
+	@ARTIFACTS=$(ARTIFACTS) ./hack/release.sh $@ $(ARTIFACTS)/RELEASE_NOTES.md $(TAG)
 

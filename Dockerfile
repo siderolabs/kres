@@ -2,7 +2,7 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2021-05-17T13:11:22Z by kres d88b53b.
+# Generated on 2021-05-21T00:52:36Z by kres c1b0c97-dirty.
 
 ARG TOOLCHAIN
 
@@ -20,7 +20,7 @@ RUN npm i sentences-per-line@0.2.1
 WORKDIR /src
 COPY .markdownlint.json .
 COPY ./README.md ./README.md
-RUN markdownlint --ignore "**/node_modules/**" --ignore '**/hack/chglog/**' --rules /node_modules/sentences-per-line/index.js .
+RUN markdownlint --ignore "CHANGELOG.md" --ignore "**/node_modules/**" --ignore '**/hack/chglog/**' --rules /node_modules/sentences-per-line/index.js .
 
 # base toolchain image
 FROM ${TOOLCHAIN} AS toolchain
@@ -49,14 +49,14 @@ COPY ./internal ./internal
 COPY ./cmd ./cmd
 RUN --mount=type=cache,target=/go/pkg go list -mod=readonly all >/dev/null
 
-# builds kres
-FROM base AS kres-build
+# builds kres-linux-amd64
+FROM base AS kres-linux-amd64-build
 COPY --from=generate / /
 WORKDIR /src/cmd/kres
 ARG VERSION_PKG="github.com/talos-systems/kres/internal/version"
 ARG SHA
 ARG TAG
-RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg go build -ldflags "-s -w -X ${VERSION_PKG}.Name=kres -X ${VERSION_PKG}.SHA=${SHA} -X ${VERSION_PKG}.Tag=${TAG}" -o /kres
+RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg go build -ldflags "-s -w -X ${VERSION_PKG}.Name=kres -X ${VERSION_PKG}.SHA=${SHA} -X ${VERSION_PKG}.Tag=${TAG}" -o /kres-linux-amd64
 
 # runs gofumpt
 FROM base AS lint-gofumpt
@@ -80,14 +80,17 @@ FROM base AS unit-tests-run
 ARG TESTPKGS
 RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg --mount=type=cache,target=/tmp go test -v -covermode=atomic -coverprofile=coverage.txt -coverpkg=${TESTPKGS} -count 1 ${TESTPKGS}
 
-FROM scratch AS kres
-COPY --from=kres-build /kres /kres
+FROM scratch AS kres-linux-amd64
+COPY --from=kres-linux-amd64-build /kres-linux-amd64 /kres-linux-amd64
 
 FROM scratch AS unit-tests
 COPY --from=unit-tests-run /src/coverage.txt /coverage.txt
 
+FROM kres-linux-${TARGETARCH} AS kres
+
 FROM scratch AS image-kres
-COPY --from=kres / /
+ARG TARGETARCH
+COPY --from=kres kres-linux-${TARGETARCH} /kres
 COPY --from=image-fhs / /
 COPY --from=image-ca-certificates / /
 LABEL org.opencontainers.image.source https://github.com/talos-systems/kres

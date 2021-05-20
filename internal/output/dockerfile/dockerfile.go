@@ -159,7 +159,12 @@ type Compiler interface {
 	CompileDockerfile(*Output) error
 }
 
-// Generator is implemented by project block which generate code.
+// Generator is implemented by project blocks which generate code.
 type Generator interface {
 	GetArtifacts() []string
+}
+
+// CmdCompiler is implemented by project blocks which may output executable entrypoints.
+type CmdCompiler interface {
+	Entrypoint() string
 }
