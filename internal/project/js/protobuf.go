@@ -140,6 +140,7 @@ func (proto *Protobuf) CompileDockerfile(output *dockerfile.Output) error {
 			fmt.Sprintf("--ts_proto_out=paths=source_relative:%s", dir),
 			"--ts_proto_opt=returnObservable=false",
 			"--ts_proto_opt=outputClientImpl=false",
+			"--ts_proto_opt=snakeToCamel=false",
 		)
 
 		args = append(args, proto.ExperimentalFlags...)
