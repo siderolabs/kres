@@ -25,7 +25,8 @@ type Protobuf struct {
 	ProtobufTSVersion        string `yaml:"protobufTSVersion"`
 	ProtobufTSGatewayVersion string `yaml:"protobufTSGatewayVersion"`
 
-	BaseSpecPath string `yaml:"baseSpecPath"`
+	BaseSpecPath    string `yaml:"baseSpecPath"`
+	DestinationRoot string `yaml:"destinationRoot"`
 
 	Specs []ProtoSpec `yaml:"specs"`
 
@@ -111,8 +112,13 @@ func (proto *Protobuf) CompileDockerfile(output *dockerfile.Output) error {
 		From("scratch")
 
 	for _, spec := range proto.Specs {
+		destRoot := proto.DestinationRoot
+		if spec.DestinationRoot != "" {
+			destRoot = spec.DestinationRoot
+		}
+
 		specs.Step(
-			step.Add(spec.Source, filepath.Join(rootDir, spec.DestinationRoot, spec.SubDirectory)+"/"),
+			step.Add(spec.Source, filepath.Join(rootDir, destRoot, spec.SubDirectory)+"/"),
 		)
 	}
 
@@ -124,7 +130,12 @@ func (proto *Protobuf) CompileDockerfile(output *dockerfile.Output) error {
 	cleanupSteps := []*step.RunStep{}
 
 	for _, spec := range proto.Specs {
-		dir := filepath.Join(rootDir, spec.DestinationRoot)
+		destRoot := proto.DestinationRoot
+		if spec.DestinationRoot != "" {
+			destRoot = spec.DestinationRoot
+		}
+
+		dir := filepath.Join(rootDir, destRoot)
 		source := filepath.Join(dir, spec.SubDirectory, filepath.Base(spec.Source))
 
 		args := []string{
