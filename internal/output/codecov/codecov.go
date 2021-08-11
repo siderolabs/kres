@@ -6,7 +6,7 @@
 package codecov
 
 import (
-	_ "embed" //nolint:gci
+	_ "embed" //nolint:gci // allows go:embed usage
 	"fmt"
 	"io"
 

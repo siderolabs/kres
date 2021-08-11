@@ -1,7 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2021-03-11T14:02:06Z by kres 93ce485-dirty.
-
+# Generated on 2021-08-11T16:25:38Z by kres c77e3bf-dirty.
 
 # options for analysis running
 run:
@@ -21,7 +20,6 @@ output:
   print-linter-name: true
   uniq-by-line: true
   path-prefix: ""
-
 
 # all available settings of specific linters
 linters-settings:
@@ -116,23 +114,23 @@ linters-settings:
 
 linters:
   enable-all: true
-  disable:
-    - gas
-    - typecheck
-    - gochecknoglobals
-    - gochecknoinits
-    - funlen
-    - godox
-    - gomnd
-    - goerr113
-    - nestif
-    - wrapcheck
-    - paralleltest
-    - exhaustivestruct
-    - forbidigo
   disable-all: false
   fast: false
-
+  disable:
+    - exhaustivestruct
+    - forbidigo
+    - funlen
+    - gas
+    - gochecknoglobals
+    - gochecknoinits
+    - godox
+    - goerr113
+    - gomnd
+    - nestif
+    - paralleltest
+    - tagliatelle
+    - typecheck
+    - wrapcheck
 
 issues:
   exclude: []
@@ -141,10 +139,8 @@ issues:
   exclude-case-sensitive: false
   max-issues-per-linter: 10
   max-same-issues: 3
-
   new: false
 
 severity:
   default-severity: error
-
   case-sensitive: false

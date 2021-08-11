@@ -6,6 +6,7 @@
 package golangci
 
 import (
+	_ "embed" //nolint:gci // allows go:embed usage
 	"fmt"
 	"io"
 
@@ -15,6 +16,9 @@ import (
 const (
 	filename = ".golangci.yml"
 )
+
+//go:embed golangci.yml
+var configTemplate string
 
 // Output implements .golangci.yml generation.
 type Output struct {
@@ -80,7 +84,7 @@ func (o *Output) config(w io.Writer) error {
 		return err
 	}
 
-	if _, err := fmt.Fprintf(w, config, o.canonicalPath); err != nil {
+	if _, err := fmt.Fprintf(w, configTemplate, o.canonicalPath); err != nil {
 		return err
 	}
 

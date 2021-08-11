@@ -2,7 +2,7 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2021-05-21T00:52:36Z by kres c1b0c97-dirty.
+# Generated on 2021-08-11T16:23:52Z by kres c77e3bf-dirty.
 
 ARG TOOLCHAIN
 
@@ -31,11 +31,9 @@ FROM toolchain AS tools
 ENV GO111MODULE on
 ENV CGO_ENABLED 0
 ENV GOPATH /go
-RUN curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s -- -b /bin v1.38.0
+RUN curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s -- -b /bin v1.41.1
 ARG GOFUMPT_VERSION
-RUN cd $(mktemp -d) \
-	&& go mod init tmp \
-	&& go get mvdan.cc/gofumpt/gofumports@${GOFUMPT_VERSION} \
+RUN go install mvdan.cc/gofumpt/gofumports@${GOFUMPT_VERSION} \
 	&& mv /go/bin/gofumports /bin/gofumports
 
 # tools and sources
@@ -45,8 +43,8 @@ COPY ./go.mod .
 COPY ./go.sum .
 RUN --mount=type=cache,target=/go/pkg go mod download
 RUN --mount=type=cache,target=/go/pkg go mod verify
-COPY ./internal ./internal
 COPY ./cmd ./cmd
+COPY ./internal ./internal
 RUN --mount=type=cache,target=/go/pkg go list -mod=readonly all >/dev/null
 
 # builds kres-linux-amd64
