@@ -1,10 +1,3 @@
-// This Source Code Form is subject to the terms of the Mozilla Public
-// License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-package golangci
-
-const config = `
 # options for analysis running
 run:
   timeout: 10m
@@ -23,7 +16,6 @@ output:
   print-linter-name: true
   uniq-by-line: true
   path-prefix: ""
-
 
 # all available settings of specific linters
 linters-settings:
@@ -118,23 +110,23 @@ linters-settings:
 
 linters:
   enable-all: true
-  disable:
-    - gas
-    - typecheck
-    - gochecknoglobals
-    - gochecknoinits
-    - funlen
-    - godox
-    - gomnd
-    - goerr113
-    - nestif
-    - wrapcheck
-    - paralleltest
-    - exhaustivestruct
-    - forbidigo
   disable-all: false
   fast: false
-
+  disable:
+    - exhaustivestruct
+    - forbidigo
+    - funlen
+    - gas
+    - gochecknoglobals
+    - gochecknoinits
+    - godox
+    - goerr113
+    - gomnd
+    - nestif
+    - paralleltest
+    - tagliatelle
+    - typecheck
+    - wrapcheck
 
 issues:
   exclude: []
@@ -143,11 +135,8 @@ issues:
   exclude-case-sensitive: false
   max-issues-per-linter: 10
   max-same-issues: 3
-
   new: false
 
 severity:
   default-severity: error
-
   case-sensitive: false
-`

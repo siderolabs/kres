@@ -86,7 +86,7 @@ func (proto *Protobuf) ToolchainBuild(stage *dockerfile.Stage) error {
 		Step(step.Arg("PROTOBUF_TS_VERSION")).
 		Step(step.Script("npm install -g ts-proto@^${PROTOBUF_TS_VERSION}")).
 		Step(step.Arg("PROTOBUF_GRPC_GATEWAY_TS_VERSION")).
-		Step(step.Script("go get github.com/grpc-ecosystem/protoc-gen-grpc-gateway-ts@v${PROTOBUF_GRPC_GATEWAY_TS_VERSION}")).
+		Step(step.Script("go install github.com/grpc-ecosystem/protoc-gen-grpc-gateway-ts@v${PROTOBUF_GRPC_GATEWAY_TS_VERSION}")).
 		Step(step.Run("mv", filepath.Join(proto.meta.GoPath, "bin", "protoc-gen-grpc-gateway-ts"), proto.meta.BinPath))
 
 	return nil

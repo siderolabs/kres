@@ -5,7 +5,7 @@
 // Package templates defines default templates for various JS components.
 package templates
 
-import _ "embed" // import embed to allow go:embed usage.
+import _ "embed" // allows go:embed usage
 
 // Babel babel.config.js.
 //go:embed babel.js

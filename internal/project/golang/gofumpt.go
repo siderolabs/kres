@@ -52,8 +52,8 @@ func (lint *Gofumpt) CompileMakefile(output *makefile.Output) error {
 		Script(fmt.Sprintf(
 			`@docker run --rm -it -v $(PWD):/src -w /src golang:$(GO_VERSION) \
 	bash -c "export GO111MODULE=on; export GOPROXY=https://proxy.golang.org; \
-	cd /tmp && go mod init tmp && go get mvdan.cc/gofumpt/gofumports@$(GOFUMPT_VERSION) && \
-	cd - && gofumports -w -local %s ."`,
+	go install mvdan.cc/gofumpt/gofumports@$(GOFUMPT_VERSION) && \
+	gofumports -w -local %s ."`,
 			lint.meta.CanonicalPath,
 		))
 
@@ -64,9 +64,8 @@ func (lint *Gofumpt) CompileMakefile(output *makefile.Output) error {
 func (lint *Gofumpt) ToolchainBuild(stage *dockerfile.Stage) error {
 	stage.
 		Step(step.Arg("GOFUMPT_VERSION")).
-		Step(step.Script(fmt.Sprintf(`cd $(mktemp -d) \
-	&& go mod init tmp \
-	&& go get mvdan.cc/gofumpt/gofumports@${GOFUMPT_VERSION} \
+		Step(step.Script(fmt.Sprintf(
+			`go install mvdan.cc/gofumpt/gofumports@${GOFUMPT_VERSION} \
 	&& mv /go/bin/gofumports %s/gofumports`, lint.meta.BinPath)))
 
 	return nil
