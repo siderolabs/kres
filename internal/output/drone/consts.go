@@ -4,7 +4,7 @@
 
 package drone
 
-//nolint: lll
+//nolint:lll
 const notifyTemplate = `{{#if build.pull }}
 *{{#success build.status}}✓ Success{{else}}✕ Fail{{/success}}*: {{ repo.owner }}/{{ repo.name }} - <https://github.com/{{ repo.owner }}/{{ repo.name }}/pull/{{ build.pull }}|Pull Request #{{ build.pull }}>
 {{else}}

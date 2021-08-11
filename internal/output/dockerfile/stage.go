@@ -62,7 +62,7 @@ func (stage *Stage) Dependencies() []string {
 
 // Before implements stableToposort.Node interface.
 func (stage *Stage) Before(node stableToposort.Node) bool {
-	otherStage := node.(*Stage) //nolint: errcheck,forcetypeassert
+	otherStage := node.(*Stage) //nolint:errcheck,forcetypeassert
 
 	for _, dep := range otherStage.Dependencies() {
 		sanitized := stripVars.ReplaceAllString(dep, "")

@@ -8,5 +8,5 @@ import "github.com/mitchellh/cli"
 
 // Meta is a shared command functionality.
 type Meta struct {
-	Ui cli.Ui //nolint: golint,stylecheck,revive
+	Ui cli.Ui //nolint:golint,stylecheck,revive
 }

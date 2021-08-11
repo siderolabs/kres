@@ -21,7 +21,7 @@ type MakefileSuite struct {
 }
 
 func (suite *MakefileSuite) SetupSuite() {
-	output.PreambleTimestamp, _ = time.Parse(time.RFC3339, strings.ReplaceAll(time.RFC3339, "07:00", "")) //nolint: errcheck
+	output.PreambleTimestamp, _ = time.Parse(time.RFC3339, strings.ReplaceAll(time.RFC3339, "07:00", "")) //nolint:errcheck
 	output.PreambleCreator = "test"
 }
 

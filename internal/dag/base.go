@@ -7,7 +7,7 @@ package dag
 // BaseNode implements core functionality of the node.
 //
 // BaseNode is designed to be included into other types.
-type BaseNode struct { //nolint: govet
+type BaseNode struct { //nolint:govet
 	inputs []Node
 	name   string
 }
