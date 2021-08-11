@@ -42,7 +42,14 @@ func (builder *builder) DetectGolang() (bool, error) {
 
 	builder.meta.CanonicalPath = modfile.ModulePath(contents)
 
-	for _, srcDir := range []string{"src", "internal", "pkg", "cmd", "api"} {
+	for _, srcDir := range []string{
+		"api",         // API definitions (generated protobufs, Kubebuilder's resources)
+		"cmd",         // main packages
+		"controllers", // Kubernetes controllers
+		"internal",    // internal packages
+		"pkg",         // generic, general use packages that can be used independently
+		"src",         // deprecated
+	} {
 		exists, err := directoryExists(builder.rootPath, srcDir)
 		if err != nil {
 			return true, err
