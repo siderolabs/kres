@@ -25,6 +25,7 @@ type Output struct {
 	output.FileAdapter
 
 	canonicalPath string
+	goVersion     string
 	enabled       bool
 }
 
@@ -32,6 +33,7 @@ type Output struct {
 func NewOutput() *Output {
 	output := &Output{
 		canonicalPath: "github.com/example.com/example.proj",
+		goVersion:     "1.16",
 	}
 
 	output.FileAdapter.FileWriter = output
@@ -84,7 +86,7 @@ func (o *Output) config(w io.Writer) error {
 		return err
 	}
 
-	if _, err := fmt.Fprintf(w, configTemplate, o.canonicalPath); err != nil {
+	if _, err := fmt.Fprintf(w, configTemplate, o.canonicalPath, o.goVersion); err != nil {
 		return err
 	}
 
