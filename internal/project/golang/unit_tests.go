@@ -17,7 +17,7 @@ import (
 )
 
 // UnitTests runs unit-tests for Go packages.
-type UnitTests struct { //nolint: govet
+type UnitTests struct { //nolint:govet
 	dag.BaseNode
 
 	RequiresInsecure bool `yaml:"requiresInsecure"`

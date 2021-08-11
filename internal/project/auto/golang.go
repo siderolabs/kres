@@ -20,7 +20,7 @@ import (
 
 // DetectGolang checks if project at rootPath is Go-based project.
 //
-//nolint: gocognit,gocyclo,cyclop
+//nolint:gocognit,gocyclo,cyclop
 func (builder *builder) DetectGolang() (bool, error) {
 	gomodPath := filepath.Join(builder.rootPath, "go.mod")
 
@@ -33,7 +33,7 @@ func (builder *builder) DetectGolang() (bool, error) {
 		return false, err
 	}
 
-	defer gomod.Close() //nolint: errcheck
+	defer gomod.Close() //nolint:errcheck
 
 	contents, err := ioutil.ReadAll(gomod)
 	if err != nil {

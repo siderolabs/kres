@@ -27,7 +27,7 @@ func (builder *builder) DetectJS() (bool, error) {
 		return false, err
 	}
 
-	defer npmPackageConfig.Close() //nolint: errcheck
+	defer npmPackageConfig.Close() //nolint:errcheck
 
 	for _, srcDir := range []string{"frontend"} {
 		exists, err := directoryExists(builder.rootPath, srcDir)

@@ -37,7 +37,7 @@ var ErrSkip = fmt.Errorf("skip file")
 
 // Generate implements outout.Writer.
 //
-//nolint: gocognit
+//nolint:gocognit
 func (adapter *FileAdapter) Generate() error {
 	// buffer the output before writing it down
 	buffers := map[string]*bytes.Buffer{}
@@ -84,7 +84,7 @@ func (adapter *FileAdapter) Generate() error {
 				return err
 			}
 
-			defer f.Close() //nolint: errcheck
+			defer f.Close() //nolint:errcheck
 
 			oldContents, err = splitIgnoringPreamble(f)
 
@@ -105,7 +105,7 @@ func (adapter *FileAdapter) Generate() error {
 				return err
 			}
 
-			defer f.Close() //nolint: errcheck
+			defer f.Close() //nolint:errcheck
 
 			_, err = buffers[filename].WriteTo(f)
 

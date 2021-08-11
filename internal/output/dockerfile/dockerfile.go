@@ -127,7 +127,7 @@ func (o *Output) dockerfile(w io.Writer) error {
 	sortedStages, _ := stableToposort.Sort(stageNodes)
 
 	for _, stageNode := range sortedStages {
-		stage := stageNode.(*Stage) //nolint: errcheck,forcetypeassert
+		stage := stageNode.(*Stage) //nolint:errcheck,forcetypeassert
 		if err := stage.Generate(w); err != nil {
 			return err
 		}

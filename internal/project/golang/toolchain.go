@@ -28,7 +28,7 @@ const (
 )
 
 // Toolchain provides Go compiler and common utilities.
-type Toolchain struct { //nolint: govet
+type Toolchain struct { //nolint:govet
 	dag.BaseNode
 
 	meta *meta.Options

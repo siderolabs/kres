@@ -65,7 +65,7 @@ func walk(targets []Node, walkFn WalkFunc, visited map[Node]struct{}, depth int)
 func FindByName(name string, targets ...Node) (result Node) {
 	visited := make(map[Node]struct{})
 
-	walk(targets, func(node Node) error { //nolint: errcheck
+	walk(targets, func(node Node) error { //nolint:errcheck
 		if node.Name() == name {
 			result = node
 		}

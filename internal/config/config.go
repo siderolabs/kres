@@ -44,7 +44,7 @@ func NewProvider(path string) (*Provider, error) {
 		return nil, err
 	}
 
-	defer r.Close() //nolint: errcheck
+	defer r.Close() //nolint:errcheck
 
 	decoder := yaml.NewDecoder(r)
 
