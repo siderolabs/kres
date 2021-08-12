@@ -2,10 +2,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-// Package conform implements output to .conform.yml.
+// Package conform implements output to .conform.yaml.
 package conform
 
 import (
+	_ "embed" //nolint:gci // allows go:embed usage
 	"encoding/json"
 	"io"
 	"text/template"
@@ -17,13 +18,17 @@ const (
 	filename = ".conform.yaml"
 )
 
+//go:embed conform.yaml
+var configTemplate string
+
 // Output implements .conform.yaml generation.
 type Output struct {
 	output.FileAdapter
 
-	scopes       []string
-	types        []string
-	licenseCheck bool
+	scopes            []string
+	types             []string
+	licenseCheck      bool
+	gpgSignatureCheck bool
 
 	enabled bool
 }
@@ -68,6 +73,11 @@ func (o *Output) SetLicenseCheck(enable bool) {
 	o.licenseCheck = enable
 }
 
+// SetGPGSignatureCheck enables GPG signature check.
+func (o *Output) SetGPGSignatureCheck(enable bool) {
+	o.gpgSignatureCheck = enable
+}
+
 // Filenames implements output.FileWriter interface.
 func (o *Output) Filenames() []string {
 	if !o.enabled {
@@ -108,13 +118,15 @@ func (o *Output) config(w io.Writer) error {
 	}
 
 	vars := struct {
-		Types              string
-		Scopes             string
-		EnableLicenseCheck bool
+		Types                   string
+		Scopes                  string
+		EnableLicenseCheck      bool
+		EnableGPGSignatureCheck bool
 	}{
-		Types:              string(types),
-		Scopes:             string(scopes),
-		EnableLicenseCheck: o.licenseCheck,
+		Types:                   string(types),
+		Scopes:                  string(scopes),
+		EnableLicenseCheck:      o.licenseCheck,
+		EnableGPGSignatureCheck: o.gpgSignatureCheck,
 	}
 
 	return tmpl.Execute(w, vars)

@@ -27,11 +27,12 @@ type Repository struct { //nolint:govet,maligned
 	MainBranch      string   `yaml:"mainBranch"`
 	EnforceContexts []string `yaml:"enforceContexts"`
 
-	EnableConform       bool     `yaml:"enableConform"`
-	ConformWebhookURL   string   `yaml:"conformWebhookURL"`
-	ConformTypes        []string `yaml:"conformTypes"`
-	ConformScopes       []string `yaml:"conformScopes"`
-	ConformLicenseCheck bool     `yaml:"conformLicenseCheck"`
+	EnableConform            bool     `yaml:"enableConform"`
+	ConformWebhookURL        string   `yaml:"conformWebhookURL"`
+	ConformTypes             []string `yaml:"conformTypes"`
+	ConformScopes            []string `yaml:"conformScopes"`
+	ConformLicenseCheck      bool     `yaml:"conformLicenseCheck"`
+	ConformGPGSignatureCheck bool     `yaml:"conformGPGSignatureCheck"`
 
 	EnableLicense bool `yaml:"enableLicense"`
 
@@ -64,7 +65,8 @@ func NewRepository(meta *meta.Options) *Repository {
 		ConformScopes: []string{
 			".*",
 		},
-		ConformLicenseCheck: true,
+		ConformLicenseCheck:      true,
+		ConformGPGSignatureCheck: true,
 
 		EnableLicense: true,
 
@@ -82,6 +84,7 @@ func (r *Repository) CompileConform(o *conform.Output) error {
 	o.SetScopes(r.ConformScopes)
 	o.SetTypes(r.ConformTypes)
 	o.SetLicenseCheck(r.ConformLicenseCheck)
+	o.SetGPGSignatureCheck(r.ConformGPGSignatureCheck)
 
 	return nil
 }

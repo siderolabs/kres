@@ -1,14 +1,9 @@
-// This Source Code Form is subject to the terms of the Mozilla Public
-// License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-package conform
-
-const configTemplate = `policies:
+---
+policies:
 - type: commit
   spec:
     dco: true
-    gpg: false
+    gpg: {{ .EnableGPGSignatureCheck }}
     spellcheck:
       locale: US
     maximumOfOneCommit: true
@@ -37,4 +32,3 @@ const configTemplate = `policies:
       // License, v. 2.0. If a copy of the MPL was not distributed with this
       // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 {{ end -}}
-`

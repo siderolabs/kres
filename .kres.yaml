@@ -1,4 +1,3 @@
----
 # Configuration file for Kres
 #
 # Kres configuration is a multi-document YAML file, each document has same structure:
@@ -12,6 +11,8 @@
 #
 #
 # Any node in the tree might have its configuration overridden via the config.
+
+---
 kind: common.Image
 name: image-kres
 spec:
