@@ -1,12 +1,13 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2021-05-20T21:00:34Z by kres fb41160.
+# Generated on 2021-08-12T14:23:04Z by kres 470baea-dirty.
 
+---
 policies:
 - type: commit
   spec:
     dco: true
-    gpg: false
+    gpg: true
     spellcheck:
       locale: US
     maximumOfOneCommit: true
