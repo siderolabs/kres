@@ -37,7 +37,7 @@ func NewDocker(meta *meta.Options) *Docker {
 
 		meta: meta,
 
-		DockerImage: "docker:19.03-dind",
+		DockerImage: "docker:20.10-dind",
 	}
 }
 

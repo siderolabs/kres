@@ -122,11 +122,18 @@ linters:
     - godox
     - goerr113
     - gomnd
+    - gomoddirectives
     - nestif
     - paralleltest
     - tagliatelle
+    - thelper
     - typecheck
     - wrapcheck
+    # abandoned linters for which golangci shows the warning that the repo is archived by the owner
+    - interfacer
+    - maligned
+    - golint
+    - scopelint
 
 issues:
   exclude: []

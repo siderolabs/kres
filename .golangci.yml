@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2021-08-11T16:25:38Z by kres c77e3bf-dirty.
+# Generated on 2021-08-24T17:25:25Z by kres e5f1e7e-dirty.
 
 # options for analysis running
 run:
@@ -126,11 +126,18 @@ linters:
     - godox
     - goerr113
     - gomnd
+    - gomoddirectives
     - nestif
     - paralleltest
     - tagliatelle
+    - thelper
     - typecheck
     - wrapcheck
+    # abandoned linters for which golangci shows the warning that the repo is archived by the owner
+    - interfacer
+    - maligned
+    - golint
+    - scopelint
 
 issues:
   exclude: []
