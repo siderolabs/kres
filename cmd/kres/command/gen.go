@@ -78,7 +78,9 @@ func (c *Gen) Run(args []string) int {
 
 	var err error
 
-	options := meta.Options{}
+	options := meta.Options{
+		GoContainerVersion: "1.16-alpine",
+	}
 
 	options.Config, err = config.NewProvider(".kres.yaml")
 	if err != nil {

@@ -58,6 +58,9 @@ type Options struct { //nolint:govet
 	// Path to /bin.
 	BinPath string
 
+	// GoContainerVersion is the default go official container version.
+	GoContainerVersion string
+
 	// Go's GOPATH.
 	GoPath string
 
