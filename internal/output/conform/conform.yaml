@@ -3,7 +3,12 @@ policies:
 - type: commit
   spec:
     dco: true
-    gpg: {{ .EnableGPGSignatureCheck }}
+    gpg:
+      required: {{ .EnableGPGSignatureCheck }}
+{{- if .Organization }}
+      identity:
+        gitHubOrganization: {{ .Organization }}
+{{- end }}
     spellcheck:
       locale: US
     maximumOfOneCommit: true

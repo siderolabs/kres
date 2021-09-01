@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2021-08-11T11:26:17Z by kres 907039b-dirty.
+# Generated on 2021-09-01T21:38:59Z by kres 5ca7963-dirty.
 
 # common variables
 
@@ -124,7 +124,7 @@ $(ARTIFACTS)/kres-linux-amd64:
 kres-linux-amd64: $(ARTIFACTS)/kres-linux-amd64  ## Builds executable for kres-linux-amd64.
 
 .PHONY: kres
-kres: kres-linux-amd64
+kres: kres-linux-amd64  ## Builds executables for kres.
 
 .PHONY: lint-markdown
 lint-markdown:  ## Runs markdownlint.

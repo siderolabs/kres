@@ -85,6 +85,7 @@ func (r *Repository) CompileConform(o *conform.Output) error {
 	o.SetTypes(r.ConformTypes)
 	o.SetLicenseCheck(r.ConformLicenseCheck)
 	o.SetGPGSignatureCheck(r.ConformGPGSignatureCheck)
+	o.SetGitHubOrganization(r.meta.GitHubOrganization)
 
 	return nil
 }

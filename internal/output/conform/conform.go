@@ -25,6 +25,7 @@ var configTemplate string
 type Output struct {
 	output.FileAdapter
 
+	githubOrg         string
 	scopes            []string
 	types             []string
 	licenseCheck      bool
@@ -78,6 +79,11 @@ func (o *Output) SetGPGSignatureCheck(enable bool) {
 	o.gpgSignatureCheck = enable
 }
 
+// SetGitHubOrganization scopes GPG identity check to the GitHub organization.
+func (o *Output) SetGitHubOrganization(org string) {
+	o.githubOrg = org
+}
+
 // Filenames implements output.FileWriter interface.
 func (o *Output) Filenames() []string {
 	if !o.enabled {
@@ -120,11 +126,13 @@ func (o *Output) config(w io.Writer) error {
 	vars := struct {
 		Types                   string
 		Scopes                  string
+		Organization            string
 		EnableLicenseCheck      bool
 		EnableGPGSignatureCheck bool
 	}{
 		Types:                   string(types),
 		Scopes:                  string(scopes),
+		Organization:            o.githubOrg,
 		EnableLicenseCheck:      o.licenseCheck,
 		EnableGPGSignatureCheck: o.gpgSignatureCheck,
 	}

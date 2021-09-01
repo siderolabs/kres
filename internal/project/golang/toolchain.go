@@ -33,9 +33,10 @@ type Toolchain struct { //nolint:govet
 
 	meta *meta.Options
 
-	Kind    ToolchainKind
-	Version string
-	Image   string
+	Kind          ToolchainKind
+	Version       string
+	Image         string
+	ExtraPackages []string `yaml:"extraPackages"`
 }
 
 // NewToolchain builds Toolchain with default values.
@@ -126,8 +127,11 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 		From("${TOOLCHAIN}")
 
 	if toolchain.Kind == ToolchainOfficial {
+		packages := []string{"add", "bash", "curl", "build-base", "protoc", "protobuf-dev"}
+		packages = append(packages, toolchain.ExtraPackages...)
+
 		toolchainStage.
-			Step(step.Run("apk", "--update", "--no-cache", "add", "bash", "curl", "build-base", "protoc", "protobuf-dev"))
+			Step(step.Run("apk", append([]string{"--update", "--no-cache"}, packages...)...))
 	}
 
 	tools := output.Stage("tools").

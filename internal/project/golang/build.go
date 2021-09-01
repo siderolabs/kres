@@ -33,8 +33,16 @@ type Build struct {
 type CompileConfig map[string]string
 
 func (c CompileConfig) set(script *step.RunStep) {
-	for key, value := range c {
-		script.Env(key, value)
+	keys := make([]string, 0, len(c))
+
+	for key := range c {
+		keys = append(keys, key)
+	}
+
+	sort.Strings(keys)
+
+	for _, key := range keys {
+		script.Env(key, c[key])
 	}
 }
 
@@ -121,6 +129,7 @@ func (build *Build) CompileMakefile(output *makefile.Output) error {
 	}
 
 	output.Target(build.Name()).
+		Description(fmt.Sprintf("Builds executables for %s.", build.Name())).
 		Depends(build.artifacts...).
 		Phony()
 

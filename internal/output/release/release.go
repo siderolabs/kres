@@ -17,10 +17,8 @@ import (
 )
 
 const (
-	release           = "./hack/release.sh"
-	releaseTemplate   = "./hack/release.toml"
-	config            = "./hack/git-chglog/config.yaml"
-	changelogTemplate = "./hack/git-chglog/CHANGELOG.tpl.md"
+	release         = "./hack/release.sh"
+	releaseTemplate = "./hack/release.toml"
 )
 
 const releaseStr = `
@@ -86,36 +84,6 @@ EOF
   exit 1
 fi`
 
-const configStr = `style: github
-template: CHANGELOG.tpl.md
-info:
-  title: CHANGELOG
-  repository_url: https://github.com/{{ .GitHubOrganization }}/{{ .GitHubRepository }}
-options:
-  commits:
-    # filters:
-    #   Type:
-    #     - feat
-    #     - fix
-    #     - perf
-    #     - refactor
-  commit_groups:
-    # title_maps:
-    #   feat: Features
-    #   fix: Bug Fixes
-    #   perf: Performance Improvements
-    #   refactor: Code Refactoring
-  header:
-    pattern: "^(\\w*)(?:\\(([\\w\\$\\.\\-\\*\\s]*)\\))?\\:\\s(.*)$"
-    pattern_maps:
-      - Type
-      - Scope
-      - Subject
-  notes:
-    keywords:
-      - BREAKING CHANGE
-`
-
 const releaseTemplateStr = `
 # commit to be tagged for the new release
 commit = "HEAD"
@@ -129,29 +97,6 @@ match_deps = "^github.com/({{ .GitHubOrganization }}/[a-zA-Z0-9-]+)$"
 
 # [notes]
 `
-
-const templateStr = `{{ range .Versions }}
-<a name="{{ .Tag.Name }}"></a>
-## {{ if .Tag.Previous }}[{{ .Tag.Name }}]({{ $.Info.RepositoryURL }}/compare/{{ .Tag.Previous.Name }}...{{ .Tag.Name }}){{ else }}{{ .Tag.Name }}{{ end }} ({{ datetime "2006-01-02" .Tag.Date }})
-
-{{ range .CommitGroups -}}
-### {{ .Title }}
-
-{{ range .Commits -}}
-* {{ if .Scope }}**{{ .Scope }}:** {{ end }}{{ .Subject }}
-{{ end }}
-{{ end -}}
-
-{{- if .NoteGroups -}}
-{{ range .NoteGroups -}}
-### {{ .Title }}
-
-{{ range .Notes }}
-{{ .Body }}
-{{ end }}
-{{ end -}}
-{{ end -}}
-{{ end -}}`
 
 // Output implements .gitignore generation.
 type Output struct {
@@ -182,7 +127,7 @@ func (o *Output) Compile(node interface{}) error {
 
 // Filenames implements output.FileWriter interface.
 func (o *Output) Filenames() []string {
-	return []string{release, releaseTemplate, config, changelogTemplate}
+	return []string{release, releaseTemplate}
 }
 
 // SetMeta grabs build options.
@@ -197,10 +142,6 @@ func (o *Output) GenerateFile(filename string, w io.Writer) error {
 		return o.release(w)
 	case releaseTemplate:
 		return o.releaseTemplate(filename, w)
-	case config:
-		return o.config(w)
-	case changelogTemplate:
-		return o.changelogTemplate(w)
 	default:
 		panic("unexpected filename: " + filename)
 	}
@@ -252,31 +193,6 @@ func (o *Output) releaseTemplate(filename string, w io.Writer) error {
 	}
 
 	return tmpl.Execute(w, o.meta)
-}
-
-func (o *Output) config(w io.Writer) error {
-	if _, err := w.Write([]byte(output.Preamble("# "))); err != nil {
-		return err
-	}
-
-	tmpl, err := template.New("config").Parse(configStr)
-	if err != nil {
-		return err
-	}
-
-	return tmpl.Execute(w, o.meta)
-}
-
-func (o *Output) changelogTemplate(w io.Writer) error {
-	if _, err := w.Write([]byte(output.Preamble("<!-- ", " -->"))); err != nil {
-		return err
-	}
-
-	if _, err := fmt.Fprintf(w, "%s\n", templateStr); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // Compiler is implemented by project blocks which support Dockerfile generate.
