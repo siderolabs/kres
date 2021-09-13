@@ -33,7 +33,7 @@ func NewGofumpt(meta *meta.Options) *Gofumpt {
 
 		meta: meta,
 
-		GoVersion: "1.16",
+		GoVersion: "1.17",
 		Version:   "abc0db2c416aca0f60ea33c23c76665f6e7ba0b6",
 	}
 }

@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2021-09-01T21:38:59Z by kres 5ca7963-dirty.
+# Generated on 2021-09-13T12:59:01Z by kres 7412de4-dirty.
 
 # common variables
 
@@ -12,7 +12,7 @@ REGISTRY ?= ghcr.io
 USERNAME ?= talos-systems
 REGISTRY_AND_USERNAME ?= $(REGISTRY)/$(USERNAME)
 GOFUMPT_VERSION ?= abc0db2c416aca0f60ea33c23c76665f6e7ba0b6
-GO_VERSION ?= 1.16
+GO_VERSION ?= 1.17
 PROTOBUF_GO_VERSION ?= 1.25.0
 GRPC_GO_VERSION ?= 1.1.0
 GRPC_GATEWAY_VERSION ?= 2.4.0
@@ -40,7 +40,7 @@ COMMON_ARGS += --build-arg=PROTOBUF_GO_VERSION=$(PROTOBUF_GO_VERSION)
 COMMON_ARGS += --build-arg=GRPC_GO_VERSION=$(GRPC_GO_VERSION)
 COMMON_ARGS += --build-arg=GRPC_GATEWAY_VERSION=$(GRPC_GATEWAY_VERSION)
 COMMON_ARGS += --build-arg=TESTPKGS=$(TESTPKGS)
-TOOLCHAIN ?= docker.io/golang:1.16-alpine
+TOOLCHAIN ?= docker.io/golang:1.17-alpine
 
 # help menu
 
