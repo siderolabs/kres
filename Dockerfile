@@ -2,7 +2,7 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2021-09-13T12:59:01Z by kres 7412de4-dirty.
+# Generated on 2021-09-14T14:58:33Z by kres 2a27963-dirty.
 
 ARG TOOLCHAIN
 
@@ -24,7 +24,7 @@ RUN markdownlint --ignore "CHANGELOG.md" --ignore "**/node_modules/**" --ignore 
 
 # base toolchain image
 FROM ${TOOLCHAIN} AS toolchain
-RUN apk --update --no-cache add bash curl build-base protoc protobuf-dev
+RUN apk --update --no-cache add bash build-base curl git gnupg protobuf-dev protoc
 
 # build tools
 FROM toolchain AS tools
