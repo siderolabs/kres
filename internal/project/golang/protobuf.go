@@ -24,19 +24,23 @@ type Protobuf struct {
 
 	ProtobufGoVersion  string `yaml:"protobufGoVersion"`
 	GrpcGoVersion      string `yaml:"grpcGoVersion"`
-	GrpcGatewayVersion string `yaml:"GrpcGatewayVersion"`
+	GrpcGatewayVersion string `yaml:"grpcGatewayVersion"`
+	VTProtobufVersion  string `yaml:"vtProtobufVersion"`
 
 	BaseSpecPath string `yaml:"baseSpecPath"`
 
 	Specs []ProtoSpec `yaml:"specs"`
 
 	ExperimentalFlags []string `yaml:"experimentalFlags"`
+
+	VTProtobufEnabled bool `yaml:"vtProtobufEnabled"`
 }
 
 // ProtoSpec describes a set of protobuf specs to be compiled.
 type ProtoSpec struct {
 	Source       string `yaml:"source"`
 	SubDirectory string `yaml:"subdirectory"`
+	SkipCompile  bool   `yaml:"skipCompile"`
 	GenGateway   bool   `yaml:"genGateway"`
 }
 
@@ -46,6 +50,7 @@ func NewProtobuf(meta *meta.Options) *Protobuf {
 		"PROTOBUF_GO_VERSION",
 		"GRPC_GO_VERSION",
 		"GRPC_GATEWAY_VERSION",
+		"VTPROTOBUF_VERSION",
 	)
 
 	return &Protobuf{
@@ -53,9 +58,10 @@ func NewProtobuf(meta *meta.Options) *Protobuf {
 
 		meta: meta,
 
-		ProtobufGoVersion:  "v1.25.0",
+		ProtobufGoVersion:  "v1.27.1",
 		GrpcGoVersion:      "v1.1.0",
 		GrpcGatewayVersion: "v2.4.0",
+		VTProtobufVersion:  "81d623a9a700ede8ef765e5ab08b3aa1f5b4d5a8",
 
 		BaseSpecPath: "/api",
 	}
@@ -66,7 +72,8 @@ func (proto *Protobuf) CompileMakefile(output *makefile.Output) error {
 	output.VariableGroup(makefile.VariableGroupCommon).
 		Variable(makefile.OverridableVariable("PROTOBUF_GO_VERSION", strings.TrimLeft(proto.ProtobufGoVersion, "v"))).
 		Variable(makefile.OverridableVariable("GRPC_GO_VERSION", strings.TrimLeft(proto.GrpcGoVersion, "v"))).
-		Variable(makefile.OverridableVariable("GRPC_GATEWAY_VERSION", strings.TrimLeft(proto.GrpcGatewayVersion, "v")))
+		Variable(makefile.OverridableVariable("GRPC_GATEWAY_VERSION", strings.TrimLeft(proto.GrpcGatewayVersion, "v"))).
+		Variable(makefile.OverridableVariable("VTPROTOBUF_VERSION", strings.TrimLeft(proto.VTProtobufVersion, "v")))
 
 	if len(proto.Specs) == 0 {
 		return nil
@@ -94,6 +101,13 @@ func (proto *Protobuf) ToolchainBuild(stage *dockerfile.Stage) error {
 		Step(step.Arg("GRPC_GATEWAY_VERSION")).
 		Step(step.Script("go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v${GRPC_GATEWAY_VERSION}")).
 		Step(step.Run("mv", filepath.Join(proto.meta.GoPath, "bin", "protoc-gen-grpc-gateway"), proto.meta.BinPath))
+
+	if proto.VTProtobufEnabled {
+		stage.
+			Step(step.Arg("VTPROTOBUF_VERSION")).
+			Step(step.Script("go install github.com/planetscale/vtprotobuf/cmd/protoc-gen-go-vtproto@${VTPROTOBUF_VERSION}")).
+			Step(step.Run("mv", filepath.Join(proto.meta.GoPath, "bin", "protoc-gen-go-vtproto"), proto.meta.BinPath))
+	}
 
 	return nil
 }
@@ -127,42 +141,50 @@ func (proto *Protobuf) CompileDockerfile(output *dockerfile.Output) error {
 
 	for _, spec := range proto.Specs {
 		external := strings.HasPrefix(spec.Source, "http")
-
-		flags := []string{
-			fmt.Sprintf("-I%s", proto.BaseSpecPath),
-		}
-
-		if spec.GenGateway {
-			flags = append(flags,
-				fmt.Sprintf("--grpc-gateway_out=paths=source_relative:%s", proto.BaseSpecPath),
-				"--grpc-gateway_opt=generate_unbound_methods=true",
-			)
-
-			if external {
-				flags = append(flags,
-					"--grpc-gateway_opt=standalone=true",
-				)
-			}
-		}
-
-		if !spec.GenGateway || !external {
-			flags = append(flags,
-				fmt.Sprintf("--go_out=paths=source_relative:%s", proto.BaseSpecPath),
-				fmt.Sprintf("--go-grpc_out=paths=source_relative:%s", proto.BaseSpecPath),
-			)
-		}
-
 		source := filepath.Join(proto.BaseSpecPath, spec.SubDirectory, filepath.Base(spec.Source))
 
-		flags = append(flags, proto.ExperimentalFlags...)
-		flags = append(flags, source)
+		if !spec.SkipCompile {
+			flags := []string{
+				fmt.Sprintf("-I%s", proto.BaseSpecPath),
+			}
 
-		compile.Step(
-			step.Run(
-				"protoc",
-				flags...,
-			),
-		)
+			if spec.GenGateway {
+				flags = append(flags,
+					fmt.Sprintf("--grpc-gateway_out=paths=source_relative:%s", proto.BaseSpecPath),
+					"--grpc-gateway_opt=generate_unbound_methods=true",
+				)
+
+				if external {
+					flags = append(flags,
+						"--grpc-gateway_opt=standalone=true",
+					)
+				}
+			}
+
+			if !spec.GenGateway || !external {
+				flags = append(flags,
+					fmt.Sprintf("--go_out=paths=source_relative:%s", proto.BaseSpecPath),
+					fmt.Sprintf("--go-grpc_out=paths=source_relative:%s", proto.BaseSpecPath),
+				)
+
+				if proto.VTProtobufEnabled {
+					flags = append(flags,
+						fmt.Sprintf("--go-vtproto_out=paths=source_relative:%s", proto.BaseSpecPath),
+						"--go-vtproto_opt=features=marshal+unmarshal+size",
+					)
+				}
+			}
+
+			flags = append(flags, proto.ExperimentalFlags...)
+			flags = append(flags, source)
+
+			compile.Step(
+				step.Run(
+					"protoc",
+					flags...,
+				),
+			)
+		}
 
 		if !external {
 			cleanupSteps = append(cleanupSteps,
