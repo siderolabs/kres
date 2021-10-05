@@ -6,10 +6,12 @@
 package release
 
 import (
+	_ "embed" //nolint:gci // allows go:embed usage
 	"errors"
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"text/template"
 
 	"github.com/talos-systems/kres/internal/output"
@@ -17,86 +19,15 @@ import (
 )
 
 const (
-	release         = "./hack/release.sh"
+	releaseScript   = "./hack/release.sh"
 	releaseTemplate = "./hack/release.toml"
 )
 
-const releaseStr = `
-#!/bin/bash
+//go:embed release.sh
+var releaseScriptStr string
 
-set -e
-
-RELEASE_TOOL_IMAGE="ghcr.io/talos-systems/release-tool:latest"
-
-function release-tool {
-  docker pull "${RELEASE_TOOL_IMAGE}" >/dev/null
-  docker run --rm -w /src -v "${PWD}":/src:ro "${RELEASE_TOOL_IMAGE}" -l -d -n -t "${1}" ./hack/release.toml
-}
-
-function changelog {
-  if [ "$#" -eq 1 ]; then
-    (release-tool ${1}; echo; cat CHANGELOG.md) > CHANGELOG.md- && mv CHANGELOG.md- CHANGELOG.md
-  else
-    echo 1>&2 "Usage: $0 changelog [tag]"
-    exit 1
-  fi
-}
-
-function release-notes {
-  release-tool "${2}" > "${1}"
-}
-
-function cherry-pick {
-  if [ $# -ne 2 ]; then
-    echo 1>&2 "Usage: $0 cherry-pick <commit> <branch>"
-    exit 1
-  fi
-
-  git checkout $2
-  git fetch
-  git rebase upstream/$2
-  git cherry-pick -x $1
-}
-
-function commit {
-  if [ $# -ne 1 ]; then
-    echo 1>&2 "Usage: $0 commit <tag>"
-    exit 1
-  fi
-
-  git commit -s -m "release($1): prepare release" -m "This is the official $1 release."
-}
-
-if declare -f "$1" > /dev/null
-then
-  cmd="$1"
-  shift
-  $cmd "$@"
-else
-  cat <<EOF
-Usage:
-  commit:        Create the official release commit message.
-  cherry-pick:   Cherry-pick a commit into a release branch.
-  changelog:     Update the specified CHANGELOG.
-  release-notes: Create release notes for GitHub release.
-EOF
-
-  exit 1
-fi`
-
-const releaseTemplateStr = `
-# commit to be tagged for the new release
-commit = "HEAD"
-
-project_name = "{{ .GitHubRepository }}"
-github_repo = "{{ .GitHubOrganization}}/{{ .GitHubRepository }}"
-match_deps = "^github.com/({{ .GitHubOrganization }}/[a-zA-Z0-9-]+)$"
-
-# previous = -
-# pre_release = true
-
-# [notes]
-`
+//go:embed release.toml
+var releaseTemplateStr string
 
 // Output implements .gitignore generation.
 type Output struct {
@@ -127,7 +58,7 @@ func (o *Output) Compile(node interface{}) error {
 
 // Filenames implements output.FileWriter interface.
 func (o *Output) Filenames() []string {
-	return []string{release, releaseTemplate}
+	return []string{releaseScript, releaseTemplate}
 }
 
 // SetMeta grabs build options.
@@ -138,8 +69,8 @@ func (o *Output) SetMeta(meta *meta.Options) {
 // GenerateFile implements output.FileWriter interface.
 func (o *Output) GenerateFile(filename string, w io.Writer) error {
 	switch filename {
-	case release:
-		return o.release(w)
+	case releaseScript:
+		return o.releaseScript(w)
 	case releaseTemplate:
 		return o.releaseTemplate(filename, w)
 	default:
@@ -149,14 +80,14 @@ func (o *Output) GenerateFile(filename string, w io.Writer) error {
 
 // Permissions implements output.PermissionsWriter interface.
 func (o *Output) Permissions(filename string) os.FileMode {
-	if filename == release {
+	if filename == releaseScript {
 		return 0o744
 	}
 
 	return 0
 }
 
-func (o *Output) release(w io.Writer) error {
+func (o *Output) releaseScript(w io.Writer) error {
 	if _, err := w.Write([]byte("#!/bin/bash\n\n")); err != nil {
 		return err
 	}
@@ -165,7 +96,7 @@ func (o *Output) release(w io.Writer) error {
 		return err
 	}
 
-	if _, err := fmt.Fprintf(w, "%s\n", releaseStr); err != nil {
+	if _, err := fmt.Fprintf(w, "%s\n", releaseScriptStr); err != nil {
 		return err
 	}
 
@@ -183,11 +114,9 @@ func (o *Output) releaseTemplate(filename string, w io.Writer) error {
 		return err
 	}
 
-	if _, err = w.Write([]byte(output.Preamble("# "))); err != nil {
-		return err
-	}
+	// no preamble as this file is meant to be edited
 
-	tmpl, err := template.New("config").Parse(releaseTemplateStr)
+	tmpl, err := template.New("config").Parse(strings.TrimSpace(releaseTemplateStr) + "\n")
 	if err != nil {
 		return err
 	}

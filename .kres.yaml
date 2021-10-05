@@ -17,3 +17,8 @@ kind: common.Image
 name: image-kres
 spec:
     entrypointArgs: ['gen']
+
+---
+kind: service.CodeCov
+spec:
+    targetThreshold: 10

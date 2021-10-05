@@ -85,7 +85,7 @@ linters-settings:
     require-explanation: false
     require-specific: true
   rowserrcheck: {}
-  testpackage:
+  testpackage: {}
   unparam:
     check-exported: false
   unused:

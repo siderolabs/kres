@@ -1,0 +1,11 @@
+# commit to be tagged for the new release
+commit = "HEAD"
+
+project_name = "{{ .GitHubRepository }}"
+github_repo = "{{ .GitHubOrganization}}/{{ .GitHubRepository }}"
+match_deps = "^github.com/({{ .GitHubOrganization }}/[a-zA-Z0-9-]+)$"
+
+# previous = -
+# pre_release = true
+
+# [notes]

@@ -1,9 +1,3 @@
-#!/bin/bash
-
-# THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
-#
-# Generated on 2021-10-05T12:02:21Z by kres 3a3fd2c-dirty.
-
 set -e
 
 RELEASE_TOOL_IMAGE="ghcr.io/talos-systems/release-tool:latest"
@@ -63,4 +57,3 @@ EOF
 
   exit 1
 fi
-
