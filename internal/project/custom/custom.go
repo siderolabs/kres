@@ -80,6 +80,11 @@ func (step *Step) CompileDrone(output *drone.Output) error {
 	return nil
 }
 
+// DroneEnabled implements drone.CustomCompiler.
+func (step *Step) DroneEnabled() bool {
+	return step.Drone.Enabled
+}
+
 // CompileMakefile implements makefile.Compiler.
 func (step *Step) CompileMakefile(output *makefile.Output) error {
 	if !step.Makefile.Enabled {

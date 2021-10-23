@@ -12,6 +12,7 @@ import (
 	"github.com/drone/drone-yaml/yaml"
 	"github.com/drone/drone-yaml/yaml/pretty"
 
+	"github.com/talos-systems/kres/internal/dag"
 	"github.com/talos-systems/kres/internal/output"
 )
 
@@ -120,7 +121,6 @@ func (o *Output) Step(step *Step) {
 // Compile implements output.Writer interface.
 func (o *Output) Compile(node interface{}) error {
 	compiler, implements := node.(Compiler)
-
 	if !implements {
 		return nil
 	}
@@ -176,4 +176,24 @@ func (o *Output) drone(w io.Writer) error {
 // Compiler is implemented by project blocks which support Drone config generation.
 type Compiler interface {
 	CompileDrone(*Output) error
+}
+
+// CustomCompiler is implemented by custom steps.
+type CustomCompiler interface {
+	DroneEnabled() bool
+}
+
+// HasDroneOutput checks if the node implements Compiler and has any output from drone.
+func HasDroneOutput() dag.NodeCondition {
+	return func(node dag.Node) bool {
+		if !dag.Implements((*Compiler)(nil))(node) {
+			return false
+		}
+
+		if c, ok := node.(CustomCompiler); ok && !c.DroneEnabled() {
+			return false
+		}
+
+		return true
+	}
 }

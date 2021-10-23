@@ -32,7 +32,7 @@ func NewRelease(meta *meta.Options) *Release {
 func (release *Release) CompileDrone(output *drone.Output) error {
 	output.Step(drone.MakeStep("release-notes").
 		OnlyOnTag().
-		DependsOn(dag.GatherMatchingInputNames(release, dag.Implements((*drone.Compiler)(nil)))...),
+		DependsOn(dag.GatherMatchingInputNames(release, drone.HasDroneOutput())...),
 	)
 
 	output.Step(drone.CustomStep(release.Name()).
