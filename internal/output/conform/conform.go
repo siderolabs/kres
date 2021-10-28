@@ -26,6 +26,7 @@ type Output struct {
 	output.FileAdapter
 
 	githubOrg         string
+	licenseHeader     string
 	scopes            []string
 	types             []string
 	licenseCheck      bool
@@ -72,6 +73,11 @@ func (o *Output) SetTypes(types []string) {
 // SetLicenseCheck enables license check.
 func (o *Output) SetLicenseCheck(enable bool) {
 	o.licenseCheck = enable
+}
+
+// SetLicenseHeader configures license header.
+func (o *Output) SetLicenseHeader(header string) {
+	o.licenseHeader = header
 }
 
 // SetGPGSignatureCheck enables GPG signature check.
@@ -127,6 +133,7 @@ func (o *Output) config(w io.Writer) error {
 		Types                   string
 		Scopes                  string
 		Organization            string
+		LicenseHeader           string
 		EnableLicenseCheck      bool
 		EnableGPGSignatureCheck bool
 	}{
@@ -134,6 +141,7 @@ func (o *Output) config(w io.Writer) error {
 		Scopes:                  string(scopes),
 		Organization:            o.githubOrg,
 		EnableLicenseCheck:      o.licenseCheck,
+		LicenseHeader:           o.licenseHeader,
 		EnableGPGSignatureCheck: o.gpgSignatureCheck,
 	}
 

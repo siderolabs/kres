@@ -34,9 +34,21 @@ type Repository struct { //nolint:govet,maligned
 	ConformLicenseCheck      bool     `yaml:"conformLicenseCheck"`
 	ConformGPGSignatureCheck bool     `yaml:"conformGPGSignatureCheck"`
 
-	EnableLicense bool `yaml:"enableLicense"`
+	DeprecatedEnableLicense *bool `yaml:"enableLicense"`
+
+	License LicenseConfig `yaml:"license"`
 
 	BotName string `yaml:"botName"`
+}
+
+// LicenseConfig configures the license.
+//
+//nolint:govet
+type LicenseConfig struct {
+	Enabled bool                   `yaml:"enabled"`
+	ID      string                 `yaml:"id"`
+	Params  map[string]interface{} `yaml:"params"`
+	Header  string                 `yaml:"header"`
 }
 
 // NewRepository initializes Repository.
@@ -68,7 +80,11 @@ func NewRepository(meta *meta.Options) *Repository {
 		ConformLicenseCheck:      true,
 		ConformGPGSignatureCheck: true,
 
-		EnableLicense: true,
+		License: LicenseConfig{
+			Enabled: true,
+			ID:      "MPL-2.0",
+			Header:  mplHeader,
+		},
 
 		BotName: "talos-bot",
 	}
@@ -84,6 +100,7 @@ func (r *Repository) CompileConform(o *conform.Output) error {
 	o.SetScopes(r.ConformScopes)
 	o.SetTypes(r.ConformTypes)
 	o.SetLicenseCheck(r.ConformLicenseCheck)
+	o.SetLicenseHeader(r.License.Header)
 	o.SetGPGSignatureCheck(r.ConformGPGSignatureCheck)
 	o.SetGitHubOrganization(r.meta.GitHubOrganization)
 
@@ -92,13 +109,15 @@ func (r *Repository) CompileConform(o *conform.Output) error {
 
 // CompileLicense implements license.Compiler.
 func (r *Repository) CompileLicense(o *license.Output) error {
-	if !r.EnableLicense {
+	if r.DeprecatedEnableLicense != nil {
+		r.License.Enabled = *r.DeprecatedEnableLicense
+	}
+
+	if !r.License.Enabled {
 		return nil
 	}
 
-	o.Enable()
-
-	return nil
+	return o.Enable(r.License.ID, r.License.Params)
 }
 
 // CompileGitHub implements github.Compiler.
@@ -269,3 +288,8 @@ func equalStringSlices(a, b []string) bool {
 
 	return true
 }
+
+const mplHeader = `// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+`

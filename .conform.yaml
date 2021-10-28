@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2021-09-01T22:12:15Z by kres 5ca7963-dirty.
+# Generated on 2021-10-28T19:59:15Z by kres 2ebcde5-dirty.
 
 ---
 policies:
@@ -33,7 +33,4 @@ policies:
     excludeSuffixes:
       - .pb.go
       - .pb.gw.go
-    header: |
-      // This Source Code Form is subject to the terms of the Mozilla Public
-      // License, v. 2.0. If a copy of the MPL was not distributed with this
-      // file, You can obtain one at http://mozilla.org/MPL/2.0/.
+    header: "// This Source Code Form is subject to the terms of the Mozilla Public\u000A// License, v. 2.0. If a copy of the MPL was not distributed with this\u000A// file, You can obtain one at http://mozilla.org/MPL/2.0/.\u000A"
