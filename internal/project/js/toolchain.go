@@ -13,6 +13,7 @@ import (
 	"github.com/talos-systems/kres/internal/output/dockerfile"
 	"github.com/talos-systems/kres/internal/output/dockerfile/step"
 	"github.com/talos-systems/kres/internal/output/drone"
+	"github.com/talos-systems/kres/internal/output/gitignore"
 	"github.com/talos-systems/kres/internal/output/makefile"
 	"github.com/talos-systems/kres/internal/output/template"
 	"github.com/talos-systems/kres/internal/project/common"
@@ -46,6 +47,14 @@ func NewToolchain(meta *meta.Options, sourceDir string) *Toolchain {
 	meta.SourceFiles = append(meta.SourceFiles, ".babelrc", ".tsconfig")
 
 	return toolchain
+}
+
+// CompileGitignore implements gitignore.Compiler.
+func (toolchain *Toolchain) CompileGitignore(output *gitignore.Output) error {
+	output.
+		IgnorePath(filepath.Join(toolchain.sourceDir, "node_modules"))
+
+	return nil
 }
 
 // CompileTemplates implements template.Compiler.
