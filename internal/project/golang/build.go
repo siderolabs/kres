@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/talos-systems/kres/internal/dag"
 	"github.com/talos-systems/kres/internal/output/dockerfile"
@@ -91,12 +92,6 @@ func (build *Build) CompileDockerfile(output *dockerfile.Output) error {
 			Step(step.Copy("/"+name, "/"+name).From(fmt.Sprintf("%s-build", name)))
 	}
 
-	if len(build.Outputs) == 0 {
-		build.Outputs = map[string]CompileConfig{
-			fmt.Sprintf("%s-linux-amd64", build.Name()): nil,
-		}
-	}
-
 	for _, name := range build.getArtifacts() {
 		addBuildSteps(name, build.Outputs[name])
 	}
@@ -152,7 +147,7 @@ func (build *Build) getArtifacts() []string {
 		build.artifacts = []string{}
 
 		for name := range build.Outputs {
-			build.artifacts = append(build.artifacts, name)
+			build.artifacts = append(build.artifacts, strings.Join([]string{build.Name(), name}, "-"))
 		}
 
 		sort.Strings(build.artifacts)
