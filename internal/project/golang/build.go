@@ -27,11 +27,17 @@ type Build struct {
 	meta       *meta.Options
 	sourcePath string
 	entrypoint string
-	artifacts  []string
+	artifacts  []artifact
+	configs    []CompileConfig
 }
 
 // CompileConfig defines Go cross compile architecture settings.
 type CompileConfig map[string]string
+
+type artifact struct {
+	config CompileConfig
+	name   string
+}
 
 func (c CompileConfig) set(script *step.RunStep) {
 	keys := make([]string, 0, len(c))
@@ -92,8 +98,8 @@ func (build *Build) CompileDockerfile(output *dockerfile.Output) error {
 			Step(step.Copy("/"+name, "/"+name).From(fmt.Sprintf("%s-build", name)))
 	}
 
-	for _, name := range build.getArtifacts() {
-		addBuildSteps(name, build.Outputs[name])
+	for _, artifact := range build.getArtifacts() {
+		addBuildSteps(artifact.name, artifact.config)
 	}
 
 	build.entrypoint = fmt.Sprintf("%s-linux-${TARGETARCH}", build.Name())
@@ -112,20 +118,24 @@ func (build *Build) CompileDrone(output *drone.Output) error {
 
 // CompileMakefile implements makefile.Compiler.
 func (build *Build) CompileMakefile(output *makefile.Output) error {
+	deps := []string{}
+
 	for _, artifact := range build.getArtifacts() {
-		output.Target(fmt.Sprintf("$(ARTIFACTS)/%s", artifact)).
-			Script(fmt.Sprintf("@$(MAKE) local-%s DEST=$(ARTIFACTS)", artifact)).
+		output.Target(fmt.Sprintf("$(ARTIFACTS)/%s", artifact.name)).
+			Script(fmt.Sprintf("@$(MAKE) local-%s DEST=$(ARTIFACTS)", artifact.name)).
 			Phony()
 
-		output.Target(artifact).
-			Description(fmt.Sprintf("Builds executable for %s.", artifact)).
-			Depends(fmt.Sprintf("$(ARTIFACTS)/%s", artifact)).
+		deps = append(deps, artifact.name)
+
+		output.Target(artifact.name).
+			Description(fmt.Sprintf("Builds executable for %s.", artifact.name)).
+			Depends(fmt.Sprintf("$(ARTIFACTS)/%s", artifact.name)).
 			Phony()
 	}
 
 	output.Target(build.Name()).
 		Description(fmt.Sprintf("Builds executables for %s.", build.Name())).
-		Depends(build.artifacts...).
+		Depends(deps...).
 		Phony()
 
 	return nil
@@ -136,21 +146,32 @@ func (build *Build) Entrypoint() string {
 	return build.entrypoint
 }
 
-func (build *Build) getArtifacts() []string {
+func (build *Build) getArtifacts() []artifact {
 	if build.artifacts != nil {
 		return build.artifacts
 	}
 
-	if len(build.Outputs) == 0 {
-		build.artifacts = []string{fmt.Sprintf("%s-linux-amd64", build.Name())}
-	} else {
-		build.artifacts = []string{}
+	build.configs = []CompileConfig{}
 
-		for name := range build.Outputs {
-			build.artifacts = append(build.artifacts, strings.Join([]string{build.Name(), name}, "-"))
+	if len(build.Outputs) == 0 {
+		build.artifacts = []artifact{
+			{
+				name: fmt.Sprintf("%s-linux-amd64", build.Name()),
+			},
+		}
+	} else {
+		build.artifacts = make([]artifact, 0, len(build.Outputs))
+
+		for name, config := range build.Outputs {
+			build.artifacts = append(build.artifacts, artifact{
+				name:   strings.Join([]string{build.Name(), name}, "-"),
+				config: config,
+			})
 		}
 
-		sort.Strings(build.artifacts)
+		sort.Slice(build.artifacts, func(i, j int) bool {
+			return build.artifacts[i].name < build.artifacts[j].name
+		})
 	}
 
 	return build.artifacts

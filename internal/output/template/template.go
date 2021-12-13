@@ -8,6 +8,7 @@ package template
 import (
 	"fmt"
 	"io"
+	"os"
 	"sort"
 	"text/template"
 
@@ -22,6 +23,7 @@ type FileTemplate struct {
 	template       string
 	withPreamble   bool
 	withLicense    bool
+	noOverwrite    bool
 }
 
 // PreamblePrefix sets preamble prefix.
@@ -45,6 +47,13 @@ func (t *FileTemplate) NoPreamble() *FileTemplate {
 	return t
 }
 
+// NoOverwrite generates the template only if it doesn't exist yet.
+func (t *FileTemplate) NoOverwrite() *FileTemplate {
+	t.noOverwrite = true
+
+	return t
+}
+
 // Params sets template params.
 func (t *FileTemplate) Params(value interface{}) *FileTemplate {
 	t.params = value
@@ -53,6 +62,18 @@ func (t *FileTemplate) Params(value interface{}) *FileTemplate {
 }
 
 func (t *FileTemplate) write(w io.Writer) error {
+	if t.noOverwrite {
+		_, err := os.Stat(t.name)
+
+		if err != nil {
+			if !os.IsNotExist(err) {
+				return err
+			}
+		} else {
+			return output.ErrSkip
+		}
+	}
+
 	if t.withLicense {
 		if _, err := w.Write([]byte(output.License(t.preamblePrefix))); err != nil {
 			return err

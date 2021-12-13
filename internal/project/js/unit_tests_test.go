@@ -12,7 +12,6 @@ import (
 	"github.com/talos-systems/kres/internal/output/dockerfile"
 	"github.com/talos-systems/kres/internal/output/drone"
 	"github.com/talos-systems/kres/internal/output/makefile"
-	"github.com/talos-systems/kres/internal/output/template"
 	"github.com/talos-systems/kres/internal/project/js"
 )
 
@@ -20,5 +19,4 @@ func TestUnitTestsInterfaces(t *testing.T) {
 	assert.Implements(t, (*dockerfile.Compiler)(nil), new(js.UnitTests))
 	assert.Implements(t, (*makefile.Compiler)(nil), new(js.UnitTests))
 	assert.Implements(t, (*drone.Compiler)(nil), new(js.UnitTests))
-	assert.Implements(t, (*template.Compiler)(nil), new(js.UnitTests))
 }

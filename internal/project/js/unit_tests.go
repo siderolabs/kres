@@ -10,8 +10,6 @@ import (
 	"github.com/talos-systems/kres/internal/output/dockerfile/step"
 	"github.com/talos-systems/kres/internal/output/drone"
 	"github.com/talos-systems/kres/internal/output/makefile"
-	"github.com/talos-systems/kres/internal/output/template"
-	"github.com/talos-systems/kres/internal/project/js/templates"
 	"github.com/talos-systems/kres/internal/project/meta"
 )
 
@@ -24,8 +22,6 @@ type UnitTests struct {
 
 // NewUnitTests initializes UnitTests.
 func NewUnitTests(meta *meta.Options, name string) *UnitTests {
-	meta.SourceFiles = append(meta.SourceFiles, ".jestrc")
-
 	return &UnitTests{
 		BaseNode: dag.NewBaseNode(name),
 		meta:     meta,
@@ -53,14 +49,6 @@ func (tests *UnitTests) CompileMakefile(output *makefile.Output) error {
 		Description("Performs unit tests").
 		Script("@$(MAKE) target-$@").
 		Phony()
-
-	return nil
-}
-
-// CompileTemplates implements template.Compiler.
-func (tests *UnitTests) CompileTemplates(output *template.Output) error {
-	output.Define(".jestrc", templates.Jest).
-		PreamblePrefix("// ")
 
 	return nil
 }

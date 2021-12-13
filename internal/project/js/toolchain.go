@@ -44,7 +44,6 @@ func NewToolchain(meta *meta.Options, sourceDir string) *Toolchain {
 	}
 
 	meta.BuildArgs = append(meta.BuildArgs, "JS_TOOLCHAIN")
-	meta.SourceFiles = append(meta.SourceFiles, ".babelrc", ".tsconfig")
 
 	return toolchain
 }
@@ -59,11 +58,17 @@ func (toolchain *Toolchain) CompileGitignore(output *gitignore.Output) error {
 
 // CompileTemplates implements template.Compiler.
 func (toolchain *Toolchain) CompileTemplates(output *template.Output) error {
-	output.Define(".babelrc", templates.Babel).
-		PreamblePrefix("// ")
+	output.Define(filepath.Join(toolchain.sourceDir, "babel.config.js"), templates.Babel).
+		NoPreamble().
+		NoOverwrite()
 
-	output.Define(".tsconfig", templates.TSConfig).
-		NoPreamble()
+	output.Define(filepath.Join(toolchain.sourceDir, "tsconfig.json"), templates.TSConfig).
+		NoPreamble().
+		NoOverwrite()
+
+	output.Define(filepath.Join(toolchain.sourceDir, "jest.config.js"), templates.Jest).
+		NoPreamble().
+		NoOverwrite()
 
 	return nil
 }
@@ -136,9 +141,9 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 		Step(step.Script("npm install").
 			MountCache(toolchain.meta.NpmCachePath)).
 		Step(step.Copy(".eslintrc.yaml", "./")).
-		Step(step.Copy(".babelrc", "./babel.config.js")).
-		Step(step.Copy(".jestrc", "./jest.config.js")).
-		Step(step.Copy(".tsconfig", "./tsconfig.json"))
+		Step(step.Copy(filepath.Join(toolchain.sourceDir, "babel.config.js"), "./")).
+		Step(step.Copy(filepath.Join(toolchain.sourceDir, "jest.config.js"), "./")).
+		Step(step.Copy(filepath.Join(toolchain.sourceDir, "tsconfig.json"), "./"))
 
 	for _, directory := range toolchain.meta.JSDirectories {
 		dest := strings.TrimLeft(directory, toolchain.sourceDir)
