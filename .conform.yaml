@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2021-10-28T16:28:22Z by kres b8587b7-dirty.
+# Generated on 2022-03-23T14:52:24Z by kres 137a0e1.
 
 ---
 policies:
@@ -10,7 +10,7 @@ policies:
     gpg:
       required: true
       identity:
-        gitHubOrganization: talos-systems
+        gitHubOrganization: siderolabs
     spellcheck:
       locale: US
     maximumOfOneCommit: true

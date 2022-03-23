@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2021-11-07T12:42:33Z by kres latest.
+# Generated on 2022-03-23T14:52:24Z by kres 137a0e1.
 
 # common variables
 
@@ -9,7 +9,7 @@ TAG := $(shell git describe --tag --always --dirty)
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 ARTIFACTS := _out
 REGISTRY ?= ghcr.io
-USERNAME ?= talos-systems
+USERNAME ?= siderolabs
 REGISTRY_AND_USERNAME ?= $(REGISTRY)/$(USERNAME)
 GOFUMPT_VERSION ?= abc0db2c416aca0f60ea33c23c76665f6e7ba0b6
 GO_VERSION ?= 1.17

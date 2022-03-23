@@ -2,7 +2,7 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2021-11-07T12:42:33Z by kres latest.
+# Generated on 2022-03-23T14:52:24Z by kres 137a0e1.
 
 ARG TOOLCHAIN
 
@@ -91,6 +91,6 @@ ARG TARGETARCH
 COPY --from=kres kres-linux-${TARGETARCH} /kres
 COPY --from=image-fhs / /
 COPY --from=image-ca-certificates / /
-LABEL org.opencontainers.image.source https://github.com/talos-systems/kres
+LABEL org.opencontainers.image.source https://github.com/siderolabs/kres
 ENTRYPOINT ["/kres","gen"]
 
