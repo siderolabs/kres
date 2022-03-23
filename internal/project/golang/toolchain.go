@@ -67,7 +67,7 @@ func (toolchain *Toolchain) image() string {
 	case ToolchainOfficial:
 		return fmt.Sprintf("docker.io/golang:%s", toolchain.Version)
 	case ToolchainTools:
-		return fmt.Sprintf("ghcr.io/talos-systems/tools:%s", toolchain.Version)
+		return fmt.Sprintf("ghcr.io/siderolabs/tools:%s", toolchain.Version)
 	default:
 		panic("unsupported toolchain kind")
 	}

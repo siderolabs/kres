@@ -33,8 +33,8 @@ func NewFHS(meta *meta.Options) *InputImage {
 	return &InputImage{
 		BaseNode: dag.NewBaseNode(fmt.Sprintf("image-%s", "fhs")),
 
-		Image:   "ghcr.io/talos-systems/fhs",
-		Version: "v0.3.0-12-g90722c3",
+		Image:   "ghcr.io/siderolabs/fhs",
+		Version: "v1.0.0",
 	}
 }
 
@@ -43,7 +43,7 @@ func NewCACerts(meta *meta.Options) *InputImage {
 	return &InputImage{
 		BaseNode: dag.NewBaseNode(fmt.Sprintf("image-%s", "ca-certificates")),
 
-		Image:   "ghcr.io/talos-systems/ca-certificates",
-		Version: "v0.3.0-12-g90722c3",
+		Image:   "ghcr.io/siderolabs/ca-certificates",
+		Version: "v1.0.0",
 	}
 }

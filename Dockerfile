@@ -2,16 +2,16 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2022-03-23T14:52:24Z by kres 137a0e1.
+# Generated on 2022-03-23T18:12:59Z by kres 8bc4139-dirty.
 
 ARG TOOLCHAIN
 
 # cleaned up specs and compiled versions
 FROM scratch AS generate
 
-FROM ghcr.io/talos-systems/ca-certificates:v0.3.0-12-g90722c3 AS image-ca-certificates
+FROM ghcr.io/siderolabs/ca-certificates:v1.0.0 AS image-ca-certificates
 
-FROM ghcr.io/talos-systems/fhs:v0.3.0-12-g90722c3 AS image-fhs
+FROM ghcr.io/siderolabs/fhs:v1.0.0 AS image-fhs
 
 # runs markdownlint
 FROM node:14.8.0-alpine AS lint-markdown

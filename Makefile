@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2022-03-23T14:52:24Z by kres 137a0e1.
+# Generated on 2022-03-23T18:12:59Z by kres 8bc4139-dirty.
 
 # common variables
 
@@ -18,7 +18,7 @@ GRPC_GO_VERSION ?= 1.1.0
 GRPC_GATEWAY_VERSION ?= 2.4.0
 VTPROTOBUF_VERSION ?= 81d623a9a700ede8ef765e5ab08b3aa1f5b4d5a8
 TESTPKGS ?= ./...
-KRES_IMAGE ?= ghcr.io/talos-systems/kres:latest
+KRES_IMAGE ?= ghcr.io/siderolabs/kres:latest
 
 # docker build settings
 
