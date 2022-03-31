@@ -62,7 +62,7 @@ func walk(targets []Node, walkFn WalkFunc, visited map[Node]struct{}, depth int)
 }
 
 // FindByName walks the nodes to find the node with matching name.
-func FindByName(name string, targets ...Node) (result Node) {
+func FindByName(name string, targets ...Node) (result Node) { //nolint:ireturn
 	visited := make(map[Node]struct{})
 
 	walk(targets, func(node Node) error { //nolint:errcheck

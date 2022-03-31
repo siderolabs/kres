@@ -171,7 +171,7 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 	// build chain of gen containers.
 	inputs := dag.GatherMatchingInputs(toolchain, dag.Implements((*dockerfile.Generator)(nil)))
 	for _, input := range inputs {
-		for _, path := range input.(dockerfile.Generator).GetArtifacts() {
+		for _, path := range input.(dockerfile.Generator).GetArtifacts() { //nolint:forcetypeassert
 			base.Step(step.Copy(path, "./"+strings.Trim(path, "/")).From(input.Name()))
 		}
 	}

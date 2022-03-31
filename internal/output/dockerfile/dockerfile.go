@@ -121,7 +121,7 @@ func (o *Output) dockerfile(w io.Writer) error {
 	}
 
 	sort.Slice(stageNodes, func(i, j int) bool {
-		return stageNodes[i].(*Stage).name < stageNodes[j].(*Stage).name
+		return stageNodes[i].(*Stage).name < stageNodes[j].(*Stage).name //nolint:forcetypeassert
 	})
 
 	sortedStages, _ := stableToposort.Sort(stageNodes)

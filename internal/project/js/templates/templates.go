@@ -6,7 +6,7 @@
 package templates
 
 import (
-	_ "embed" //nolint:gci // allows go:embed usage
+	_ "embed"
 )
 
 // Babel babel.config.js.

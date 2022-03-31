@@ -58,10 +58,10 @@ func NewProtobuf(meta *meta.Options) *Protobuf {
 
 		meta: meta,
 
-		ProtobufGoVersion:  "v1.27.1",
-		GrpcGoVersion:      "v1.1.0",
-		GrpcGatewayVersion: "v2.4.0",
-		VTProtobufVersion:  "81d623a9a700ede8ef765e5ab08b3aa1f5b4d5a8",
+		ProtobufGoVersion:  "v1.28.0",
+		GrpcGoVersion:      "v1.2.0",
+		GrpcGatewayVersion: "v2.10.0",
+		VTProtobufVersion:  "d8520340f57329767fd3b2c9cc0aea3703dd68c9",
 
 		BaseSpecPath: "/api",
 	}

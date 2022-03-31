@@ -128,6 +128,7 @@ linters:
     - tagliatelle
     - thelper
     - typecheck
+    - varnamelen
     - wrapcheck
     # abandoned linters for which golangci shows the warning that the repo is archived by the owner
     - interfacer

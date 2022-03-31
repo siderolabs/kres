@@ -34,7 +34,7 @@ func NewGolangciLint(meta *meta.Options) *GolangciLint {
 
 		meta: meta,
 
-		Version: "v1.42.1",
+		Version: "v1.45.2",
 	}
 }
 

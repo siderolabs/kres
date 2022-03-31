@@ -6,7 +6,7 @@
 package conform
 
 import (
-	_ "embed" //nolint:gci // allows go:embed usage
+	_ "embed"
 	"encoding/json"
 	"io"
 	"text/template"

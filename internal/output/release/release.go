@@ -6,7 +6,7 @@
 package release
 
 import (
-	_ "embed" //nolint:gci // allows go:embed usage
+	_ "embed"
 	"errors"
 	"fmt"
 	"io"

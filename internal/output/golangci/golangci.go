@@ -6,7 +6,7 @@
 package golangci
 
 import (
-	_ "embed" //nolint:gci // allows go:embed usage
+	_ "embed"
 	"fmt"
 	"io"
 

@@ -214,7 +214,7 @@ func (r *Repository) enableConform(client *github.Client) error {
 	}
 
 	for _, hook := range hooks {
-		if hook.Config["url"].(string) == r.ConformWebhookURL {
+		if hook.Config["url"].(string) == r.ConformWebhookURL { //nolint:forcetypeassert
 			return nil
 		}
 	}
