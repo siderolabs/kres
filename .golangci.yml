@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2022-03-31T15:17:45Z by kres ff0aee3-dirty.
+# Generated on 2022-04-05T08:07:27Z by kres 4975f30.
 
 # options for analysis running
 run:
@@ -39,6 +39,13 @@ linters-settings:
     local-prefixes: github.com/talos-systems/kres
   gocognit:
     min-complexity: 30
+  ireturn:
+    allow:
+      - anon
+      - error
+      - empty
+      - stdlib
+      - github.com\/talos-systems\/kres\/internal\/dag.Node
   nestif:
     min-complexity: 5
   goconst:

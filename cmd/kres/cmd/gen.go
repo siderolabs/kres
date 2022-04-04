@@ -2,12 +2,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package command
+package cmd
 
 import (
-	"strings"
+	"fmt"
 
-	"github.com/mitchellh/cli"
+	"github.com/spf13/cobra"
 
 	"github.com/talos-systems/kres/internal/config"
 	"github.com/talos-systems/kres/internal/output"
@@ -27,39 +27,25 @@ import (
 	"github.com/talos-systems/kres/internal/project/meta"
 )
 
-// Gen implements 'gen' command.
-type Gen struct {
-	Meta
-}
-
-// Help implements cli.Command.
-func (c *Gen) Help() string {
-	helpText := `
-Usage: kres gen
+var genCmd = &cobra.Command{
+	Use:   "gen",
+	Short: "Generate build instructions for the project.",
+	Long: `Usage: kres gen
 
 	Generate build instructions for the project. Kres analyzes the project structure
 	starting from the current directory, detects project type and components, and emits
 	build instructions in the following formats:
 
 	  * Makefile
-	  * Dockerfile
-
-Options:
-
-	--outputs=output1,output2           Additional outputs to be generated
-`
-
-	return strings.TrimSpace(helpText)
+	  * Dockerfile`,
+	Args: cobra.NoArgs,
+	RunE: func(cmd *cobra.Command, _ []string) error {
+		return runGen()
+	},
 }
 
-// Synopsis implements cli.Command.
-func (c *Gen) Synopsis() string {
-	return "Generate build instructions for the project."
-}
-
-// Run implements cli.Command.
-func (c *Gen) Run(args []string) int {
-	c.Ui.Info("gen started")
+func runGen() error {
+	fmt.Println("gen started")
 
 	outputs := []output.Writer{
 		dockerfile.NewOutput(),
@@ -84,48 +70,29 @@ func (c *Gen) Run(args []string) int {
 
 	options.Config, err = config.NewProvider(".kres.yaml")
 	if err != nil {
-		c.Ui.Error(err.Error())
-
-		return 1
+		return err
 	}
 
 	proj, err := auto.Build(&options)
 	if err != nil {
-		c.Ui.Error(err.Error())
-
-		return 1
+		return err
 	}
 
 	if err := proj.LoadConfig(options.Config); err != nil {
-		c.Ui.Error(err.Error())
-
-		return 1
+		return err
 	}
 
 	if err := proj.Compile(outputs); err != nil {
-		c.Ui.Error(err.Error())
-
-		return 1
+		return err
 	}
 
 	for _, out := range outputs {
 		if err := out.Generate(); err != nil {
-			c.Ui.Error(err.Error())
-
-			return 1
+			return err
 		}
 	}
 
-	c.Ui.Info("success")
+	fmt.Println("success")
 
-	return 0
-}
-
-// NewGen creates Gen command.
-func NewGen(m Meta) cli.CommandFactory {
-	return func() (cli.Command, error) {
-		return &Gen{
-			Meta: m,
-		}, nil
-	}
+	return nil
 }

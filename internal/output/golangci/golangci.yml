@@ -35,6 +35,13 @@ linters-settings:
     local-prefixes: %[1]s
   gocognit:
     min-complexity: 30
+  ireturn:
+    allow:
+      - anon
+      - error
+      - empty
+      - stdlib
+      - github.com\/talos-systems\/kres\/internal\/dag.Node
   nestif:
     min-complexity: 5
   goconst:
