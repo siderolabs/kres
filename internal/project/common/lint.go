@@ -30,7 +30,7 @@ func NewLint(meta *meta.Options) *Lint {
 // CompileDrone implements drone.Compiler.
 func (lint *Lint) CompileDrone(output *drone.Output) error {
 	output.Step(drone.MakeStep("lint").
-		DependsOn(dag.GatherMatchingInputNames(lint, dag.Implements((*drone.Compiler)(nil)))...),
+		DependsOn(dag.GatherMatchingInputNames(lint, dag.Implements[*drone.Compiler]())...),
 	)
 
 	return nil
@@ -39,7 +39,7 @@ func (lint *Lint) CompileDrone(output *drone.Output) error {
 // CompileMakefile implements makefile.Compiler.
 func (lint *Lint) CompileMakefile(output *makefile.Output) error {
 	output.Target("lint").Description("Run all linters for the project.").
-		Depends(dag.GatherMatchingInputNames(lint, dag.Not(dag.Implements((*makefile.SkipAsMakefileDependency)(nil))))...).
+		Depends(dag.GatherMatchingInputNames(lint, dag.Not(dag.Implements[*makefile.SkipAsMakefileDependency]()))...).
 		Phony()
 
 	return nil

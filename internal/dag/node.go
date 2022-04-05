@@ -20,9 +20,11 @@ type Node interface {
 type NodeCondition func(Node) bool
 
 // Implements checks whether node implements specific interface.
-func Implements(typ interface{}) NodeCondition {
+func Implements[T any]() NodeCondition {
 	return func(node Node) bool {
-		return reflect.TypeOf(node).Implements(reflect.TypeOf(typ).Elem())
+		var t T
+
+		return reflect.TypeOf(node).Implements(reflect.TypeOf(t).Elem())
 	}
 }
 

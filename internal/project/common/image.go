@@ -51,7 +51,7 @@ func NewImage(meta *meta.Options, name string) *Image {
 // CompileDrone implements drone.Compiler.
 func (image *Image) CompileDrone(output *drone.Output) error {
 	output.Step(drone.MakeStep(image.Name()).
-		DependsOn(dag.GatherMatchingInputNames(image, dag.Implements((*drone.Compiler)(nil)))...),
+		DependsOn(dag.GatherMatchingInputNames(image, dag.Implements[*drone.Compiler]())...),
 	)
 
 	output.Step(drone.MakeStep(image.Name()).
@@ -103,7 +103,7 @@ func (image *Image) CompileDockerfile(output *dockerfile.Output) error {
 		stage.Step(step.Script(command))
 	}
 
-	inputs := dag.GatherMatchingInputs(image, dag.Implements((*dockerfile.Compiler)(nil)))
+	inputs := dag.GatherMatchingInputs(image, dag.Implements[*dockerfile.Compiler]())
 	if len(inputs) == 0 {
 		return fmt.Errorf("no inputs for Image block")
 	}

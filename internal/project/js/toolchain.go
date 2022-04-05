@@ -97,7 +97,7 @@ func (toolchain *Toolchain) CompileMakefile(output *makefile.Output) error {
 // CompileDrone implements drone.Compiler.
 func (toolchain *Toolchain) CompileDrone(output *drone.Output) error {
 	output.Step(drone.MakeStep("js").
-		DependsOn(dag.GatherMatchingInputNames(toolchain, dag.Implements((*drone.Compiler)(nil)))...),
+		DependsOn(dag.GatherMatchingInputNames(toolchain, dag.Implements[*drone.Compiler]())...),
 	)
 
 	return nil

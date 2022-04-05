@@ -111,7 +111,7 @@ func (build *Build) CompileDockerfile(output *dockerfile.Output) error {
 
 // CompileDrone implements drone.Compiler.
 func (build *Build) CompileDrone(output *drone.Output) error {
-	output.Step(drone.MakeStep(build.Name()).DependsOn(dag.GatherMatchingInputNames(build, dag.Implements((*drone.Compiler)(nil)))...))
+	output.Step(drone.MakeStep(build.Name()).DependsOn(dag.GatherMatchingInputNames(build, dag.Implements[*drone.Compiler]())...))
 
 	return nil
 }

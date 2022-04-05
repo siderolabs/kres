@@ -29,7 +29,7 @@ func NewAll(meta *meta.Options) *All {
 // CompileMakefile implements makefile.Compiler.
 func (all *All) CompileMakefile(output *makefile.Output) error {
 	output.Target("all").
-		Depends(dag.GatherMatchingInputNames(all, dag.Not(dag.Implements((*makefile.SkipAsMakefileDependency)(nil))))...)
+		Depends(dag.GatherMatchingInputNames(all, dag.Not(dag.Implements[*makefile.SkipAsMakefileDependency]()))...)
 
 	return nil
 }

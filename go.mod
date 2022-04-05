@@ -1,6 +1,6 @@
 module github.com/talos-systems/kres
 
-go 1.17
+go 1.18
 
 require (
 	github.com/SOF3/go-stable-toposort v0.0.0-20180826141444-ba650b7de8a0
