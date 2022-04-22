@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2022-03-31T15:16:26Z by kres ff0aee3-dirty.
+# Generated on 2022-04-22T17:27:37Z by kres 685be7b-dirty.
 
 # common variables
 
@@ -11,12 +11,13 @@ ARTIFACTS := _out
 REGISTRY ?= ghcr.io
 USERNAME ?= siderolabs
 REGISTRY_AND_USERNAME ?= $(REGISTRY)/$(USERNAME)
-GOFUMPT_VERSION ?= abc0db2c416aca0f60ea33c23c76665f6e7ba0b6
+GOFUMPT_VERSION ?= v0.3.1
 GO_VERSION ?= 1.18
+GOIMPORTS_VERSION ?= v0.1.10
 PROTOBUF_GO_VERSION ?= 1.28.0
 GRPC_GO_VERSION ?= 1.2.0
 GRPC_GATEWAY_VERSION ?= 2.10.0
-VTPROTOBUF_VERSION ?= d8520340f57329767fd3b2c9cc0aea3703dd68c9
+VTPROTOBUF_VERSION ?= 0.3.0
 TESTPKGS ?= ./...
 KRES_IMAGE ?= ghcr.io/siderolabs/kres:latest
 
@@ -37,6 +38,7 @@ COMMON_ARGS += --build-arg=TAG=$(TAG)
 COMMON_ARGS += --build-arg=USERNAME=$(USERNAME)
 COMMON_ARGS += --build-arg=TOOLCHAIN=$(TOOLCHAIN)
 COMMON_ARGS += --build-arg=GOFUMPT_VERSION=$(GOFUMPT_VERSION)
+COMMON_ARGS += --build-arg=GOIMPORTS_VERSION=$(GOIMPORTS_VERSION)
 COMMON_ARGS += --build-arg=PROTOBUF_GO_VERSION=$(PROTOBUF_GO_VERSION)
 COMMON_ARGS += --build-arg=GRPC_GO_VERSION=$(GRPC_GO_VERSION)
 COMMON_ARGS += --build-arg=GRPC_GATEWAY_VERSION=$(GRPC_GATEWAY_VERSION)
@@ -99,8 +101,11 @@ lint-gofumpt:  ## Runs gofumpt linter.
 fmt:  ## Formats the source code
 	@docker run --rm -it -v $(PWD):/src -w /src golang:$(GO_VERSION) \
 		bash -c "export GO111MODULE=on; export GOPROXY=https://proxy.golang.org; \
-		go install mvdan.cc/gofumpt/gofumports@$(GOFUMPT_VERSION) && \
-		gofumports -w -local github.com/talos-systems/kres ."
+		go install mvdan.cc/gofumpt@$(GOFUMPT_VERSION) && \
+		gofumpt -w ."
+
+lint-goimports:  ## Runs goimports linter.
+	@$(MAKE) target-$@
 
 .PHONY: base
 base:  ## Prepare base toolchain
@@ -133,7 +138,7 @@ lint-markdown:  ## Runs markdownlint.
 	@$(MAKE) target-$@
 
 .PHONY: lint
-lint: lint-golangci-lint lint-gofumpt lint-markdown  ## Run all linters for the project.
+lint: lint-golangci-lint lint-gofumpt lint-goimports lint-markdown  ## Run all linters for the project.
 
 .PHONY: image-kres
 image-kres:  ## Builds image for kres.

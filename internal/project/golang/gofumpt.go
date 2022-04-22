@@ -34,7 +34,7 @@ func NewGofumpt(meta *meta.Options) *Gofumpt {
 		meta: meta,
 
 		GoVersion: "1.18",
-		Version:   "abc0db2c416aca0f60ea33c23c76665f6e7ba0b6",
+		Version:   "v0.3.1",
 	}
 }
 
@@ -49,13 +49,12 @@ func (lint *Gofumpt) CompileMakefile(output *makefile.Output) error {
 
 	output.Target("fmt").Description("Formats the source code").
 		Phony().
-		Script(fmt.Sprintf(
+		Script(
 			`@docker run --rm -it -v $(PWD):/src -w /src golang:$(GO_VERSION) \
 	bash -c "export GO111MODULE=on; export GOPROXY=https://proxy.golang.org; \
-	go install mvdan.cc/gofumpt/gofumports@$(GOFUMPT_VERSION) && \
-	gofumports -w -local %s ."`,
-			lint.meta.CanonicalPath,
-		))
+	go install mvdan.cc/gofumpt@$(GOFUMPT_VERSION) && \
+	gofumpt -w ."`,
+		)
 
 	return nil
 }
@@ -65,8 +64,8 @@ func (lint *Gofumpt) ToolchainBuild(stage *dockerfile.Stage) error {
 	stage.
 		Step(step.Arg("GOFUMPT_VERSION")).
 		Step(step.Script(fmt.Sprintf(
-			`go install mvdan.cc/gofumpt/gofumports@${GOFUMPT_VERSION} \
-	&& mv /go/bin/gofumports %s/gofumports`, lint.meta.BinPath)))
+			`go install mvdan.cc/gofumpt@${GOFUMPT_VERSION} \
+	&& mv /go/bin/gofumpt %s/gofumpt`, lint.meta.BinPath)))
 
 	return nil
 }
@@ -76,14 +75,8 @@ func (lint *Gofumpt) CompileDockerfile(output *dockerfile.Output) error {
 	output.Stage("lint-gofumpt").
 		Description("runs gofumpt").
 		From("base").
-		Step(step.Script(`find . -name '*.pb.go' | xargs -r rm`)).
-		Step(step.Script(`find . -name '*.pb.gw.go' | xargs -r rm`)).
 		Step(step.Script(
-			fmt.Sprintf(
-				`FILES="$(gofumports -l -local %s .)" && test -z "${FILES}" || (echo -e "Source code is not formatted with 'gofumports -w -local %s .':\n${FILES}"; exit 1)`,
-				lint.meta.CanonicalPath,
-				lint.meta.CanonicalPath,
-			),
+			`FILES="$(gofumpt -l .)" && test -z "${FILES}" || (echo -e "Source code is not formatted with 'gofumpt -w .':\n${FILES}"; exit 1)`,
 		))
 
 	return nil

@@ -7,6 +7,7 @@ package golang
 import (
 	"fmt"
 	"path/filepath"
+	"reflect"
 	"strings"
 
 	"github.com/talos-systems/kres/internal/dag"
@@ -40,8 +41,13 @@ type Protobuf struct {
 type ProtoSpec struct {
 	Source       string `yaml:"source"`
 	SubDirectory string `yaml:"subdirectory"`
-	SkipCompile  bool   `yaml:"skipCompile"`
-	GenGateway   bool   `yaml:"genGateway"`
+
+	sourcePath string
+
+	SkipCompile bool `yaml:"skipCompile"`
+	GenGateway  bool `yaml:"genGateway"`
+
+	external bool
 }
 
 // NewProtobuf builds Protobuf node.
@@ -61,7 +67,7 @@ func NewProtobuf(meta *meta.Options) *Protobuf {
 		ProtobufGoVersion:  "v1.28.0",
 		GrpcGoVersion:      "v1.2.0",
 		GrpcGatewayVersion: "v2.10.0",
-		VTProtobufVersion:  "d8520340f57329767fd3b2c9cc0aea3703dd68c9",
+		VTProtobufVersion:  "v0.3.0",
 
 		BaseSpecPath: "/api",
 	}
@@ -105,7 +111,7 @@ func (proto *Protobuf) ToolchainBuild(stage *dockerfile.Stage) error {
 	if proto.VTProtobufEnabled {
 		stage.
 			Step(step.Arg("VTPROTOBUF_VERSION")).
-			Step(step.Script("go install github.com/planetscale/vtprotobuf/cmd/protoc-gen-go-vtproto@${VTPROTOBUF_VERSION}")).
+			Step(step.Script("go install github.com/planetscale/vtprotobuf/cmd/protoc-gen-go-vtproto@v${VTPROTOBUF_VERSION}")).
 			Step(step.Run("mv", filepath.Join(proto.meta.GoPath, "bin", "protoc-gen-go-vtproto"), proto.meta.BinPath))
 	}
 
@@ -132,70 +138,121 @@ func (proto *Protobuf) CompileDockerfile(output *dockerfile.Output) error {
 		)
 	}
 
+	for i := range proto.Specs {
+		if strings.HasPrefix(proto.Specs[i].Source, "http") {
+			proto.Specs[i].external = true
+		}
+
+		proto.Specs[i].sourcePath = filepath.Join(proto.BaseSpecPath, proto.Specs[i].SubDirectory, filepath.Base(proto.Specs[i].Source))
+	}
+
 	compile := output.Stage("proto-compile").
 		Description("runs protobuf compiler").
 		From("tools").
 		Step(step.Copy("/", "/").From("proto-specs"))
 
-	cleanupSteps := []*step.RunStep{}
+	var ( //nolint:prealloc
+		prevFlags              []string
+		accumulatedSourcePaths []string
+	)
 
+	// try to combine as many specs as possible into a single invocation of protoc,
+	// as for some generators this fixes the problem with multiple definitions of internal functions
 	for _, spec := range proto.Specs {
-		external := strings.HasPrefix(spec.Source, "http")
-		source := filepath.Join(proto.BaseSpecPath, spec.SubDirectory, filepath.Base(spec.Source))
+		if spec.SkipCompile {
+			continue
+		}
 
-		if !spec.SkipCompile {
-			flags := []string{
-				fmt.Sprintf("-I%s", proto.BaseSpecPath),
-			}
+		flags := []string{
+			fmt.Sprintf("-I%s", proto.BaseSpecPath),
+		}
 
-			if spec.GenGateway {
+		if spec.GenGateway {
+			flags = append(flags,
+				fmt.Sprintf("--grpc-gateway_out=paths=source_relative:%s", proto.BaseSpecPath),
+				"--grpc-gateway_opt=generate_unbound_methods=true",
+			)
+
+			if spec.external {
 				flags = append(flags,
-					fmt.Sprintf("--grpc-gateway_out=paths=source_relative:%s", proto.BaseSpecPath),
-					"--grpc-gateway_opt=generate_unbound_methods=true",
+					"--grpc-gateway_opt=standalone=true",
 				)
-
-				if external {
-					flags = append(flags,
-						"--grpc-gateway_opt=standalone=true",
-					)
-				}
 			}
+		}
 
-			if !spec.GenGateway || !external {
+		if !spec.GenGateway || !spec.external {
+			flags = append(flags,
+				fmt.Sprintf("--go_out=paths=source_relative:%s", proto.BaseSpecPath),
+				fmt.Sprintf("--go-grpc_out=paths=source_relative:%s", proto.BaseSpecPath),
+			)
+
+			if proto.VTProtobufEnabled {
 				flags = append(flags,
-					fmt.Sprintf("--go_out=paths=source_relative:%s", proto.BaseSpecPath),
-					fmt.Sprintf("--go-grpc_out=paths=source_relative:%s", proto.BaseSpecPath),
+					fmt.Sprintf("--go-vtproto_out=paths=source_relative:%s", proto.BaseSpecPath),
+					"--go-vtproto_opt=features=marshal+unmarshal+size",
 				)
-
-				if proto.VTProtobufEnabled {
-					flags = append(flags,
-						fmt.Sprintf("--go-vtproto_out=paths=source_relative:%s", proto.BaseSpecPath),
-						"--go-vtproto_opt=features=marshal+unmarshal+size",
-					)
-				}
 			}
+		}
 
-			flags = append(flags, proto.ExperimentalFlags...)
-			flags = append(flags, source)
+		flags = append(flags, proto.ExperimentalFlags...)
 
+		if prevFlags != nil && !reflect.DeepEqual(flags, prevFlags) {
 			compile.Step(
 				step.Run(
 					"protoc",
-					flags...,
+					append(prevFlags, accumulatedSourcePaths...)...,
 				),
 			)
+
+			accumulatedSourcePaths = nil
 		}
 
-		if !external {
-			cleanupSteps = append(cleanupSteps,
-				step.Script(fmt.Sprintf("rm %s", source)),
-			)
-		}
+		prevFlags = flags
+
+		accumulatedSourcePaths = append(accumulatedSourcePaths, spec.sourcePath)
 	}
 
-	for _, s := range cleanupSteps {
-		compile.Step(s)
+	if len(accumulatedSourcePaths) > 0 {
+		compile.Step(
+			step.Run(
+				"protoc",
+				append(prevFlags, accumulatedSourcePaths...)...,
+			),
+		)
 	}
+
+	// cleanup copied source files
+	for _, spec := range proto.Specs {
+		if spec.external {
+			continue
+		}
+
+		compile.Step(
+			step.Run(
+				"rm",
+				spec.sourcePath,
+			),
+		)
+	}
+
+	// gofumpt + goimports
+	compile.Step(
+		step.Run(
+			"goimports",
+			"-w",
+			"-local",
+			proto.meta.CanonicalPath,
+			proto.BaseSpecPath,
+		),
+	)
+
+	compile.Step(
+		step.Run(
+			"gofumpt",
+			"-w",
+			proto.BaseSpecPath,
+		),
+	)
 
 	generate.Step(step.Copy(filepath.Clean(proto.BaseSpecPath)+"/", filepath.Clean(proto.BaseSpecPath)+"/").
 		From("proto-compile"))

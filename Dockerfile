@@ -2,7 +2,7 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2022-03-31T15:16:26Z by kres ff0aee3-dirty.
+# Generated on 2022-04-22T17:27:37Z by kres 685be7b-dirty.
 
 ARG TOOLCHAIN
 
@@ -33,8 +33,11 @@ ENV CGO_ENABLED 0
 ENV GOPATH /go
 RUN curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s -- -b /bin v1.45.2
 ARG GOFUMPT_VERSION
-RUN go install mvdan.cc/gofumpt/gofumports@${GOFUMPT_VERSION} \
-	&& mv /go/bin/gofumports /bin/gofumports
+RUN go install mvdan.cc/gofumpt@${GOFUMPT_VERSION} \
+	&& mv /go/bin/gofumpt /bin/gofumpt
+ARG GOIMPORTS_VERSION
+RUN go install golang.org/x/tools/cmd/goimports@${GOIMPORTS_VERSION} \
+	&& mv /go/bin/goimports /bin/goimports
 
 # tools and sources
 FROM tools AS base
@@ -58,9 +61,11 @@ RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/g
 
 # runs gofumpt
 FROM base AS lint-gofumpt
-RUN find . -name '*.pb.go' | xargs -r rm
-RUN find . -name '*.pb.gw.go' | xargs -r rm
-RUN FILES="$(gofumports -l -local github.com/talos-systems/kres .)" && test -z "${FILES}" || (echo -e "Source code is not formatted with 'gofumports -w -local github.com/talos-systems/kres .':\n${FILES}"; exit 1)
+RUN FILES="$(gofumpt -l .)" && test -z "${FILES}" || (echo -e "Source code is not formatted with 'gofumpt -w .':\n${FILES}"; exit 1)
+
+# runs goimports
+FROM base AS lint-goimports
+RUN FILES="$(goimports -l -local github.com/talos-systems/kres .)" && test -z "${FILES}" || (echo -e "Source code is not formatted with 'goimports -w -local github.com/talos-systems/kres .':\n${FILES}"; exit 1)
 
 # runs golangci-lint
 FROM base AS lint-golangci-lint
