@@ -58,7 +58,7 @@ func NewRepository(meta *meta.Options) *Repository {
 
 		meta: meta,
 
-		MainBranch: "master",
+		MainBranch: meta.MainBranch,
 		EnforceContexts: []string{
 			"continuous-integration/drone/pr",
 		},

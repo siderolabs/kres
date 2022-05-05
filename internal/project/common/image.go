@@ -66,7 +66,7 @@ func (image *Image) CompileDrone(output *drone.Output) error {
 		output.Step(drone.MakeStep(image.Name(), "TAG=latest").
 			Name(fmt.Sprintf("push-%s-latest", image.ImageName)).
 			Environment("PUSH", "true").
-			OnlyOnMaster().
+			OnlyOnBranch(image.meta.MainBranch).
 			ExceptPullRequest().
 			DockerLogin().
 			DependsOn(fmt.Sprintf("push-%s", image.ImageName)),

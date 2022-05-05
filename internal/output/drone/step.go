@@ -89,9 +89,9 @@ func (step *Step) OnlyOnTag() *Step {
 	return step
 }
 
-// OnlyOnMaster adds condition to run step only on master branch.
-func (step *Step) OnlyOnMaster() *Step {
-	step.container.When.Branch.Include = append(step.container.When.Branch.Include, "master")
+// OnlyOnBranch adds condition to run step only on the specified branch.
+func (step *Step) OnlyOnBranch(branchName string) *Step {
+	step.container.When.Branch.Include = append(step.container.When.Branch.Include, branchName)
 
 	return step
 }

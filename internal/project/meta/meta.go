@@ -16,6 +16,9 @@ type Options struct { //nolint:govet
 	GitHubOrganization string
 	GitHubRepository   string
 
+	// Git settings.
+	MainBranch string
+
 	// CanonicalPath, import path for Go projects.
 	CanonicalPath string
 

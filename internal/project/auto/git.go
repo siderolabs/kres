@@ -21,6 +21,32 @@ func (builder *builder) DetectGit() (bool, error) {
 		return false, nil
 	}
 
+	c, err := repo.Config()
+	if err != nil {
+		return true, fmt.Errorf("failed to get repository configuration: %w", err)
+	}
+
+	rawConfig := c.Raw
+
+	const branchSectionName = "branch"
+
+	if !rawConfig.HasSection(branchSectionName) {
+		return true, fmt.Errorf("repository configuration section %q not found", branchSectionName)
+	}
+
+	branchSection := rawConfig.Section(branchSectionName)
+
+	for _, b := range branchSection.Subsections {
+		remote := b.Option("remote")
+		if remote == git.DefaultRemoteName {
+			builder.meta.MainBranch = b.Name
+		}
+	}
+
+	if builder.meta.MainBranch == "" {
+		builder.meta.MainBranch = "main"
+	}
+
 	remotes, err := repo.Remotes()
 	if err != nil {
 		return true, err
