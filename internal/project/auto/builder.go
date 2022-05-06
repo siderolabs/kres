@@ -96,11 +96,12 @@ func (builder *builder) build() error {
 	release := common.NewRelease(builder.meta)
 	rekres := common.NewReKres(builder.meta)
 	makeHelp := common.NewMakeHelp(builder.meta)
+	conformance := common.NewConformance(builder.meta)
 
 	release.AddInput(builder.targets...)
 
 	builder.proj.AddTarget(builder.targets...)
-	builder.proj.AddTarget(rekres, all, makeHelp, release)
+	builder.proj.AddTarget(rekres, all, makeHelp, release, conformance)
 
 	return nil
 }

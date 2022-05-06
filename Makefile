@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2022-04-22T17:27:37Z by kres 685be7b-dirty.
+# Generated on 2022-05-06T15:22:05Z by kres 7d96ef5-dirty.
 
 # common variables
 
@@ -20,6 +20,7 @@ GRPC_GATEWAY_VERSION ?= 2.10.0
 VTPROTOBUF_VERSION ?= 0.3.0
 TESTPKGS ?= ./...
 KRES_IMAGE ?= ghcr.io/siderolabs/kres:latest
+CONFORMANCE_IMAGE ?= ghcr.io/siderolabs/conform:latest
 
 # docker build settings
 
@@ -158,4 +159,9 @@ help:  ## This help menu.
 release-notes:
 	mkdir -p $(ARTIFACTS)
 	@ARTIFACTS=$(ARTIFACTS) ./hack/release.sh $@ $(ARTIFACTS)/RELEASE_NOTES.md $(TAG)
+
+.PHONY: conformance
+conformance:
+	@docker pull $(CONFORMANCE_IMAGE)
+	@docker run --rm -it -v $(PWD):/src -w /src $(CONFORMANCE_IMAGE) enforce
 
