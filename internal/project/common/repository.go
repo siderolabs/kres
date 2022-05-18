@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"sort"
 
-	"github.com/google/go-github/v32/github"
+	"github.com/google/go-github/v44/github"
 
 	"github.com/talos-systems/kres/internal/dag"
 	"github.com/talos-systems/kres/internal/output/conform"
@@ -135,6 +135,7 @@ func (r *Repository) CompileGitHub(client *github.Client) error {
 	return r.inviteBot(client)
 }
 
+//nolint:gocognit
 func (r *Repository) enableBranchProtection(client *github.Client) error {
 	branchProtection, resp, err := client.Repositories.GetBranchProtection(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, r.MainBranch)
 	if err != nil {
@@ -168,11 +169,10 @@ func (r *Repository) enableBranchProtection(client *github.Client) error {
 		RequireLinearHistory: github.Bool(true),
 		AllowDeletions:       github.Bool(false),
 		AllowForcePushes:     github.Bool(false),
-		EnforceAdmins:        false,
+		EnforceAdmins:        true,
 
 		RequiredPullRequestReviews: &github.PullRequestReviewsEnforcementRequest{
 			RequiredApprovingReviewCount: 1,
-			DismissStaleReviews:          true,
 		},
 
 		RequiredStatusChecks: &github.RequiredStatusChecks{
@@ -182,6 +182,13 @@ func (r *Repository) enableBranchProtection(client *github.Client) error {
 	}
 
 	if branchProtection != nil {
+		var sigProtected *github.SignaturesProtectedBranch
+
+		sigProtected, _, err = client.Repositories.GetSignaturesProtectedBranch(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, r.MainBranch)
+		if err != nil {
+			return nil
+		}
+
 		// check if everything is already set up
 		if branchProtection.GetAllowDeletions().Enabled == *req.AllowDeletions &&
 			branchProtection.GetAllowForcePushes().Enabled == *req.AllowForcePushes &&
@@ -192,12 +199,18 @@ func (r *Repository) enableBranchProtection(client *github.Client) error {
 			branchProtection.GetRequiredPullRequestReviews().RequiredApprovingReviewCount == req.RequiredPullRequestReviews.RequiredApprovingReviewCount &&
 			branchProtection.GetRequiredStatusChecks() != nil &&
 			branchProtection.GetRequiredStatusChecks().Strict == req.RequiredStatusChecks.Strict &&
-			equalStringSlices(branchProtection.GetRequiredStatusChecks().Contexts, req.RequiredStatusChecks.Contexts) {
+			equalStringSlices(branchProtection.GetRequiredStatusChecks().Contexts, req.RequiredStatusChecks.Contexts) &&
+			sigProtected.GetEnabled() {
 			return nil
 		}
 	}
 
 	_, _, err = client.Repositories.UpdateBranchProtection(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, r.MainBranch, &req)
+	if err != nil {
+		return err
+	}
+
+	_, _, err = client.Repositories.RequireSignaturesOnProtectedBranch(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, r.MainBranch)
 	if err != nil {
 		return err
 	}

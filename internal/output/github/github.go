@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/google/go-github/v32/github"
+	"github.com/google/go-github/v44/github"
 	"golang.org/x/oauth2"
 )
 
