@@ -150,7 +150,10 @@ func (builder *builder) BuildGolang() error {
 	// add protobufs
 	protobuf := golang.NewProtobuf(builder.meta)
 
-	toolchain.AddInput(protobuf)
+	// add deepcopy
+	deepcopy := golang.NewDeepCopy(builder.meta)
+
+	toolchain.AddInput(protobuf, deepcopy)
 
 	builder.lintInputs = append(builder.lintInputs, toolchain, golangciLint, gofumpt, goimports)
 

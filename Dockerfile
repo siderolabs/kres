@@ -2,7 +2,7 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2022-04-22T17:27:37Z by kres 685be7b-dirty.
+# Generated on 2022-05-18T11:06:13Z by kres 0a1f877-dirty.
 
 ARG TOOLCHAIN
 
@@ -38,6 +38,9 @@ RUN go install mvdan.cc/gofumpt@${GOFUMPT_VERSION} \
 ARG GOIMPORTS_VERSION
 RUN go install golang.org/x/tools/cmd/goimports@${GOIMPORTS_VERSION} \
 	&& mv /go/bin/goimports /bin/goimports
+ARG DEEPCOPY_VERSION
+RUN go install github.com/siderolabs/deep-copy@${DEEPCOPY_VERSION} \
+	&& mv /go/bin/deep-copy /bin/deep-copy
 
 # tools and sources
 FROM tools AS base
