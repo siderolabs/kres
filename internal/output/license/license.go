@@ -16,6 +16,8 @@ import (
 
 const (
 	filename = "LICENSE"
+	// Header file path.
+	Header = ".license-header.go.txt"
 )
 
 //go:embed MPL-2.0.txt
@@ -35,6 +37,7 @@ type Output struct {
 
 	templateParams  interface{}
 	licenseTemplate string
+	licenseHeader   string
 }
 
 // NewOutput creates new Makefile output.
@@ -57,13 +60,18 @@ func (o *Output) Compile(node interface{}) error {
 	return compiler.CompileLicense(o)
 }
 
+// SetLicenseHeader configures license header.
+func (o *Output) SetLicenseHeader(header string) {
+	o.licenseHeader = header
+}
+
 // Enable should be called to enable config generation.
 func (o *Output) Enable(licenseID string, params interface{}) error {
 	var ok bool
 
 	o.licenseTemplate, ok = licenseTemplates[licenseID]
 	if !ok {
-		return fmt.Errorf("unsupported license %q", licenseID)
+		return fmt.Errorf("unsupported license %q: missing LICENSE template", licenseID)
 	}
 
 	o.templateParams = params
@@ -77,14 +85,16 @@ func (o *Output) Filenames() []string {
 		return nil
 	}
 
-	return []string{filename}
+	return []string{filename, Header}
 }
 
 // GenerateFile implements output.FileWriter interface.
-func (o *Output) GenerateFile(filename string, w io.Writer) error {
-	switch filename {
+func (o *Output) GenerateFile(path string, w io.Writer) error {
+	switch path {
 	case filename:
 		return o.license(w)
+	case Header:
+		return o.boilerplate(w)
 	default:
 		panic("unexpected filename: " + filename)
 	}
@@ -92,6 +102,19 @@ func (o *Output) GenerateFile(filename string, w io.Writer) error {
 
 func (o *Output) license(w io.Writer) error {
 	tmpl, err := template.New("license").Parse(o.licenseTemplate)
+	if err != nil {
+		return err
+	}
+
+	return tmpl.Execute(w, o.templateParams)
+}
+
+func (o *Output) boilerplate(w io.Writer) error {
+	if o.licenseHeader == "" {
+		return nil
+	}
+
+	tmpl, err := template.New("licenseHeader").Parse(o.licenseHeader)
 	if err != nil {
 		return err
 	}

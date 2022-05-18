@@ -117,6 +117,8 @@ func (r *Repository) CompileLicense(o *license.Output) error {
 		return nil
 	}
 
+	o.SetLicenseHeader(r.License.Header)
+
 	return o.Enable(r.License.ID, r.License.Params)
 }
 

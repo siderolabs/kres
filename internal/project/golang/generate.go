@@ -13,12 +13,14 @@ import (
 	"github.com/talos-systems/kres/internal/dag"
 	"github.com/talos-systems/kres/internal/output/dockerfile"
 	"github.com/talos-systems/kres/internal/output/dockerfile/step"
+	"github.com/talos-systems/kres/internal/output/license"
 	"github.com/talos-systems/kres/internal/output/makefile"
 	"github.com/talos-systems/kres/internal/project/meta"
 )
 
-// Protobuf provides .proto compilation with grpc-go plugin.
-type Protobuf struct {
+// Generate provides .proto compilation with grpc-go plugin
+// and go generate runner.
+type Generate struct {
 	dag.BaseNode
 
 	meta *meta.Options
@@ -30,7 +32,8 @@ type Protobuf struct {
 
 	BaseSpecPath string `yaml:"baseSpecPath"`
 
-	Specs []ProtoSpec `yaml:"specs"`
+	Specs           []ProtoSpec      `yaml:"specs"`
+	GoGenerateSpecs []GoGenerateSpec `yaml:"goGenerateSpecs"`
 
 	ExperimentalFlags []string `yaml:"experimentalFlags"`
 
@@ -50,8 +53,14 @@ type ProtoSpec struct {
 	external bool
 }
 
-// NewProtobuf builds Protobuf node.
-func NewProtobuf(meta *meta.Options) *Protobuf {
+// GoGenerateSpec describes a set of go generate specs to be compiled.
+type GoGenerateSpec struct {
+	Source string   `yaml:"source"`
+	Copy   []string `yaml:"copy"`
+}
+
+// NewGenerate builds Generate node.
+func NewGenerate(meta *meta.Options) *Generate {
 	meta.BuildArgs = append(meta.BuildArgs,
 		"PROTOBUF_GO_VERSION",
 		"GRPC_GO_VERSION",
@@ -59,7 +68,7 @@ func NewProtobuf(meta *meta.Options) *Protobuf {
 		"VTPROTOBUF_VERSION",
 	)
 
-	return &Protobuf{
+	return &Generate{
 		BaseNode: dag.NewBaseNode("protobuf"),
 
 		meta: meta,
@@ -74,14 +83,14 @@ func NewProtobuf(meta *meta.Options) *Protobuf {
 }
 
 // CompileMakefile implements makefile.Compiler.
-func (proto *Protobuf) CompileMakefile(output *makefile.Output) error {
+func (generate *Generate) CompileMakefile(output *makefile.Output) error {
 	output.VariableGroup(makefile.VariableGroupCommon).
-		Variable(makefile.OverridableVariable("PROTOBUF_GO_VERSION", strings.TrimLeft(proto.ProtobufGoVersion, "v"))).
-		Variable(makefile.OverridableVariable("GRPC_GO_VERSION", strings.TrimLeft(proto.GrpcGoVersion, "v"))).
-		Variable(makefile.OverridableVariable("GRPC_GATEWAY_VERSION", strings.TrimLeft(proto.GrpcGatewayVersion, "v"))).
-		Variable(makefile.OverridableVariable("VTPROTOBUF_VERSION", strings.TrimLeft(proto.VTProtobufVersion, "v")))
+		Variable(makefile.OverridableVariable("PROTOBUF_GO_VERSION", strings.TrimLeft(generate.ProtobufGoVersion, "v"))).
+		Variable(makefile.OverridableVariable("GRPC_GO_VERSION", strings.TrimLeft(generate.GrpcGoVersion, "v"))).
+		Variable(makefile.OverridableVariable("GRPC_GATEWAY_VERSION", strings.TrimLeft(generate.GrpcGatewayVersion, "v"))).
+		Variable(makefile.OverridableVariable("VTPROTOBUF_VERSION", strings.TrimLeft(generate.VTProtobufVersion, "v")))
 
-	if len(proto.Specs) == 0 {
+	if len(generate.Specs) == 0 {
 		return nil
 	}
 
@@ -92,39 +101,40 @@ func (proto *Protobuf) CompileMakefile(output *makefile.Output) error {
 }
 
 // ToolchainBuild implements common.ToolchainBuilder hook.
-func (proto *Protobuf) ToolchainBuild(stage *dockerfile.Stage) error {
-	if len(proto.Specs) == 0 {
+func (generate *Generate) ToolchainBuild(stage *dockerfile.Stage) error {
+	if len(generate.Specs) == 0 {
 		return nil
 	}
 
 	stage.
 		Step(step.Arg("PROTOBUF_GO_VERSION")).
 		Step(step.Script("go install google.golang.org/protobuf/cmd/protoc-gen-go@v${PROTOBUF_GO_VERSION}")).
-		Step(step.Run("mv", filepath.Join(proto.meta.GoPath, "bin", "protoc-gen-go"), proto.meta.BinPath)).
+		Step(step.Run("mv", filepath.Join(generate.meta.GoPath, "bin", "protoc-gen-go"), generate.meta.BinPath)).
 		Step(step.Arg("GRPC_GO_VERSION")).
 		Step(step.Script("go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v${GRPC_GO_VERSION}")).
-		Step(step.Run("mv", filepath.Join(proto.meta.GoPath, "bin", "protoc-gen-go-grpc"), proto.meta.BinPath)).
+		Step(step.Run("mv", filepath.Join(generate.meta.GoPath, "bin", "protoc-gen-go-grpc"), generate.meta.BinPath)).
 		Step(step.Arg("GRPC_GATEWAY_VERSION")).
 		Step(step.Script("go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v${GRPC_GATEWAY_VERSION}")).
-		Step(step.Run("mv", filepath.Join(proto.meta.GoPath, "bin", "protoc-gen-grpc-gateway"), proto.meta.BinPath))
+		Step(step.Run("mv", filepath.Join(generate.meta.GoPath, "bin", "protoc-gen-grpc-gateway"), generate.meta.BinPath))
 
-	if proto.VTProtobufEnabled {
+	if generate.VTProtobufEnabled {
 		stage.
 			Step(step.Arg("VTPROTOBUF_VERSION")).
 			Step(step.Script("go install github.com/planetscale/vtprotobuf/cmd/protoc-gen-go-vtproto@v${VTPROTOBUF_VERSION}")).
-			Step(step.Run("mv", filepath.Join(proto.meta.GoPath, "bin", "protoc-gen-go-vtproto"), proto.meta.BinPath))
+			Step(step.Run("mv", filepath.Join(generate.meta.GoPath, "bin", "protoc-gen-go-vtproto"), generate.meta.BinPath))
 	}
 
 	return nil
 }
 
 // CompileDockerfile implements dockerfile.Compiler.
-func (proto *Protobuf) CompileDockerfile(output *dockerfile.Output) error {
-	generate := output.Stage("generate").
+//nolint:gocognit
+func (generate *Generate) CompileDockerfile(output *dockerfile.Output) error {
+	generateStage := output.Stage("generate").
 		Description("cleaned up specs and compiled versions").
 		From("scratch")
 
-	if len(proto.Specs) == 0 {
+	if len(generate.Specs) == 0 {
 		return nil
 	}
 
@@ -132,18 +142,18 @@ func (proto *Protobuf) CompileDockerfile(output *dockerfile.Output) error {
 		Description("collects proto specs").
 		From("scratch")
 
-	for _, spec := range proto.Specs {
+	for _, spec := range generate.Specs {
 		specs.Step(
-			step.Add(spec.Source, filepath.Join(proto.BaseSpecPath, spec.SubDirectory)+"/"),
+			step.Add(spec.Source, filepath.Join(generate.BaseSpecPath, spec.SubDirectory)+"/"),
 		)
 	}
 
-	for i := range proto.Specs {
-		if strings.HasPrefix(proto.Specs[i].Source, "http") {
-			proto.Specs[i].external = true
+	for i := range generate.Specs {
+		if strings.HasPrefix(generate.Specs[i].Source, "http") {
+			generate.Specs[i].external = true
 		}
 
-		proto.Specs[i].sourcePath = filepath.Join(proto.BaseSpecPath, proto.Specs[i].SubDirectory, filepath.Base(proto.Specs[i].Source))
+		generate.Specs[i].sourcePath = filepath.Join(generate.BaseSpecPath, generate.Specs[i].SubDirectory, filepath.Base(generate.Specs[i].Source))
 	}
 
 	compile := output.Stage("proto-compile").
@@ -158,18 +168,18 @@ func (proto *Protobuf) CompileDockerfile(output *dockerfile.Output) error {
 
 	// try to combine as many specs as possible into a single invocation of protoc,
 	// as for some generators this fixes the problem with multiple definitions of internal functions
-	for _, spec := range proto.Specs {
+	for _, spec := range generate.Specs {
 		if spec.SkipCompile {
 			continue
 		}
 
 		flags := []string{
-			fmt.Sprintf("-I%s", proto.BaseSpecPath),
+			fmt.Sprintf("-I%s", generate.BaseSpecPath),
 		}
 
 		if spec.GenGateway {
 			flags = append(flags,
-				fmt.Sprintf("--grpc-gateway_out=paths=source_relative:%s", proto.BaseSpecPath),
+				fmt.Sprintf("--grpc-gateway_out=paths=source_relative:%s", generate.BaseSpecPath),
 				"--grpc-gateway_opt=generate_unbound_methods=true",
 			)
 
@@ -182,19 +192,19 @@ func (proto *Protobuf) CompileDockerfile(output *dockerfile.Output) error {
 
 		if !spec.GenGateway || !spec.external {
 			flags = append(flags,
-				fmt.Sprintf("--go_out=paths=source_relative:%s", proto.BaseSpecPath),
-				fmt.Sprintf("--go-grpc_out=paths=source_relative:%s", proto.BaseSpecPath),
+				fmt.Sprintf("--go_out=paths=source_relative:%s", generate.BaseSpecPath),
+				fmt.Sprintf("--go-grpc_out=paths=source_relative:%s", generate.BaseSpecPath),
 			)
 
-			if proto.VTProtobufEnabled {
+			if generate.VTProtobufEnabled {
 				flags = append(flags,
-					fmt.Sprintf("--go-vtproto_out=paths=source_relative:%s", proto.BaseSpecPath),
+					fmt.Sprintf("--go-vtproto_out=paths=source_relative:%s", generate.BaseSpecPath),
 					"--go-vtproto_opt=features=marshal+unmarshal+size",
 				)
 			}
 		}
 
-		flags = append(flags, proto.ExperimentalFlags...)
+		flags = append(flags, generate.ExperimentalFlags...)
 
 		if prevFlags != nil && !reflect.DeepEqual(flags, prevFlags) {
 			compile.Step(
@@ -222,7 +232,7 @@ func (proto *Protobuf) CompileDockerfile(output *dockerfile.Output) error {
 	}
 
 	// cleanup copied source files
-	for _, spec := range proto.Specs {
+	for _, spec := range generate.Specs {
 		if spec.external {
 			continue
 		}
@@ -241,8 +251,8 @@ func (proto *Protobuf) CompileDockerfile(output *dockerfile.Output) error {
 			"goimports",
 			"-w",
 			"-local",
-			proto.meta.CanonicalPath,
-			proto.BaseSpecPath,
+			generate.meta.CanonicalPath,
+			generate.BaseSpecPath,
 		),
 	)
 
@@ -250,12 +260,40 @@ func (proto *Protobuf) CompileDockerfile(output *dockerfile.Output) error {
 		step.Run(
 			"gofumpt",
 			"-w",
-			proto.BaseSpecPath,
+			generate.BaseSpecPath,
 		),
 	)
 
-	generate.Step(step.Copy(filepath.Clean(proto.BaseSpecPath)+"/", filepath.Clean(proto.BaseSpecPath)+"/").
+	generateStage.Step(step.Copy(filepath.Clean(generate.BaseSpecPath)+"/", filepath.Clean(generate.BaseSpecPath)+"/").
 		From("proto-compile"))
+
+	output.AllowLocalPath(license.Header)
+
+	for index, spec := range generate.GoGenerateSpecs {
+		output.Stage(fmt.Sprintf("go-generate-%d", index)).
+			Description("run go generate").
+			From("base").
+			Step(step.WorkDir("/src")).
+			Step(step.Copy(license.Header, filepath.Join("./hack/", license.Header))).
+			Step(step.Script(fmt.Sprintf("go generate %s/...", spec.Source)).
+				MountCache(filepath.Join(generate.meta.CachePath, "go-build")).
+				MountCache(filepath.Join(generate.meta.GoPath, "pkg")),
+			).
+			Step(step.Run(
+				"goimports",
+				"-w",
+				"-local",
+				generate.meta.CanonicalPath,
+				spec.Source,
+			))
+	}
+
+	for index, spec := range generate.GoGenerateSpecs {
+		for _, path := range spec.Copy {
+			path = filepath.Clean(path)
+			generateStage.Step(step.Copy(filepath.Join("/src", path), path).From(fmt.Sprintf("go-generate-%d", index)))
+		}
+	}
 
 	return nil
 }
