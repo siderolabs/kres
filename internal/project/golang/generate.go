@@ -90,7 +90,7 @@ func (generate *Generate) CompileMakefile(output *makefile.Output) error {
 		Variable(makefile.OverridableVariable("GRPC_GATEWAY_VERSION", strings.TrimLeft(generate.GrpcGatewayVersion, "v"))).
 		Variable(makefile.OverridableVariable("VTPROTOBUF_VERSION", strings.TrimLeft(generate.VTProtobufVersion, "v")))
 
-	if len(generate.Specs) == 0 {
+	if len(generate.Specs) == 0 && len(generate.GoGenerateSpecs) == 0 {
 		return nil
 	}
 
@@ -128,146 +128,146 @@ func (generate *Generate) ToolchainBuild(stage *dockerfile.Stage) error {
 }
 
 // CompileDockerfile implements dockerfile.Compiler.
-//nolint:gocognit
+//nolint:gocognit,gocyclo,cyclop
 func (generate *Generate) CompileDockerfile(output *dockerfile.Output) error {
 	generateStage := output.Stage("generate").
 		Description("cleaned up specs and compiled versions").
 		From("scratch")
 
-	if len(generate.Specs) == 0 {
-		return nil
-	}
+	if len(generate.Specs) > 0 {
+		specs := output.Stage("proto-specs").
+			Description("collects proto specs").
+			From("scratch")
 
-	specs := output.Stage("proto-specs").
-		Description("collects proto specs").
-		From("scratch")
+		for _, spec := range generate.Specs {
+			specs.Step(
+				step.Add(spec.Source, filepath.Join(generate.BaseSpecPath, spec.SubDirectory)+"/"),
+			)
+		}
 
-	for _, spec := range generate.Specs {
-		specs.Step(
-			step.Add(spec.Source, filepath.Join(generate.BaseSpecPath, spec.SubDirectory)+"/"),
+		for i := range generate.Specs {
+			if strings.HasPrefix(generate.Specs[i].Source, "http") {
+				generate.Specs[i].external = true
+			}
+
+			generate.Specs[i].sourcePath = filepath.Join(generate.BaseSpecPath, generate.Specs[i].SubDirectory, filepath.Base(generate.Specs[i].Source))
+		}
+
+		compile := output.Stage("proto-compile").
+			Description("runs protobuf compiler").
+			From("tools").
+			Step(step.Copy("/", "/").From("proto-specs"))
+
+		var (
+			prevFlags              []string
+			accumulatedSourcePaths []string
 		)
-	}
 
-	for i := range generate.Specs {
-		if strings.HasPrefix(generate.Specs[i].Source, "http") {
-			generate.Specs[i].external = true
-		}
-
-		generate.Specs[i].sourcePath = filepath.Join(generate.BaseSpecPath, generate.Specs[i].SubDirectory, filepath.Base(generate.Specs[i].Source))
-	}
-
-	compile := output.Stage("proto-compile").
-		Description("runs protobuf compiler").
-		From("tools").
-		Step(step.Copy("/", "/").From("proto-specs"))
-
-	var ( //nolint:prealloc
-		prevFlags              []string
-		accumulatedSourcePaths []string
-	)
-
-	// try to combine as many specs as possible into a single invocation of protoc,
-	// as for some generators this fixes the problem with multiple definitions of internal functions
-	for _, spec := range generate.Specs {
-		if spec.SkipCompile {
-			continue
-		}
-
-		flags := []string{
-			fmt.Sprintf("-I%s", generate.BaseSpecPath),
-		}
-
-		if spec.GenGateway {
-			flags = append(flags,
-				fmt.Sprintf("--grpc-gateway_out=paths=source_relative:%s", generate.BaseSpecPath),
-				"--grpc-gateway_opt=generate_unbound_methods=true",
-			)
-
-			if spec.external {
-				flags = append(flags,
-					"--grpc-gateway_opt=standalone=true",
-				)
+		// try to combine as many specs as possible into a single invocation of protoc,
+		// as for some generators this fixes the problem with multiple definitions of internal functions
+		for _, spec := range generate.Specs {
+			if spec.SkipCompile {
+				continue
 			}
-		}
 
-		if !spec.GenGateway || !spec.external {
-			flags = append(flags,
-				fmt.Sprintf("--go_out=paths=source_relative:%s", generate.BaseSpecPath),
-				fmt.Sprintf("--go-grpc_out=paths=source_relative:%s", generate.BaseSpecPath),
-			)
-
-			if generate.VTProtobufEnabled {
-				flags = append(flags,
-					fmt.Sprintf("--go-vtproto_out=paths=source_relative:%s", generate.BaseSpecPath),
-					"--go-vtproto_opt=features=marshal+unmarshal+size",
-				)
+			flags := []string{
+				fmt.Sprintf("-I%s", generate.BaseSpecPath),
 			}
+
+			if spec.GenGateway {
+				flags = append(flags,
+					fmt.Sprintf("--grpc-gateway_out=paths=source_relative:%s", generate.BaseSpecPath),
+					"--grpc-gateway_opt=generate_unbound_methods=true",
+				)
+
+				if spec.external {
+					flags = append(flags,
+						"--grpc-gateway_opt=standalone=true",
+					)
+				}
+			}
+
+			if !spec.GenGateway || !spec.external {
+				flags = append(flags,
+					fmt.Sprintf("--go_out=paths=source_relative:%s", generate.BaseSpecPath),
+					fmt.Sprintf("--go-grpc_out=paths=source_relative:%s", generate.BaseSpecPath),
+				)
+
+				if generate.VTProtobufEnabled {
+					flags = append(flags,
+						fmt.Sprintf("--go-vtproto_out=paths=source_relative:%s", generate.BaseSpecPath),
+						"--go-vtproto_opt=features=marshal+unmarshal+size",
+					)
+				}
+			}
+
+			flags = append(flags, generate.ExperimentalFlags...)
+
+			if prevFlags != nil && !reflect.DeepEqual(flags, prevFlags) {
+				compile.Step(
+					step.Run(
+						"protoc",
+						append(prevFlags, accumulatedSourcePaths...)...,
+					),
+				)
+
+				accumulatedSourcePaths = nil
+			}
+
+			prevFlags = flags
+
+			accumulatedSourcePaths = append(accumulatedSourcePaths, spec.sourcePath)
 		}
 
-		flags = append(flags, generate.ExperimentalFlags...)
-
-		if prevFlags != nil && !reflect.DeepEqual(flags, prevFlags) {
+		if len(accumulatedSourcePaths) > 0 {
 			compile.Step(
 				step.Run(
 					"protoc",
 					append(prevFlags, accumulatedSourcePaths...)...,
 				),
 			)
-
-			accumulatedSourcePaths = nil
 		}
 
-		prevFlags = flags
+		// cleanup copied source files
+		for _, spec := range generate.Specs {
+			if spec.external {
+				continue
+			}
 
-		accumulatedSourcePaths = append(accumulatedSourcePaths, spec.sourcePath)
-	}
-
-	if len(accumulatedSourcePaths) > 0 {
-		compile.Step(
-			step.Run(
-				"protoc",
-				append(prevFlags, accumulatedSourcePaths...)...,
-			),
-		)
-	}
-
-	// cleanup copied source files
-	for _, spec := range generate.Specs {
-		if spec.external {
-			continue
+			compile.Step(
+				step.Run(
+					"rm",
+					spec.sourcePath,
+				),
+			)
 		}
 
+		// gofumpt + goimports
 		compile.Step(
 			step.Run(
-				"rm",
-				spec.sourcePath,
+				"goimports",
+				"-w",
+				"-local",
+				generate.meta.CanonicalPath,
+				generate.BaseSpecPath,
 			),
 		)
+
+		compile.Step(
+			step.Run(
+				"gofumpt",
+				"-w",
+				generate.BaseSpecPath,
+			),
+		)
+
+		generateStage.Step(step.Copy(filepath.Clean(generate.BaseSpecPath)+"/", filepath.Clean(generate.BaseSpecPath)+"/").
+			From("proto-compile"))
 	}
 
-	// gofumpt + goimports
-	compile.Step(
-		step.Run(
-			"goimports",
-			"-w",
-			"-local",
-			generate.meta.CanonicalPath,
-			generate.BaseSpecPath,
-		),
-	)
-
-	compile.Step(
-		step.Run(
-			"gofumpt",
-			"-w",
-			generate.BaseSpecPath,
-		),
-	)
-
-	generateStage.Step(step.Copy(filepath.Clean(generate.BaseSpecPath)+"/", filepath.Clean(generate.BaseSpecPath)+"/").
-		From("proto-compile"))
-
-	output.AllowLocalPath(license.Header)
+	if len(generate.GoGenerateSpecs) > 0 {
+		output.AllowLocalPath(license.Header)
+	}
 
 	for index, spec := range generate.GoGenerateSpecs {
 		output.Stage(fmt.Sprintf("go-generate-%d", index)).
