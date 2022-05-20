@@ -120,6 +120,7 @@ linters:
   disable-all: false
   fast: false
   disable:
+    - exhaustruct
     - exhaustivestruct
     - forbidigo
     - funlen

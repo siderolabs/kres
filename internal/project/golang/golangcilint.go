@@ -28,13 +28,14 @@ type GolangciLint struct {
 // NewGolangciLint builds golangci-lint node.
 func NewGolangciLint(meta *meta.Options) *GolangciLint {
 	meta.SourceFiles = append(meta.SourceFiles, ".golangci.yml")
+	meta.BuildArgs = append(meta.BuildArgs, "GOLANGCILINT_VERSION")
 
 	return &GolangciLint{
 		BaseNode: dag.NewBaseNode("lint-golangci-lint"),
 
 		meta: meta,
 
-		Version: "v1.45.2",
+		Version: "v1.46.2",
 	}
 }
 
@@ -51,13 +52,19 @@ func (lint *GolangciLint) CompileMakefile(output *makefile.Output) error {
 	output.Target("lint-golangci-lint").Description("Runs golangci-lint linter.").
 		Script("@$(MAKE) target-$@")
 
+	output.VariableGroup(makefile.VariableGroupCommon).
+		Variable(makefile.OverridableVariable("GOLANGCILINT_VERSION", lint.Version))
+
 	return nil
 }
 
 // ToolchainBuild implements common.ToolchainBuilder hook.
 func (lint *GolangciLint) ToolchainBuild(stage *dockerfile.Stage) error {
 	stage.
-		Step(step.Script(fmt.Sprintf("curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s -- -b %s %s", lint.meta.BinPath, lint.Version)))
+		Step(step.Arg("GOLANGCILINT_VERSION")).
+		Step(step.Script(
+			fmt.Sprintf("curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/${GOLANGCILINT_VERSION}/install.sh | bash -s -- -b %s ${GOLANGCILINT_VERSION}", lint.meta.BinPath),
+		))
 
 	return nil
 }

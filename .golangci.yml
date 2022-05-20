@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2022-04-05T08:07:27Z by kres 4975f30.
+# Generated on 2022-05-21T09:35:58Z by kres 48670a1-dirty.
 
 # options for analysis running
 run:
@@ -124,6 +124,7 @@ linters:
   disable-all: false
   fast: false
   disable:
+    - exhaustruct
     - exhaustivestruct
     - forbidigo
     - funlen

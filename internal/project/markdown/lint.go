@@ -35,8 +35,8 @@ func NewLint(meta *meta.Options) *Lint {
 
 		meta: meta,
 
-		BaseImage:               "node:14.8.0-alpine",
-		MardownLintCLIVersion:   "0.23.2",
+		BaseImage:               "node:18.2.0-alpine",
+		MardownLintCLIVersion:   "0.31.1",
 		SentencesPerLineVersion: "0.2.1",
 	}
 }
@@ -45,9 +45,9 @@ func NewLint(meta *meta.Options) *Lint {
 func (lint *Lint) CompileDockerfile(output *dockerfile.Output) error {
 	stage := output.Stage(lint.Name()).Description("runs markdownlint").
 		From(lint.BaseImage).
+		Step(step.WorkDir("/src")).
 		Step(step.Run("npm", "i", "-g", fmt.Sprintf("markdownlint-cli@%s", lint.MardownLintCLIVersion))).
 		Step(step.Run("npm", "i", fmt.Sprintf("sentences-per-line@%s", lint.SentencesPerLineVersion))).
-		Step(step.WorkDir("/src")).
 		Step(step.Copy(".markdownlint.json", "."))
 
 	for _, directory := range lint.meta.MarkdownDirectories {
@@ -59,7 +59,7 @@ func (lint *Lint) CompileDockerfile(output *dockerfile.Output) error {
 	}
 
 	stage.
-		Step(step.Script(`markdownlint --ignore "CHANGELOG.md" --ignore "**/node_modules/**" --ignore '**/hack/chglog/**' --rules /node_modules/sentences-per-line/index.js .`))
+		Step(step.Script(`markdownlint --ignore "CHANGELOG.md" --ignore "**/node_modules/**" --ignore '**/hack/chglog/**' --rules node_modules/sentences-per-line/index.js .`))
 
 	return nil
 }
