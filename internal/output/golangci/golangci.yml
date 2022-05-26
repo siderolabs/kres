@@ -6,7 +6,9 @@ run:
   build-tags: []
   skip-dirs: []
   skip-dirs-use-default: true
-  skip-files: []
+  skip-files:
+    - ".*pb.gw.go"
+    - ".*pb.go"
   modules-download-mode: readonly
 
 # output configuration options

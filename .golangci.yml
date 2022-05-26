@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2022-05-21T09:35:58Z by kres 48670a1-dirty.
+# Generated on 2022-05-26T18:31:15Z by kres 65530e7-dirty.
 
 # options for analysis running
 run:
@@ -10,7 +10,9 @@ run:
   build-tags: []
   skip-dirs: []
   skip-dirs-use-default: true
-  skip-files: []
+  skip-files:
+    - ".*pb.gw.go"
+    - ".*pb.go"
   modules-download-mode: readonly
 
 # output configuration options
