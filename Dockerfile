@@ -14,7 +14,7 @@ FROM ghcr.io/siderolabs/ca-certificates:v1.0.0 AS image-ca-certificates
 FROM ghcr.io/siderolabs/fhs:v1.0.0 AS image-fhs
 
 # runs markdownlint
-FROM node:18.2.0-alpine AS lint-markdown
+FROM node:18.4.0-alpine AS lint-markdown
 WORKDIR /src
 RUN npm i -g markdownlint-cli@0.31.1
 RUN npm i sentences-per-line@0.2.1
