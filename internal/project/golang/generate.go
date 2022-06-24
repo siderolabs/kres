@@ -43,6 +43,7 @@ type Generate struct {
 // ProtoSpec describes a set of protobuf specs to be compiled.
 type ProtoSpec struct {
 	Source       string `yaml:"source"`
+	External     *bool  `yaml:"external"`
 	SubDirectory string `yaml:"subdirectory"`
 
 	sourcePath string
@@ -146,7 +147,9 @@ func (generate *Generate) CompileDockerfile(output *dockerfile.Output) error {
 		}
 
 		for i := range generate.Specs {
-			if strings.HasPrefix(generate.Specs[i].Source, "http") {
+			if generate.Specs[i].External != nil {
+				generate.Specs[i].external = *generate.Specs[i].External
+			} else if strings.HasPrefix(generate.Specs[i].Source, "http") {
 				generate.Specs[i].external = true
 			}
 
