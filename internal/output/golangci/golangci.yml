@@ -131,6 +131,7 @@ linters:
     - goerr113
     - gomnd
     - gomoddirectives
+    - ireturn
     - nestif
     - paralleltest
     - tagliatelle
