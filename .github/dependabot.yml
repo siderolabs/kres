@@ -15,5 +15,8 @@ updates:
       day: "monday"
       time: "01:00"
       timezone: "UTC"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-patch"]
 
 # no website for now
