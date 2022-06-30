@@ -40,7 +40,7 @@ func NewToolchain(meta *meta.Options, sourceDir string) *Toolchain {
 		meta:      meta,
 		sourceDir: sourceDir,
 
-		Version: "14.18.1-alpine3.14",
+		Version: "18.4.0-alpine3.16",
 	}
 
 	meta.BuildArgs = append(meta.BuildArgs, "JS_TOOLCHAIN")
@@ -140,7 +140,7 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 			MountCache(toolchain.meta.NpmCachePath)).
 		Step(step.Script("npm install").
 			MountCache(toolchain.meta.NpmCachePath)).
-		Step(step.Copy(".eslintrc.yaml", "./")).
+		Step(step.Copy("frontend/.eslintrc.yaml", "./")).
 		Step(step.Copy(filepath.Join(toolchain.sourceDir, "babel.config.js"), "./")).
 		Step(step.Copy(filepath.Join(toolchain.sourceDir, "jest.config.js"), "./")).
 		Step(step.Copy(filepath.Join(toolchain.sourceDir, "tsconfig.json"), "./"))

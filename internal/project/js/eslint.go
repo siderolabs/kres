@@ -23,7 +23,7 @@ type EsLint struct {
 
 // NewEsLint builds golangci-lint node.
 func NewEsLint(meta *meta.Options) *EsLint {
-	meta.SourceFiles = append(meta.SourceFiles, ".eslintrc.yaml")
+	meta.SourceFiles = append(meta.SourceFiles, "frontend/.eslintrc.yaml")
 
 	return &EsLint{
 		BaseNode: dag.NewBaseNode("lint-eslint"),
@@ -34,7 +34,7 @@ func NewEsLint(meta *meta.Options) *EsLint {
 
 // CompileTemplates implements templates.Compiler.
 func (lint *EsLint) CompileTemplates(output *template.Output) error {
-	output.Define(".eslintrc.yaml", templates.Eslint).
+	output.Define("frontend/.eslintrc.yaml", templates.Eslint).
 		PreamblePrefix("# ")
 
 	return nil

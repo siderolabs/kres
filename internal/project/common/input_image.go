@@ -34,7 +34,7 @@ func NewFHS(meta *meta.Options) *InputImage {
 		BaseNode: dag.NewBaseNode(fmt.Sprintf("image-%s", "fhs")),
 
 		Image:   "ghcr.io/siderolabs/fhs",
-		Version: "v1.0.0",
+		Version: "v1.1.0",
 	}
 }
 
@@ -44,6 +44,6 @@ func NewCACerts(meta *meta.Options) *InputImage {
 		BaseNode: dag.NewBaseNode(fmt.Sprintf("image-%s", "ca-certificates")),
 
 		Image:   "ghcr.io/siderolabs/ca-certificates",
-		Version: "v1.0.0",
+		Version: "v1.1.0",
 	}
 }

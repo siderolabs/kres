@@ -53,8 +53,8 @@ func NewProtobuf(meta *meta.Options, name string) *Protobuf {
 
 		meta: meta,
 
-		ProtobufTSVersion:        "v1.79.2",
-		ProtobufTSGatewayVersion: "v1.1.0",
+		ProtobufTSVersion:        "v1.115.5",
+		ProtobufTSGatewayVersion: "v1.1.2",
 
 		BaseSpecPath: "/api",
 	}
