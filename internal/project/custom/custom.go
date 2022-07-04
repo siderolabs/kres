@@ -14,6 +14,8 @@ import (
 )
 
 // Step is defined in the config manually.
+//
+//nolint:govet
 type Step struct {
 	dag.BaseNode
 
@@ -34,6 +36,10 @@ type Step struct {
 	Drone struct {
 		Enabled    bool `yaml:"enabled"`
 		Privileged bool `yaml:"privileged"`
+		Requests   *struct {
+			CPUCores  int `yaml:"cpuCores"`
+			MemoryGiB int `yaml:"memoryGiB"`
+		} `yaml:"requests"`
 	} `yaml:"drone"`
 }
 
@@ -73,6 +79,10 @@ func (step *Step) CompileDrone(output *drone.Output) error {
 
 	if step.Drone.Privileged {
 		droneStep.Privileged()
+	}
+
+	if step.Drone.Requests != nil {
+		droneStep.ResourceRequests(step.Drone.Requests.CPUCores, step.Drone.Requests.MemoryGiB)
 	}
 
 	output.Step(droneStep)

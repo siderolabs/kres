@@ -135,6 +135,22 @@ func (step *Step) Image(image string) *Step {
 	return step
 }
 
+// ResourceRequests sets step resource requests.
+func (step *Step) ResourceRequests(cpuCores, memoryGib int) *Step {
+	if step.container.Resources == nil {
+		step.container.Resources = &yaml.Resources{}
+	}
+
+	if step.container.Resources.Requests == nil {
+		step.container.Resources.Requests = &yaml.ResourceObject{}
+	}
+
+	step.container.Resources.Requests.CPU = float64(cpuCores) * 1000.0
+	step.container.Resources.Requests.Memory = yaml.BytesSize(int64(memoryGib) * 1024 * 1024 * 1024)
+
+	return step
+}
+
 // PublishArtifacts publishes artifacts with the default Github settings.
 func (step *Step) PublishArtifacts(note string, artifacts ...string) *Step {
 	step.container.Settings = map[string]*yaml.Parameter{
