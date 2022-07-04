@@ -8,18 +8,40 @@ package custom
 import (
 	"github.com/talos-systems/kres/internal/dag"
 	"github.com/talos-systems/kres/internal/output/dockerfile"
+	dockerstep "github.com/talos-systems/kres/internal/output/dockerfile/step"
 	"github.com/talos-systems/kres/internal/output/drone"
 	"github.com/talos-systems/kres/internal/output/makefile"
 	"github.com/talos-systems/kres/internal/project/meta"
 )
 
 // Step is defined in the config manually.
-//
 //nolint:govet
 type Step struct {
 	dag.BaseNode
 
 	meta *meta.Options
+
+	Docker struct {
+		Stages []struct {
+			Name        string `yaml:"name"`
+			Description string `yaml:"description"`
+			From        string `yaml:"from"`
+			Steps       []struct {
+				Script *struct {
+					Command string   `yaml:"command"`
+					Cache   []string `yaml:"cache"`
+				} `yaml:"script"`
+				Copy *struct {
+					From string `yaml:"from"`
+					Src  string `yaml:"src"`
+					Dst  string `yaml:"dst"`
+				} `yaml:"copy"`
+				Arg string `yaml:"arg"`
+			} `yaml:"steps"`
+		} `yaml:"stages"`
+
+		Enabled bool `yaml:"enabled"`
+	} `yaml:"docker"`
 
 	Makefile struct { //nolint:govet
 		Enabled bool     `yaml:"enabled"`
@@ -53,6 +75,41 @@ func NewStep(meta *meta.Options, name string) *Step {
 
 // CompileDockerfile implements dockerfile.Compiler.
 func (step *Step) CompileDockerfile(output *dockerfile.Output) error {
+	if !step.Docker.Enabled {
+		return nil
+	}
+
+	for _, stage := range step.Docker.Stages {
+		s := output.Stage(stage.Name).Description(stage.Description)
+
+		if stage.From != "" {
+			s.From(stage.From)
+		} else {
+			s.From("scratch")
+		}
+
+		for _, stageStep := range stage.Steps {
+			switch {
+			case stageStep.Arg != "":
+				s.Step(dockerstep.Arg(stageStep.Arg))
+			case stageStep.Script != nil:
+				script := dockerstep.Script(stageStep.Script.Command)
+				for _, cache := range stageStep.Script.Cache {
+					script.MountCache(cache)
+				}
+
+				s.Step(script)
+			case stageStep.Copy != nil:
+				copyStep := dockerstep.Copy(stageStep.Copy.Src, stageStep.Copy.Dst)
+				if stageStep.Copy.From != "" {
+					copyStep.From(stageStep.Copy.From)
+				}
+
+				s.Step(copyStep)
+			}
+		}
+	}
+
 	return nil
 }
 
