@@ -35,7 +35,7 @@ func NewLint(meta *meta.Options) *Lint {
 
 		meta: meta,
 
-		BaseImage:               "node:18.4.0-alpine",
+		BaseImage:               "node:18.5.0-alpine",
 		MardownLintCLIVersion:   "0.31.1",
 		SentencesPerLineVersion: "0.2.1",
 	}

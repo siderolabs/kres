@@ -40,7 +40,7 @@ func NewToolchain(meta *meta.Options, sourceDir string) *Toolchain {
 		meta:      meta,
 		sourceDir: sourceDir,
 
-		Version: "18.4.0-alpine3.16",
+		Version: "18.5.0-alpine3.16",
 	}
 
 	meta.BuildArgs = append(meta.BuildArgs, "JS_TOOLCHAIN")
