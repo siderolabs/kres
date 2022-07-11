@@ -152,6 +152,7 @@ func (proto *Protobuf) CompileDockerfile(output *dockerfile.Output) error {
 			"--ts_proto_opt=returnObservable=false",
 			"--ts_proto_opt=outputClientImpl=false",
 			"--ts_proto_opt=snakeToCamel=false",
+			"--ts_proto_opt=esModuleInterop=true",
 		)
 
 		args = append(args, proto.ExperimentalFlags...)
