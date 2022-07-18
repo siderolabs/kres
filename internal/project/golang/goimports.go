@@ -32,7 +32,7 @@ func NewGoimports(meta *meta.Options) *Goimports {
 
 		meta: meta,
 
-		Version: "v0.1.10",
+		Version: "v0.1.11",
 	}
 }
 
