@@ -133,6 +133,8 @@ linters:
     - gomoddirectives
     - ireturn
     - nestif
+    - nonamedreturns
+    - nosnakecase
     - paralleltest
     - tagliatelle
     - thelper

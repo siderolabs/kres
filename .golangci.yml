@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2022-06-28T12:54:11Z by kres ba905fc-dirty.
+# Generated on 2022-07-22T07:58:01Z by kres c84ca98-dirty.
 
 # options for analysis running
 run:
@@ -137,6 +137,8 @@ linters:
     - gomoddirectives
     - ireturn
     - nestif
+    - nonamedreturns
+    - nosnakecase
     - paralleltest
     - tagliatelle
     - thelper
