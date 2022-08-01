@@ -188,7 +188,7 @@ func (r *Repository) enableBranchProtection(client *github.Client) error {
 
 		sigProtected, _, err = client.Repositories.GetSignaturesProtectedBranch(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, r.MainBranch)
 		if err != nil {
-			return nil
+			return nil //nolint:nilerr
 		}
 
 		// check if everything is already set up
