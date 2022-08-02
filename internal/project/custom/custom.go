@@ -15,6 +15,7 @@ import (
 )
 
 // Step is defined in the config manually.
+//
 //nolint:govet
 type Step struct {
 	dag.BaseNode

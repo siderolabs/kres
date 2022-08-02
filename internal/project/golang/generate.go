@@ -129,6 +129,7 @@ func (generate *Generate) ToolchainBuild(stage *dockerfile.Stage) error {
 }
 
 // CompileDockerfile implements dockerfile.Compiler.
+//
 //nolint:gocognit,gocyclo,cyclop
 func (generate *Generate) CompileDockerfile(output *dockerfile.Output) error {
 	generateStage := output.Stage("generate").

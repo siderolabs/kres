@@ -5,14 +5,13 @@
 package auto
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
 func listFilesWithSuffix(path, suffix string) ([]string, error) {
-	contents, err := ioutil.ReadDir(path)
+	contents, err := os.ReadDir(path)
 	if err != nil {
 		return nil, err
 	}

@@ -65,7 +65,7 @@ func runGen() error {
 	var err error
 
 	options := meta.Options{
-		GoContainerVersion: "1.18-alpine",
+		GoContainerVersion: "1.19-alpine",
 	}
 
 	options.Config, err = config.NewProvider(".kres.yaml")

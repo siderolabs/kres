@@ -5,7 +5,7 @@
 package auto
 
 import (
-	"io/ioutil"
+	"io"
 	"os"
 	"path"
 	"path/filepath"
@@ -35,7 +35,7 @@ func (builder *builder) DetectGolang() (bool, error) {
 
 	defer gomod.Close() //nolint:errcheck
 
-	contents, err := ioutil.ReadAll(gomod)
+	contents, err := io.ReadAll(gomod)
 	if err != nil {
 		return true, err
 	}
@@ -63,7 +63,7 @@ func (builder *builder) DetectGolang() (bool, error) {
 
 	if len(builder.meta.GoDirectories) == 0 {
 		// no standard directories found, assume any directory with `.go` files is a source directory
-		topLevel, err := ioutil.ReadDir(builder.rootPath)
+		topLevel, err := os.ReadDir(builder.rootPath)
 		if err != nil {
 			return true, err
 		}
@@ -117,7 +117,7 @@ func (builder *builder) DetectGolang() (bool, error) {
 		}
 
 		if cmdExists {
-			dirs, err := ioutil.ReadDir(filepath.Join(builder.rootPath, "cmd"))
+			dirs, err := os.ReadDir(filepath.Join(builder.rootPath, "cmd"))
 			if err != nil {
 				return true, err
 			}

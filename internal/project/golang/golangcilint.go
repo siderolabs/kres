@@ -63,7 +63,9 @@ func (lint *GolangciLint) ToolchainBuild(stage *dockerfile.Stage) error {
 	stage.
 		Step(step.Arg("GOLANGCILINT_VERSION")).
 		Step(step.Script(
-			fmt.Sprintf("curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/${GOLANGCILINT_VERSION}/install.sh | bash -s -- -b %s ${GOLANGCILINT_VERSION}", lint.meta.BinPath),
+			fmt.Sprintf(
+				"go install github.com/golangci/golangci-lint/cmd/golangci-lint@${GOLANGCILINT_VERSION} \\\n"+
+					"\t&& mv /go/bin/golangci-lint %s/golangci-lint", lint.meta.BinPath),
 		))
 
 	return nil

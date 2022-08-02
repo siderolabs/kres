@@ -10,18 +10,22 @@ import (
 )
 
 // Babel babel.config.js.
+//
 //go:embed babel.js
 var Babel string
 
 // Eslint eslintrc.yaml.
+//
 //go:embed eslint.yaml
 var Eslint string
 
 // Jest jest.config.js.
+//
 //go:embed jest.js
 var Jest string
 
 // TSConfig tsconfig.json.
+//
 //go:embed tsconfig.json
 var TSConfig string
 
