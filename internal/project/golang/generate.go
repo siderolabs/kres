@@ -76,7 +76,7 @@ func NewGenerate(meta *meta.Options) *Generate {
 
 		ProtobufGoVersion:  "v1.28.1",
 		GrpcGoVersion:      "v1.2.0",
-		GrpcGatewayVersion: "v2.10.0",
+		GrpcGatewayVersion: "v2.11.1",
 		VTProtobufVersion:  "v0.3.0",
 
 		BaseSpecPath: "/api",
