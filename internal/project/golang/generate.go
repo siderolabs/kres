@@ -74,7 +74,7 @@ func NewGenerate(meta *meta.Options) *Generate {
 
 		meta: meta,
 
-		ProtobufGoVersion:  "v1.28.0",
+		ProtobufGoVersion:  "v1.28.1",
 		GrpcGoVersion:      "v1.2.0",
 		GrpcGatewayVersion: "v2.10.0",
 		VTProtobufVersion:  "v0.3.0",
