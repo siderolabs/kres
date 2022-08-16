@@ -27,10 +27,13 @@ type Build struct {
 	artifacts []string
 }
 
+const nodeBuildArgsVarName = "NODE_BUILD_ARGS"
+
 // NewBuild initializes Build.
 func NewBuild(meta *meta.Options, name string) *Build {
 	embedFile := fmt.Sprintf("internal/%s/%s.go", name, name)
 	meta.SourceFiles = append(meta.SourceFiles, embedFile)
+	meta.BuildArgs = append(meta.BuildArgs, nodeBuildArgsVarName)
 
 	return &Build{
 		BaseNode:  dag.NewBaseNode(name),
@@ -67,7 +70,8 @@ func (build *Build) CompileDockerfile(output *dockerfile.Output) error {
 	output.Stage(build.Name()).
 		Description(fmt.Sprintf("builds %s", build.Name())).
 		From("js").
-		Step(step.Script("npm run build").
+		Step(step.Arg(nodeBuildArgsVarName)).
+		Step(step.Script("npm run build ${" + nodeBuildArgsVarName + "}").
 			MountCache(build.meta.NpmCachePath)).
 		Step(step.Script("mkdir -p " + outputDir)).
 		Step(step.Script("cp -rf ./dist/* " + outputDir))
@@ -86,6 +90,9 @@ func (build *Build) CompileDrone(output *drone.Output) error {
 
 // CompileMakefile implements makefile.Compiler.
 func (build *Build) CompileMakefile(output *makefile.Output) error {
+	output.VariableGroup(makefile.VariableGroupCommon).
+		Variable(makefile.OverridableVariable(nodeBuildArgsVarName, ""))
+
 	output.Target(fmt.Sprintf("$(ARTIFACTS)/%s-js", build.Name())).
 		Script(fmt.Sprintf("@$(MAKE) target-%s", build.Name())).
 		Phony()
