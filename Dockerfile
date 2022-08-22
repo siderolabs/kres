@@ -9,7 +9,7 @@ ARG TOOLCHAIN
 # cleaned up specs and compiled versions
 FROM scratch AS generate
 
-FROM ghcr.io/siderolabs/ca-certificates:v1.1.0 AS image-ca-certificates
+FROM ghcr.io/siderolabs/ca-certificates:v1.3.0-alpha.0-1-g01df058 AS image-ca-certificates
 
 FROM ghcr.io/siderolabs/fhs:v1.1.0 AS image-fhs
 
