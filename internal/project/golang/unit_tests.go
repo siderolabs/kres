@@ -21,6 +21,7 @@ type UnitTests struct { //nolint:govet
 	dag.BaseNode
 
 	RequiresInsecure bool `yaml:"requiresInsecure"`
+	DisableTests     bool `yaml:"disableTests"`
 
 	meta *meta.Options
 }
@@ -37,6 +38,10 @@ func NewUnitTests(meta *meta.Options) *UnitTests {
 
 // CompileDockerfile implements dockerfile.Compiler.
 func (tests *UnitTests) CompileDockerfile(output *dockerfile.Output) error {
+	if tests.DisableTests {
+		return nil
+	}
+
 	wrapAsInsecure := func(s *step.RunStep) *step.RunStep {
 		if tests.RequiresInsecure {
 			return s.SecurityInsecure()
@@ -73,6 +78,10 @@ func (tests *UnitTests) CompileDockerfile(output *dockerfile.Output) error {
 
 // CompileMakefile implements makefile.Compiler.
 func (tests *UnitTests) CompileMakefile(output *makefile.Output) error {
+	if tests.DisableTests {
+		return nil
+	}
+
 	output.VariableGroup(makefile.VariableGroupCommon).
 		Variable(makefile.OverridableVariable("TESTPKGS", "./..."))
 
@@ -97,6 +106,10 @@ func (tests *UnitTests) CompileMakefile(output *makefile.Output) error {
 
 // CompileDrone implements drone.Compiler.
 func (tests *UnitTests) CompileDrone(output *drone.Output) error {
+	if tests.DisableTests {
+		return nil
+	}
+
 	output.Step(drone.MakeStep("unit-tests").
 		DependsOn(dag.GatherMatchingInputNames(tests, dag.Implements[*drone.Compiler]())...),
 	)
