@@ -7,10 +7,10 @@ package config
 
 const (
 	// DeepCopyVersion is the version of deepcopy.
-	// renovate: datasource=github-tags depName=siderolabs/deep-copy
+	// renovate: datasource=go depName=github.com/siderolabs/deep-copy
 	DeepCopyVersion = "v0.5.5"
 	// GoFmtVersion is the version of gofmt.
-	// renovate: datasource=github-tags depName=mvdan/gofumpt
+	// renovate: datasource=go depName=github.com/mvdan/gofumpt
 	GoFmtVersion = "v0.3.1"
 	// GoImportsVersion is the version of goimports.
 	// renovate: datasource=go depName=golang.org/x/tools
@@ -19,7 +19,7 @@ const (
 	// renovate: datasource=go depName=github.com/golangci/golangci-lint
 	GolangCIlintVersion = "v1.49.0"
 	// GolangContainerImageVersion is the default golang container image.
-	// renovate: datasource=docker versioning=loose depName=golang
+	// renovate: datasource=docker versioning=docker depName=golang
 	GolangContainerImageVersion = "1.19-alpine"
 	// GoVersion is the version of Go.
 	// renovate: datasource=github-tags extractVersion=^v(?<version>.*)$ versioning=loose depName=golang/go
@@ -34,7 +34,7 @@ const (
 	// renovate: datasource=npm depName=markdownlint-cli
 	MardownLintCLIVersion = "0.31.1"
 	// NodeContainerImageVersion is the default node container image.
-	// renovate: datasource=docker versioning=loose depName=node
+	// renovate: datasource=docker versioning=docker depName=node
 	NodeContainerImageVersion = "18.7.0-alpine3.16"
 	// PkgsVersion is the version of pkgs.
 	// renovate: datasource=github-tags depName=siderolabs/pkgs

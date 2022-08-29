@@ -1,5 +1,8 @@
 {
     "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "extends": [
+        ":semanticCommitScopeDisabled"
+    ],
     "regexManagers": [
         {
             "fileMatch": [
@@ -9,6 +12,48 @@
                 "\\/\\/\\s+renovate: datasource=(?<datasource>.*?)(?:\\s+extractVersion=(?<extractVersion>.+?))?(?:\\s+versioning=(?<versioning>.+?))?\\s+depName=(?<depName>.+?)?\\s.*Version\\s+=\\s+\\\"(?<currentValue>.+?)\\\""
             ],
             "versioningTemplate": "{{#if versioning}}{{versioning}}{{else}}semver{{/if}}"
+        }
+    ],
+    "packageRules": [
+        {
+            "matchPackagePatterns": [
+                "*"
+            ],
+            "matchDatasources": [
+                "docker"
+            ],
+            "groupName": "container images"
+        },
+        {
+            "matchPackagePatterns": [
+                "*"
+            ],
+            "matchDatasources": [
+                "go",
+                "golang-version"
+            ],
+            "groupName": "go packages"
+        },
+        {
+            "matchPackagePatterns": [
+                "*"
+            ],
+            "matchDatasources": [
+                "npm"
+            ],
+            "groupName": "node packages"
+        },
+        {
+            "matchPackagePatterns": [
+                "*"
+            ],
+            "matchDatasources": [
+                "git-refs",
+                "git-tags",
+                "github-tags",
+                "github-releases"
+            ],
+            "groupName": "releases"
         }
     ],
     "schedule": [
