@@ -1,0 +1,19 @@
+{
+    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "regexManagers": [
+        {
+            "fileMatch": [
+                "internal/config/constants.go"
+            ],
+            "matchStrings": [
+                "\\/\\/\\s+renovate: datasource=(?<datasource>.*?)(?:\\s+extractVersion=(?<extractVersion>.+?))?(?:\\s+versioning=(?<versioning>.+?))?\\s+depName=(?<depName>.+?)?\\s.*Version\\s+=\\s+\\\"(?<currentValue>.+?)\\\""
+            ],
+            "versioningTemplate": "{{#if versioning}}{{versioning}}{{else}}semver{{/if}}"
+        }
+    ],
+    "schedule": [
+        "on monday at 1am"
+    ],
+    "timezone": "Etc/UTC",
+    "dependencyDashboard": true
+}

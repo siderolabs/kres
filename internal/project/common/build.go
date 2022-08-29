@@ -5,12 +5,12 @@
 package common
 
 import (
-	"github.com/talos-systems/kres/internal/dag"
-	"github.com/talos-systems/kres/internal/output/dockerfile"
-	"github.com/talos-systems/kres/internal/output/gitignore"
-	"github.com/talos-systems/kres/internal/output/makefile"
-	"github.com/talos-systems/kres/internal/output/release"
-	"github.com/talos-systems/kres/internal/project/meta"
+	"github.com/siderolabs/kres/internal/dag"
+	"github.com/siderolabs/kres/internal/output/dockerfile"
+	"github.com/siderolabs/kres/internal/output/gitignore"
+	"github.com/siderolabs/kres/internal/output/makefile"
+	"github.com/siderolabs/kres/internal/output/release"
+	"github.com/siderolabs/kres/internal/project/meta"
 )
 
 // Build provides very common build environment settings.

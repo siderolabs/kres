@@ -9,10 +9,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/talos-systems/kres/internal/output/dockerfile"
-	"github.com/talos-systems/kres/internal/output/gitignore"
-	"github.com/talos-systems/kres/internal/output/makefile"
-	"github.com/talos-systems/kres/internal/project/common"
+	"github.com/siderolabs/kres/internal/output/dockerfile"
+	"github.com/siderolabs/kres/internal/output/gitignore"
+	"github.com/siderolabs/kres/internal/output/makefile"
+	"github.com/siderolabs/kres/internal/project/common"
 )
 
 func TestBuildInterfaces(t *testing.T) {

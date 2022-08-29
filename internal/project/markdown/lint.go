@@ -7,12 +7,13 @@ package markdown
 import (
 	"fmt"
 
-	"github.com/talos-systems/kres/internal/dag"
-	"github.com/talos-systems/kres/internal/output/dockerfile"
-	"github.com/talos-systems/kres/internal/output/dockerfile/step"
-	"github.com/talos-systems/kres/internal/output/makefile"
-	"github.com/talos-systems/kres/internal/output/markdownlint"
-	"github.com/talos-systems/kres/internal/project/meta"
+	"github.com/siderolabs/kres/internal/config"
+	"github.com/siderolabs/kres/internal/dag"
+	"github.com/siderolabs/kres/internal/output/dockerfile"
+	"github.com/siderolabs/kres/internal/output/dockerfile/step"
+	"github.com/siderolabs/kres/internal/output/makefile"
+	"github.com/siderolabs/kres/internal/output/markdownlint"
+	"github.com/siderolabs/kres/internal/project/meta"
 )
 
 // Lint provides lint-markdown target.
@@ -35,16 +36,16 @@ func NewLint(meta *meta.Options) *Lint {
 
 		meta: meta,
 
-		BaseImage:               "node:18.7.0-alpine",
-		MardownLintCLIVersion:   "0.31.1",
-		SentencesPerLineVersion: "0.2.1",
+		BaseImage:               config.NodeContainerImageVersion,
+		MardownLintCLIVersion:   config.MardownLintCLIVersion,
+		SentencesPerLineVersion: config.SentencesPerLineVersion,
 	}
 }
 
 // CompileDockerfile implements dockerfile.Compiler.
 func (lint *Lint) CompileDockerfile(output *dockerfile.Output) error {
 	stage := output.Stage(lint.Name()).Description("runs markdownlint").
-		From(lint.BaseImage).
+		From(fmt.Sprintf("docker.io/node:%s", lint.BaseImage)).
 		Step(step.WorkDir("/src")).
 		Step(step.Run("npm", "i", "-g", fmt.Sprintf("markdownlint-cli@%s", lint.MardownLintCLIVersion))).
 		Step(step.Run("npm", "i", fmt.Sprintf("sentences-per-line@%s", lint.SentencesPerLineVersion))).

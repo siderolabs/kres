@@ -9,9 +9,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/talos-systems/kres/internal/output/makefile"
-	"github.com/talos-systems/kres/internal/project/common"
-	"github.com/talos-systems/kres/internal/project/golang"
+	"github.com/siderolabs/kres/internal/output/makefile"
+	"github.com/siderolabs/kres/internal/project/common"
+	"github.com/siderolabs/kres/internal/project/golang"
 )
 
 func TestDeepCopyInterfaces(t *testing.T) {

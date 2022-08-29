@@ -12,10 +12,10 @@ import (
 
 	"github.com/google/go-github/v44/github"
 
-	"github.com/talos-systems/kres/internal/dag"
-	"github.com/talos-systems/kres/internal/output/conform"
-	"github.com/talos-systems/kres/internal/output/license"
-	"github.com/talos-systems/kres/internal/project/meta"
+	"github.com/siderolabs/kres/internal/dag"
+	"github.com/siderolabs/kres/internal/output/conform"
+	"github.com/siderolabs/kres/internal/output/license"
+	"github.com/siderolabs/kres/internal/project/meta"
 )
 
 // Repository sets up repository settings.

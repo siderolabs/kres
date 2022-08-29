@@ -10,12 +10,13 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/talos-systems/kres/internal/dag"
-	"github.com/talos-systems/kres/internal/output/dockerfile"
-	"github.com/talos-systems/kres/internal/output/dockerfile/step"
-	"github.com/talos-systems/kres/internal/output/license"
-	"github.com/talos-systems/kres/internal/output/makefile"
-	"github.com/talos-systems/kres/internal/project/meta"
+	"github.com/siderolabs/kres/internal/config"
+	"github.com/siderolabs/kres/internal/dag"
+	"github.com/siderolabs/kres/internal/output/dockerfile"
+	"github.com/siderolabs/kres/internal/output/dockerfile/step"
+	"github.com/siderolabs/kres/internal/output/license"
+	"github.com/siderolabs/kres/internal/output/makefile"
+	"github.com/siderolabs/kres/internal/project/meta"
 )
 
 // Generate provides .proto compilation with grpc-go plugin
@@ -74,10 +75,10 @@ func NewGenerate(meta *meta.Options) *Generate {
 
 		meta: meta,
 
-		ProtobufGoVersion:  "v1.28.1",
-		GrpcGoVersion:      "v1.2.0",
-		GrpcGatewayVersion: "v2.11.1",
-		VTProtobufVersion:  "v0.3.0",
+		ProtobufGoVersion:  config.ProtobufGoVersion,
+		GrpcGoVersion:      config.GrpcGoVersion,
+		GrpcGatewayVersion: config.GrpcGatewayVersion,
+		VTProtobufVersion:  config.VTProtobufVersion,
 
 		BaseSpecPath: "/api",
 	}

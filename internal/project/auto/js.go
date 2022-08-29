@@ -9,7 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/talos-systems/kres/internal/project/js"
+	"github.com/siderolabs/kres/internal/project/js"
 )
 
 // DetectJS checks if project at rootPath/frontend is JS-based project.

@@ -9,7 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/talos-systems/kres/internal/version"
+	"github.com/siderolabs/kres/internal/version"
 )
 
 var versionCmd = &cobra.Command{

@@ -7,9 +7,10 @@ package common
 import (
 	"fmt"
 
-	"github.com/talos-systems/kres/internal/dag"
-	"github.com/talos-systems/kres/internal/output/dockerfile"
-	"github.com/talos-systems/kres/internal/project/meta"
+	"github.com/siderolabs/kres/internal/config"
+	"github.com/siderolabs/kres/internal/dag"
+	"github.com/siderolabs/kres/internal/output/dockerfile"
+	"github.com/siderolabs/kres/internal/project/meta"
 )
 
 // InputImage provides common input image used to build containers.
@@ -34,7 +35,7 @@ func NewFHS(meta *meta.Options) *InputImage {
 		BaseNode: dag.NewBaseNode(fmt.Sprintf("image-%s", "fhs")),
 
 		Image:   "ghcr.io/siderolabs/fhs",
-		Version: "v1.1.0",
+		Version: config.PkgsVersion,
 	}
 }
 
@@ -44,6 +45,6 @@ func NewCACerts(meta *meta.Options) *InputImage {
 		BaseNode: dag.NewBaseNode(fmt.Sprintf("image-%s", "ca-certificates")),
 
 		Image:   "ghcr.io/siderolabs/ca-certificates",
-		Version: "v1.1.0",
+		Version: config.PkgsVersion,
 	}
 }

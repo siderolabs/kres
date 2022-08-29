@@ -9,22 +9,22 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/talos-systems/kres/internal/config"
-	"github.com/talos-systems/kres/internal/output"
-	"github.com/talos-systems/kres/internal/output/codecov"
-	"github.com/talos-systems/kres/internal/output/conform"
-	"github.com/talos-systems/kres/internal/output/dockerfile"
-	"github.com/talos-systems/kres/internal/output/drone"
-	"github.com/talos-systems/kres/internal/output/github"
-	"github.com/talos-systems/kres/internal/output/gitignore"
-	"github.com/talos-systems/kres/internal/output/golangci"
-	"github.com/talos-systems/kres/internal/output/license"
-	"github.com/talos-systems/kres/internal/output/makefile"
-	"github.com/talos-systems/kres/internal/output/markdownlint"
-	"github.com/talos-systems/kres/internal/output/release"
-	"github.com/talos-systems/kres/internal/output/template"
-	"github.com/talos-systems/kres/internal/project/auto"
-	"github.com/talos-systems/kres/internal/project/meta"
+	"github.com/siderolabs/kres/internal/config"
+	"github.com/siderolabs/kres/internal/output"
+	"github.com/siderolabs/kres/internal/output/codecov"
+	"github.com/siderolabs/kres/internal/output/conform"
+	"github.com/siderolabs/kres/internal/output/dockerfile"
+	"github.com/siderolabs/kres/internal/output/drone"
+	"github.com/siderolabs/kres/internal/output/github"
+	"github.com/siderolabs/kres/internal/output/gitignore"
+	"github.com/siderolabs/kres/internal/output/golangci"
+	"github.com/siderolabs/kres/internal/output/license"
+	"github.com/siderolabs/kres/internal/output/makefile"
+	"github.com/siderolabs/kres/internal/output/markdownlint"
+	"github.com/siderolabs/kres/internal/output/release"
+	"github.com/siderolabs/kres/internal/output/template"
+	"github.com/siderolabs/kres/internal/project/auto"
+	"github.com/siderolabs/kres/internal/project/meta"
 )
 
 var genCmd = &cobra.Command{
@@ -65,7 +65,7 @@ func runGen() error {
 	var err error
 
 	options := meta.Options{
-		GoContainerVersion: "1.19-alpine",
+		GoContainerVersion: config.GolangContainerImageVersion,
 	}
 
 	options.Config, err = config.NewProvider(".kres.yaml")

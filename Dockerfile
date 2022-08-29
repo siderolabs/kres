@@ -2,7 +2,7 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2022-08-03T12:13:32Z by kres 6cf4e14-dirty.
+# Generated on 2022-08-29T14:47:43Z by kres bb965bb.
 
 ARG TOOLCHAIN
 
@@ -14,7 +14,7 @@ FROM ghcr.io/siderolabs/ca-certificates:v1.1.0 AS image-ca-certificates
 FROM ghcr.io/siderolabs/fhs:v1.1.0 AS image-fhs
 
 # runs markdownlint
-FROM node:18.7.0-alpine AS lint-markdown
+FROM docker.io/node:18.7.0-alpine3.16 AS lint-markdown
 WORKDIR /src
 RUN npm i -g markdownlint-cli@0.31.1
 RUN npm i sentences-per-line@0.2.1
@@ -59,7 +59,7 @@ RUN --mount=type=cache,target=/go/pkg go list -mod=readonly all >/dev/null
 FROM base AS kres-linux-amd64-build
 COPY --from=generate / /
 WORKDIR /src/cmd/kres
-ARG VERSION_PKG="github.com/talos-systems/kres/internal/version"
+ARG VERSION_PKG="github.com/siderolabs/kres/internal/version"
 ARG SHA
 ARG TAG
 RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg go build -ldflags "-s -w -X ${VERSION_PKG}.Name=kres -X ${VERSION_PKG}.SHA=${SHA} -X ${VERSION_PKG}.Tag=${TAG}" -o /kres-linux-amd64
@@ -70,7 +70,7 @@ RUN FILES="$(gofumpt -l .)" && test -z "${FILES}" || (echo -e "Source code is no
 
 # runs goimports
 FROM base AS lint-goimports
-RUN FILES="$(goimports -l -local github.com/talos-systems/kres .)" && test -z "${FILES}" || (echo -e "Source code is not formatted with 'goimports -w -local github.com/talos-systems/kres .':\n${FILES}"; exit 1)
+RUN FILES="$(goimports -l -local github.com/siderolabs/kres .)" && test -z "${FILES}" || (echo -e "Source code is not formatted with 'goimports -w -local github.com/siderolabs/kres .':\n${FILES}"; exit 1)
 
 # runs golangci-lint
 FROM base AS lint-golangci-lint

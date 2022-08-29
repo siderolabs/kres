@@ -1,4 +1,4 @@
-module github.com/talos-systems/kres
+module github.com/siderolabs/kres
 
 go 1.19
 

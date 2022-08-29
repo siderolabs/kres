@@ -12,9 +12,9 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/talos-systems/kres/internal/output"
-	"github.com/talos-systems/kres/internal/output/dockerfile"
-	"github.com/talos-systems/kres/internal/output/dockerfile/step"
+	"github.com/siderolabs/kres/internal/output"
+	"github.com/siderolabs/kres/internal/output/dockerfile"
+	"github.com/siderolabs/kres/internal/output/dockerfile/step"
 )
 
 type DockerfileSuite struct {

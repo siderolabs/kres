@@ -5,10 +5,10 @@
 package auto
 
 import (
-	"github.com/talos-systems/kres/internal/dag"
-	"github.com/talos-systems/kres/internal/project"
-	"github.com/talos-systems/kres/internal/project/common"
-	"github.com/talos-systems/kres/internal/project/meta"
+	"github.com/siderolabs/kres/internal/dag"
+	"github.com/siderolabs/kres/internal/project"
+	"github.com/siderolabs/kres/internal/project/common"
+	"github.com/siderolabs/kres/internal/project/meta"
 )
 
 // builder keeps state of project contents being built.

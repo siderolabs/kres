@@ -5,7 +5,7 @@
 package auto
 
 import (
-	"github.com/talos-systems/kres/internal/project/markdown"
+	"github.com/siderolabs/kres/internal/project/markdown"
 )
 
 // DetectMarkdown checks if project at rootPath contains Markdown files.

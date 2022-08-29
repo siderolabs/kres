@@ -12,8 +12,8 @@ import (
 	"github.com/drone/drone-yaml/yaml"
 	"github.com/drone/drone-yaml/yaml/pretty"
 
-	"github.com/talos-systems/kres/internal/dag"
-	"github.com/talos-systems/kres/internal/output"
+	"github.com/siderolabs/kres/internal/dag"
+	"github.com/siderolabs/kres/internal/output"
 )
 
 const (

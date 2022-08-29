@@ -5,7 +5,7 @@
 // kres entrypoint.
 package main
 
-import "github.com/talos-systems/kres/cmd/kres/cmd"
+import "github.com/siderolabs/kres/cmd/kres/cmd"
 
 func main() {
 	cmd.Execute()

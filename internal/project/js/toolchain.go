@@ -9,16 +9,17 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/talos-systems/kres/internal/dag"
-	"github.com/talos-systems/kres/internal/output/dockerfile"
-	"github.com/talos-systems/kres/internal/output/dockerfile/step"
-	"github.com/talos-systems/kres/internal/output/drone"
-	"github.com/talos-systems/kres/internal/output/gitignore"
-	"github.com/talos-systems/kres/internal/output/makefile"
-	"github.com/talos-systems/kres/internal/output/template"
-	"github.com/talos-systems/kres/internal/project/common"
-	"github.com/talos-systems/kres/internal/project/js/templates"
-	"github.com/talos-systems/kres/internal/project/meta"
+	"github.com/siderolabs/kres/internal/config"
+	"github.com/siderolabs/kres/internal/dag"
+	"github.com/siderolabs/kres/internal/output/dockerfile"
+	"github.com/siderolabs/kres/internal/output/dockerfile/step"
+	"github.com/siderolabs/kres/internal/output/drone"
+	"github.com/siderolabs/kres/internal/output/gitignore"
+	"github.com/siderolabs/kres/internal/output/makefile"
+	"github.com/siderolabs/kres/internal/output/template"
+	"github.com/siderolabs/kres/internal/project/common"
+	"github.com/siderolabs/kres/internal/project/js/templates"
+	"github.com/siderolabs/kres/internal/project/meta"
 )
 
 // Toolchain provides node js runtime and common utilities.
@@ -40,7 +41,7 @@ func NewToolchain(meta *meta.Options, sourceDir string) *Toolchain {
 		meta:      meta,
 		sourceDir: sourceDir,
 
-		Version: "18.7.0-alpine3.16",
+		Version: config.NodeContainerImageVersion,
 	}
 
 	meta.BuildArgs = append(meta.BuildArgs, "JS_TOOLCHAIN")

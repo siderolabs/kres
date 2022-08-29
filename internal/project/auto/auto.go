@@ -6,8 +6,8 @@
 package auto
 
 import (
-	"github.com/talos-systems/kres/internal/project"
-	"github.com/talos-systems/kres/internal/project/meta"
+	"github.com/siderolabs/kres/internal/project"
+	"github.com/siderolabs/kres/internal/project/meta"
 )
 
 // Build the project type and structure based on project type.

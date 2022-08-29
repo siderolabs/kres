@@ -10,7 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/talos-systems/kres/internal/output/dockerfile/step"
+	"github.com/siderolabs/kres/internal/output/dockerfile/step"
 )
 
 func TestGenerate(t *testing.T) {

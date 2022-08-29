@@ -6,9 +6,9 @@
 package project
 
 import (
-	"github.com/talos-systems/kres/internal/config"
-	"github.com/talos-systems/kres/internal/dag"
-	"github.com/talos-systems/kres/internal/output"
+	"github.com/siderolabs/kres/internal/config"
+	"github.com/siderolabs/kres/internal/dag"
+	"github.com/siderolabs/kres/internal/output"
 )
 
 // Contents is a DAG of the project.

@@ -10,7 +10,7 @@ import (
 
 	git "github.com/go-git/go-git/v5"
 
-	"github.com/talos-systems/kres/internal/project/common"
+	"github.com/siderolabs/kres/internal/project/common"
 )
 
 // DetectGit detects if current directory is git repository.

@@ -9,7 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/talos-systems/kres/internal/config"
+	"github.com/siderolabs/kres/internal/config"
 )
 
 func TestMissingFile(t *testing.T) {

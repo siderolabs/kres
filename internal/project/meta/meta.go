@@ -5,7 +5,7 @@
 // Package meta provides project options from source code.
 package meta
 
-import "github.com/talos-systems/kres/internal/config"
+import "github.com/siderolabs/kres/internal/config"
 
 // Options for the project.
 type Options struct { //nolint:govet

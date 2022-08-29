@@ -9,8 +9,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/talos-systems/kres/internal/output/drone"
-	"github.com/talos-systems/kres/internal/project/wrap"
+	"github.com/siderolabs/kres/internal/output/drone"
+	"github.com/siderolabs/kres/internal/project/wrap"
 )
 
 func TestDroneInterfaces(t *testing.T) {

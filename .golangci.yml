@@ -36,7 +36,7 @@ linters-settings:
     lines: 60
     statements: 40
   gci:
-    local-prefixes: github.com/talos-systems/kres
+    local-prefixes: github.com/siderolabs/kres
   gocognit:
     min-complexity: 30
   ireturn:
@@ -65,7 +65,7 @@ linters-settings:
   gofmt:
     simplify: true
   goimports:
-    local-prefixes: github.com/talos-systems/kres
+    local-prefixes: github.com/siderolabs/kres
   golint:
     min-confidence: 0.8
   gomnd:

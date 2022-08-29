@@ -5,8 +5,8 @@
 package wrap
 
 import (
-	"github.com/talos-systems/kres/internal/dag"
-	"github.com/talos-systems/kres/internal/output/drone"
+	"github.com/siderolabs/kres/internal/dag"
+	"github.com/siderolabs/kres/internal/output/drone"
 )
 
 // DroneWrapper wraps the node so that it has only drone.Compiler interface exposed.

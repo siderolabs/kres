@@ -9,7 +9,7 @@ import (
 	"encoding/json"
 	"io"
 
-	"github.com/talos-systems/kres/internal/output"
+	"github.com/siderolabs/kres/internal/output"
 )
 
 const (

@@ -14,8 +14,8 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/talos-systems/kres/internal/output"
-	"github.com/talos-systems/kres/internal/project/meta"
+	"github.com/siderolabs/kres/internal/output"
+	"github.com/siderolabs/kres/internal/project/meta"
 )
 
 const (

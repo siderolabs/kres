@@ -12,7 +12,7 @@ import (
 
 	stableToposort "github.com/SOF3/go-stable-toposort"
 
-	"github.com/talos-systems/kres/internal/output/dockerfile/step"
+	"github.com/siderolabs/kres/internal/output/dockerfile/step"
 )
 
 var stripVars = regexp.MustCompile(`\$\{\w*\}`)

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/talos-systems/kres/internal/version"
+	"github.com/siderolabs/kres/internal/version"
 )
 
 // PreambleTimestamp marks the time files are generated.

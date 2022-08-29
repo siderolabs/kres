@@ -5,13 +5,13 @@
 package js
 
 import (
-	"github.com/talos-systems/kres/internal/dag"
-	"github.com/talos-systems/kres/internal/output/dockerfile"
-	"github.com/talos-systems/kres/internal/output/dockerfile/step"
-	"github.com/talos-systems/kres/internal/output/makefile"
-	"github.com/talos-systems/kres/internal/output/template"
-	"github.com/talos-systems/kres/internal/project/js/templates"
-	"github.com/talos-systems/kres/internal/project/meta"
+	"github.com/siderolabs/kres/internal/dag"
+	"github.com/siderolabs/kres/internal/output/dockerfile"
+	"github.com/siderolabs/kres/internal/output/dockerfile/step"
+	"github.com/siderolabs/kres/internal/output/makefile"
+	"github.com/siderolabs/kres/internal/output/template"
+	"github.com/siderolabs/kres/internal/project/js/templates"
+	"github.com/siderolabs/kres/internal/project/meta"
 )
 
 // EsLint provides golangci-lint.

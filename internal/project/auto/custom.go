@@ -7,8 +7,8 @@ package auto
 import (
 	"fmt"
 
-	"github.com/talos-systems/kres/internal/dag"
-	"github.com/talos-systems/kres/internal/project/custom"
+	"github.com/siderolabs/kres/internal/dag"
+	"github.com/siderolabs/kres/internal/project/custom"
 )
 
 // DetectCustom checks if project has any custom steps.

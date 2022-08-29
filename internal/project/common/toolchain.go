@@ -4,7 +4,7 @@
 
 package common
 
-import "github.com/talos-systems/kres/internal/output/dockerfile"
+import "github.com/siderolabs/kres/internal/output/dockerfile"
 
 // ToolchainBuilder is implemented by nodes which wish to inject into the toolchain build.
 type ToolchainBuilder interface {

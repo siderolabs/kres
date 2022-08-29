@@ -9,11 +9,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/talos-systems/kres/internal/dag"
-	"github.com/talos-systems/kres/internal/output/dockerfile"
-	"github.com/talos-systems/kres/internal/output/dockerfile/step"
-	"github.com/talos-systems/kres/internal/output/makefile"
-	"github.com/talos-systems/kres/internal/project/meta"
+	"github.com/siderolabs/kres/internal/config"
+	"github.com/siderolabs/kres/internal/dag"
+	"github.com/siderolabs/kres/internal/output/dockerfile"
+	"github.com/siderolabs/kres/internal/output/dockerfile/step"
+	"github.com/siderolabs/kres/internal/output/makefile"
+	"github.com/siderolabs/kres/internal/project/meta"
 )
 
 // Protobuf provides .proto compilation with ts-proto plugin.
@@ -53,8 +54,8 @@ func NewProtobuf(meta *meta.Options, name string) *Protobuf {
 
 		meta: meta,
 
-		ProtobufTSVersion:        "v1.115.5",
-		ProtobufTSGatewayVersion: "v1.1.2",
+		ProtobufTSVersion:        config.ProtobufTSVersion,
+		ProtobufTSGatewayVersion: config.ProtobufTSGatewayVersion,
 
 		BaseSpecPath: "/api",
 	}

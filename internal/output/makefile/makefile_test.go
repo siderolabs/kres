@@ -12,8 +12,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/talos-systems/kres/internal/output"
-	"github.com/talos-systems/kres/internal/output/makefile"
+	"github.com/siderolabs/kres/internal/output"
+	"github.com/siderolabs/kres/internal/output/makefile"
 )
 
 type MakefileSuite struct {

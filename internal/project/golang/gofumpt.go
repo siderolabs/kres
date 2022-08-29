@@ -7,11 +7,12 @@ package golang
 import (
 	"fmt"
 
-	"github.com/talos-systems/kres/internal/dag"
-	"github.com/talos-systems/kres/internal/output/dockerfile"
-	"github.com/talos-systems/kres/internal/output/dockerfile/step"
-	"github.com/talos-systems/kres/internal/output/makefile"
-	"github.com/talos-systems/kres/internal/project/meta"
+	"github.com/siderolabs/kres/internal/config"
+	"github.com/siderolabs/kres/internal/dag"
+	"github.com/siderolabs/kres/internal/output/dockerfile"
+	"github.com/siderolabs/kres/internal/output/dockerfile/step"
+	"github.com/siderolabs/kres/internal/output/makefile"
+	"github.com/siderolabs/kres/internal/project/meta"
 )
 
 // Gofumpt provides gofumpt linter.
@@ -33,8 +34,8 @@ func NewGofumpt(meta *meta.Options) *Gofumpt {
 
 		meta: meta,
 
-		GoVersion: "1.19",
-		Version:   "v0.3.1",
+		GoVersion: config.GoVersion,
+		Version:   config.GoFmtVersion,
 	}
 }
 

@@ -12,10 +12,10 @@ import (
 
 	"golang.org/x/mod/modfile"
 
-	"github.com/talos-systems/kres/internal/project/common"
-	"github.com/talos-systems/kres/internal/project/golang"
-	"github.com/talos-systems/kres/internal/project/service"
-	"github.com/talos-systems/kres/internal/project/wrap"
+	"github.com/siderolabs/kres/internal/project/common"
+	"github.com/siderolabs/kres/internal/project/golang"
+	"github.com/siderolabs/kres/internal/project/service"
+	"github.com/siderolabs/kres/internal/project/wrap"
 )
 
 // DetectGolang checks if project at rootPath is Go-based project.
