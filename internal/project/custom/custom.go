@@ -57,9 +57,10 @@ type Step struct {
 	} `yaml:"makefile"`
 
 	Drone struct {
-		Enabled    bool `yaml:"enabled"`
-		Privileged bool `yaml:"privileged"`
-		Requests   *struct {
+		Enabled     bool              `yaml:"enabled"`
+		Privileged  bool              `yaml:"privileged"`
+		Environment map[string]string `yaml:"environment"`
+		Requests    *struct {
 			CPUCores  int `yaml:"cpuCores"`
 			MemoryGiB int `yaml:"memoryGiB"`
 		} `yaml:"requests"`
@@ -141,6 +142,10 @@ func (step *Step) CompileDrone(output *drone.Output) error {
 
 	if step.Drone.Requests != nil {
 		droneStep.ResourceRequests(step.Drone.Requests.CPUCores, step.Drone.Requests.MemoryGiB)
+	}
+
+	for k, v := range step.Drone.Environment {
+		droneStep.Environment(k, v)
 	}
 
 	output.Step(droneStep)
