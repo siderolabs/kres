@@ -31,7 +31,7 @@ type Docker struct { //nolint:govet
 
 // NewDocker initializes Docker.
 func NewDocker(meta *meta.Options) *Docker {
-	meta.BuildArgs = append(meta.BuildArgs, "USERNAME")
+	meta.BuildArgs = append(meta.BuildArgs, "USERNAME", "REGISTRY")
 
 	return &Docker{
 		BaseNode: dag.NewBaseNode("setup-ci"),
