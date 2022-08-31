@@ -1,8 +1,12 @@
 {
     "$schema": "https://docs.renovatebot.com/renovate-schema.json",
     "extends": [
-        ":semanticCommitScopeDisabled"
+        ":dependencyDashboard",
+        ":gitSignOff",
+        ":semanticCommitScopeDisabled",
+        "schedule:earlyMondays"
     ],
+    "prHeader": "Update Request | Renovate Bot",
     "regexManagers": [
         {
             "fileMatch": [
@@ -55,10 +59,5 @@
             ],
             "groupName": "releases"
         }
-    ],
-    "schedule": [
-        "on monday at 1am"
-    ],
-    "timezone": "Etc/UTC",
-    "dependencyDashboard": true
+    ]
 }

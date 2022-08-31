@@ -9,6 +9,9 @@ const (
 	// DeepCopyVersion is the version of deepcopy.
 	// renovate: datasource=go depName=github.com/siderolabs/deep-copy
 	DeepCopyVersion = "v0.5.5"
+	// DindContainerImageVersion is the version of the dind container image.
+	// renovate: datasource=docker versioning=docker depName=docker
+	DindContainerImageVersion = "20.10-dind"
 	// GoFmtVersion is the version of gofmt.
 	// renovate: datasource=go depName=github.com/mvdan/gofumpt
 	GoFmtVersion = "v0.3.1"

@@ -10,6 +10,7 @@ import (
 
 	"github.com/drone/drone-yaml/yaml"
 
+	"github.com/siderolabs/kres/internal/config"
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/output/drone"
 	"github.com/siderolabs/kres/internal/output/makefile"
@@ -37,7 +38,7 @@ func NewDocker(meta *meta.Options) *Docker {
 
 		meta: meta,
 
-		DockerImage: "docker:20.10-dind",
+		DockerImage: fmt.Sprintf("docker:%s", config.DindContainerImageVersion),
 	}
 }
 
