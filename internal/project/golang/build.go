@@ -22,7 +22,8 @@ import (
 type Build struct {
 	dag.BaseNode
 
-	Outputs map[string]CompileConfig `yaml:"outputs"`
+	Outputs    map[string]CompileConfig `yaml:"outputs"`
+	BuildFlags []string                 `yaml:"buildFlags"`
 
 	meta       *meta.Options
 	sourcePath string
@@ -83,7 +84,13 @@ func (build *Build) CompileDockerfile(output *dockerfile.Output) error {
 			ldflags += " -X ${VERSION_PKG}.SHA=${SHA} -X ${VERSION_PKG}.Tag=${TAG}"
 		}
 
-		script := step.Script(fmt.Sprintf(`go build -ldflags "%s" -o /%s`, ldflags, name)).
+		var buildFlags string
+
+		if build.BuildFlags != nil {
+			buildFlags = " " + strings.Join(build.BuildFlags, " ")
+		}
+
+		script := step.Script(fmt.Sprintf(`go build%s -ldflags "%s" -o /%s`, buildFlags, ldflags, name)).
 			MountCache(filepath.Join(build.meta.CachePath, "go-build")).
 			MountCache(filepath.Join(build.meta.GoPath, "pkg"))
 
