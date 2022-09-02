@@ -25,6 +25,7 @@ type Docker struct { //nolint:govet
 
 	DockerImage   string `yaml:"dockerImage"`
 	AllowInsecure bool   `yaml:"allowInsecure"`
+	Platform      string `yaml:"platform"`
 
 	DockerResourceRequests *yaml.ResourceObject `yaml:"dockerResourceRequests"`
 }
@@ -39,6 +40,7 @@ func NewDocker(meta *meta.Options) *Docker {
 		meta: meta,
 
 		DockerImage: fmt.Sprintf("docker:%s", config.DindContainerImageVersion),
+		Platform:    "linux/amd64",
 	}
 }
 
@@ -111,7 +113,7 @@ func (docker *Docker) CompileMakefile(output *makefile.Output) error {
 
 	output.VariableGroup(makefile.VariableGroupDocker).
 		Variable(makefile.SimpleVariable("BUILD", "docker buildx build")).
-		Variable(makefile.OverridableVariable("PLATFORM", "linux/amd64")).
+		Variable(makefile.OverridableVariable("PLATFORM", docker.Platform)).
 		Variable(makefile.OverridableVariable("PROGRESS", "auto")).
 		Variable(makefile.OverridableVariable("PUSH", "false")).
 		Variable(makefile.OverridableVariable("CI_ARGS", "")).

@@ -57,6 +57,7 @@ func (image *Image) CompileDrone(output *drone.Output) error {
 	output.Step(drone.MakeStep(image.Name()).
 		Name(fmt.Sprintf("push-%s", image.ImageName)).
 		Environment("PUSH", "true").
+		Environment("PLATFORM", "linux/amd64/linux/arm64").
 		ExceptPullRequest().
 		DockerLogin().
 		DependsOn(image.Name()),
