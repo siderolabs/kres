@@ -136,7 +136,7 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 
 	tools := output.Stage("tools").
 		Description("build tools").
-		From("toolchain").
+		From("--platform=${BUILDPLATFORM} toolchain").
 		Step(step.Env("GO111MODULE", "on")).
 		Step(step.Env("CGO_ENABLED", "0")).
 		Step(step.Env("GOPATH", toolchain.meta.GoPath))

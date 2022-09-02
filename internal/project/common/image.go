@@ -21,13 +21,14 @@ type Image struct {
 
 	meta *meta.Options
 
-	BaseImage        string   `yaml:"baseImage"`
-	AdditionalImages []string `yaml:"additionalImages"`
-	ImageName        string   `yaml:"imageName"`
-	Entrypoint       string   `yaml:"entrypoint"`
-	EntrypointArgs   []string `yaml:"entrypointArgs"`
-	CustomCommands   []string `yaml:"customCommands"`
-	PushLatest       bool     `yaml:"pushLatest"`
+	DroneExtraEnvironment map[string]string `yaml:"droneExtraEnvironment"`
+	BaseImage             string            `yaml:"baseImage"`
+	AdditionalImages      []string          `yaml:"additionalImages"`
+	ImageName             string            `yaml:"imageName"`
+	Entrypoint            string            `yaml:"entrypoint"`
+	EntrypointArgs        []string          `yaml:"entrypointArgs"`
+	CustomCommands        []string          `yaml:"customCommands"`
+	PushLatest            bool              `yaml:"pushLatest"`
 }
 
 // ImageSourceLabel is a docker image label to specify image source.
@@ -54,23 +55,33 @@ func (image *Image) CompileDrone(output *drone.Output) error {
 		DependsOn(dag.GatherMatchingInputNames(image, dag.Implements[*drone.Compiler]())...),
 	)
 
-	output.Step(drone.MakeStep(image.Name()).
+	step := drone.MakeStep(image.Name()).
 		Name(fmt.Sprintf("push-%s", image.ImageName)).
 		Environment("PUSH", "true").
 		ExceptPullRequest().
 		DockerLogin().
-		DependsOn(image.Name()),
-	)
+		DependsOn(image.Name())
+
+	for k, v := range image.DroneExtraEnvironment {
+		step.Environment(k, v)
+	}
+
+	output.Step(step)
 
 	if image.PushLatest {
-		output.Step(drone.MakeStep(image.Name(), "TAG=latest").
+		step := drone.MakeStep(image.Name(), "TAG=latest").
 			Name(fmt.Sprintf("push-%s-latest", image.ImageName)).
 			Environment("PUSH", "true").
 			OnlyOnBranch(image.meta.MainBranch).
 			ExceptPullRequest().
 			DockerLogin().
-			DependsOn(fmt.Sprintf("push-%s", image.ImageName)),
-		)
+			DependsOn(fmt.Sprintf("push-%s", image.ImageName))
+
+		for k, v := range image.DroneExtraEnvironment {
+			step.Environment(k, v)
+		}
+
+		output.Step(step)
 	}
 
 	return nil
