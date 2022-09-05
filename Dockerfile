@@ -2,21 +2,21 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2022-09-02T18:00:52Z by kres be07ec3-dirty.
+# Generated on 2022-09-05T13:50:45Z by kres 2c7f760-dirty.
 
 ARG TOOLCHAIN
 
 # cleaned up specs and compiled versions
 FROM scratch AS generate
 
-FROM ghcr.io/siderolabs/ca-certificates:v1.1.0 AS image-ca-certificates
+FROM ghcr.io/siderolabs/ca-certificates:v1.2.0 AS image-ca-certificates
 
-FROM ghcr.io/siderolabs/fhs:v1.1.0 AS image-fhs
+FROM ghcr.io/siderolabs/fhs:v1.2.0 AS image-fhs
 
 # runs markdownlint
-FROM docker.io/node:18.7.0-alpine3.16 AS lint-markdown
+FROM docker.io/node:18.8.0-alpine3.16 AS lint-markdown
 WORKDIR /src
-RUN npm i -g markdownlint-cli@0.31.1
+RUN npm i -g markdownlint-cli@0.32.2
 RUN npm i sentences-per-line@0.2.1
 COPY .markdownlint.json .
 COPY ./README.md ./README.md
