@@ -56,6 +56,15 @@ func NewOutput() *Output {
 		Kind: "pipeline",
 	}
 
+	output.defaultPipeline.Trigger = yaml.Conditions{
+		Branch: yaml.Condition{
+			Exclude: []string{
+				"renovate/*",
+				"dependabot/*",
+			},
+		},
+	}
+
 	output.notifyPipeline = &yaml.Pipeline{
 		Name: "notify",
 		Type: output.PipelineType,
