@@ -57,9 +57,6 @@ func NewOutput() *Output {
 	}
 
 	output.defaultPipeline.Trigger = yaml.Conditions{
-		Status: yaml.Condition{
-			Include: []string{"success", "failure"},
-		},
 		Branch: yaml.Condition{
 			Exclude: []string{
 				"renovate/*",
@@ -76,6 +73,9 @@ func NewOutput() *Output {
 			Disable: true,
 		},
 		Trigger: yaml.Conditions{
+			Status: yaml.Condition{
+				Include: []string{"success", "failure"},
+			},
 			Branch: yaml.Condition{
 				Exclude: []string{
 					"renovate/*",
