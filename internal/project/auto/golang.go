@@ -5,6 +5,7 @@
 package auto
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"path"
@@ -95,6 +96,10 @@ func (builder *builder) DetectGolang() (bool, error) {
 			builder.meta.SourceFiles = append(builder.meta.SourceFiles, item)
 			builder.meta.GoSourceFiles = append(builder.meta.GoSourceFiles, item)
 		}
+	}
+
+	if len(builder.meta.GoSourceFiles) == 0 {
+		return false, fmt.Errorf("no Go source files found")
 	}
 
 	builder.meta.SourceFiles = append(builder.meta.SourceFiles, "go.mod", "go.sum")

@@ -91,7 +91,12 @@ func (t *FileTemplate) write(w io.Writer) error {
 		return err
 	}
 
-	return tmpl.Execute(w, t.params)
+	err = tmpl.Execute(w, t.params)
+	if err != nil {
+		return fmt.Errorf("failed to execute custom template '%s': %w", t.name, err)
+	}
+
+	return nil
 }
 
 // Output implements custom templates generation.

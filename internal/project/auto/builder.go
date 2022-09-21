@@ -5,6 +5,8 @@
 package auto
 
 import (
+	"errors"
+
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/project"
 	"github.com/siderolabs/kres/internal/project/common"
@@ -44,21 +46,26 @@ func (builder *builder) build() error {
 	builder.commonInputs = append(builder.commonInputs, buildTarget, common.NewDocker(builder.meta))
 	builder.lintTarget = common.NewLint(builder.meta)
 
+	mandatoryReached := false
+
 	for _, projectType := range []struct {
-		detect detectFunc
-		build  buildFunc
+		detect    detectFunc
+		build     buildFunc
+		mandatory bool
 	}{
 		{
 			detect: builder.DetectGit,
 			build:  builder.BuildGit,
 		},
 		{
-			detect: builder.DetectJS,
-			build:  builder.BuildJS,
+			detect:    builder.DetectJS,
+			build:     builder.BuildJS,
+			mandatory: true,
 		},
 		{
-			detect: builder.DetectGolang,
-			build:  builder.BuildGolang,
+			detect:    builder.DetectGolang,
+			build:     builder.BuildGolang,
+			mandatory: true,
 		},
 		{
 			detect: builder.DetectMarkdown,
@@ -82,6 +89,14 @@ func (builder *builder) build() error {
 		if err != nil {
 			return err
 		}
+
+		if projectType.mandatory {
+			mandatoryReached = true
+		}
+	}
+
+	if !mandatoryReached {
+		return errors.New("no Go or JS files were found")
 	}
 
 	if len(builder.lintInputs) > 0 {

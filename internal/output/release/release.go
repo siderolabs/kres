@@ -116,12 +116,21 @@ func (o *Output) releaseTemplate(filename string, w io.Writer) error {
 
 	// no preamble as this file is meant to be edited
 
+	if o.meta == nil {
+		return errors.New("meta is nil")
+	}
+
 	tmpl, err := template.New("config").Parse(strings.TrimSpace(releaseTemplateStr) + "\n")
 	if err != nil {
 		return err
 	}
 
-	return tmpl.Execute(w, o.meta)
+	err = tmpl.Execute(w, o.meta)
+	if err != nil {
+		return fmt.Errorf("failed to execute release template: %w", err)
+	}
+
+	return nil
 }
 
 // Compiler is implemented by project blocks which support Dockerfile generate.

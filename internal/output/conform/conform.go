@@ -8,6 +8,7 @@ package conform
 import (
 	_ "embed"
 	"encoding/json"
+	"fmt"
 	"io"
 	"text/template"
 
@@ -145,7 +146,12 @@ func (o *Output) config(w io.Writer) error {
 		EnableGPGSignatureCheck: o.gpgSignatureCheck,
 	}
 
-	return tmpl.Execute(w, vars)
+	err = tmpl.Execute(w, vars)
+	if err != nil {
+		return fmt.Errorf("failed to execute conform template: %w", err)
+	}
+
+	return nil
 }
 
 // Compiler is implemented by project blocks which support .conform.yaml generate.

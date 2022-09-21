@@ -106,7 +106,12 @@ func (o *Output) license(w io.Writer) error {
 		return err
 	}
 
-	return tmpl.Execute(w, o.templateParams)
+	err = tmpl.Execute(w, o.templateParams)
+	if err != nil {
+		return fmt.Errorf("failed to execute license template: %w", err)
+	}
+
+	return nil
 }
 
 func (o *Output) boilerplate(w io.Writer) error {
@@ -119,7 +124,12 @@ func (o *Output) boilerplate(w io.Writer) error {
 		return err
 	}
 
-	return tmpl.Execute(w, o.templateParams)
+	err = tmpl.Execute(w, o.templateParams)
+	if err != nil {
+		return fmt.Errorf("failed to execute license header template: %w", err)
+	}
+
+	return nil
 }
 
 // Compiler is implemented by project blocks which support LICENSE generation.

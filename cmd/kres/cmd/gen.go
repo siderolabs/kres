@@ -88,7 +88,7 @@ func runGen() error {
 
 	for _, out := range outputs {
 		if err := out.Generate(); err != nil {
-			return err
+			return fmt.Errorf("failed on step '%T', error: %w", out, err)
 		}
 	}
 
