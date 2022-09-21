@@ -98,7 +98,7 @@ func (builder *builder) DetectGolang() (bool, error) {
 		}
 	}
 
-	if len(builder.meta.GoSourceFiles) == 0 {
+	if len(builder.meta.GoSourceFiles) == 0 && len(builder.meta.GoDirectories) == 0 {
 		return false, fmt.Errorf("no Go source files found")
 	}
 
