@@ -2,7 +2,7 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2022-09-09T08:19:55Z by kres 871f67c-dirty.
+# Generated on 2022-09-27T14:26:26Z by kres 8e6d786-dirty.
 
 ARG TOOLCHAIN
 
@@ -37,6 +37,8 @@ RUN go install github.com/golangci/golangci-lint/cmd/golangci-lint@${GOLANGCILIN
 ARG GOFUMPT_VERSION
 RUN go install mvdan.cc/gofumpt@${GOFUMPT_VERSION} \
 	&& mv /go/bin/gofumpt /bin/gofumpt
+RUN go install golang.org/x/vuln/cmd/govulncheck@latest \
+	&& mv /go/bin/govulncheck /bin/govulncheck
 ARG GOIMPORTS_VERSION
 RUN go install golang.org/x/tools/cmd/goimports@${GOIMPORTS_VERSION} \
 	&& mv /go/bin/goimports /bin/goimports
@@ -77,6 +79,10 @@ FROM base AS lint-golangci-lint
 COPY .golangci.yml .
 ENV GOGC 50
 RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/root/.cache/golangci-lint --mount=type=cache,target=/go/pkg golangci-lint run --config .golangci.yml
+
+# runs govulncheck
+FROM base AS lint-govulncheck
+RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg govulncheck ./...
 
 # runs unit-tests with race detector
 FROM base AS unit-tests-race

@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2022-09-05T13:50:45Z by kres 2c7f760-dirty.
+# Generated on 2022-09-27T14:21:38Z by kres 8e6d786-dirty.
 
 # common variables
 
@@ -110,6 +110,9 @@ fmt:  ## Formats the source code
 		go install mvdan.cc/gofumpt@$(GOFUMPT_VERSION) && \
 		gofumpt -w ."
 
+lint-govulncheck:  ## Runs govulncheck linter.
+	@$(MAKE) target-$@
+
 lint-goimports:  ## Runs goimports linter.
 	@$(MAKE) target-$@
 
@@ -144,7 +147,7 @@ lint-markdown:  ## Runs markdownlint.
 	@$(MAKE) target-$@
 
 .PHONY: lint
-lint: lint-golangci-lint lint-gofumpt lint-goimports lint-markdown  ## Run all linters for the project.
+lint: lint-golangci-lint lint-gofumpt lint-govulncheck lint-goimports lint-markdown  ## Run all linters for the project.
 
 .PHONY: image-kres
 image-kres:  ## Builds image for kres.

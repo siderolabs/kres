@@ -147,10 +147,11 @@ func (builder *builder) BuildGolang() error {
 	// linters
 	golangciLint := golang.NewGolangciLint(builder.meta)
 	gofumpt := golang.NewGofumpt(builder.meta)
+	govulncheck := golang.NewGoVulnCheck(builder.meta)
 	goimports := golang.NewGoimports(builder.meta)
 
 	// linters are input to the toolchain as they inject into toolchain build
-	toolchain.AddInput(golangciLint, gofumpt, goimports)
+	toolchain.AddInput(golangciLint, gofumpt, govulncheck, goimports)
 
 	// add protobufs and go generate
 	generate := golang.NewGenerate(builder.meta)
@@ -160,7 +161,7 @@ func (builder *builder) BuildGolang() error {
 
 	toolchain.AddInput(generate, deepcopy)
 
-	builder.lintInputs = append(builder.lintInputs, toolchain, golangciLint, gofumpt, goimports)
+	builder.lintInputs = append(builder.lintInputs, toolchain, golangciLint, gofumpt, govulncheck, goimports)
 
 	// unit-tests
 	unitTests := golang.NewUnitTests(builder.meta)
