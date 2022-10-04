@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2022-09-27T14:21:38Z by kres 8e6d786-dirty.
+# Generated on 2022-10-04T16:32:38Z by kres fe71103-dirty.
 
 # common variables
 
@@ -21,6 +21,7 @@ GRPC_GATEWAY_VERSION ?= 2.11.3
 VTPROTOBUF_VERSION ?= 0.3.0
 DEEPCOPY_VERSION ?= v0.5.5
 TESTPKGS ?= ./...
+WITH_DEBUG ?= false
 KRES_IMAGE ?= ghcr.io/siderolabs/kres:latest
 CONFORMANCE_IMAGE ?= ghcr.io/siderolabs/conform:latest
 
@@ -50,6 +51,7 @@ COMMON_ARGS += --build-arg=GRPC_GATEWAY_VERSION=$(GRPC_GATEWAY_VERSION)
 COMMON_ARGS += --build-arg=VTPROTOBUF_VERSION=$(VTPROTOBUF_VERSION)
 COMMON_ARGS += --build-arg=DEEPCOPY_VERSION=$(DEEPCOPY_VERSION)
 COMMON_ARGS += --build-arg=TESTPKGS=$(TESTPKGS)
+COMMON_ARGS += --build-arg=WITH_DEBUG=$(WITH_DEBUG)
 TOOLCHAIN ?= docker.io/golang:1.19-alpine
 
 # help menu

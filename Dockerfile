@@ -2,7 +2,7 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2022-09-27T14:26:26Z by kres 8e6d786-dirty.
+# Generated on 2022-10-04T16:32:38Z by kres fe71103-dirty.
 
 ARG TOOLCHAIN
 
@@ -61,10 +61,11 @@ RUN --mount=type=cache,target=/go/pkg go list -mod=readonly all >/dev/null
 FROM base AS kres-linux-amd64-build
 COPY --from=generate / /
 WORKDIR /src/cmd/kres
+ARG WITH_DEBUG
 ARG VERSION_PKG="github.com/siderolabs/kres/internal/version"
 ARG SHA
 ARG TAG
-RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg go build -ldflags "-s -w -X ${VERSION_PKG}.Name=kres -X ${VERSION_PKG}.SHA=${SHA} -X ${VERSION_PKG}.Tag=${TAG}" -o /kres-linux-amd64
+RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg go build $([ "$WITH_DEBUG" == true ] && echo "-tags sidero.debug" || echo "") -ldflags "-s -w -X ${VERSION_PKG}.Name=kres -X ${VERSION_PKG}.SHA=${SHA} -X ${VERSION_PKG}.Tag=${TAG}" -o /kres-linux-amd64
 
 # runs gofumpt
 FROM base AS lint-gofumpt

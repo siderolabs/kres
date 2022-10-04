@@ -173,6 +173,8 @@ func (builder *builder) BuildGolang() error {
 
 	builder.targets = append(builder.targets, unitTests, coverage)
 
+	withDebug := golang.NewWithDebug(builder.meta)
+
 	// process commands
 	for _, cmd := range builder.meta.Commands {
 		cfg := CommandConfig{NamedConfig: NamedConfig{name: cmd}}
@@ -182,6 +184,7 @@ func (builder *builder) BuildGolang() error {
 
 		build := golang.NewBuild(builder.meta, cmd, filepath.Join("cmd", cmd))
 		build.AddInput(toolchain)
+		build.AddInput(withDebug)
 		builder.targets = append(builder.targets, build)
 
 		if !cfg.DisableImage {

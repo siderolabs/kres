@@ -14,7 +14,7 @@ type ArgStep struct {
 	arg string
 }
 
-// Arg creates new AregStep.
+// Arg creates new ArgStep.
 func Arg(arg string) *ArgStep {
 	return &ArgStep{
 		arg: arg,

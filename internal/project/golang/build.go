@@ -70,7 +70,8 @@ func (build *Build) CompileDockerfile(output *dockerfile.Output) error {
 			Description(fmt.Sprintf("builds %s", name)).
 			From("base").
 			Step(step.Copy("/", "/").From("generate")).
-			Step(step.WorkDir(filepath.Join("/src", build.sourcePath)))
+			Step(step.WorkDir(filepath.Join("/src", build.sourcePath))).
+			Step(step.Arg(WithDebugVarName))
 
 		ldflags := "-s -w"
 
@@ -84,13 +85,14 @@ func (build *Build) CompileDockerfile(output *dockerfile.Output) error {
 			ldflags += " -X ${VERSION_PKG}.SHA=${SHA} -X ${VERSION_PKG}.Tag=${TAG}"
 		}
 
-		var buildFlags string
+		buildFlags := make([]string, 0, len(build.BuildFlags)+1)
 
-		if build.BuildFlags != nil {
-			buildFlags = " " + strings.Join(build.BuildFlags, " ")
-		}
+		buildFlags = append(buildFlags, fmt.Sprintf(`$([ "$%s" == true ] && echo "-tags sidero.debug" || echo "")`, WithDebugVarName))
+		buildFlags = append(buildFlags, build.BuildFlags...)
 
-		script := step.Script(fmt.Sprintf(`go build%s -ldflags "%s" -o /%s`, buildFlags, ldflags, name)).
+		buildFlagsJoined := strings.Join(buildFlags, " ")
+
+		script := step.Script(fmt.Sprintf(`go build %s -ldflags "%s" -o /%s`, buildFlagsJoined, ldflags, name)).
 			MountCache(filepath.Join(build.meta.CachePath, "go-build")).
 			MountCache(filepath.Join(build.meta.GoPath, "pkg"))
 
