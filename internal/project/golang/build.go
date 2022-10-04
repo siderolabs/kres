@@ -70,9 +70,11 @@ func (build *Build) CompileDockerfile(output *dockerfile.Output) error {
 			Description(fmt.Sprintf("builds %s", name)).
 			From("base").
 			Step(step.Copy("/", "/").From("generate")).
-			Step(step.WorkDir(filepath.Join("/src", build.sourcePath)))
+			Step(step.WorkDir(filepath.Join("/src", build.sourcePath))).
+			Step(step.Arg("GO_BUILDFLAGS")).
+			Step(step.Arg("GO_LDFLAGS"))
 
-		ldflags := "-s -w"
+		ldflags := "${GO_LDFLAGS}"
 
 		if build.meta.VersionPackage != "" {
 			stage.
@@ -84,7 +86,7 @@ func (build *Build) CompileDockerfile(output *dockerfile.Output) error {
 			ldflags += " -X ${VERSION_PKG}.SHA=${SHA} -X ${VERSION_PKG}.Tag=${TAG}"
 		}
 
-		var buildFlags string
+		buildFlags := " ${GO_BUILDFLAGS}"
 
 		if build.BuildFlags != nil {
 			buildFlags = " " + strings.Join(build.BuildFlags, " ")

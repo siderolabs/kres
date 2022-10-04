@@ -45,6 +45,15 @@ func SimpleVariable(name, value string) *Variable {
 	}
 }
 
+// AppendVariable creates new Variable with appended value (+=).
+func AppendVariable(name, value string) *Variable {
+	return &Variable{
+		name:     name,
+		operator: "+=",
+		value:    value,
+	}
+}
+
 // MultilineVariable creates new Variable with multi-line content (define).
 func MultilineVariable(name, value string) *Variable {
 	return &Variable{

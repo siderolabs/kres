@@ -50,7 +50,7 @@ func NewToolchain(meta *meta.Options) *Toolchain {
 		Version: meta.GoContainerVersion,
 	}
 
-	meta.BuildArgs = append(meta.BuildArgs, "TOOLCHAIN")
+	meta.BuildArgs = append(meta.BuildArgs, "TOOLCHAIN", "CGO_ENABLED", "GO_BUILDFLAGS", "GO_LDFLAGS")
 	meta.BinPath = toolchain.binPath()
 	meta.CachePath = toolchain.cachePath()
 	meta.GoPath = "/go"
@@ -100,6 +100,26 @@ func (toolchain *Toolchain) CompileMakefile(output *makefile.Output) error {
 	output.VariableGroup(makefile.VariableGroupDocker).
 		Variable(makefile.OverridableVariable("TOOLCHAIN", toolchain.image()))
 
+	output.VariableGroup(makefile.VariableGroupCommon).
+		Variable(makefile.OverridableVariable("GO_BUILDFLAGS", "")).
+		Variable(makefile.OverridableVariable("GO_LDFLAGS", "")).
+		Variable(makefile.OverridableVariable("CGO_ENABLED", "0"))
+
+	output.IfTrueCondition("WITH_RACE").
+		Then(
+			makefile.AppendVariable("GO_BUILDFLAGS", "-race"),
+			makefile.SimpleVariable("CGO_ENABLED", "1"),
+			makefile.AppendVariable("GO_LDFLAGS", "-linkmode=external -extldflags '-static'"),
+		)
+
+	output.IfTrueCondition("WITH_DEBUG").
+		Then(
+			makefile.AppendVariable("GO_BUILDFLAGS", "-tags sidero.debug"),
+		).
+		Else(
+			makefile.AppendVariable("GO_LDFLAGS", "-s -w"),
+		)
+
 	output.Target("base").
 		Depends(dag.GatherMatchingInputNames(toolchain, dag.Implements[*dockerfile.Generator]())...).
 		Description("Prepare base toolchain").
@@ -138,7 +158,8 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 		Description("build tools").
 		From("--platform=${BUILDPLATFORM} toolchain").
 		Step(step.Env("GO111MODULE", "on")).
-		Step(step.Env("CGO_ENABLED", "0")).
+		Step(step.Arg("CGO_ENABLED")).
+		Step(step.Env("CGO_ENABLED", "${CGO_ENABLED}")).
 		Step(step.Env("GOPATH", toolchain.meta.GoPath))
 
 	if err := dag.WalkNode(toolchain, func(node dag.Node) error {

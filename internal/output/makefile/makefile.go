@@ -23,6 +23,8 @@ type Output struct {
 	variableGroups     map[string]*VariableGroup
 	variableGroupOrder []string
 
+	conditions []*Condition
+
 	targets []*Target
 }
 
@@ -61,6 +63,19 @@ func (o *Output) Target(name string) *Target {
 	return target
 }
 
+// IfTrueCondition creates new Makefile condition.
+func (o *Output) IfTrueCondition(variable string) *Condition {
+	condition := &Condition{
+		trigger: &Trigger{
+			variable: variable,
+		},
+	}
+
+	o.conditions = append(o.conditions, condition)
+
+	return condition
+}
+
 // Compile implements output.Writer interface.
 func (o *Output) Compile(node interface{}) error {
 	compiler, implements := node.(Compiler)
@@ -94,6 +109,12 @@ func (o *Output) makefile(w io.Writer) error {
 
 	for _, varGroupName := range o.variableGroupOrder {
 		if err := o.variableGroups[varGroupName].Generate(w); err != nil {
+			return err
+		}
+	}
+
+	for _, condition := range o.conditions {
+		if err := condition.Generate(w); err != nil {
 			return err
 		}
 	}

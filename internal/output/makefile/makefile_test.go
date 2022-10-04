@@ -41,6 +41,15 @@ func (suite *MakefileSuite) TestGenerateFile() {
 	output.VariableGroup(makefile.VariableGroupHelp).
 		Variable(makefile.MultilineVariable("HELP_MENU", "This is multi-line\nlong\nstring.\n"))
 
+	output.IfTrueCondition("WITH_DEBUG").
+		Then(
+			makefile.SimpleVariable("DEBUG", "true"),
+			makefile.AppendVariable("BUILD_FLAGS", "--debug"),
+		).
+		Else(
+			makefile.SimpleVariable("DEBUG", "false"),
+		)
+
 	output.Target("all").
 		Depends("foo", "bar")
 
@@ -80,6 +89,13 @@ long
 string.
 
 endef
+
+ifneq (, $(filter $(WITH_DEBUG), t true TRUE y yes 1))
+DEBUG := true
+BUILD_FLAGS += --debug
+else
+DEBUG := false
+endif
 
 all: foo bar
 

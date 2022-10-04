@@ -101,7 +101,7 @@ func (docker *Docker) CompileMakefile(output *makefile.Output) error {
 		Push("--push=$(PUSH)")
 
 	for _, arg := range docker.meta.BuildArgs {
-		buildArgs.Push(fmt.Sprintf("--build-arg=%s=$(%s)", arg, arg))
+		buildArgs.Push(fmt.Sprintf("--build-arg=%s=\"$(%s)\"", arg, arg))
 	}
 
 	output.VariableGroup(makefile.VariableGroupCommon).

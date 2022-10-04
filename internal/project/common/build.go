@@ -52,7 +52,9 @@ func (build *Build) CompileMakefile(output *makefile.Output) error {
 		Variable(makefile.SimpleVariable("SHA", "$(shell git describe --match=none --always --abbrev=8 --dirty)")).
 		Variable(makefile.SimpleVariable("TAG", "$(shell git describe --tag --always --dirty)")).
 		Variable(makefile.SimpleVariable("BRANCH", "$(shell git rev-parse --abbrev-ref HEAD)")).
-		Variable(makefile.SimpleVariable("ARTIFACTS", build.ArtifactsPath))
+		Variable(makefile.SimpleVariable("ARTIFACTS", build.ArtifactsPath)).
+		Variable(makefile.OverridableVariable("WITH_DEBUG", "false")).
+		Variable(makefile.OverridableVariable("WITH_RACE", "false"))
 
 	output.Target("clean").
 		Description("Cleans up all artifacts.").

@@ -2,7 +2,7 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2022-09-27T14:26:26Z by kres 8e6d786-dirty.
+# Generated on 2022-10-04T17:32:17Z by kres fe71103-dirty.
 
 ARG TOOLCHAIN
 
@@ -29,7 +29,8 @@ RUN apk --update --no-cache add bash curl build-base protoc protobuf-dev
 # build tools
 FROM --platform=${BUILDPLATFORM} toolchain AS tools
 ENV GO111MODULE on
-ENV CGO_ENABLED 0
+ARG CGO_ENABLED
+ENV CGO_ENABLED ${CGO_ENABLED}
 ENV GOPATH /go
 ARG GOLANGCILINT_VERSION
 RUN go install github.com/golangci/golangci-lint/cmd/golangci-lint@${GOLANGCILINT_VERSION} \
@@ -61,10 +62,12 @@ RUN --mount=type=cache,target=/go/pkg go list -mod=readonly all >/dev/null
 FROM base AS kres-linux-amd64-build
 COPY --from=generate / /
 WORKDIR /src/cmd/kres
+ARG GO_BUILDFLAGS
+ARG GO_LDFLAGS
 ARG VERSION_PKG="github.com/siderolabs/kres/internal/version"
 ARG SHA
 ARG TAG
-RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg go build -ldflags "-s -w -X ${VERSION_PKG}.Name=kres -X ${VERSION_PKG}.SHA=${SHA} -X ${VERSION_PKG}.Tag=${TAG}" -o /kres-linux-amd64
+RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg go build ${GO_BUILDFLAGS} -ldflags "${GO_LDFLAGS} -X ${VERSION_PKG}.Name=kres -X ${VERSION_PKG}.SHA=${SHA} -X ${VERSION_PKG}.Tag=${TAG}" -o /kres-linux-amd64
 
 # runs gofumpt
 FROM base AS lint-gofumpt
