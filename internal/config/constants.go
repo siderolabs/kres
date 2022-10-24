@@ -17,10 +17,10 @@ const (
 	GoFmtVersion = "v0.4.0"
 	// GoImportsVersion is the version of goimports.
 	// renovate: datasource=go depName=golang.org/x/tools
-	GoImportsVersion = "v0.1.12"
+	GoImportsVersion = "v0.2.0"
 	// GolangCIlintVersion is the version of golangci-lint.
 	// renovate: datasource=go depName=github.com/golangci/golangci-lint
-	GolangCIlintVersion = "v1.50.0"
+	GolangCIlintVersion = "v1.50.1"
 	// GolangContainerImageVersion is the default golang container image.
 	// renovate: datasource=docker versioning=docker depName=golang
 	GolangContainerImageVersion = "1.19-alpine"
@@ -29,7 +29,7 @@ const (
 	GoVersion = "1.19"
 	// GrpcGatewayVersion is the version of grpc-gateway.
 	// renovate: datasource=go depName=github.com/grpc-ecosystem/grpc-gateway/v2
-	GrpcGatewayVersion = "v2.11.3"
+	GrpcGatewayVersion = "v2.12.0"
 	// GrpcGoVersion is the version of grpc.
 	// renovate: datasource=go depName=google.golang.org/grpc/cmd/protoc-gen-go-grpc
 	GrpcGoVersion = "v1.2.0"
@@ -38,7 +38,7 @@ const (
 	MardownLintCLIVersion = "0.32.2"
 	// NodeContainerImageVersion is the default node container image.
 	// renovate: datasource=docker versioning=docker depName=node
-	NodeContainerImageVersion = "18.10.0-alpine3.16"
+	NodeContainerImageVersion = "19.0.0-alpine3.16"
 	// PkgsVersion is the version of pkgs.
 	// renovate: datasource=github-tags depName=siderolabs/pkgs
 	PkgsVersion = "v1.2.0"
@@ -50,7 +50,7 @@ const (
 	ProtobufTSGatewayVersion = "v1.1.2"
 	// ProtobufTSVersion is the version of protoc.
 	// renovate: datasource=npm depName=ts-proto
-	ProtobufTSVersion = "1.126.1"
+	ProtobufTSVersion = "1.130.0"
 	// SentencesPerLineVersion is the version of sentences-per-line.
 	// renovate: datasource=npm depName=sentences-per-line
 	SentencesPerLineVersion = "0.2.1"
