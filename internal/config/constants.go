@@ -17,7 +17,7 @@ const (
 	GoFmtVersion = "v0.4.0"
 	// GoImportsVersion is the version of goimports.
 	// renovate: datasource=go depName=golang.org/x/tools
-	GoImportsVersion = "v0.2.0"
+	GoImportsVersion = "v0.3.0"
 	// GolangCIlintVersion is the version of golangci-lint.
 	// renovate: datasource=go depName=github.com/golangci/golangci-lint
 	GolangCIlintVersion = "v1.50.1"
@@ -28,8 +28,8 @@ const (
 	// renovate: datasource=github-tags extractVersion=^v(?<version>.*)$ versioning=loose depName=golang/go
 	GoVersion = "1.19"
 	// GrpcGatewayVersion is the version of grpc-gateway.
-	// renovate: datasource=go depName=github.com/grpc-ecosystem/grpc-gateway/v2
-	GrpcGatewayVersion = "v2.12.0"
+	// renovate: datasource=go depName=github.com/grpc-ecosystem/grpc-gateway
+	GrpcGatewayVersion = "v2.13.0"
 	// GrpcGoVersion is the version of grpc.
 	// renovate: datasource=go depName=google.golang.org/grpc/cmd/protoc-gen-go-grpc
 	GrpcGoVersion = "v1.2.0"
@@ -50,7 +50,7 @@ const (
 	ProtobufTSGatewayVersion = "v1.1.2"
 	// ProtobufTSVersion is the version of protoc.
 	// renovate: datasource=npm depName=ts-proto
-	ProtobufTSVersion = "1.130.0"
+	ProtobufTSVersion = "1.131.2"
 	// SentencesPerLineVersion is the version of sentences-per-line.
 	// renovate: datasource=npm depName=sentences-per-line
 	SentencesPerLineVersion = "0.2.1"
