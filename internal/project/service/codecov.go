@@ -44,7 +44,7 @@ func (coverage *CodeCov) CompileDrone(output *drone.Output) error {
 	}
 
 	output.Step(drone.MakeStep("coverage").
-		DependsOn(dag.GatherMatchingInputNames(coverage, dag.Implements[*drone.Compiler]())...).
+		DependsOn(dag.GatherMatchingInputNames(coverage, dag.Implements[drone.Compiler]())...).
 		EnvironmentFromSecret("CODECOV_TOKEN", "CODECOV_TOKEN"),
 	)
 

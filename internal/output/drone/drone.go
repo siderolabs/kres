@@ -196,7 +196,7 @@ type CustomCompiler interface {
 // HasDroneOutput checks if the node implements Compiler and has any output from drone.
 func HasDroneOutput() dag.NodeCondition {
 	return func(node dag.Node) bool {
-		if !dag.Implements[*Compiler]()(node) {
+		if !dag.Implements[Compiler]()(node) {
 			return false
 		}
 

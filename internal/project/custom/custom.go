@@ -122,7 +122,7 @@ func (step *Step) CompileDrone(output *drone.Output) error {
 	}
 
 	droneMatches := func(node dag.Node) bool {
-		if !dag.Implements[*drone.Compiler]()(node) {
+		if !dag.Implements[drone.Compiler]()(node) {
 			return false
 		}
 

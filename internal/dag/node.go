@@ -4,10 +4,6 @@
 
 package dag
 
-import (
-	"reflect"
-)
-
 // Node in directed acyclic graph, recording parent nodes as inputs.
 type Node interface {
 	Name() string
@@ -19,12 +15,12 @@ type Node interface {
 // NodeCondition checks the node for a specific condition.
 type NodeCondition func(Node) bool
 
-// Implements checks whether node implements specific interface.
+// Implements checks whether node implements specific type T.
 func Implements[T any]() NodeCondition {
 	return func(node Node) bool {
-		var t T
+		_, ok := node.(T)
 
-		return reflect.TypeOf(node).Implements(reflect.TypeOf(t).Elem())
+		return ok
 	}
 }
 

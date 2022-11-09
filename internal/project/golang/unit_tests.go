@@ -98,11 +98,11 @@ func (tests *UnitTests) CompileMakefile(output *makefile.Output) error {
 // CompileDrone implements drone.Compiler.
 func (tests *UnitTests) CompileDrone(output *drone.Output) error {
 	output.Step(drone.MakeStep("unit-tests").
-		DependsOn(dag.GatherMatchingInputNames(tests, dag.Implements[*drone.Compiler]())...),
+		DependsOn(dag.GatherMatchingInputNames(tests, dag.Implements[drone.Compiler]())...),
 	)
 
 	output.Step(drone.MakeStep("unit-tests-race").
-		DependsOn(dag.GatherMatchingInputNames(tests, dag.Implements[*drone.Compiler]())...),
+		DependsOn(dag.GatherMatchingInputNames(tests, dag.Implements[drone.Compiler]())...),
 	)
 
 	return nil

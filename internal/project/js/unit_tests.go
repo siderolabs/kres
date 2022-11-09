@@ -56,7 +56,7 @@ func (tests *UnitTests) CompileMakefile(output *makefile.Output) error {
 // CompileDrone implements drone.Compiler.
 func (tests *UnitTests) CompileDrone(output *drone.Output) error {
 	output.Step(drone.MakeStep(tests.Name()).
-		DependsOn(dag.GatherMatchingInputNames(tests, dag.Implements[*drone.Compiler]())...),
+		DependsOn(dag.GatherMatchingInputNames(tests, dag.Implements[drone.Compiler]())...),
 	)
 
 	return nil

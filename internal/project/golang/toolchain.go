@@ -121,7 +121,7 @@ func (toolchain *Toolchain) CompileMakefile(output *makefile.Output) error {
 		)
 
 	output.Target("base").
-		Depends(dag.GatherMatchingInputNames(toolchain, dag.Implements[*dockerfile.Generator]())...).
+		Depends(dag.GatherMatchingInputNames(toolchain, dag.Implements[dockerfile.Generator]())...).
 		Description("Prepare base toolchain").
 		Script("@$(MAKE) target-$@").
 		Phony()
@@ -132,7 +132,7 @@ func (toolchain *Toolchain) CompileMakefile(output *makefile.Output) error {
 // CompileDrone implements drone.Compiler.
 func (toolchain *Toolchain) CompileDrone(output *drone.Output) error {
 	output.Step(drone.MakeStep("base").
-		DependsOn(dag.GatherMatchingInputNames(toolchain, dag.Implements[*drone.Compiler]())...),
+		DependsOn(dag.GatherMatchingInputNames(toolchain, dag.Implements[drone.Compiler]())...),
 	)
 
 	return nil
@@ -190,7 +190,7 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 	}
 
 	// build chain of gen containers.
-	inputs := dag.GatherMatchingInputs(toolchain, dag.Implements[*dockerfile.Generator]())
+	inputs := dag.GatherMatchingInputs(toolchain, dag.Implements[dockerfile.Generator]())
 	for _, input := range inputs {
 		for _, path := range input.(dockerfile.Generator).GetArtifacts() { //nolint:forcetypeassert
 			base.Step(step.Copy(path, "./"+strings.Trim(path, "/")).From(input.Name()))
