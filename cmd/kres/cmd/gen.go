@@ -48,18 +48,18 @@ func runGen() error {
 	fmt.Println("gen started")
 
 	outputs := []output.Writer{
-		dockerfile.NewOutput(),
-		makefile.NewOutput(),
-		golangci.NewOutput(),
-		license.NewOutput(),
-		gitignore.NewOutput(),
-		drone.NewOutput(),
-		codecov.NewOutput(),
-		release.NewOutput(),
-		markdownlint.NewOutput(),
-		github.NewOutput(),
-		conform.NewOutput(),
-		template.NewOutput(),
+		output.Wrap[dockerfile.Compiler](dockerfile.NewOutput()),
+		output.Wrap[makefile.Compiler](makefile.NewOutput()),
+		output.Wrap[golangci.Compiler](golangci.NewOutput()),
+		output.Wrap[license.Compiler](license.NewOutput()),
+		output.Wrap[gitignore.Compiler](gitignore.NewOutput()),
+		output.Wrap[drone.Compiler](drone.NewOutput()),
+		output.Wrap[codecov.Compiler](codecov.NewOutput()),
+		output.Wrap[release.Compiler](release.NewOutput()),
+		output.Wrap[markdownlint.Compiler](markdownlint.NewOutput()),
+		output.Wrap[github.Compiler](github.NewOutput()),
+		output.Wrap[conform.Compiler](conform.NewOutput()),
+		output.Wrap[template.Compiler](template.NewOutput()),
 	}
 
 	var err error

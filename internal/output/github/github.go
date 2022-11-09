@@ -46,16 +46,10 @@ func (o *Output) Generate() error {
 	return nil
 }
 
-// Compile implements output.Writer interface.
-func (o *Output) Compile(node interface{}) error {
+// Compile implements [output.TypedWriter] interface.
+func (o *Output) Compile(compiler Compiler) error {
 	if o.client == nil {
 		// no token, skip it
-		return nil
-	}
-
-	compiler, implements := node.(Compiler)
-
-	if !implements {
 		return nil
 	}
 

@@ -40,13 +40,7 @@ func NewOutput() *Output {
 }
 
 // Compile implements output.Writer interface.
-func (o *Output) Compile(node interface{}) error {
-	compiler, implements := node.(Compiler)
-
-	if !implements {
-		return nil
-	}
-
+func (o *Output) Compile(compiler Compiler) error {
 	return compiler.CompileCodeCov(o)
 }
 

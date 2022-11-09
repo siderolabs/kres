@@ -133,13 +133,8 @@ func (o *Output) Step(step *Step) {
 	o.defaultPipeline.Steps = append(o.defaultPipeline.Steps, &step.container)
 }
 
-// Compile implements output.Writer interface.
-func (o *Output) Compile(node interface{}) error {
-	compiler, implements := node.(Compiler)
-	if !implements {
-		return nil
-	}
-
+// Compile implements [output.TypedWriter] interface.
+func (o *Output) Compile(compiler Compiler) error {
 	return compiler.CompileDrone(o)
 }
 

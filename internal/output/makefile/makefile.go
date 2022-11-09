@@ -76,14 +76,8 @@ func (o *Output) IfTrueCondition(variable string) *Condition {
 	return condition
 }
 
-// Compile implements output.Writer interface.
-func (o *Output) Compile(node interface{}) error {
-	compiler, implements := node.(Compiler)
-
-	if !implements {
-		return nil
-	}
-
+// Compile implements [output.TypedWriter]  interface.
+func (o *Output) Compile(compiler Compiler) error {
 	return compiler.CompileMakefile(o)
 }
 

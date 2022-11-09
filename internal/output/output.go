@@ -10,3 +10,29 @@ type Writer interface {
 	Generate() error
 	Compile(interface{}) error
 }
+
+// TypedWriter is an interface which should be implemented by outputs. It is a typed version of Writer.
+type TypedWriter[T any] interface {
+	Generate() error
+	Compile(T) error
+}
+
+type adapter[T any] struct {
+	inner TypedWriter[T]
+}
+
+func (w *adapter[T]) Generate() error { return w.inner.Generate() }
+
+func (w *adapter[T]) Compile(i interface{}) error {
+	val, ok := i.(T)
+	if !ok {
+		return nil
+	}
+
+	return w.inner.Compile(val)
+}
+
+// Wrap creates a [Writer] instance from a [TypedWriter] instance.
+func Wrap[T any](w TypedWriter[T]) Writer {
+	return &adapter[T]{inner: w}
+}
