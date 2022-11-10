@@ -24,11 +24,16 @@ type Image struct {
 	DroneExtraEnvironment map[string]string `yaml:"droneExtraEnvironment"`
 	BaseImage             string            `yaml:"baseImage"`
 	AdditionalImages      []string          `yaml:"additionalImages"`
-	ImageName             string            `yaml:"imageName"`
-	Entrypoint            string            `yaml:"entrypoint"`
-	EntrypointArgs        []string          `yaml:"entrypointArgs"`
-	CustomCommands        []string          `yaml:"customCommands"`
-	PushLatest            bool              `yaml:"pushLatest"`
+	CopyFrom              []struct {
+		Stage       string `yaml:"stage"`
+		Source      string `yaml:"source"`
+		Destination string `yaml:"destination"`
+	} `yaml:"copyFrom"`
+	ImageName      string   `yaml:"imageName"`
+	Entrypoint     string   `yaml:"entrypoint"`
+	EntrypointArgs []string `yaml:"entrypointArgs"`
+	CustomCommands []string `yaml:"customCommands"`
+	PushLatest     bool     `yaml:"pushLatest"`
 }
 
 // ImageSourceLabel is a docker image label to specify image source.
@@ -150,6 +155,10 @@ func (image *Image) CompileDockerfile(output *dockerfile.Output) error {
 		}
 	}
 
+	for _, copyFrom := range image.CopyFrom {
+		stage.Step(step.Copy(stringOr(copyFrom.Source, "/"), stringOr(copyFrom.Destination, "/")).From(copyFrom.Stage))
+	}
+
 	if image.meta.GitHubOrganization != "" && image.meta.GitHubRepository != "" {
 		stage.Step(step.Label(ImageSourceLabel, fmt.Sprintf("https://github.com/%s/%s", image.meta.GitHubOrganization, image.meta.GitHubRepository)))
 	}
@@ -157,4 +166,12 @@ func (image *Image) CompileDockerfile(output *dockerfile.Output) error {
 	stage.Step(step.Entrypoint(image.Entrypoint, image.EntrypointArgs...))
 
 	return nil
+}
+
+func stringOr(s string, def string) string {
+	if s == "" {
+		return def
+	}
+
+	return s
 }

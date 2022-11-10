@@ -111,6 +111,14 @@ func (build *Build) CompileDockerfile(output *dockerfile.Output) error {
 		addBuildSteps(artifact.name, artifact.config)
 	}
 
+	// combine all binaries built for each arch into '-all' stage
+	all := output.Stage(fmt.Sprintf("%s-all", build.Name())).
+		From("scratch")
+
+	for _, artifact := range build.getArtifacts() {
+		all.Step(step.Copy("/", "/").From(artifact.name))
+	}
+
 	build.entrypoint = fmt.Sprintf("%s-linux-${TARGETARCH}", build.Name())
 	output.Stage(build.Name()).
 		From(build.entrypoint)

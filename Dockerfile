@@ -2,7 +2,7 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2022-10-24T13:36:25Z by kres ef0ba25-dirty.
+# Generated on 2022-11-10T12:19:49Z by kres 2131c78-dirty.
 
 ARG TOOLCHAIN
 
@@ -104,6 +104,9 @@ FROM scratch AS unit-tests
 COPY --from=unit-tests-run /src/coverage.txt /coverage.txt
 
 FROM kres-linux-${TARGETARCH} AS kres
+
+FROM scratch AS kres-all
+COPY --from=kres-linux-amd64 / /
 
 FROM scratch AS image-kres
 ARG TARGETARCH
