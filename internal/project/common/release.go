@@ -7,6 +7,8 @@ package common
 import (
 	"path/filepath"
 
+	"github.com/siderolabs/gen/slices"
+
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/output/drone"
 	"github.com/siderolabs/kres/internal/output/makefile"
@@ -17,6 +19,11 @@ import (
 type Release struct {
 	meta *meta.Options
 	dag.BaseNode
+
+	// List of file patterns relative to the ArtifactsPath to include in the release.
+	//
+	// If not specified, defaults to '["*"]'.
+	Artifacts []string `yaml:"artifacts"`
 }
 
 // NewRelease initializes Release.
@@ -25,6 +32,8 @@ func NewRelease(meta *meta.Options) *Release {
 		BaseNode: dag.NewBaseNode("release"),
 
 		meta: meta,
+
+		Artifacts: []string{"*"},
 	}
 }
 
@@ -39,7 +48,9 @@ func (release *Release) CompileDrone(output *drone.Output) error {
 		Image("plugins/github-release").
 		PublishArtifacts(
 			filepath.Join(release.meta.ArtifactsPath, "RELEASE_NOTES.md"),
-			filepath.Join(release.meta.ArtifactsPath, "*"),
+			slices.Map(release.Artifacts, func(artifact string) string {
+				return filepath.Join(release.meta.ArtifactsPath, artifact)
+			})...,
 		).
 		OnlyOnTag().
 		DependsOn("release-notes"),
