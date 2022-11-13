@@ -3,7 +3,6 @@ module github.com/siderolabs/kres
 go 1.19
 
 require (
-	github.com/SOF3/go-stable-toposort v0.0.0-20180826141444-ba650b7de8a0
 	github.com/drone/drone-yaml v1.2.3
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/google/go-github/v44 v44.1.0

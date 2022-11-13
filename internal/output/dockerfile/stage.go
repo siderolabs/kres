@@ -10,8 +10,6 @@ import (
 	"regexp"
 	"strings"
 
-	stableToposort "github.com/SOF3/go-stable-toposort"
-
 	"github.com/siderolabs/kres/internal/output/dockerfile/step"
 )
 
@@ -61,9 +59,7 @@ func (stage *Stage) Dependencies() []string {
 }
 
 // Before implements stableToposort.Node interface.
-func (stage *Stage) Before(node stableToposort.Node) bool {
-	otherStage := node.(*Stage) //nolint:errcheck,forcetypeassert
-
+func (stage *Stage) Before(otherStage *Stage) bool {
 	for _, dep := range otherStage.Dependencies() {
 		sanitized := stripVars.ReplaceAllString(dep, "")
 		if sanitized != dep && sanitized != "" {

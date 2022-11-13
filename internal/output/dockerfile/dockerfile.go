@@ -10,10 +10,9 @@ import (
 	"io"
 	"sort"
 
-	stableToposort "github.com/SOF3/go-stable-toposort"
-
 	"github.com/siderolabs/kres/internal/output"
 	"github.com/siderolabs/kres/internal/output/dockerfile/step"
+	"github.com/siderolabs/kres/internal/toposort"
 )
 
 const (
@@ -109,20 +108,19 @@ func (o *Output) dockerfile(w io.Writer) error {
 		return err
 	}
 
-	stageNodes := make([]stableToposort.Node, 0, len(o.stages))
+	stageNodes := make([]*Stage, 0, len(o.stages))
 	for _, stage := range o.stages {
 		stageNodes = append(stageNodes, stage)
 	}
 
 	sort.Slice(stageNodes, func(i, j int) bool {
-		return stageNodes[i].(*Stage).name < stageNodes[j].(*Stage).name //nolint:forcetypeassert
+		return stageNodes[i].name < stageNodes[j].name
 	})
 
-	sortedStages, _ := stableToposort.Sort(stageNodes)
+	sortedStages, _ := toposort.Stable(stageNodes)
 
 	for _, stageNode := range sortedStages {
-		stage := stageNode.(*Stage) //nolint:errcheck,forcetypeassert
-		if err := stage.Generate(w); err != nil {
+		if err := stageNode.Generate(w); err != nil {
 			return err
 		}
 	}
@@ -135,7 +133,7 @@ func (o *Output) dockerignore(w io.Writer) error {
 		return err
 	}
 
-	if _, err := fmt.Fprintln(w, "**"); err != nil {
+	if _, err := fmt.Fprintln(w, "*"); err != nil {
 		return err
 	}
 
