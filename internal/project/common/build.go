@@ -19,7 +19,8 @@ type Build struct {
 
 	meta *meta.Options
 
-	ArtifactsPath string `yaml:"artifactsPath"`
+	ArtifactsPath string   `yaml:"artifactsPath"`
+	IgnoredPaths  []string `yaml:"ignoredPaths"`
 }
 
 // NewBuild initializes Build.
@@ -66,8 +67,11 @@ func (build *Build) CompileMakefile(output *makefile.Output) error {
 
 // CompileGitignore implements gitignore.Compiler.
 func (build *Build) CompileGitignore(output *gitignore.Output) error {
-	output.
-		IgnorePath(build.ArtifactsPath)
+	output.IgnorePath(build.ArtifactsPath)
+
+	for _, ignoredPath := range build.IgnoredPaths {
+		output.IgnorePath(ignoredPath)
+	}
 
 	return nil
 }

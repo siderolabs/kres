@@ -22,3 +22,8 @@ spec:
 kind: service.CodeCov
 spec:
     targetThreshold: 10
+---
+kind: common.Build
+spec:
+    ignoredPaths:
+        - "_out/example/"
