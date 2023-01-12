@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"sort"
 
-	"github.com/google/go-github/v44/github"
+	"github.com/google/go-github/v49/github"
 
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/output/conform"
