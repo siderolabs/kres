@@ -2,12 +2,15 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2023-01-12T10:59:58Z by kres e209704.
+# Generated on 2023-01-24T18:26:41Z by kres dc2a7bb.
 
 ARG TOOLCHAIN
 
 # cleaned up specs and compiled versions
 FROM scratch AS generate
+
+# generates static files
+FROM scratch AS generate-files
 
 FROM ghcr.io/siderolabs/ca-certificates:v1.3.0 AS image-ca-certificates
 

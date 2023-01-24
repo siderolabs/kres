@@ -71,6 +71,8 @@ func (build *Build) CompileDockerfile(output *dockerfile.Output) error {
 		Description(fmt.Sprintf("builds %s", build.Name())).
 		From("js").
 		Step(step.Arg(nodeBuildArgsVarName)).
+		Step(step.Copy("/", "/generated").From("generate-files")).
+		Step(step.Script(fmt.Sprintf("cp -rf /generated/%s/. ./ || true && rm -rf /generated", build.Name()))).
 		Step(step.Script("npm run build ${" + nodeBuildArgsVarName + "}").
 			MountCache(build.meta.NpmCachePath)).
 		Step(step.Script("mkdir -p " + outputDir)).

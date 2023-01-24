@@ -280,6 +280,7 @@ func (generate *Generate) CompileDockerfile(output *dockerfile.Output) error {
 			From("base").
 			Step(step.WorkDir("/src")).
 			Step(step.Copy(license.Header, filepath.Join("./hack/", license.Header))).
+			Step(step.Copy("/", "./").From("generate-files")).
 			Step(step.Script(fmt.Sprintf("go generate %s/...", spec.Source)).
 				MountCache(filepath.Join(generate.meta.CachePath, "go-build")).
 				MountCache(filepath.Join(generate.meta.GoPath, "pkg")),
