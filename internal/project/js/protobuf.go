@@ -23,6 +23,9 @@ type Protobuf struct {
 
 	meta *meta.Options
 
+	// Files are the arbitrary files to be copied into the image.
+	Files []File `yaml:"files"`
+
 	ProtobufTSVersion        string `yaml:"protobufTSVersion"`
 	ProtobufTSGatewayVersion string `yaml:"protobufTSGatewayVersion"`
 
@@ -32,6 +35,12 @@ type Protobuf struct {
 	Specs []ProtoSpec `yaml:"specs"`
 
 	ExperimentalFlags []string `yaml:"experimentalFlags"`
+}
+
+// File represents a file to be fetched/copied into the image.
+type File struct {
+	Source      string `yaml:"source"`
+	Destination string `yaml:"destination"`
 }
 
 // ProtoSpec describes a set of protobuf specs to be compiled.
@@ -103,6 +112,10 @@ func (proto *Protobuf) CompileDockerfile(output *dockerfile.Output) error {
 	generate := output.Stage(generateContainer).
 		Description("cleaned up specs and compiled versions").
 		From("scratch")
+
+	for _, file := range proto.Files {
+		generate.Step(step.Add(file.Source, file.Destination))
+	}
 
 	if len(proto.Specs) == 0 {
 		return nil
