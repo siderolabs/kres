@@ -110,19 +110,31 @@ func (generate *Generate) ToolchainBuild(stage *dockerfile.Stage) error {
 
 	stage.
 		Step(step.Arg("PROTOBUF_GO_VERSION")).
-		Step(step.Script("go install google.golang.org/protobuf/cmd/protoc-gen-go@v${PROTOBUF_GO_VERSION}")).
+		Step(step.Script("go install google.golang.org/protobuf/cmd/protoc-gen-go@v${PROTOBUF_GO_VERSION}").
+			MountCache(filepath.Join(generate.meta.CachePath, "go-build")).
+			MountCache(filepath.Join(generate.meta.GoPath, "pkg")),
+		).
 		Step(step.Run("mv", filepath.Join(generate.meta.GoPath, "bin", "protoc-gen-go"), generate.meta.BinPath)).
 		Step(step.Arg("GRPC_GO_VERSION")).
-		Step(step.Script("go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v${GRPC_GO_VERSION}")).
+		Step(step.Script("go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v${GRPC_GO_VERSION}").
+			MountCache(filepath.Join(generate.meta.CachePath, "go-build")).
+			MountCache(filepath.Join(generate.meta.GoPath, "pkg")),
+		).
 		Step(step.Run("mv", filepath.Join(generate.meta.GoPath, "bin", "protoc-gen-go-grpc"), generate.meta.BinPath)).
 		Step(step.Arg("GRPC_GATEWAY_VERSION")).
-		Step(step.Script("go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v${GRPC_GATEWAY_VERSION}")).
+		Step(step.Script("go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v${GRPC_GATEWAY_VERSION}").
+			MountCache(filepath.Join(generate.meta.CachePath, "go-build")).
+			MountCache(filepath.Join(generate.meta.GoPath, "pkg")),
+		).
 		Step(step.Run("mv", filepath.Join(generate.meta.GoPath, "bin", "protoc-gen-grpc-gateway"), generate.meta.BinPath))
 
 	if generate.VTProtobufEnabled {
 		stage.
 			Step(step.Arg("VTPROTOBUF_VERSION")).
-			Step(step.Script("go install github.com/planetscale/vtprotobuf/cmd/protoc-gen-go-vtproto@v${VTPROTOBUF_VERSION}")).
+			Step(step.Script("go install github.com/planetscale/vtprotobuf/cmd/protoc-gen-go-vtproto@v${VTPROTOBUF_VERSION}").
+				MountCache(filepath.Join(generate.meta.CachePath, "go-build")).
+				MountCache(filepath.Join(generate.meta.GoPath, "pkg")),
+			).
 			Step(step.Run("mv", filepath.Join(generate.meta.GoPath, "bin", "protoc-gen-go-vtproto"), generate.meta.BinPath))
 	}
 
@@ -201,7 +213,7 @@ func (generate *Generate) CompileDockerfile(output *dockerfile.Output) error {
 				if generate.VTProtobufEnabled {
 					flags = append(flags,
 						fmt.Sprintf("--go-vtproto_out=paths=source_relative:%s", generate.BaseSpecPath),
-						"--go-vtproto_opt=features=marshal+unmarshal+size",
+						"--go-vtproto_opt=features=marshal+unmarshal+size+equal",
 					)
 				}
 			}

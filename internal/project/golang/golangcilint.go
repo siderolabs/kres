@@ -67,7 +67,10 @@ func (lint *GolangciLint) ToolchainBuild(stage *dockerfile.Stage) error {
 			fmt.Sprintf(
 				"go install github.com/golangci/golangci-lint/cmd/golangci-lint@${GOLANGCILINT_VERSION} \\\n"+
 					"\t&& mv /go/bin/golangci-lint %s/golangci-lint", lint.meta.BinPath),
-		))
+		).
+			MountCache(filepath.Join(lint.meta.CachePath, "go-build")).
+			MountCache(filepath.Join(lint.meta.GoPath, "pkg")),
+		)
 
 	return nil
 }

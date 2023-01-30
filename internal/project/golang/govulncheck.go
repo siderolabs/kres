@@ -46,7 +46,10 @@ func (lint *GoVulnCheck) ToolchainBuild(stage *dockerfile.Stage) error {
 	stage.
 		Step(step.Script(fmt.Sprintf(
 			`go install golang.org/x/vuln/cmd/govulncheck@latest \
-	&& mv /go/bin/govulncheck %s/govulncheck`, lint.meta.BinPath)))
+	&& mv /go/bin/govulncheck %s/govulncheck`, lint.meta.BinPath)).
+			MountCache(filepath.Join(lint.meta.CachePath, "go-build")).
+			MountCache(filepath.Join(lint.meta.GoPath, "pkg")),
+		)
 
 	return nil
 }

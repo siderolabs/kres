@@ -6,6 +6,7 @@ package golang
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/siderolabs/kres/internal/config"
 	"github.com/siderolabs/kres/internal/dag"
@@ -51,7 +52,10 @@ func (deepcopy *DeepCopy) ToolchainBuild(stage *dockerfile.Stage) error {
 		Step(step.Arg("DEEPCOPY_VERSION")).
 		Step(step.Script(fmt.Sprintf(
 			`go install github.com/siderolabs/deep-copy@${DEEPCOPY_VERSION} \
-	&& mv /go/bin/deep-copy %s/deep-copy`, deepcopy.meta.BinPath)))
+	&& mv /go/bin/deep-copy %s/deep-copy`, deepcopy.meta.BinPath)).
+			MountCache(filepath.Join(deepcopy.meta.CachePath, "go-build")).
+			MountCache(filepath.Join(deepcopy.meta.GoPath, "pkg")),
+		)
 
 	return nil
 }

@@ -56,5 +56,5 @@ const (
 	SentencesPerLineVersion = "0.2.1"
 	// VTProtobufVersion is the version of vtprotobuf.
 	// renovate: datasource=go depName=github.com/planetscale/vtprotobuf
-	VTProtobufVersion = "v0.3.0"
+	VTProtobufVersion = "v0.4.0"
 )

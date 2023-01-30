@@ -2,7 +2,7 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2023-01-12T10:59:58Z by kres e209704.
+# Generated on 2023-01-30T12:19:50Z by kres e6f779d-dirty.
 
 ARG TOOLCHAIN
 
@@ -33,18 +33,18 @@ ARG CGO_ENABLED
 ENV CGO_ENABLED ${CGO_ENABLED}
 ENV GOPATH /go
 ARG GOLANGCILINT_VERSION
-RUN go install github.com/golangci/golangci-lint/cmd/golangci-lint@${GOLANGCILINT_VERSION} \
+RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg go install github.com/golangci/golangci-lint/cmd/golangci-lint@${GOLANGCILINT_VERSION} \
 	&& mv /go/bin/golangci-lint /bin/golangci-lint
 ARG GOFUMPT_VERSION
 RUN go install mvdan.cc/gofumpt@${GOFUMPT_VERSION} \
 	&& mv /go/bin/gofumpt /bin/gofumpt
-RUN go install golang.org/x/vuln/cmd/govulncheck@latest \
+RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg go install golang.org/x/vuln/cmd/govulncheck@latest \
 	&& mv /go/bin/govulncheck /bin/govulncheck
 ARG GOIMPORTS_VERSION
-RUN go install golang.org/x/tools/cmd/goimports@${GOIMPORTS_VERSION} \
+RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg go install golang.org/x/tools/cmd/goimports@${GOIMPORTS_VERSION} \
 	&& mv /go/bin/goimports /bin/goimports
 ARG DEEPCOPY_VERSION
-RUN go install github.com/siderolabs/deep-copy@${DEEPCOPY_VERSION} \
+RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg go install github.com/siderolabs/deep-copy@${DEEPCOPY_VERSION} \
 	&& mv /go/bin/deep-copy /bin/deep-copy
 
 # tools and sources

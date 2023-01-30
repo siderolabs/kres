@@ -6,6 +6,7 @@ package golang
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/siderolabs/kres/internal/config"
 	"github.com/siderolabs/kres/internal/dag"
@@ -54,7 +55,10 @@ func (lint *Goimports) ToolchainBuild(stage *dockerfile.Stage) error {
 		Step(step.Arg("GOIMPORTS_VERSION")).
 		Step(step.Script(fmt.Sprintf(
 			`go install golang.org/x/tools/cmd/goimports@${GOIMPORTS_VERSION} \
-	&& mv /go/bin/goimports %s/goimports`, lint.meta.BinPath)))
+	&& mv /go/bin/goimports %s/goimports`, lint.meta.BinPath)).
+			MountCache(filepath.Join(lint.meta.CachePath, "go-build")).
+			MountCache(filepath.Join(lint.meta.GoPath, "pkg")),
+		)
 
 	return nil
 }
