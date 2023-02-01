@@ -37,6 +37,7 @@ type Toolchain struct { //nolint:govet
 	Version       string
 	Image         string
 	ExtraPackages []string `yaml:"extraPackages"`
+	PrivateRepos  []string `yaml:"privateRepos"`
 }
 
 // NewToolchain builds Toolchain with default values.
@@ -56,6 +57,16 @@ func NewToolchain(meta *meta.Options) *Toolchain {
 	meta.GoPath = "/go"
 
 	return toolchain
+}
+
+// AfterLoad adds the github token to the build args in this case, making it possible
+// to configure git and go to use private repositories.
+func (toolchain *Toolchain) AfterLoad() error {
+	if toolchain.PrivateRepos != nil {
+		toolchain.meta.BuildArgs = append(toolchain.meta.BuildArgs, "GITHUB_TOKEN")
+	}
+
+	return nil
 }
 
 func (toolchain *Toolchain) image() string {
@@ -100,10 +111,15 @@ func (toolchain *Toolchain) CompileMakefile(output *makefile.Output) error {
 	output.VariableGroup(makefile.VariableGroupDocker).
 		Variable(makefile.OverridableVariable("TOOLCHAIN", toolchain.image()))
 
-	output.VariableGroup(makefile.VariableGroupCommon).
+	common := output.VariableGroup(makefile.VariableGroupCommon).
 		Variable(makefile.OverridableVariable("GO_BUILDFLAGS", "")).
 		Variable(makefile.OverridableVariable("GO_LDFLAGS", "")).
 		Variable(makefile.OverridableVariable("CGO_ENABLED", "0"))
+
+	// add github token only if necessary
+	if toolchain.PrivateRepos != nil {
+		common.Variable(makefile.OverridableVariable("GITHUB_TOKEN", ""))
+	}
 
 	output.IfTrueCondition("WITH_RACE").
 		Then(
@@ -150,6 +166,11 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 		packages := []string{"add", "bash", "curl", "build-base", "protoc", "protobuf-dev"}
 		packages = append(packages, toolchain.ExtraPackages...)
 
+		// automatically add git if we know we're going to have to deal with private repos
+		if toolchain.PrivateRepos != nil {
+			packages = append(packages, "git")
+		}
+
 		toolchainStage.
 			Step(step.Run("apk", append([]string{"--update", "--no-cache"}, packages...)...))
 	}
@@ -161,6 +182,14 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 		Step(step.Arg("CGO_ENABLED")).
 		Step(step.Env("CGO_ENABLED", "${CGO_ENABLED}")).
 		Step(step.Env("GOPATH", toolchain.meta.GoPath))
+
+	// configure git to use the github token for private repos and set GOPRIVATE
+	if toolchain.PrivateRepos != nil {
+		tools.Step(step.Arg("GITHUB_TOKEN")).
+			Step(step.Env("GITHUB_TOKEN", "${GITHUB_TOKEN}")).
+			Step(step.Env("GOPRIVATE", strings.Join(toolchain.PrivateRepos, ","))).
+			Step(step.Script("git config --global url.https://${GITHUB_TOKEN}:x-oauth-basic@github.com/.insteadOf https://github.com/"))
+	}
 
 	if err := dag.WalkNode(toolchain, func(node dag.Node) error {
 		if builder, ok := node.(common.ToolchainBuilder); ok {

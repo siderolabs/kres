@@ -41,6 +41,16 @@ func (project *Contents) LoadConfig(config *config.Provider) error {
 	visited := make(map[dag.Node]struct{})
 
 	return dag.Walk(project, func(node dag.Node) error {
-		return config.Load(node)
+		if err := config.Load(node); err != nil {
+			return err
+		}
+
+		// allow for nodes to implement an AfterLoad function to edit the loaded config
+		// before compilation starts.
+		if loadHook, ok := node.(interface{ AfterLoad() error }); ok {
+			return loadHook.AfterLoad()
+		}
+
+		return nil
 	}, visited, -1)
 }
