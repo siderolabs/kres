@@ -147,7 +147,7 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 		From("${TOOLCHAIN}")
 
 	if toolchain.Kind == ToolchainOfficial {
-		packages := []string{"add", "bash", "curl", "build-base", "protoc", "protobuf-dev"}
+		packages := []string{"add", "bash", "curl", "build-base", "protoc", "protobuf-dev", "git"}
 		packages = append(packages, toolchain.ExtraPackages...)
 
 		toolchainStage.
