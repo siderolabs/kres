@@ -19,13 +19,13 @@ import (
 // Document is a part of config.
 type Document struct {
 	// Class name and package name, e.g. `golang.Toolchain`.
-	Kind string
+	Kind string `yaml:"kind"`
 
 	// Name of particular object (if supported).
-	Name string
+	Name string `yaml:"name,omitempty"`
 
 	// Spec is loaded into the matching object.
-	Spec yaml.Node
+	Spec yaml.Node `yaml:"spec"`
 }
 
 // Provider resolves configuration for each object.

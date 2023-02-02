@@ -37,7 +37,7 @@ func newEdgeIndex() *edgeIndex {
 	return index
 }
 
-func (index *edgeIndex) add(edge edge) edgeNumber {
+func (index *edgeIndex) add(edge edge) {
 	number := len(index.slice)
 	index.slice = append(index.slice, edge)
 
@@ -48,8 +48,6 @@ func (index *edgeIndex) add(edge edge) edgeNumber {
 
 		index.index[pos][edge[pos]][edge[1-pos]] = number
 	}
-
-	return number
 }
 
 func (index *edgeIndex) removeIndex(edge edge) {
