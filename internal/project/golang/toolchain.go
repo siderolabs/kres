@@ -147,9 +147,13 @@ func (toolchain *Toolchain) CompileMakefile(output *makefile.Output) error {
 
 // CompileDrone implements drone.Compiler.
 func (toolchain *Toolchain) CompileDrone(output *drone.Output) error {
-	output.Step(drone.MakeStep("base").
-		DependsOn(dag.GatherMatchingInputNames(toolchain, dag.Implements[drone.Compiler]())...),
-	)
+	baseStep := drone.MakeStep("base").DependsOn(dag.GatherMatchingInputNames(toolchain, dag.Implements[drone.Compiler]())...)
+
+	if toolchain.PrivateRepos != nil {
+		baseStep = baseStep.EnvironmentFromSecret("GITHUB_TOKEN", "github_token")
+	}
+
+	output.Step(baseStep)
 
 	return nil
 }
