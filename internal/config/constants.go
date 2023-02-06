@@ -20,7 +20,7 @@ const (
 	GoImportsVersion = "v0.5.0"
 	// GolangCIlintVersion is the version of golangci-lint.
 	// renovate: datasource=go depName=github.com/golangci/golangci-lint
-	GolangCIlintVersion = "v1.51.0"
+	GolangCIlintVersion = "v1.51.1"
 	// GolangContainerImageVersion is the default golang container image.
 	// renovate: datasource=docker versioning=docker depName=golang
 	GolangContainerImageVersion = "1.20-alpine"
@@ -38,7 +38,7 @@ const (
 	MardownLintCLIVersion = "0.33.0"
 	// NodeContainerImageVersion is the default node container image.
 	// renovate: datasource=docker versioning=docker depName=node
-	NodeContainerImageVersion = "19.5.0-alpine3.16"
+	NodeContainerImageVersion = "19.6.0-alpine3.16"
 	// PkgsVersion is the version of pkgs.
 	// renovate: datasource=github-tags depName=siderolabs/pkgs
 	PkgsVersion = "v1.3.0"

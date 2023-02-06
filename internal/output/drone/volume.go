@@ -8,7 +8,7 @@ import "github.com/drone/drone-yaml/yaml"
 
 // VolumeHostPath adds a host path mount.
 func (o *Output) VolumeHostPath(name, hostPath, mountPath string) *Output {
-	o.standardVolumes = append(o.standardVolumes, &yaml.Volume{
+	o.volumes = append(o.volumes, &yaml.Volume{
 		Name: name,
 		HostPath: &yaml.VolumeHostPath{
 			Path: hostPath,
@@ -25,7 +25,7 @@ func (o *Output) VolumeHostPath(name, hostPath, mountPath string) *Output {
 
 // VolumeTemporary adds a temporary (tmpfs) volume mount.
 func (o *Output) VolumeTemporary(name, mountPath string) *Output {
-	o.standardVolumes = append(o.standardVolumes, &yaml.Volume{
+	o.volumes = append(o.volumes, &yaml.Volume{
 		Name: name,
 		EmptyDir: &yaml.VolumeEmptyDir{
 			Medium: "memory",

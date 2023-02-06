@@ -29,8 +29,8 @@ type Output struct { //nolint:govet
 	defaultPipeline *yaml.Pipeline
 	notifyPipeline  *yaml.Pipeline
 
-	standardMounts  []*yaml.VolumeMount
-	standardVolumes []*yaml.Volume
+	standardMounts []*yaml.VolumeMount
+	volumes        []*yaml.Volume
 
 	PipelineType       string
 	NotifySlackChannel string
@@ -48,7 +48,7 @@ func NewOutput() *Output {
 	}
 
 	output.standardMounts = []*yaml.VolumeMount{}
-	output.standardVolumes = []*yaml.Volume{}
+	output.volumes = []*yaml.Volume{}
 
 	output.defaultPipeline = &yaml.Pipeline{
 		Name: "default",
@@ -129,6 +129,7 @@ func (o *Output) Step(step *Step) {
 	}
 
 	step.container.Volumes = append(step.container.Volumes, o.standardMounts...)
+	o.volumes = append(o.volumes, step.volumes...)
 
 	o.defaultPipeline.Steps = append(o.defaultPipeline.Steps, &step.container)
 }
@@ -155,7 +156,7 @@ func (o *Output) GenerateFile(filename string, w io.Writer) error {
 
 func (o *Output) drone(w io.Writer) error {
 	// fix up volumes
-	o.defaultPipeline.Volumes = o.standardVolumes
+	o.defaultPipeline.Volumes = o.volumes
 
 	preamble := output.Preamble("# ")
 

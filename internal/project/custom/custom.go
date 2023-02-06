@@ -64,6 +64,10 @@ type Step struct {
 			CPUCores  int `yaml:"cpuCores"`
 			MemoryGiB int `yaml:"memoryGiB"`
 		} `yaml:"requests"`
+		Volumes []struct {
+			Name      string `yaml:"name"`
+			MountPath string `yaml:"mountPath"`
+		} `yaml:"volumes"`
 	} `yaml:"drone"`
 }
 
@@ -146,6 +150,10 @@ func (step *Step) CompileDrone(output *drone.Output) error {
 
 	for k, v := range step.Drone.Environment {
 		droneStep.Environment(k, v)
+	}
+
+	for _, volume := range step.Drone.Volumes {
+		droneStep.EmptyDirVolume(volume.Name, volume.MountPath)
 	}
 
 	output.Step(droneStep)

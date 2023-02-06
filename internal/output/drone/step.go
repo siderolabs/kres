@@ -14,6 +14,7 @@ import (
 // Step is a pipeline Step.
 type Step struct {
 	container yaml.Container
+	volumes   []*yaml.Volume
 }
 
 // MakeStep creates a step which calls make target.
@@ -170,6 +171,21 @@ func (step *Step) PublishArtifacts(note string, artifacts ...string) *Step {
 			Value: note,
 		},
 	}
+
+	return step
+}
+
+// EmptyDirVolume mounts an empty dir volume to the step.
+func (step *Step) EmptyDirVolume(name, mountPath string) *Step {
+	step.container.Volumes = append(step.container.Volumes, &yaml.VolumeMount{
+		Name:      name,
+		MountPath: mountPath,
+	})
+
+	step.volumes = append(step.volumes, &yaml.Volume{
+		Name:     name,
+		EmptyDir: &yaml.VolumeEmptyDir{},
+	})
 
 	return step
 }
