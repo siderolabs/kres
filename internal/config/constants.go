@@ -11,7 +11,7 @@ const (
 	DeepCopyVersion = "v0.5.5"
 	// DindContainerImageVersion is the version of the dind container image.
 	// renovate: datasource=docker versioning=docker depName=docker
-	DindContainerImageVersion = "20.10-dind"
+	DindContainerImageVersion = "23.0-dind"
 	// GoFmtVersion is the version of gofmt.
 	// renovate: datasource=go depName=github.com/mvdan/gofumpt
 	GoFmtVersion = "v0.4.0"
