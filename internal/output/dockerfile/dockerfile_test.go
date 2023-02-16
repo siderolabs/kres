@@ -6,12 +6,14 @@ package dockerfile_test
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/siderolabs/kres/internal/config"
 	"github.com/siderolabs/kres/internal/output"
 	"github.com/siderolabs/kres/internal/output/dockerfile"
 	"github.com/siderolabs/kres/internal/output/dockerfile/step"
@@ -42,7 +44,7 @@ func (suite *DockerfileSuite) TestGenerateFile() {
 	err := output.GenerateFile("Dockerfile", &buf)
 	suite.Require().NoError(err)
 
-	suite.Assert().Equal(`# syntax = docker/dockerfile-upstream:1.2.0-labs
+	suite.Assert().Equal(fmt.Sprintf(`# syntax = docker/dockerfile-upstream:%s
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
@@ -59,7 +61,7 @@ COPY . .
 FROM setup AS build
 WORKDIR /src
 
-`, buf.String())
+`, config.DockerfileFrontendImageVersion), buf.String())
 }
 
 func TestDockerfileSuite(t *testing.T) {

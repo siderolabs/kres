@@ -10,6 +10,7 @@ import (
 	"io"
 	"sort"
 
+	"github.com/siderolabs/kres/internal/config"
 	"github.com/siderolabs/kres/internal/output"
 	"github.com/siderolabs/kres/internal/output/dockerfile/step"
 	"github.com/siderolabs/kres/internal/toposort"
@@ -18,7 +19,7 @@ import (
 const (
 	dockerfile   = "Dockerfile"
 	dockerignore = ".dockerignore"
-	syntax       = "docker/dockerfile-upstream:1.2.0-labs"
+	syntax       = "docker/dockerfile-upstream:" + config.DockerfileFrontendImageVersion
 )
 
 // Output implements Dockerfile and .dockerignore generation.

@@ -12,12 +12,15 @@ const (
 	// DindContainerImageVersion is the version of the dind container image.
 	// renovate: datasource=docker versioning=docker depName=docker
 	DindContainerImageVersion = "23.0-dind"
+	// DockerfileFrontendImageVersion is the version of the dockerfile frontend image.
+	// renovate: datasource=docker versioning=docker depName=docker/dockerfile-upstream
+	DockerfileFrontendImageVersion = "1.5.2-labs"
 	// GoFmtVersion is the version of gofmt.
 	// renovate: datasource=go depName=github.com/mvdan/gofumpt
 	GoFmtVersion = "v0.4.0"
 	// GoImportsVersion is the version of goimports.
 	// renovate: datasource=go depName=golang.org/x/tools
-	GoImportsVersion = "v0.5.0"
+	GoImportsVersion = "v0.6.0"
 	// GolangCIlintVersion is the version of golangci-lint.
 	// renovate: datasource=go depName=github.com/golangci/golangci-lint
 	GolangCIlintVersion = "v1.51.1"
