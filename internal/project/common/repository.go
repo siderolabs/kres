@@ -206,7 +206,11 @@ func (r *Repository) enableBranchProtection(client *github.Client) error {
 			branchProtection.GetRequiredPullRequestReviews().RequiredApprovingReviewCount == req.RequiredPullRequestReviews.RequiredApprovingReviewCount &&
 			branchProtection.GetRequiredStatusChecks() != nil &&
 			branchProtection.GetRequiredStatusChecks().Strict == req.RequiredStatusChecks.Strict &&
-			equalStringSlices(branchProtection.GetRequiredStatusChecks().Contexts, req.RequiredStatusChecks.Contexts) &&
+			equalStringSlices(
+				slices.Map(branchProtection.GetRequiredStatusChecks().Checks,
+					func(s *github.RequiredStatusCheck) string {
+						return s.Context
+					}), enforceContexts) &&
 			sigProtected.GetEnabled() {
 			return nil
 		}
