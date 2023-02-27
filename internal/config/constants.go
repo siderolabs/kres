@@ -32,7 +32,7 @@ const (
 	GoVersion = "1.20"
 	// GrpcGatewayVersion is the version of grpc-gateway.
 	// renovate: datasource=go depName=github.com/grpc-ecosystem/grpc-gateway
-	GrpcGatewayVersion = "v2.15.0"
+	GrpcGatewayVersion = "v2.15.1"
 	// GrpcGoVersion is the version of grpc.
 	// renovate: datasource=go depName=google.golang.org/grpc/cmd/protoc-gen-go-grpc
 	GrpcGoVersion = "v1.2.0"
@@ -41,7 +41,7 @@ const (
 	MardownLintCLIVersion = "0.33.0"
 	// NodeContainerImageVersion is the default node container image.
 	// renovate: datasource=docker versioning=docker depName=node
-	NodeContainerImageVersion = "19.6.0-alpine3.16"
+	NodeContainerImageVersion = "19.7.0-alpine3.16"
 	// PkgsVersion is the version of pkgs.
 	// renovate: datasource=github-tags depName=siderolabs/pkgs
 	PkgsVersion = "v1.3.0"
@@ -53,7 +53,7 @@ const (
 	ProtobufTSGatewayVersion = "v1.1.2"
 	// ProtobufTSVersion is the version of protoc.
 	// renovate: datasource=npm depName=ts-proto
-	ProtobufTSVersion = "1.139.0"
+	ProtobufTSVersion = "1.140.0"
 	// SentencesPerLineVersion is the version of sentences-per-line.
 	// renovate: datasource=npm depName=sentences-per-line
 	SentencesPerLineVersion = "0.2.1"
