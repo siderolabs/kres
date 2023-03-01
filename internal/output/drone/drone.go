@@ -11,6 +11,7 @@ import (
 
 	"github.com/drone/drone-yaml/yaml"
 	"github.com/drone/drone-yaml/yaml/pretty"
+	"github.com/siderolabs/gen/slices"
 
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/output"
@@ -19,6 +20,12 @@ import (
 const (
 	filename = ".drone.yml"
 )
+
+// StepService provides base Drone compilation to a pipeline.
+type StepService interface {
+	Service(spec *yaml.Container)
+	Step(step *Step)
+}
 
 // Output implements Drone project config generation.
 type Output struct { //nolint:govet
@@ -61,6 +68,12 @@ func NewOutput() *Output {
 			Exclude: []string{
 				"renovate/*",
 				"dependabot/*",
+			},
+		},
+		Event: yaml.Condition{
+			Exclude: []string{
+				"promote",
+				"cron",
 			},
 		},
 	}
@@ -108,10 +121,9 @@ func NewOutput() *Output {
 				},
 			},
 		},
-		DependsOn: []string{"default"},
 	}
 
-	output.manifest.Resources = append(output.manifest.Resources, output.defaultPipeline, output.notifyPipeline)
+	output.manifest.Resources = append(output.manifest.Resources, output.defaultPipeline)
 
 	output.FileAdapter.FileWriter = output
 
@@ -120,6 +132,15 @@ func NewOutput() *Output {
 
 // Step appends a step to the default pipeline.
 func (o *Output) Step(step *Step) {
+	o.appendStep(step, o.defaultPipeline)
+}
+
+func (o *Output) appendStep(originalStep *Step, pipeline *yaml.Pipeline) {
+	// perform a shallow copy of the step to avoid modifying the original
+	step := *originalStep
+
+	step.container.Volumes = append([]*yaml.VolumeMount{}, step.container.Volumes...)
+
 	if step.container.Image == "" {
 		step.container.Image = o.BuildContainer
 	}
@@ -129,9 +150,55 @@ func (o *Output) Step(step *Step) {
 	}
 
 	step.container.Volumes = append(step.container.Volumes, o.standardMounts...)
-	o.volumes = append(o.volumes, step.volumes...)
 
-	o.defaultPipeline.Steps = append(o.defaultPipeline.Steps, &step.container)
+	for _, volume := range step.volumes {
+		if !slices.Contains(o.volumes, func(v *yaml.Volume) bool { return v.Name == volume.Name }) {
+			o.volumes = append(o.volumes, step.volumes...)
+		}
+	}
+
+	pipeline.Steps = append(pipeline.Steps, &step.container)
+}
+
+// Pipeline creates a new pipeline which can be triggered via promotion/cron.
+func (o *Output) Pipeline(name string, targets []string, crons []string) *Pipeline {
+	p := &Pipeline{
+		drone: o,
+	}
+
+	if len(targets) > 0 {
+		targetPipeline := &yaml.Pipeline{
+			Name: name,
+			Type: o.PipelineType,
+			Kind: "pipeline",
+			Trigger: yaml.Conditions{
+				Target: yaml.Condition{
+					Include: targets,
+				},
+			},
+		}
+
+		o.manifest.Resources = append(o.manifest.Resources, targetPipeline)
+		p.pipelines = append(p.pipelines, targetPipeline)
+	}
+
+	if len(crons) > 0 {
+		cronPipeline := &yaml.Pipeline{
+			Name: "cron-" + name,
+			Type: o.PipelineType,
+			Kind: "pipeline",
+			Trigger: yaml.Conditions{
+				Cron: yaml.Condition{
+					Include: crons,
+				},
+			},
+		}
+
+		o.manifest.Resources = append(o.manifest.Resources, cronPipeline)
+		p.pipelines = append(p.pipelines, cronPipeline)
+	}
+
+	return p
 }
 
 // Compile implements [output.TypedWriter] interface.
@@ -156,7 +223,20 @@ func (o *Output) GenerateFile(filename string, w io.Writer) error {
 
 func (o *Output) drone(w io.Writer) error {
 	// fix up volumes
-	o.defaultPipeline.Volumes = o.volumes
+	for _, r := range o.manifest.Resources {
+		if pipeline, ok := r.(*yaml.Pipeline); ok {
+			pipeline.Volumes = o.volumes
+		}
+	}
+
+	// fix up notify pipeline
+	for _, r := range o.manifest.Resources {
+		if pipeline, ok := r.(*yaml.Pipeline); ok {
+			o.notifyPipeline.DependsOn = append(o.notifyPipeline.DependsOn, pipeline.Name)
+		}
+	}
+
+	o.manifest.Resources = append(o.manifest.Resources, o.notifyPipeline)
 
 	preamble := output.Preamble("# ")
 

@@ -7,10 +7,16 @@ package drone
 import "github.com/drone/drone-yaml/yaml"
 
 // Service appends a new service.
-func (o *Output) Service(spec *yaml.Container) *Output {
+func (o *Output) Service(spec *yaml.Container) {
+	o.appendService(spec, o.defaultPipeline)
+}
+
+func (o *Output) appendService(originalService *yaml.Container, pipeline *yaml.Pipeline) {
+	// perform a shallow copy of the step to avoid modifying the original
+	spec := *originalService
+
+	spec.Volumes = append([]*yaml.VolumeMount{}, spec.Volumes...)
 	spec.Volumes = append(spec.Volumes, o.standardMounts...)
 
-	o.defaultPipeline.Services = append(o.defaultPipeline.Services, spec)
-
-	return o
+	pipeline.Services = append(pipeline.Services, &spec)
 }

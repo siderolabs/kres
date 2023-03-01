@@ -1,7 +1,7 @@
 ---
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2023-02-13T09:56:10Z by kres c0f18ba-dirty.
+# Generated on 2023-03-01T19:46:03Z by kres 636983d-dirty.
 
 kind: pipeline
 type: kubernetes
@@ -308,6 +308,10 @@ trigger:
     exclude:
     - renovate/*
     - dependabot/*
+  event:
+    exclude:
+    - promote
+    - cron
 
 ---
 kind: pipeline

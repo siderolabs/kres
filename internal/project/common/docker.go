@@ -50,6 +50,13 @@ func (docker *Docker) CompileDrone(output *drone.Output) error {
 		VolumeTemporary("buildx", "/root/.docker/buildx").
 		VolumeTemporary("ssh", "/root/.ssh")
 
+	docker.BuildBaseDroneSteps(output)
+
+	return nil
+}
+
+// BuildBaseDroneSteps builds the base steps which start the pipeline.
+func (docker *Docker) BuildBaseDroneSteps(output drone.StepService) {
 	resources := (*yaml.Resources)(nil)
 	if docker.DockerResourceRequests != nil {
 		resources = &yaml.Resources{
@@ -89,8 +96,6 @@ func (docker *Docker) CompileDrone(output *drone.Output) error {
 			"docker buildx inspect --bootstrap",
 		).EnvironmentFromSecret("SSH_KEY", "ssh_key"),
 	)
-
-	return nil
 }
 
 // CompileMakefile implements makefile.Compiler.

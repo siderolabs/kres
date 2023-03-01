@@ -29,17 +29,6 @@ func (node *BaseNode) Inputs() []Node {
 	return node.inputs
 }
 
-// InputNames implements Node interface.
-func (node *BaseNode) InputNames() []string {
-	names := make([]string, len(node.inputs))
-
-	for i := range names {
-		names[i] = node.inputs[i].Name()
-	}
-
-	return names
-}
-
 // AddInput implements Node interface.
 func (node *BaseNode) AddInput(input ...Node) {
 	node.inputs = append(node.inputs, input...)

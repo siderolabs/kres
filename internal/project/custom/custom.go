@@ -6,6 +6,8 @@
 package custom
 
 import (
+	"fmt"
+
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/output/dockerfile"
 	dockerstep "github.com/siderolabs/kres/internal/output/dockerfile/step"
@@ -68,6 +70,12 @@ type Step struct {
 			Name      string `yaml:"name"`
 			MountPath string `yaml:"mountPath"`
 		} `yaml:"volumes"`
+		Pipelines []struct {
+			Name                string            `yaml:"name"`
+			Triggers            []string          `yaml:"triggers"`
+			Crons               []string          `yaml:"crons"`
+			EnvironmentOverride map[string]string `yaml:"environmentOverride"`
+		}
 	} `yaml:"drone"`
 }
 
@@ -137,26 +145,80 @@ func (step *Step) CompileDrone(output *drone.Output) error {
 		return true
 	}
 
-	droneStep := drone.MakeStep(step.Name()).
-		DependsOn(dag.GatherMatchingInputNames(step, droneMatches)...)
+	baseDroneStep := func() *drone.Step {
+		droneStep := drone.MakeStep(step.Name())
 
-	if step.Drone.Privileged {
-		droneStep.Privileged()
+		if step.Drone.Privileged {
+			droneStep.Privileged()
+		}
+
+		if step.Drone.Requests != nil {
+			droneStep.ResourceRequests(step.Drone.Requests.CPUCores, step.Drone.Requests.MemoryGiB)
+		}
+
+		for k, v := range step.Drone.Environment {
+			droneStep.Environment(k, v)
+		}
+
+		for _, volume := range step.Drone.Volumes {
+			droneStep.EmptyDirVolume(volume.Name, volume.MountPath)
+		}
+
+		return droneStep
 	}
 
-	if step.Drone.Requests != nil {
-		droneStep.ResourceRequests(step.Drone.Requests.CPUCores, step.Drone.Requests.MemoryGiB)
+	output.Step(baseDroneStep().
+		DependsOn(dag.GatherMatchingInputNames(step, droneMatches)...))
+
+	for _, customPipeline := range step.Drone.Pipelines {
+		pipeline := output.Pipeline(customPipeline.Name, customPipeline.Triggers, customPipeline.Crons)
+
+		type baseDroneStepper interface {
+			BuildBaseDroneSteps(output drone.StepService)
+		}
+
+		baseStepNames := []string{}
+
+		for _, baseInput := range dag.GatherMatchingInputsRecursive(step, dag.Implements[baseDroneStepper]()) {
+			baseInput.(baseDroneStepper).BuildBaseDroneSteps(pipeline) //nolint:forcetypeassert // type is checked in GatherMatchingInputsRecursive
+
+			baseStepNames = append(baseStepNames, baseInput.Name())
+		}
+
+		pipeline.Step(
+			drone.CustomStep("load-artifacts",
+				"s3cmd --host=rook-ceph-rgw-ci-store.rook-ceph.svc --host-bucket=rook-ceph-rgw-ci-store.rook-ceph.svc --no-ssl --stats sync s3://${CI_COMMIT_SHA}${DRONE_TAG//./-} .",
+			).
+				DependsOn(baseStepNames...).
+				EnvironmentFromSecret("AWS_ACCESS_KEY_ID", "rook_access_key_id").
+				EnvironmentFromSecret("AWS_SECRET_ACCESS_KEY", "rook_secret_access_key"),
+		)
+
+		droneStep := baseDroneStep()
+
+		for k, v := range customPipeline.EnvironmentOverride {
+			droneStep.Environment(k, v)
+		}
+
+		pipeline.Step(droneStep.DependsOn("load-artifacts"))
 	}
 
-	for k, v := range step.Drone.Environment {
-		droneStep.Environment(k, v)
+	if len(step.Drone.Pipelines) > 0 {
+		// add a "save artifacts" step to the default pipeline
+		output.Step(
+			drone.CustomStep("save-artifacts",
+				"s3cmd --host=rook-ceph-rgw-ci-store.rook-ceph.svc --host-bucket=rook-ceph-rgw-ci-store.rook-ceph.svc --no-ssl mb s3://${CI_COMMIT_SHA}${DRONE_TAG//./-}",
+				"s3cmd --host=rook-ceph-rgw-ci-store.rook-ceph.svc --host-bucket=rook-ceph-rgw-ci-store.rook-ceph.svc --no-ssl expire s3://${CI_COMMIT_SHA}${DRONE_TAG//./-} --expiry-days=3",
+				fmt.Sprintf(
+					"s3cmd --host=rook-ceph-rgw-ci-store.rook-ceph.svc --host-bucket=rook-ceph-rgw-ci-store.rook-ceph.svc --no-ssl --stats sync %s s3://${CI_COMMIT_SHA}${DRONE_TAG//./-}",
+					step.meta.ArtifactsPath,
+				),
+			).
+				DependsOn(step.Name()).
+				EnvironmentFromSecret("AWS_ACCESS_KEY_ID", "rook_access_key_id").
+				EnvironmentFromSecret("AWS_SECRET_ACCESS_KEY", "rook_secret_access_key"),
+		)
 	}
-
-	for _, volume := range step.Drone.Volumes {
-		droneStep.EmptyDirVolume(volume.Name, volume.MountPath)
-	}
-
-	output.Step(droneStep)
 
 	return nil
 }

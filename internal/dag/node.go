@@ -4,11 +4,12 @@
 
 package dag
 
+import "github.com/siderolabs/gen/slices"
+
 // Node in directed acyclic graph, recording parent nodes as inputs.
 type Node interface {
 	Name() string
 	Inputs() []Node
-	InputNames() []string
 	AddInput(...Node)
 }
 
@@ -32,29 +33,28 @@ func Not(condition NodeCondition) NodeCondition {
 }
 
 // GatherMatchingInputNames scans all the inputs and returns those which match the condition.
-//
-// If direct input doesn't match a condition, search continues up until matching node is found.
 func GatherMatchingInputNames(node Node, condition NodeCondition) []string {
-	result := []string{}
-
-	for _, input := range node.Inputs() {
-		if condition(input) {
-			result = append(result, input.Name())
-		}
-	}
-
-	return result
+	return slices.Map(GatherMatchingInputs(node, condition), func(input Node) string {
+		return input.Name()
+	})
 }
 
 // GatherMatchingInputs scans all the inputs and returns those which match the condition.
-//
-// If direct input doesn't match a condition, search continues up until matching node is found.
 func GatherMatchingInputs(node Node, condition NodeCondition) []Node {
-	result := []Node{}
+	return slices.Filter(node.Inputs(), func(input Node) bool { return condition(input) })
+}
+
+// GatherMatchingInputsRecursive scans all the inputs recursively and returns those which match the condition.
+func GatherMatchingInputsRecursive(node Node, condition NodeCondition) []Node {
+	result := GatherMatchingInputs(node, condition)
 
 	for _, input := range node.Inputs() {
-		if condition(input) {
-			result = append(result, input)
+		downstream := GatherMatchingInputsRecursive(input, condition)
+
+		for _, downstreamInput := range downstream {
+			if !slices.Contains(result, func(n Node) bool { return n == downstreamInput }) {
+				result = append(result, downstreamInput)
+			}
 		}
 	}
 
