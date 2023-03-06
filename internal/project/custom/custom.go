@@ -187,11 +187,25 @@ func (step *Step) CompileDrone(output *drone.Output) error {
 
 		pipeline.Step(
 			drone.CustomStep("load-artifacts",
-				"s3cmd --host=rook-ceph-rgw-ci-store.rook-ceph.svc --host-bucket=rook-ceph-rgw-ci-store.rook-ceph.svc --no-ssl --stats sync s3://${CI_COMMIT_SHA}${DRONE_TAG//./-} .",
+				`az login --service-principal -u "$${AZURE_STORAGE_USER}" -p "$${AZURE_STORAGE_PASS}" --tenant "$${AZURE_TENANT}"`,
+				fmt.Sprintf(
+					`mkdir -p %s`,
+					step.meta.ArtifactsPath,
+				),
+				fmt.Sprintf(
+					`az storage blob download-batch --overwrite true -d %s -s ${CI_COMMIT_SHA}${DRONE_TAG//./-}`,
+					step.meta.ArtifactsPath,
+				),
+				fmt.Sprintf(
+					`find %s -type f -exec chmod +x {} \;`,
+					step.meta.ArtifactsPath,
+				),
 			).
 				DependsOn(baseStepNames...).
-				EnvironmentFromSecret("AWS_ACCESS_KEY_ID", "rook_access_key_id").
-				EnvironmentFromSecret("AWS_SECRET_ACCESS_KEY", "rook_secret_access_key"),
+				EnvironmentFromSecret("AZURE_STORAGE_ACCOUNT", "az_storage_account").
+				EnvironmentFromSecret("AZURE_STORAGE_USER", "az_storage_user").
+				EnvironmentFromSecret("AZURE_STORAGE_PASS", "az_storage_pass").
+				EnvironmentFromSecret("AZURE_TENANT", "az_tenant"),
 		)
 
 		droneStep := baseDroneStep()
@@ -207,16 +221,19 @@ func (step *Step) CompileDrone(output *drone.Output) error {
 		// add a "save artifacts" step to the default pipeline
 		output.Step(
 			drone.CustomStep("save-artifacts",
-				"s3cmd --host=rook-ceph-rgw-ci-store.rook-ceph.svc --host-bucket=rook-ceph-rgw-ci-store.rook-ceph.svc --no-ssl mb s3://${CI_COMMIT_SHA}${DRONE_TAG//./-}",
-				"s3cmd --host=rook-ceph-rgw-ci-store.rook-ceph.svc --host-bucket=rook-ceph-rgw-ci-store.rook-ceph.svc --no-ssl expire s3://${CI_COMMIT_SHA}${DRONE_TAG//./-} --expiry-days=3",
+				`az login --service-principal -u "$${AZURE_STORAGE_USER}" -p "$${AZURE_STORAGE_PASS}" --tenant "$${AZURE_TENANT}"`,
+				`az storage container create -n ${CI_COMMIT_SHA}${DRONE_TAG//./-}`,
+				`az storage container immutability-policy create --account-name $${AZURE_STORAGE_ACCOUNT} --period 3 -c ${CI_COMMIT_SHA}${DRONE_TAG//./-}`,
 				fmt.Sprintf(
-					"s3cmd --host=rook-ceph-rgw-ci-store.rook-ceph.svc --host-bucket=rook-ceph-rgw-ci-store.rook-ceph.svc --no-ssl --stats sync %s s3://${CI_COMMIT_SHA}${DRONE_TAG//./-}",
+					`az storage blob upload-batch -s %s -d ${CI_COMMIT_SHA}${DRONE_TAG//./-}`,
 					step.meta.ArtifactsPath,
 				),
 			).
 				DependsOn(step.Name()).
-				EnvironmentFromSecret("AWS_ACCESS_KEY_ID", "rook_access_key_id").
-				EnvironmentFromSecret("AWS_SECRET_ACCESS_KEY", "rook_secret_access_key"),
+				EnvironmentFromSecret("AZURE_STORAGE_ACCOUNT", "az_storage_account").
+				EnvironmentFromSecret("AZURE_STORAGE_USER", "az_storage_user").
+				EnvironmentFromSecret("AZURE_STORAGE_PASS", "az_storage_pass").
+				EnvironmentFromSecret("AZURE_TENANT", "az_tenant"),
 		)
 	}
 

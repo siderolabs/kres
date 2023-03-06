@@ -32,10 +32,10 @@ const (
 	GoVersion = "1.20"
 	// GrpcGatewayVersion is the version of grpc-gateway.
 	// renovate: datasource=go depName=github.com/grpc-ecosystem/grpc-gateway
-	GrpcGatewayVersion = "v2.15.1"
+	GrpcGatewayVersion = "v2.15.2"
 	// GrpcGoVersion is the version of grpc.
 	// renovate: datasource=go depName=google.golang.org/grpc/cmd/protoc-gen-go-grpc
-	GrpcGoVersion = "v1.2.0"
+	GrpcGoVersion = "v1.3.0"
 	// MardownLintCLIVersion is the version of markdownlint.
 	// renovate: datasource=npm depName=markdownlint-cli
 	MardownLintCLIVersion = "0.33.0"
