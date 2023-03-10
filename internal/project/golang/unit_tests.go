@@ -21,6 +21,8 @@ type UnitTests struct { //nolint:govet
 	dag.BaseNode
 
 	RequiresInsecure bool `yaml:"requiresInsecure"`
+	// ExtraArgs are extra arguments for `go test`.
+	ExtraArgs string `yaml:"extraArgs"`
 
 	meta *meta.Options
 }
@@ -45,14 +47,24 @@ func (tests *UnitTests) CompileDockerfile(output *dockerfile.Output) error {
 		return s
 	}
 
+	extraArgs := tests.ExtraArgs
+	if extraArgs != "" {
+		extraArgs += " "
+	}
+
 	output.Stage("unit-tests-run").
 		Description("runs unit-tests").
 		From("base").
 		Step(step.Arg("TESTPKGS")).
-		Step(wrapAsInsecure(step.Script(`go test -v -covermode=atomic -coverprofile=coverage.txt -coverpkg=${TESTPKGS} -count 1 ${TESTPKGS}`).
-			MountCache(filepath.Join(tests.meta.CachePath, "go-build")).
-			MountCache(filepath.Join(tests.meta.GoPath, "pkg")).
-			MountCache("/tmp")))
+		Step(wrapAsInsecure(
+			step.Script(
+				fmt.Sprintf(
+					`go test -v -covermode=atomic -coverprofile=coverage.txt -coverpkg=${TESTPKGS} -count 1 %s${TESTPKGS}`,
+					extraArgs),
+			).
+				MountCache(filepath.Join(tests.meta.CachePath, "go-build")).
+				MountCache(filepath.Join(tests.meta.GoPath, "pkg")).
+				MountCache("/tmp")))
 
 	output.Stage("unit-tests").
 		From("scratch").
@@ -62,11 +74,17 @@ func (tests *UnitTests) CompileDockerfile(output *dockerfile.Output) error {
 		Description("runs unit-tests with race detector").
 		From("base").
 		Step(step.Arg("TESTPKGS")).
-		Step(wrapAsInsecure(step.Script(`go test -v -race -count 1 ${TESTPKGS}`).
-			MountCache(filepath.Join(tests.meta.CachePath, "go-build")).
-			MountCache(filepath.Join(tests.meta.GoPath, "pkg")).
-			MountCache("/tmp").
-			Env("CGO_ENABLED", "1")))
+		Step(wrapAsInsecure(
+			step.Script(
+				fmt.Sprintf(
+					`go test -v -race -count 1 %s${TESTPKGS}`,
+					extraArgs,
+				),
+			).
+				MountCache(filepath.Join(tests.meta.CachePath, "go-build")).
+				MountCache(filepath.Join(tests.meta.GoPath, "pkg")).
+				MountCache("/tmp").
+				Env("CGO_ENABLED", "1")))
 
 	return nil
 }
