@@ -222,10 +222,9 @@ func (step *Step) CompileDrone(output *drone.Output) error {
 		output.Step(
 			drone.CustomStep("save-artifacts",
 				`az login --service-principal -u "$${AZURE_STORAGE_USER}" -p "$${AZURE_STORAGE_PASS}" --tenant "$${AZURE_TENANT}"`,
-				`az storage container create -n ${CI_COMMIT_SHA}${DRONE_TAG//./-}`,
-				`az storage container immutability-policy create --account-name $${AZURE_STORAGE_ACCOUNT} --period 3 -c ${CI_COMMIT_SHA}${DRONE_TAG//./-}`,
+				`az storage container create --metadata ci=true -n ${CI_COMMIT_SHA}${DRONE_TAG//./-}`,
 				fmt.Sprintf(
-					`az storage blob upload-batch -s %s -d ${CI_COMMIT_SHA}${DRONE_TAG//./-}`,
+					`az storage blob upload-batch --overwrite -s %s -d ${CI_COMMIT_SHA}${DRONE_TAG//./-}`,
 					step.meta.ArtifactsPath,
 				),
 			).
