@@ -4,8 +4,8 @@ go 1.19
 
 require (
 	github.com/drone/drone-yaml v1.2.3
-	github.com/go-git/go-git/v5 v5.6.0
-	github.com/google/go-github/v50 v50.1.0
+	github.com/go-git/go-git/v5 v5.6.1
+	github.com/google/go-github/v50 v50.2.0
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/siderolabs/gen v0.4.3
 	github.com/spf13/cobra v1.6.1
@@ -17,8 +17,8 @@ require (
 
 require (
 	github.com/Microsoft/go-winio v0.5.2 // indirect
-	github.com/ProtonMail/go-crypto v0.0.0-20221026131551-cf6655e29de4 // indirect
-	github.com/acomagu/bufpipe v1.0.3 // indirect
+	github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8 // indirect
+	github.com/acomagu/bufpipe v1.0.4 // indirect
 	github.com/bmatcuk/doublestar v1.3.4 // indirect
 	github.com/buildkite/yaml v2.1.0+incompatible // indirect
 	github.com/cloudflare/circl v1.1.0 // indirect
@@ -26,7 +26,7 @@ require (
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
-	github.com/go-git/go-billy/v5 v5.4.0 // indirect
+	github.com/go-git/go-billy/v5 v5.4.1 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
@@ -39,7 +39,7 @@ require (
 	github.com/skeema/knownhosts v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
-	golang.org/x/crypto v0.3.0 // indirect
+	golang.org/x/crypto v0.7.0 // indirect
 	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect

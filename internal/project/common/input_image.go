@@ -30,7 +30,7 @@ func (inputImage *InputImage) CompileDockerfile(output *dockerfile.Output) error
 }
 
 // NewFHS builds standard input image for FHS.
-func NewFHS(meta *meta.Options) *InputImage {
+func NewFHS(_ *meta.Options) *InputImage {
 	return &InputImage{
 		BaseNode: dag.NewBaseNode(fmt.Sprintf("image-%s", "fhs")),
 
@@ -40,7 +40,7 @@ func NewFHS(meta *meta.Options) *InputImage {
 }
 
 // NewCACerts builds standard input image for ca-certificates.
-func NewCACerts(meta *meta.Options) *InputImage {
+func NewCACerts(_ *meta.Options) *InputImage {
 	return &InputImage{
 		BaseNode: dag.NewBaseNode(fmt.Sprintf("image-%s", "ca-certificates")),
 
