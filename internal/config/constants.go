@@ -49,11 +49,8 @@ const (
 	// renovate: datasource=go depName=google.golang.org/protobuf/cmd/protoc-gen-go
 	ProtobufGoVersion = "v1.28.1"
 	// ProtobufTSGatewayVersion is the version of protobuf-ts.
-	// renovate: datasource=go depName=github.com/grpc-ecosystem/protoc-gen-grpc-gateway-ts
-	ProtobufTSGatewayVersion = "v1.1.2"
-	// ProtobufTSVersion is the version of protoc.
-	// renovate: datasource=npm depName=ts-proto
-	ProtobufTSVersion = "1.140.0"
+	// renovate: datasource=go depName=github.com/siderolabs/protoc-gen-grpc-gateway-ts
+	ProtobufTSGatewayVersion = "v1.1.6"
 	// SentencesPerLineVersion is the version of sentences-per-line.
 	// renovate: datasource=npm depName=sentences-per-line
 	SentencesPerLineVersion = "0.2.1"

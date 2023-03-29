@@ -26,7 +26,6 @@ type Protobuf struct {
 	// Files are the arbitrary files to be copied into the image.
 	Files []File `yaml:"files"`
 
-	ProtobufTSVersion        string `yaml:"protobufTSVersion"`
 	ProtobufTSGatewayVersion string `yaml:"protobufTSGatewayVersion"`
 
 	BaseSpecPath    string `yaml:"baseSpecPath"`
@@ -48,13 +47,11 @@ type ProtoSpec struct {
 	Source          string `yaml:"source"`
 	SubDirectory    string `yaml:"subdirectory"`
 	DestinationRoot string `yaml:"destinationRoot"`
-	GenGateway      bool   `yaml:"genGateway"`
 }
 
 // NewProtobuf builds Protobuf node.
 func NewProtobuf(meta *meta.Options, name string) *Protobuf {
 	meta.BuildArgs = append(meta.BuildArgs,
-		"PROTOBUF_TS_VERSION",
 		"PROTOBUF_GRPC_GATEWAY_TS_VERSION",
 	)
 
@@ -63,7 +60,6 @@ func NewProtobuf(meta *meta.Options, name string) *Protobuf {
 
 		meta: meta,
 
-		ProtobufTSVersion:        config.ProtobufTSVersion,
 		ProtobufTSGatewayVersion: config.ProtobufTSGatewayVersion,
 
 		BaseSpecPath: "/api",
@@ -73,7 +69,6 @@ func NewProtobuf(meta *meta.Options, name string) *Protobuf {
 // CompileMakefile implements makefile.Compiler.
 func (proto *Protobuf) CompileMakefile(output *makefile.Output) error {
 	output.VariableGroup(makefile.VariableGroupCommon).
-		Variable(makefile.OverridableVariable("PROTOBUF_TS_VERSION", strings.TrimLeft(proto.ProtobufTSVersion, "v"))).
 		Variable(makefile.OverridableVariable("PROTOBUF_GRPC_GATEWAY_TS_VERSION", strings.TrimLeft(proto.ProtobufTSGatewayVersion, "v")))
 
 	if len(proto.Specs) == 0 {
@@ -93,10 +88,8 @@ func (proto *Protobuf) ToolchainBuild(stage *dockerfile.Stage) error {
 	}
 
 	stage.
-		Step(step.Arg("PROTOBUF_TS_VERSION")).
-		Step(step.Script("npm install -g ts-proto@^${PROTOBUF_TS_VERSION}")).
 		Step(step.Arg("PROTOBUF_GRPC_GATEWAY_TS_VERSION")).
-		Step(step.Script("go install github.com/grpc-ecosystem/protoc-gen-grpc-gateway-ts@v${PROTOBUF_GRPC_GATEWAY_TS_VERSION}").
+		Step(step.Script("go install github.com/siderolabs/protoc-gen-grpc-gateway-ts@v${PROTOBUF_GRPC_GATEWAY_TS_VERSION}").
 			MountCache(filepath.Join(proto.meta.CachePath, "go-build")).
 			MountCache(filepath.Join(proto.meta.GoPath, "pkg")),
 		).
@@ -159,19 +152,10 @@ func (proto *Protobuf) CompileDockerfile(output *dockerfile.Output) error {
 			fmt.Sprintf("-I%s", dir),
 		}
 
-		if spec.GenGateway {
-			args = append(args, fmt.Sprintf("--grpc-gateway-ts_out=source_relative:%s", dir))
-		}
-
 		args = append(args,
-			"--plugin=/root/.npm-global/.bin/protoc-gen-ts_proto.cmd",
-			fmt.Sprintf("--ts_proto_out=paths=source_relative:%s", dir),
-			"--ts_proto_opt=returnObservable=false",
-			"--ts_proto_opt=outputClientImpl=false",
-			"--ts_proto_opt=snakeToCamel=false",
-			"--ts_proto_opt=esModuleInterop=true",
+			fmt.Sprintf("--grpc-gateway-ts_out=source_relative:%s", dir),
+			"--grpc-gateway-ts_opt=use_proto_names=true",
 		)
-
 		args = append(args, proto.ExperimentalFlags...)
 		args = append(args, source)
 
