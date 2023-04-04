@@ -23,7 +23,7 @@ const (
 	GoImportsVersion = "v0.7.0"
 	// GolangCIlintVersion is the version of golangci-lint.
 	// renovate: datasource=go depName=github.com/golangci/golangci-lint
-	GolangCIlintVersion = "v1.52.0"
+	GolangCIlintVersion = "v1.52.2"
 	// GolangContainerImageVersion is the default golang container image.
 	// renovate: datasource=docker versioning=docker depName=golang
 	GolangContainerImageVersion = "1.20-alpine"
@@ -44,7 +44,7 @@ const (
 	NodeContainerImageVersion = "19.8.1-alpine3.16"
 	// PkgsVersion is the version of pkgs.
 	// renovate: datasource=github-tags depName=siderolabs/pkgs
-	PkgsVersion = "v1.3.0"
+	PkgsVersion = "v1.4.1"
 	// ProtobufGoVersion is the version of protobuf.
 	// renovate: datasource=go depName=google.golang.org/protobuf/cmd/protoc-gen-go
 	ProtobufGoVersion = "v1.28.1"
