@@ -17,10 +17,10 @@ const (
 	DockerfileFrontendImageVersion = "1.5.2-labs"
 	// GoFmtVersion is the version of gofmt.
 	// renovate: datasource=go depName=github.com/mvdan/gofumpt
-	GoFmtVersion = "v0.4.0"
+	GoFmtVersion = "v0.5.0"
 	// GoImportsVersion is the version of goimports.
 	// renovate: datasource=go depName=golang.org/x/tools
-	GoImportsVersion = "v0.7.0"
+	GoImportsVersion = "v0.8.0"
 	// GolangCIlintVersion is the version of golangci-lint.
 	// renovate: datasource=go depName=github.com/golangci/golangci-lint
 	GolangCIlintVersion = "v1.52.2"
