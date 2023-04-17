@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/drone/drone-yaml v1.2.3
 	github.com/go-git/go-git/v5 v5.6.1
-	github.com/google/go-github/v50 v50.2.0
+	github.com/google/go-github/v51 v51.0.0
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/siderolabs/gen v0.4.3
 	github.com/spf13/cobra v1.7.0
