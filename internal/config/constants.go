@@ -38,7 +38,7 @@ const (
 	GrpcGoVersion = "v1.3.0"
 	// MardownLintCLIVersion is the version of markdownlint.
 	// renovate: datasource=npm depName=markdownlint-cli
-	MardownLintCLIVersion = "0.33.0"
+	MardownLintCLIVersion = "0.34.0"
 	// NodeContainerImageVersion is the default node container image.
 	// renovate: datasource=docker versioning=docker depName=node
 	NodeContainerImageVersion = "20.0.0-alpine3.16"
