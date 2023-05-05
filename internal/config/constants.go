@@ -50,7 +50,7 @@ const (
 	ProtobufGoVersion = "v1.28.1"
 	// ProtobufTSGatewayVersion is the version of protobuf-ts.
 	// renovate: datasource=go depName=github.com/siderolabs/protoc-gen-grpc-gateway-ts
-	ProtobufTSGatewayVersion = "v1.1.6"
+	ProtobufTSGatewayVersion = "v1.2.0"
 	// SentencesPerLineVersion is the version of sentences-per-line.
 	// renovate: datasource=npm depName=sentences-per-line
 	SentencesPerLineVersion = "0.2.1"
