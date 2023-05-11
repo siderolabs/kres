@@ -19,7 +19,7 @@ type Contents struct {
 // Compile the project to specified outputs.
 func (project *Contents) Compile(outputs []output.Writer) error {
 	for _, output := range outputs {
-		visited := make(map[dag.Node]struct{})
+		visited := map[dag.Node]struct{}{}
 
 		if err := project.CompileTo(output, visited); err != nil {
 			return err
@@ -38,7 +38,7 @@ func (project *Contents) CompileTo(out output.Writer, visited map[dag.Node]struc
 
 // LoadConfig walks the tree and loads the config into every node.
 func (project *Contents) LoadConfig(config *config.Provider) error {
-	visited := make(map[dag.Node]struct{})
+	visited := map[dag.Node]struct{}{}
 
 	return dag.Walk(project, func(node dag.Node) error {
 		if err := config.Load(node); err != nil {

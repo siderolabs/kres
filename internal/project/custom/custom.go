@@ -177,7 +177,7 @@ func (step *Step) CompileDrone(output *drone.Output) error {
 			BuildBaseDroneSteps(output drone.StepService)
 		}
 
-		baseStepNames := []string{}
+		var baseStepNames []string
 
 		for _, baseInput := range dag.GatherMatchingInputsRecursive(step, dag.Implements[baseDroneStepper]()) {
 			baseInput.(baseDroneStepper).BuildBaseDroneSteps(pipeline) //nolint:forcetypeassert // type is checked in GatherMatchingInputsRecursive

@@ -135,9 +135,10 @@ func (build *Build) CompileDrone(output *drone.Output) error {
 
 // CompileMakefile implements makefile.Compiler.
 func (build *Build) CompileMakefile(output *makefile.Output) error {
-	deps := []string{}
+	artifacts := build.getArtifacts()
+	deps := make([]string, 0, len(artifacts))
 
-	for _, artifact := range build.getArtifacts() {
+	for _, artifact := range artifacts {
 		output.Target(fmt.Sprintf("$(ARTIFACTS)/%s", artifact.name)).
 			Script(fmt.Sprintf("@$(MAKE) local-%s DEST=$(ARTIFACTS)", artifact.name)).
 			Phony()

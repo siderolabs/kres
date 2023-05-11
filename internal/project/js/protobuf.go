@@ -137,7 +137,7 @@ func (proto *Protobuf) CompileDockerfile(output *dockerfile.Output) error {
 		From("js").
 		Step(step.Copy("/", "/").From(specsContainer))
 
-	cleanupSteps := []*step.RunStep{}
+	var cleanupSteps []*step.RunStep
 
 	for _, spec := range proto.Specs {
 		destRoot := proto.DestinationRoot

@@ -30,7 +30,7 @@ func (builder *builder) BuildCustom() error {
 		return err
 	}
 
-	createdSteps := []dag.Node{}
+	createdSteps := make([]dag.Node, 0, len(customSteps.Steps))
 
 	for _, spec := range customSteps.Steps {
 		step := custom.NewStep(builder.meta, spec.Name)

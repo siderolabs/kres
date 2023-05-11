@@ -72,7 +72,7 @@ func NewProvider(path string) (*Provider, error) {
 // Load config into passed object.
 //
 // All the matching configs are loaded in the order specified.
-func (provider *Provider) Load(obj interface{}) error {
+func (provider *Provider) Load(obj any) error {
 	type named interface {
 		Name() string
 	}

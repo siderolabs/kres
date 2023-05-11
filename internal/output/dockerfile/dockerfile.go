@@ -68,7 +68,7 @@ func (o *Output) Stage(name string) *Stage {
 	stage := &Stage{name: name}
 
 	if o.stages == nil {
-		o.stages = make(map[string]*Stage)
+		o.stages = map[string]*Stage{}
 	}
 
 	o.stages[name] = stage

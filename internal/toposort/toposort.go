@@ -43,7 +43,7 @@ func (index *edgeIndex) add(edge edge) {
 
 	for pos := range index.index {
 		if _, exists := index.index[pos][edge[pos]]; !exists {
-			index.index[pos][edge[pos]] = make(map[nodeNumber]edgeNumber)
+			index.index[pos][edge[pos]] = map[nodeNumber]edgeNumber{}
 		}
 
 		index.index[pos][edge[pos]][edge[1-pos]] = number

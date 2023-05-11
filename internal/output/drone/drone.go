@@ -139,7 +139,7 @@ func (o *Output) appendStep(originalStep *Step, pipeline *yaml.Pipeline) {
 	// perform a shallow copy of the step to avoid modifying the original
 	step := *originalStep
 
-	step.container.Volumes = append([]*yaml.VolumeMount{}, step.container.Volumes...)
+	step.container.Volumes = slices.Clone(step.container.Volumes)
 
 	if step.container.Image == "" {
 		step.container.Image = o.BuildContainer

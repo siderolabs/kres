@@ -16,7 +16,7 @@ type WalkFunc func(node Node) error
 // Walk the graph calling function for every node just once.
 func Walk(graph Graph, walkFn WalkFunc, visited map[Node]struct{}, depth int) error {
 	if visited == nil {
-		visited = make(map[Node]struct{})
+		visited = map[Node]struct{}{}
 	}
 
 	targets := graph.Targets()
@@ -27,7 +27,7 @@ func Walk(graph Graph, walkFn WalkFunc, visited map[Node]struct{}, depth int) er
 // WalkNode walks the graph starting from the node just once.
 func WalkNode(node Node, walkFn WalkFunc, visited map[Node]struct{}, depth int) error {
 	if visited == nil {
-		visited = make(map[Node]struct{})
+		visited = map[Node]struct{}{}
 	}
 
 	targets := node.Inputs()
@@ -65,7 +65,7 @@ func walk(targets []Node, walkFn WalkFunc, visited map[Node]struct{}, depth int)
 //
 //nolint:nonamedreturns
 func FindByName(name string, targets ...Node) (result Node) {
-	visited := make(map[Node]struct{})
+	visited := map[Node]struct{}{}
 
 	walk(targets, func(node Node) error { //nolint:errcheck
 		if node.Name() == name {

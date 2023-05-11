@@ -46,10 +46,10 @@ type Repository struct { //nolint:govet,maligned
 //
 //nolint:govet
 type LicenseConfig struct {
-	Enabled bool                   `yaml:"enabled"`
-	ID      string                 `yaml:"id"`
-	Params  map[string]interface{} `yaml:"params"`
-	Header  string                 `yaml:"header"`
+	Enabled bool           `yaml:"enabled"`
+	ID      string         `yaml:"id"`
+	Params  map[string]any `yaml:"params"`
+	Header  string         `yaml:"header"`
 }
 
 // NewRepository initializes Repository.
@@ -245,7 +245,7 @@ func (r *Repository) enableConform(client *github.Client) error {
 
 	_, _, err = client.Repositories.CreateHook(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, &github.Hook{
 		Active: github.Bool(true),
-		Config: map[string]interface{}{
+		Config: map[string]any{
 			"url":          r.ConformWebhookURL,
 			"content_type": "json",
 			"insecure_ssl": "0",

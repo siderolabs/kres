@@ -35,7 +35,7 @@ var licenseTemplates = map[string]string{
 type Output struct {
 	output.FileAdapter
 
-	templateParams  interface{}
+	templateParams  any
 	licenseTemplate string
 	licenseHeader   string
 }
@@ -60,7 +60,7 @@ func (o *Output) SetLicenseHeader(header string) {
 }
 
 // Enable should be called to enable config generation.
-func (o *Output) Enable(licenseID string, params interface{}) error {
+func (o *Output) Enable(licenseID string, params any) error {
 	var ok bool
 
 	o.licenseTemplate, ok = licenseTemplates[licenseID]

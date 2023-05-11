@@ -40,7 +40,7 @@ func NewOutput() *Output {
 // VariableGroup creates new group of variables.
 func (o *Output) VariableGroup(description string) *VariableGroup {
 	if o.variableGroups == nil {
-		o.variableGroups = make(map[string]*VariableGroup)
+		o.variableGroups = map[string]*VariableGroup{}
 	}
 
 	if _, ok := o.variableGroups[description]; !ok {

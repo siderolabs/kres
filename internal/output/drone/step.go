@@ -25,7 +25,7 @@ func MakeStep(target string, args ...string) *Step {
 			Commands: []string{
 				strings.TrimSpace(fmt.Sprintf("make %s %s", target, strings.Join(args, " "))),
 			},
-			Environment: make(map[string]*yaml.Variable),
+			Environment: map[string]*yaml.Variable{},
 		},
 	}
 }
@@ -36,7 +36,7 @@ func CustomStep(target string, commands ...string) *Step {
 		container: yaml.Container{
 			Name:        target,
 			Commands:    commands,
-			Environment: make(map[string]*yaml.Variable),
+			Environment: map[string]*yaml.Variable{},
 		},
 	}
 }

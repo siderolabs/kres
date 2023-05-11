@@ -8,7 +8,7 @@ package output
 // Writer is an interface which should be implemented by outputs.
 type Writer interface {
 	Generate() error
-	Compile(interface{}) error
+	Compile(any) error
 }
 
 // TypedWriter is an interface which should be implemented by outputs. It is a typed version of Writer.
@@ -23,7 +23,7 @@ type adapter[T any] struct {
 
 func (w *adapter[T]) Generate() error { return w.inner.Generate() }
 
-func (w *adapter[T]) Compile(i interface{}) error {
+func (w *adapter[T]) Compile(i any) error {
 	val, ok := i.(T)
 	if !ok {
 		return nil

@@ -4,7 +4,10 @@
 
 package drone
 
-import "github.com/drone/drone-yaml/yaml"
+import (
+	"github.com/drone/drone-yaml/yaml"
+	"github.com/siderolabs/gen/slices"
+)
 
 // Service appends a new service.
 func (o *Output) Service(spec *yaml.Container) {
@@ -15,7 +18,7 @@ func (o *Output) appendService(originalService *yaml.Container, pipeline *yaml.P
 	// perform a shallow copy of the step to avoid modifying the original
 	spec := *originalService
 
-	spec.Volumes = append([]*yaml.VolumeMount{}, spec.Volumes...)
+	spec.Volumes = slices.Clone(spec.Volumes)
 	spec.Volumes = append(spec.Volumes, o.standardMounts...)
 
 	pipeline.Services = append(pipeline.Services, &spec)

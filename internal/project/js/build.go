@@ -38,7 +38,6 @@ func NewBuild(meta *meta.Options, name string) *Build {
 	return &Build{
 		BaseNode:  dag.NewBaseNode(name),
 		meta:      meta,
-		artifacts: []string{},
 		embedFile: embedFile,
 	}
 }
