@@ -41,7 +41,7 @@ const (
 	MardownLintCLIVersion = "0.34.0"
 	// NodeContainerImageVersion is the default node container image.
 	// renovate: datasource=docker versioning=docker depName=node
-	NodeContainerImageVersion = "20.1.0-alpine3.17"
+	NodeContainerImageVersion = "20.2.0-alpine3.17"
 	// PkgsVersion is the version of pkgs.
 	// renovate: datasource=github-tags depName=siderolabs/pkgs
 	PkgsVersion = "v1.4.1"
