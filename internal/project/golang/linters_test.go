@@ -9,12 +9,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/siderolabs/kres/internal/output/dockerfile"
-	"github.com/siderolabs/kres/internal/output/makefile"
+	"github.com/siderolabs/kres/internal/project/common"
 	"github.com/siderolabs/kres/internal/project/golang"
 )
 
-func TestGoVulnCheckInterfaces(t *testing.T) {
-	assert.Implements(t, (*dockerfile.Compiler)(nil), new(golang.GoVulnCheck))
-	assert.Implements(t, (*makefile.Compiler)(nil), new(golang.GoVulnCheck))
+func TestLintersInterfaces(t *testing.T) {
+	assert.Implements(t, (*common.ToolchainBuilder)(nil), new(golang.Linters))
 }

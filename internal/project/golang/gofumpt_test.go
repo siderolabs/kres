@@ -11,12 +11,10 @@ import (
 
 	"github.com/siderolabs/kres/internal/output/dockerfile"
 	"github.com/siderolabs/kres/internal/output/makefile"
-	"github.com/siderolabs/kres/internal/project/common"
 	"github.com/siderolabs/kres/internal/project/golang"
 )
 
 func TestGofumptInterfaces(t *testing.T) {
 	assert.Implements(t, (*dockerfile.Compiler)(nil), new(golang.Gofumpt))
 	assert.Implements(t, (*makefile.Compiler)(nil), new(golang.Gofumpt))
-	assert.Implements(t, (*common.ToolchainBuilder)(nil), new(golang.Gofumpt))
 }

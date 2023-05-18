@@ -7,6 +7,8 @@ package makefile
 import (
 	"fmt"
 	"io"
+
+	"github.com/siderolabs/gen/slices"
 )
 
 // Descriptions (used as keys) of some predefined variable groups.
@@ -25,6 +27,12 @@ type VariableGroup struct {
 
 // Variable appends variable to the group.
 func (group *VariableGroup) Variable(variable *Variable) *VariableGroup {
+	if slices.Contains(group.variables, func(item *Variable) bool {
+		return item.name == variable.name
+	}) {
+		return group
+	}
+
 	group.variables = append(group.variables, variable)
 
 	return group

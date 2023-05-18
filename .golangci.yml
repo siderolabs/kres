@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2023-02-02T11:37:12Z by kres 5686454-dirty.
+# Generated on 2023-05-18T16:29:23Z by kres 5240ae1-dirty.
 
 # options for analysis running
 run:
@@ -36,7 +36,7 @@ linters-settings:
     lines: 60
     statements: 40
   gci:
-    local-prefixes: github.com/siderolabs/kres
+    local-prefixes: github.com/siderolabs/kres/
   gocognit:
     min-complexity: 30
   ireturn:
@@ -65,7 +65,7 @@ linters-settings:
   gofmt:
     simplify: true
   goimports:
-    local-prefixes: github.com/siderolabs/kres
+    local-prefixes: github.com/siderolabs/kres/
   golint:
     min-confidence: 0.8
   gomnd:

@@ -20,9 +20,9 @@ type CodeCov struct {
 
 	meta *meta.Options
 
-	InputPath       string `yaml:"inputPath"`
-	TargetThreshold int    `yaml:"targetThreshold"`
-	Enabled         bool   `yaml:"enabled"`
+	InputPaths      []string `yaml:"inputPaths"`
+	TargetThreshold int      `yaml:"targetThreshold"`
+	Enabled         bool     `yaml:"enabled"`
 }
 
 // NewCodeCov initializes CodeCov.
@@ -57,9 +57,12 @@ func (coverage *CodeCov) CompileMakefile(output *makefile.Output) error {
 		return nil
 	}
 
-	output.Target("coverage").Description("Upload coverage data to codecov.io.").
-		Script(fmt.Sprintf(`bash -c "bash <(curl -s https://codecov.io/bash) -f $(ARTIFACTS)/%s -X fix"`, coverage.InputPath)).
-		Phony()
+	target := output.Target("coverage").Description("Upload coverage data to codecov.io.")
+
+	for _, inputPath := range coverage.InputPaths {
+		target.Script(fmt.Sprintf(`bash -c "bash <(curl -s https://codecov.io/bash) -f $(ARTIFACTS)/%s -X fix"`, inputPath)).
+			Phony()
+	}
 
 	return nil
 }

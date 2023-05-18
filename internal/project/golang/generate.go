@@ -265,7 +265,7 @@ func (generate *Generate) CompileDockerfile(output *dockerfile.Output) error {
 				"goimports",
 				"-w",
 				"-local",
-				generate.meta.CanonicalPath,
+				strings.Join(generate.meta.CanonicalPaths, ","),
 				generate.BaseSpecPath,
 			),
 		)
@@ -300,7 +300,7 @@ func (generate *Generate) CompileDockerfile(output *dockerfile.Output) error {
 				"goimports",
 				"-w",
 				"-local",
-				generate.meta.CanonicalPath,
+				strings.Join(generate.meta.CanonicalPaths, ","),
 				spec.Source,
 			))
 	}

@@ -21,63 +21,60 @@ type Gofumpt struct {
 
 	meta *meta.Options
 
-	GoVersion string `yaml:"goVersion"`
-	Version   string `yaml:"version"`
+	GoVersion   string `yaml:"goVersion"`
+	Version     string `yaml:"version"`
+	projectPath string
 }
 
 // NewGofumpt builds Gofumpt node.
-func NewGofumpt(meta *meta.Options) *Gofumpt {
-	meta.BuildArgs = append(meta.BuildArgs, "GOFUMPT_VERSION")
+func NewGofumpt(meta *meta.Options, projectPath string) *Gofumpt {
+	meta.BuildArgs.Add("GOFUMPT_VERSION")
 
 	return &Gofumpt{
-		BaseNode: dag.NewBaseNode("lint-gofumpt"),
+		BaseNode: dag.NewBaseNode(genName("lint-gofumpt", projectPath)),
 
 		meta: meta,
 
-		GoVersion: config.GoVersion,
-		Version:   config.GoFmtVersion,
+		GoVersion:   config.GoVersion,
+		Version:     config.GoFmtVersion,
+		projectPath: projectPath,
 	}
 }
 
 // CompileMakefile implements makefile.Compiler.
 func (lint *Gofumpt) CompileMakefile(output *makefile.Output) error {
-	output.Target("lint-gofumpt").Description("Runs gofumpt linter.").
+	output.Target(lint.Name()).Description("Runs gofumpt linter.").
 		Script("@$(MAKE) target-$@")
 
 	output.VariableGroup(makefile.VariableGroupCommon).
 		Variable(makefile.OverridableVariable("GOFUMPT_VERSION", lint.Version)).
 		Variable(makefile.OverridableVariable("GO_VERSION", lint.GoVersion))
 
-	output.Target("fmt").Description("Formats the source code").
-		Phony().
-		Script(
-			`@docker run --rm -it -v $(PWD):/src -w /src golang:$(GO_VERSION) \
+	if !output.HasTarget("fmt") {
+		output.Target("fmt").Description("Formats the source code").
+			Phony().
+			Script(
+				`@docker run --rm -it -v $(PWD):/src -w /src golang:$(GO_VERSION) \
 	bash -c "export GO111MODULE=on; export GOPROXY=https://proxy.golang.org; \
 	go install mvdan.cc/gofumpt@$(GOFUMPT_VERSION) && \
 	gofumpt -w ."`,
-		)
-
-	return nil
-}
-
-// ToolchainBuild implements common.ToolchainBuilder hook.
-func (lint *Gofumpt) ToolchainBuild(stage *dockerfile.Stage) error {
-	stage.
-		Step(step.Arg("GOFUMPT_VERSION")).
-		Step(step.Script(fmt.Sprintf(
-			`go install mvdan.cc/gofumpt@${GOFUMPT_VERSION} \
-	&& mv /go/bin/gofumpt %s/gofumpt`, lint.meta.BinPath)))
+			)
+	}
 
 	return nil
 }
 
 // CompileDockerfile implements dockerfile.Compiler.
 func (lint *Gofumpt) CompileDockerfile(output *dockerfile.Output) error {
-	output.Stage("lint-gofumpt").
+	output.Stage(lint.Name()).
 		Description("runs gofumpt").
 		From("base").
 		Step(step.Script(
-			`FILES="$(gofumpt -l .)" && test -z "${FILES}" || (echo -e "Source code is not formatted with 'gofumpt -w .':\n${FILES}"; exit 1)`,
+			fmt.Sprintf(
+				`FILES="$(gofumpt -l %s)" && test -z "${FILES}" || (echo -e "Source code is not formatted with 'gofumpt -w %s':\n${FILES}"; exit 1)`,
+				lint.projectPath,
+				lint.projectPath,
+			),
 		))
 
 	return nil

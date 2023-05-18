@@ -9,6 +9,9 @@ import (
 	_ "embed"
 	"fmt"
 	"io"
+	"path/filepath"
+
+	"github.com/siderolabs/gen/slices"
 
 	"github.com/siderolabs/kres/internal/output"
 )
@@ -24,15 +27,18 @@ var configTemplate string
 type Output struct {
 	output.FileAdapter
 
+	files   []file
+	enabled bool
+}
+
+type file struct {
+	path          string
 	canonicalPath string
-	enabled       bool
 }
 
 // NewOutput creates new Makefile output.
 func NewOutput() *Output {
-	output := &Output{
-		canonicalPath: "github.com/example.com/example.proj",
-	}
+	output := &Output{}
 
 	output.FileAdapter.FileWriter = output
 
@@ -49,9 +55,12 @@ func (o *Output) Enable() {
 	o.enabled = true
 }
 
-// CanonicalPath sets canonical import path.
-func (o *Output) CanonicalPath(path string) {
-	o.canonicalPath = path
+// NewFile sets canonical import path and project path.
+func (o *Output) NewFile(canonicalPath, path string) {
+	o.files = append(o.files, file{
+		path:          filepath.Join(path, filename),
+		canonicalPath: canonicalPath,
+	})
 }
 
 // Filenames implements output.FileWriter interface.
@@ -60,25 +69,28 @@ func (o *Output) Filenames() []string {
 		return nil
 	}
 
-	return []string{filename}
+	return slices.Map(o.files, func(f file) string { return f.path })
 }
 
 // GenerateFile implements output.FileWriter interface.
 func (o *Output) GenerateFile(filename string, w io.Writer) error {
-	switch filename {
-	case filename:
-		return o.config(w)
-	default:
-		panic("unexpected filename: " + filename)
+	index := slices.IndexFunc(o.files, func(f file) bool {
+		return f.path == filename
+	})
+
+	if index >= 0 {
+		return o.config(o.files[index], w)
 	}
+
+	panic("unexpected filename: " + filename)
 }
 
-func (o *Output) config(w io.Writer) error {
+func (o *Output) config(f file, w io.Writer) error {
 	if _, err := w.Write([]byte(output.Preamble("# "))); err != nil {
 		return err
 	}
 
-	if _, err := fmt.Fprintf(w, configTemplate, o.canonicalPath); err != nil {
+	if _, err := fmt.Fprintf(w, configTemplate, f.canonicalPath); err != nil {
 		return err
 	}
 

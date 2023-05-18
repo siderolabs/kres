@@ -6,7 +6,6 @@ package golang
 
 import (
 	"fmt"
-	"path/filepath"
 
 	"github.com/siderolabs/kres/internal/config"
 	"github.com/siderolabs/kres/internal/dag"
@@ -22,25 +21,27 @@ type Goimports struct {
 
 	meta *meta.Options
 
-	Version string `yaml:"version"`
+	Version       string `yaml:"version"`
+	canonicalPath string
+	projectPath   string
 }
 
 // NewGoimports builds Goimports node.
-func NewGoimports(meta *meta.Options) *Goimports {
-	meta.BuildArgs = append(meta.BuildArgs, "GOIMPORTS_VERSION")
-
+func NewGoimports(meta *meta.Options, projectPath, canonicalPath string) *Goimports {
 	return &Goimports{
-		BaseNode: dag.NewBaseNode("lint-goimports"),
+		BaseNode: dag.NewBaseNode(genName("lint-goimports", projectPath)),
 
 		meta: meta,
 
-		Version: config.GoImportsVersion,
+		Version:       config.GoImportsVersion,
+		canonicalPath: canonicalPath,
+		projectPath:   projectPath,
 	}
 }
 
 // CompileMakefile implements makefile.Compiler.
 func (lint *Goimports) CompileMakefile(output *makefile.Output) error {
-	output.Target("lint-goimports").Description("Runs goimports linter.").
+	output.Target(lint.Name()).Description("Runs goimports linter.").
 		Script("@$(MAKE) target-$@")
 
 	output.VariableGroup(makefile.VariableGroupCommon).
@@ -49,30 +50,18 @@ func (lint *Goimports) CompileMakefile(output *makefile.Output) error {
 	return nil
 }
 
-// ToolchainBuild implements common.ToolchainBuilder hook.
-func (lint *Goimports) ToolchainBuild(stage *dockerfile.Stage) error {
-	stage.
-		Step(step.Arg("GOIMPORTS_VERSION")).
-		Step(step.Script(fmt.Sprintf(
-			`go install golang.org/x/tools/cmd/goimports@${GOIMPORTS_VERSION} \
-	&& mv /go/bin/goimports %s/goimports`, lint.meta.BinPath)).
-			MountCache(filepath.Join(lint.meta.CachePath, "go-build")).
-			MountCache(filepath.Join(lint.meta.GoPath, "pkg")),
-		)
-
-	return nil
-}
-
 // CompileDockerfile implements dockerfile.Compiler.
 func (lint *Goimports) CompileDockerfile(output *dockerfile.Output) error {
-	output.Stage("lint-goimports").
+	output.Stage(lint.Name()).
 		Description("runs goimports").
 		From("base").
 		Step(step.Script(
 			fmt.Sprintf(
-				`FILES="$(goimports -l -local %s .)" && test -z "${FILES}" || (echo -e "Source code is not formatted with 'goimports -w -local %s .':\n${FILES}"; exit 1)`,
-				lint.meta.CanonicalPath,
-				lint.meta.CanonicalPath,
+				`FILES="$(goimports -l -local %s %s)" && test -z "${FILES}" || (echo -e "Source code is not formatted with 'goimports -w -local %s %s':\n${FILES}"; exit 1)`,
+				lint.canonicalPath,
+				lint.projectPath,
+				lint.canonicalPath,
+				lint.projectPath,
 			),
 		))
 

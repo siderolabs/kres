@@ -22,18 +22,20 @@ type UnitTests struct { //nolint:govet
 
 	RequiresInsecure bool `yaml:"requiresInsecure"`
 	// ExtraArgs are extra arguments for `go test`.
-	ExtraArgs string `yaml:"extraArgs"`
+	ExtraArgs   string `yaml:"extraArgs"`
+	packagePath string
 
 	meta *meta.Options
 }
 
 // NewUnitTests initializes UnitTests.
-func NewUnitTests(meta *meta.Options) *UnitTests {
-	meta.BuildArgs = append(meta.BuildArgs, "TESTPKGS")
+func NewUnitTests(meta *meta.Options, packagePath string) *UnitTests {
+	meta.BuildArgs.Add("TESTPKGS")
 
 	return &UnitTests{
-		BaseNode: dag.NewBaseNode("unit-tests"),
-		meta:     meta,
+		BaseNode:    dag.NewBaseNode(genName("unit-tests", packagePath)),
+		meta:        meta,
+		packagePath: packagePath,
 	}
 }
 
@@ -52,9 +54,13 @@ func (tests *UnitTests) CompileDockerfile(output *dockerfile.Output) error {
 		extraArgs += " "
 	}
 
-	output.Stage("unit-tests-run").
+	workdir := step.WorkDir(filepath.Join("/src", tests.packagePath))
+	testRun := fmt.Sprintf("%s-run", tests.Name())
+
+	output.Stage(testRun).
 		Description("runs unit-tests").
 		From("base").
+		Step(workdir).
 		Step(step.Arg("TESTPKGS")).
 		Step(wrapAsInsecure(
 			step.Script(
@@ -66,13 +72,14 @@ func (tests *UnitTests) CompileDockerfile(output *dockerfile.Output) error {
 				MountCache(filepath.Join(tests.meta.GoPath, "pkg")).
 				MountCache("/tmp")))
 
-	output.Stage("unit-tests").
+	output.Stage(tests.Name()).
 		From("scratch").
-		Step(step.Copy("/src/coverage.txt", "/coverage.txt").From("unit-tests-run"))
+		Step(step.Copy(filepath.Join("/src", tests.packagePath, "coverage.txt"), fmt.Sprintf("/coverage-%s.txt", tests.Name())).From(testRun))
 
-	output.Stage("unit-tests-race").
+	output.Stage(fmt.Sprintf("%s-race", tests.Name())).
 		Description("runs unit-tests with race detector").
 		From("base").
+		Step(workdir).
 		Step(step.Arg("TESTPKGS")).
 		Step(wrapAsInsecure(
 			step.Script(
@@ -100,12 +107,12 @@ func (tests *UnitTests) CompileMakefile(output *makefile.Output) error {
 		scriptExtraArgs += `  TARGET_ARGS="--allow security.insecure"`
 	}
 
-	output.Target("unit-tests").
+	output.Target(tests.Name()).
 		Description("Performs unit tests").
 		Script(fmt.Sprintf("@$(MAKE) local-$@ DEST=$(ARTIFACTS)%s", scriptExtraArgs)).
 		Phony()
 
-	output.Target("unit-tests-race").
+	output.Target(fmt.Sprintf("%s-race", tests.Name())).
 		Description("Performs unit tests with race detection enabled.").
 		Script(fmt.Sprintf("@$(MAKE) target-$@%s", scriptExtraArgs)).
 		Phony()
@@ -115,11 +122,11 @@ func (tests *UnitTests) CompileMakefile(output *makefile.Output) error {
 
 // CompileDrone implements drone.Compiler.
 func (tests *UnitTests) CompileDrone(output *drone.Output) error {
-	output.Step(drone.MakeStep("unit-tests").
+	output.Step(drone.MakeStep(tests.Name()).
 		DependsOn(dag.GatherMatchingInputNames(tests, dag.Implements[drone.Compiler]())...),
 	)
 
-	output.Step(drone.MakeStep("unit-tests-race").
+	output.Step(drone.MakeStep(fmt.Sprintf("%s-race", tests.Name())).
 		DependsOn(dag.GatherMatchingInputNames(tests, dag.Implements[drone.Compiler]())...),
 	)
 

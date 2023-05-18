@@ -9,6 +9,8 @@ import (
 	"io"
 	"sort"
 
+	"github.com/siderolabs/gen/slices"
+
 	"github.com/siderolabs/kres/internal/output"
 )
 
@@ -61,6 +63,13 @@ func (o *Output) Target(name string) *Target {
 	o.targets = append(o.targets, target)
 
 	return target
+}
+
+// HasTarget checks that target exists.
+func (o *Output) HasTarget(name string) bool {
+	return slices.Contains(o.targets, func(t *Target) bool {
+		return t.name == name
+	})
 }
 
 // IfTrueCondition creates new Makefile condition.

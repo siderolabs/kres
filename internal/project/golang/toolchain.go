@@ -208,11 +208,21 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 	base := output.Stage("base").
 		Description("tools and sources").
 		From("tools").
-		Step(step.WorkDir("/src")).
-		Step(step.Copy("./go.mod", ".")).
-		Step(step.Copy("./go.sum", ".")).
-		Step(step.Run("go", "mod", "download").MountCache(filepath.Join(toolchain.meta.GoPath, "pkg"))).
-		Step(step.Run("go", "mod", "verify").MountCache(filepath.Join(toolchain.meta.GoPath, "pkg")))
+		Step(step.WorkDir("/src"))
+
+	for _, rootDir := range toolchain.meta.GoRootDirectories {
+		gomodPath := filepath.Join(rootDir, "go.mod")
+		gosumPath := filepath.Join(rootDir, "go.sum")
+
+		base.Step(step.Copy(gomodPath, gomodPath)).
+			Step(step.Copy(gosumPath, gosumPath))
+	}
+
+	for _, rootDir := range toolchain.meta.GoRootDirectories {
+		base.Step(step.Run("cd", rootDir)).
+			Step(step.Run("go", "mod", "download").MountCache(filepath.Join(toolchain.meta.GoPath, "pkg"))).
+			Step(step.Run("go", "mod", "verify").MountCache(filepath.Join(toolchain.meta.GoPath, "pkg")))
+	}
 
 	for _, directory := range toolchain.meta.GoDirectories {
 		base.Step(step.Copy("./"+directory, "./"+directory))

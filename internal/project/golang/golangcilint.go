@@ -5,7 +5,6 @@
 package golang
 
 import (
-	"fmt"
 	"path/filepath"
 
 	"github.com/siderolabs/kres/internal/config"
@@ -23,34 +22,37 @@ type GolangciLint struct {
 
 	meta *meta.Options
 
-	Version string
+	Version       string
+	canonicalPath string
+	projectPath   string
 }
 
 // NewGolangciLint builds golangci-lint node.
-func NewGolangciLint(meta *meta.Options) *GolangciLint {
-	meta.SourceFiles = append(meta.SourceFiles, ".golangci.yml")
-	meta.BuildArgs = append(meta.BuildArgs, "GOLANGCILINT_VERSION")
+func NewGolangciLint(meta *meta.Options, projectPath, canonicalPath string) *GolangciLint {
+	meta.SourceFiles = append(meta.SourceFiles, filepath.Join(projectPath, ".golangci.yml"))
 
 	return &GolangciLint{
-		BaseNode: dag.NewBaseNode("lint-golangci-lint"),
+		BaseNode: dag.NewBaseNode(genName("lint-golangci-lint", projectPath)),
 
 		meta: meta,
 
-		Version: config.GolangCIlintVersion,
+		Version:       config.GolangCIlintVersion,
+		canonicalPath: canonicalPath,
+		projectPath:   projectPath,
 	}
 }
 
 // CompileGolangci implements golangci.Compiler.
 func (lint *GolangciLint) CompileGolangci(output *golangci.Output) error {
 	output.Enable()
-	output.CanonicalPath(lint.meta.CanonicalPath)
+	output.NewFile(lint.canonicalPath, lint.projectPath)
 
 	return nil
 }
 
 // CompileMakefile implements makefile.Compiler.
 func (lint *GolangciLint) CompileMakefile(output *makefile.Output) error {
-	output.Target("lint-golangci-lint").Description("Runs golangci-lint linter.").
+	output.Target(lint.Name()).Description("Runs golangci-lint linter.").
 		Script("@$(MAKE) target-$@")
 
 	output.VariableGroup(makefile.VariableGroupCommon).
@@ -59,28 +61,13 @@ func (lint *GolangciLint) CompileMakefile(output *makefile.Output) error {
 	return nil
 }
 
-// ToolchainBuild implements common.ToolchainBuilder hook.
-func (lint *GolangciLint) ToolchainBuild(stage *dockerfile.Stage) error {
-	stage.
-		Step(step.Arg("GOLANGCILINT_VERSION")).
-		Step(step.Script(
-			fmt.Sprintf(
-				"go install github.com/golangci/golangci-lint/cmd/golangci-lint@${GOLANGCILINT_VERSION} \\\n"+
-					"\t&& mv /go/bin/golangci-lint %s/golangci-lint", lint.meta.BinPath),
-		).
-			MountCache(filepath.Join(lint.meta.CachePath, "go-build")).
-			MountCache(filepath.Join(lint.meta.GoPath, "pkg")),
-		)
-
-	return nil
-}
-
 // CompileDockerfile implements dockerfile.Compiler.
 func (lint *GolangciLint) CompileDockerfile(output *dockerfile.Output) error {
-	output.Stage("lint-golangci-lint").
+	output.Stage(lint.Name()).
 		Description("runs golangci-lint").
 		From("base").
-		Step(step.Copy(".golangci.yml", ".")).
+		Step(step.WorkDir(filepath.Join("/src", lint.projectPath))).
+		Step(step.Copy(filepath.Join(lint.projectPath, ".golangci.yml"), ".")).
 		Step(step.Env("GOGC", "50")).
 		Step(step.Run("golangci-lint", "run", "--config", ".golangci.yml").
 			MountCache(filepath.Join(lint.meta.CachePath, "go-build")).

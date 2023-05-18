@@ -5,7 +5,6 @@
 package golang
 
 import (
-	"fmt"
 	"path/filepath"
 
 	"github.com/siderolabs/kres/internal/dag"
@@ -16,49 +15,37 @@ import (
 )
 
 // GoVulnCheck provides GoVulnCheck linter.
-//
-//nolint:govet
 type GoVulnCheck struct {
 	dag.BaseNode
 
-	meta *meta.Options
+	meta        *meta.Options
+	projectPath string
 }
 
 // NewGoVulnCheck builds GoVulnCheck node.
-func NewGoVulnCheck(meta *meta.Options) *GoVulnCheck {
+func NewGoVulnCheck(meta *meta.Options, projectPath string) *GoVulnCheck {
 	return &GoVulnCheck{
-		BaseNode: dag.NewBaseNode("lint-govulncheck"),
+		BaseNode: dag.NewBaseNode(genName("lint-govulncheck", projectPath)),
 
-		meta: meta,
+		meta:        meta,
+		projectPath: projectPath,
 	}
 }
 
 // CompileMakefile implements makefile.Compiler.
 func (lint *GoVulnCheck) CompileMakefile(output *makefile.Output) error {
-	output.Target("lint-govulncheck").Description("Runs govulncheck linter.").
+	output.Target(lint.Name()).Description("Runs govulncheck linter.").
 		Script("@$(MAKE) target-$@")
-
-	return nil
-}
-
-// ToolchainBuild implements common.ToolchainBuilder hook.
-func (lint *GoVulnCheck) ToolchainBuild(stage *dockerfile.Stage) error {
-	stage.
-		Step(step.Script(fmt.Sprintf(
-			`go install golang.org/x/vuln/cmd/govulncheck@latest \
-	&& mv /go/bin/govulncheck %s/govulncheck`, lint.meta.BinPath)).
-			MountCache(filepath.Join(lint.meta.CachePath, "go-build")).
-			MountCache(filepath.Join(lint.meta.GoPath, "pkg")),
-		)
 
 	return nil
 }
 
 // CompileDockerfile implements dockerfile.Compiler.
 func (lint *GoVulnCheck) CompileDockerfile(output *dockerfile.Output) error {
-	output.Stage("lint-govulncheck").
+	output.Stage(lint.Name()).
 		Description("runs govulncheck").
 		From("base").
+		Step(step.WorkDir(filepath.Join("/src", lint.projectPath))).
 		Step(step.Script(
 			`govulncheck ./...`,
 		).

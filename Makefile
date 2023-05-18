@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2023-05-11T04:45:18Z by kres 00c9f23.
+# Generated on 2023-05-19T11:21:06Z by kres 05a5352-dirty.
 
 # common variables
 
@@ -13,15 +13,15 @@ WITH_RACE ?= false
 REGISTRY ?= ghcr.io
 USERNAME ?= siderolabs
 REGISTRY_AND_USERNAME ?= $(REGISTRY)/$(USERNAME)
-GOLANGCILINT_VERSION ?= v1.52.2
-GOFUMPT_VERSION ?= v0.5.0
-GO_VERSION ?= 1.20
-GOIMPORTS_VERSION ?= v0.9.1
 PROTOBUF_GO_VERSION ?= 1.28.1
 GRPC_GO_VERSION ?= 1.3.0
 GRPC_GATEWAY_VERSION ?= 2.15.2
 VTPROTOBUF_VERSION ?= 0.4.0
 DEEPCOPY_VERSION ?= v0.5.5
+GOLANGCILINT_VERSION ?= v1.52.2
+GOFUMPT_VERSION ?= v0.5.0
+GO_VERSION ?= 1.20
+GOIMPORTS_VERSION ?= v0.9.1
 GO_BUILDFLAGS ?=
 GO_LDFLAGS ?=
 CGO_ENABLED ?= 0
@@ -49,14 +49,14 @@ COMMON_ARGS += --build-arg=TOOLCHAIN="$(TOOLCHAIN)"
 COMMON_ARGS += --build-arg=CGO_ENABLED="$(CGO_ENABLED)"
 COMMON_ARGS += --build-arg=GO_BUILDFLAGS="$(GO_BUILDFLAGS)"
 COMMON_ARGS += --build-arg=GO_LDFLAGS="$(GO_LDFLAGS)"
-COMMON_ARGS += --build-arg=GOLANGCILINT_VERSION="$(GOLANGCILINT_VERSION)"
-COMMON_ARGS += --build-arg=GOFUMPT_VERSION="$(GOFUMPT_VERSION)"
-COMMON_ARGS += --build-arg=GOIMPORTS_VERSION="$(GOIMPORTS_VERSION)"
 COMMON_ARGS += --build-arg=PROTOBUF_GO_VERSION="$(PROTOBUF_GO_VERSION)"
 COMMON_ARGS += --build-arg=GRPC_GO_VERSION="$(GRPC_GO_VERSION)"
 COMMON_ARGS += --build-arg=GRPC_GATEWAY_VERSION="$(GRPC_GATEWAY_VERSION)"
 COMMON_ARGS += --build-arg=VTPROTOBUF_VERSION="$(VTPROTOBUF_VERSION)"
 COMMON_ARGS += --build-arg=DEEPCOPY_VERSION="$(DEEPCOPY_VERSION)"
+COMMON_ARGS += --build-arg=GOLANGCILINT_VERSION="$(GOLANGCILINT_VERSION)"
+COMMON_ARGS += --build-arg=GOIMPORTS_VERSION="$(GOIMPORTS_VERSION)"
+COMMON_ARGS += --build-arg=GOFUMPT_VERSION="$(GOFUMPT_VERSION)"
 COMMON_ARGS += --build-arg=TESTPKGS="$(TESTPKGS)"
 TOOLCHAIN ?= docker.io/golang:1.20-alpine
 
@@ -150,7 +150,7 @@ unit-tests-race:  ## Performs unit tests with race detection enabled.
 
 .PHONY: coverage
 coverage:  ## Upload coverage data to codecov.io.
-	bash -c "bash <(curl -s https://codecov.io/bash) -f $(ARTIFACTS)/coverage.txt -X fix"
+	bash -c "bash <(curl -s https://codecov.io/bash) -f $(ARTIFACTS)/coverage-unit-tests.txt -X fix"
 
 .PHONY: $(ARTIFACTS)/kres-linux-amd64
 $(ARTIFACTS)/kres-linux-amd64:
