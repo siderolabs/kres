@@ -11,7 +11,7 @@ const (
 	DeepCopyVersion = "v0.5.5"
 	// DindContainerImageVersion is the version of the dind container image.
 	// renovate: datasource=docker versioning=docker depName=docker
-	DindContainerImageVersion = "23.0-dind"
+	DindContainerImageVersion = "24.0-dind"
 	// DockerfileFrontendImageVersion is the version of the dockerfile frontend image.
 	// renovate: datasource=docker versioning=docker depName=docker/dockerfile-upstream
 	DockerfileFrontendImageVersion = "1.5.2-labs"
