@@ -1,11 +1,12 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2023-06-04T07:59:54Z by kres 3b7a14e.
+# Generated on 2023-07-06T17:44:49Z by kres 4755471.
 
 # common variables
 
 SHA := $(shell git describe --match=none --always --abbrev=8 --dirty)
 TAG := $(shell git describe --tag --always --dirty)
+ABBREV_TAG := $(shell git describe --tags >/dev/null 2>/dev/null && git describe --tag --always --match v[0-9]\* --abbrev=0 || echo 'undefined')
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 ARTIFACTS := _out
 WITH_DEBUG ?= false
@@ -18,10 +19,10 @@ GRPC_GO_VERSION ?= 1.3.0
 GRPC_GATEWAY_VERSION ?= 2.16.0
 VTPROTOBUF_VERSION ?= 0.4.0
 DEEPCOPY_VERSION ?= v0.5.5
-GOLANGCILINT_VERSION ?= v1.53.2
+GOLANGCILINT_VERSION ?= v1.53.3
 GOFUMPT_VERSION ?= v0.5.0
 GO_VERSION ?= 1.20
-GOIMPORTS_VERSION ?= v0.9.3
+GOIMPORTS_VERSION ?= v0.11.0
 GO_BUILDFLAGS ?=
 GO_LDFLAGS ?=
 CGO_ENABLED ?= 0
@@ -43,6 +44,7 @@ COMMON_ARGS += --push=$(PUSH)
 COMMON_ARGS += --build-arg=ARTIFACTS="$(ARTIFACTS)"
 COMMON_ARGS += --build-arg=SHA="$(SHA)"
 COMMON_ARGS += --build-arg=TAG="$(TAG)"
+COMMON_ARGS += --build-arg=ABBREV_TAG="$(ABBREV_TAG)"
 COMMON_ARGS += --build-arg=USERNAME="$(USERNAME)"
 COMMON_ARGS += --build-arg=REGISTRY="$(REGISTRY)"
 COMMON_ARGS += --build-arg=TOOLCHAIN="$(TOOLCHAIN)"
@@ -116,6 +118,9 @@ target-%:  ## Builds the specified target defined in the Dockerfile. The build r
 
 local-%:  ## Builds the specified target defined in the Dockerfile using the local output type. The build result will be output to the specified local destination.
 	@$(MAKE) target-$* TARGET_ARGS="--output=type=local,dest=$(DEST) $(TARGET_ARGS)"
+
+generate:  ## Generate .proto definitions.
+	@$(MAKE) local-$@ DEST=./
 
 lint-golangci-lint:  ## Runs golangci-lint linter.
 	@$(MAKE) target-$@

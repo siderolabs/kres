@@ -22,7 +22,7 @@ import (
 
 // DetectGolang checks if project at rootPath is Go-based project.
 func (builder *builder) DetectGolang() (bool, error) {
-	lookupDirs := []string{}
+	var lookupDirs []string
 
 	err := filepath.Walk(builder.rootPath, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
@@ -156,7 +156,7 @@ func (builder *builder) processDirectory(path string) error {
 
 	rootPath := filepath.Join(builder.rootPath, dir)
 
-	if builder.meta.VersionPackage == "" {
+	if builder.meta.VersionPackagePath == "" && builder.meta.VersionPackage == "" {
 		for _, candidate := range []string{"pkg/version", "internal/version"} {
 			exists, err := directoryExists(dir, candidate)
 			if err != nil {
@@ -215,8 +215,7 @@ func (builder *builder) BuildGolang() error {
 	builder.lintInputs = append(builder.lintInputs, toolchain, linters)
 
 	coverage := service.NewCodeCov(builder.meta)
-
-	allUnitTests := []dag.Node{}
+	allUnitTests := make([]dag.Node, 0, len(builder.meta.CanonicalPaths))
 
 	// linters
 	for index, canonicalPath := range builder.meta.CanonicalPaths {

@@ -2,12 +2,9 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2023-06-12T21:32:42Z by kres a200ffd.
+# Generated on 2023-07-05T20:04:27Z by kres 2631e74.
 
 ARG TOOLCHAIN
-
-# cleaned up specs and compiled versions
-FROM scratch AS generate
 
 FROM ghcr.io/siderolabs/ca-certificates:v1.4.1 AS image-ca-certificates
 
@@ -59,16 +56,13 @@ COPY ./cmd ./cmd
 COPY ./internal ./internal
 RUN --mount=type=cache,target=/go/pkg go list -mod=readonly all >/dev/null
 
-# builds kres-linux-amd64
-FROM base AS kres-linux-amd64-build
-COPY --from=generate / /
-WORKDIR /src/cmd/kres
-ARG GO_BUILDFLAGS
-ARG GO_LDFLAGS
-ARG VERSION_PKG="github.com/siderolabs/kres/internal/version"
+FROM tools AS embed-generate
 ARG SHA
 ARG TAG
-RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg go build ${GO_BUILDFLAGS} -ldflags "${GO_LDFLAGS} -X ${VERSION_PKG}.Name=kres -X ${VERSION_PKG}.SHA=${SHA} -X ${VERSION_PKG}.Tag=${TAG}" -o /kres-linux-amd64
+WORKDIR /src
+RUN mkdir -p internal/version/data && \
+    echo -n ${SHA} > internal/version/data/sha && \
+    echo -n ${TAG} > internal/version/data/tag
 
 # runs gofumpt
 FROM base AS lint-gofumpt
@@ -102,11 +96,30 @@ WORKDIR /src
 ARG TESTPKGS
 RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg --mount=type=cache,target=/tmp go test -v -covermode=atomic -coverprofile=coverage.txt -coverpkg=${TESTPKGS} -count 1 ${TESTPKGS}
 
-FROM scratch AS kres-linux-amd64
-COPY --from=kres-linux-amd64-build /kres-linux-amd64 /kres-linux-amd64
+FROM embed-generate AS embed-abbrev-generate
+WORKDIR /src
+ARG ABBREV_TAG
+RUN echo -n 'undefined' > internal/version/data/sha && \
+    echo -n ${ABBREV_TAG} > internal/version/data/tag
 
 FROM scratch AS unit-tests
 COPY --from=unit-tests-run /src/coverage.txt /coverage-unit-tests.txt
+
+# cleaned up specs and compiled versions
+FROM scratch AS generate
+COPY --from=embed-abbrev-generate /src/internal/version internal/version
+
+# builds kres-linux-amd64
+FROM base AS kres-linux-amd64-build
+COPY --from=generate / /
+COPY --from=embed-generate / /
+WORKDIR /src/cmd/kres
+ARG GO_BUILDFLAGS
+ARG GO_LDFLAGS
+RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg go build ${GO_BUILDFLAGS} -ldflags "${GO_LDFLAGS}" -o /kres-linux-amd64
+
+FROM scratch AS kres-linux-amd64
+COPY --from=kres-linux-amd64-build /kres-linux-amd64 /kres-linux-amd64
 
 FROM kres-linux-${TARGETARCH} AS kres
 

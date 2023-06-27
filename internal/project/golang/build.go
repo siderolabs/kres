@@ -69,14 +69,20 @@ func (build *Build) CompileDockerfile(output *dockerfile.Output) error {
 		stage := output.Stage(fmt.Sprintf("%s-build", name)).
 			Description(fmt.Sprintf("builds %s", name)).
 			From("base").
-			Step(step.Copy("/", "/").From("generate")).
+			Step(step.Copy("/", "/").From("generate"))
+
+		if build.meta.VersionPackagePath != "" {
+			stage.Step(step.Copy("/", "/").From("embed-generate"))
+		}
+
+		stage.
 			Step(step.WorkDir(filepath.Join("/src", build.sourcePath))).
 			Step(step.Arg("GO_BUILDFLAGS")).
 			Step(step.Arg("GO_LDFLAGS"))
 
 		ldflags := "${GO_LDFLAGS}"
 
-		if build.meta.VersionPackage != "" {
+		if build.meta.VersionPackagePath == "" && build.meta.VersionPackage != "" {
 			stage.
 				Step(step.Arg(fmt.Sprintf("VERSION_PKG=\"%s\"", build.meta.VersionPackage))).
 				Step(step.Arg("SHA")).

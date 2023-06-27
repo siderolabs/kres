@@ -1,11 +1,3 @@
-// This Source Code Form is subject to the terms of the Mozilla Public
-// License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-// THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
-//
-// Generated on 2023-06-27T03:07:43Z by kres b93f606.
-
 // Package version contains variables such as project name, tag and sha. It's a proper alternative to using
 // -ldflags '-X ...'.
 package version

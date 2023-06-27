@@ -27,7 +27,12 @@ type Options struct { //nolint:govet
 	CanonicalPaths []string
 
 	// VersionPackage is a canonical path to version package (if any).
+	//
+	// DEPRECATED: use VersionPackagePath instead.
 	VersionPackage string
+
+	// VersionPackagePath is a canonical path to version package directory.
+	VersionPackagePath string
 
 	// Directories which contain source code.
 	Directories []string

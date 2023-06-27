@@ -16,11 +16,15 @@ import (
 	"github.com/siderolabs/kres/internal/output/dockerfile/step"
 	"github.com/siderolabs/kres/internal/output/license"
 	"github.com/siderolabs/kres/internal/output/makefile"
+	"github.com/siderolabs/kres/internal/output/template"
+	"github.com/siderolabs/kres/internal/project/golang/templates"
 	"github.com/siderolabs/kres/internal/project/meta"
 )
 
 // Generate provides .proto compilation with grpc-go plugin
 // and go generate runner.
+//
+//nolint:govet
 type Generate struct {
 	dag.BaseNode
 
@@ -39,6 +43,8 @@ type Generate struct {
 	ExperimentalFlags []string `yaml:"experimentalFlags"`
 
 	VTProtobufEnabled bool `yaml:"vtProtobufEnabled"`
+
+	VersionPackagePath string `yaml:"versionPackagePath"`
 }
 
 // ProtoSpec describes a set of protobuf specs to be compiled.
@@ -92,7 +98,7 @@ func (generate *Generate) CompileMakefile(output *makefile.Output) error {
 		Variable(makefile.OverridableVariable("GRPC_GATEWAY_VERSION", strings.TrimLeft(generate.GrpcGatewayVersion, "v"))).
 		Variable(makefile.OverridableVariable("VTPROTOBUF_VERSION", strings.TrimLeft(generate.VTProtobufVersion, "v")))
 
-	if len(generate.Specs) == 0 && len(generate.GoGenerateSpecs) == 0 {
+	if len(generate.Specs) == 0 && len(generate.GoGenerateSpecs) == 0 && generate.versionPackagePath() == "" {
 		return nil
 	}
 
@@ -312,5 +318,51 @@ func (generate *Generate) CompileDockerfile(output *dockerfile.Output) error {
 		}
 	}
 
+	if generate.versionPackagePath() != "" {
+		output.Stage("embed-generate").From("tools").
+			Step(step.Arg("SHA")).
+			Step(step.Arg("TAG")).
+			Step(step.WorkDir("/src")).
+			Step(step.Script(fmt.Sprintf(command, generate.versionPackagePath())))
+
+		output.Stage("embed-abbrev-generate").From("embed-generate").
+			Step(step.WorkDir("/src")).
+			Step(step.Arg("ABBREV_TAG")).
+			Step(step.Script(fmt.Sprintf(abbrevCommand, generate.versionPackagePath())))
+
+		src := fmt.Sprintf("/src/%s", generate.versionPackagePath())
+
+		generateStage.Step(step.Copy(src, generate.versionPackagePath()).From("embed-abbrev-generate"))
+
+		generate.meta.VersionPackagePath = generate.versionPackagePath()
+	}
+
 	return nil
 }
+
+// CompileTemplates implements [template.Compiler].
+func (generate *Generate) CompileTemplates(output *template.Output) error {
+	if generate.versionPackagePath() == "" {
+		return nil
+	}
+
+	output.Define(fmt.Sprintf("%s/version.go", generate.versionPackagePath()), templates.VersionGo).
+		PreamblePrefix("// ").
+		WithLicense().
+		NoOverwrite()
+
+	return nil
+}
+
+func (generate *Generate) versionPackagePath() string {
+	return strings.TrimSpace(generate.VersionPackagePath)
+}
+
+const (
+	command = `mkdir -p %[1]s/data && \
+    echo -n ${SHA} > %[1]s/data/sha && \
+    echo -n ${TAG} > %[1]s/data/tag`
+
+	abbrevCommand = `echo -n 'undefined' > %[1]s/data/sha && \
+    echo -n ${ABBREV_TAG} > %[1]s/data/tag`
+)

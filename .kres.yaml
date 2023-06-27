@@ -27,3 +27,7 @@ kind: common.Build
 spec:
     ignoredPaths:
         - "_out/example/"
+---
+kind: golang.Generate
+spec:
+    versionPackagePath: internal/version
