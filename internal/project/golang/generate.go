@@ -219,7 +219,7 @@ func (generate *Generate) CompileDockerfile(output *dockerfile.Output) error {
 				if generate.VTProtobufEnabled {
 					flags = append(flags,
 						fmt.Sprintf("--go-vtproto_out=paths=source_relative:%s", generate.BaseSpecPath),
-						"--go-vtproto_opt=features=marshal+unmarshal+size+equal",
+						"--go-vtproto_opt=features=marshal+unmarshal+size+equal+clone",
 					)
 				}
 			}
