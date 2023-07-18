@@ -14,7 +14,7 @@ const (
 	DindContainerImageVersion = "24.0-dind"
 	// DockerfileFrontendImageVersion is the version of the dockerfile frontend image.
 	// renovate: datasource=docker versioning=docker depName=docker/dockerfile-upstream
-	DockerfileFrontendImageVersion = "1.5.2-labs"
+	DockerfileFrontendImageVersion = "1.6.0-labs"
 	// GoFmtVersion is the version of gofmt.
 	// renovate: datasource=go depName=github.com/mvdan/gofumpt
 	GoFmtVersion = "v0.5.0"
@@ -41,7 +41,7 @@ const (
 	MardownLintCLIVersion = "0.34.0"
 	// NodeContainerImageVersion is the default node container image.
 	// renovate: datasource=docker versioning=docker depName=node
-	NodeContainerImageVersion = "20.3.1-alpine3.18"
+	NodeContainerImageVersion = "20.4.0-alpine3.18"
 	// PkgsVersion is the version of pkgs.
 	// renovate: datasource=github-tags depName=siderolabs/pkgs
 	PkgsVersion = "v1.4.1"
