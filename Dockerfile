@@ -1,8 +1,8 @@
-# syntax = docker/dockerfile-upstream:1.5.2-labs
+# syntax = docker/dockerfile-upstream:1.6.0-labs
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2023-07-10T12:46:56Z by kres 15d4142.
+# Generated on 2023-07-18T17:24:59Z by kres 47466c8.
 
 ARG TOOLCHAIN
 
@@ -11,7 +11,7 @@ FROM ghcr.io/siderolabs/ca-certificates:v1.4.1 AS image-ca-certificates
 FROM ghcr.io/siderolabs/fhs:v1.4.1 AS image-fhs
 
 # runs markdownlint
-FROM docker.io/node:20.3.1-alpine3.18 AS lint-markdown
+FROM docker.io/node:20.4.0-alpine3.18 AS lint-markdown
 WORKDIR /src
 RUN npm i -g markdownlint-cli@0.34.0
 RUN npm i sentences-per-line@0.2.1
