@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2023-08-10T13:59:39Z by kres 3ea04b4.
+# Generated on 2023-08-10T14:53:01Z by kres eee9fa2.
 
 # common variables
 
@@ -21,7 +21,7 @@ VTPROTOBUF_VERSION ?= 0.4.0
 DEEPCOPY_VERSION ?= v0.5.5
 GOLANGCILINT_VERSION ?= v1.54.0
 GOFUMPT_VERSION ?= v0.5.0
-GO_VERSION ?= 1.20
+GO_VERSION ?= 1.21
 GOIMPORTS_VERSION ?= v0.12.0
 GO_BUILDFLAGS ?=
 GO_LDFLAGS ?=
@@ -135,7 +135,8 @@ lint-gofumpt:  ## Runs gofumpt linter.
 .PHONY: fmt
 fmt:  ## Formats the source code
 	@docker run --rm -it -v $(PWD):/src -w /src golang:$(GO_VERSION) \
-		bash -c "export GO111MODULE=on; export GOPROXY=https://proxy.golang.org; \
+		bash -c "export GOEXPERIMENT=loopvar; export GOTOOLCHAIN=local; \
+		export GO111MODULE=on; export GOPROXY=https://proxy.golang.org; \
 		go install mvdan.cc/gofumpt@$(GOFUMPT_VERSION) && \
 		gofumpt -w ."
 
