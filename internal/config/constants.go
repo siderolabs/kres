@@ -20,31 +20,31 @@ const (
 	GoFmtVersion = "v0.5.0"
 	// GoImportsVersion is the version of goimports.
 	// renovate: datasource=go depName=golang.org/x/tools
-	GoImportsVersion = "v0.11.0"
+	GoImportsVersion = "v0.12.0"
 	// GolangCIlintVersion is the version of golangci-lint.
 	// renovate: datasource=go depName=github.com/golangci/golangci-lint
-	GolangCIlintVersion = "v1.53.3"
+	GolangCIlintVersion = "v1.54.0"
 	// GolangContainerImageVersion is the default golang container image.
 	// renovate: datasource=docker versioning=docker depName=golang
-	GolangContainerImageVersion = "1.20-alpine"
+	GolangContainerImageVersion = "1.21-alpine"
 	// GoVersion is the version of Go.
 	// renovate: datasource=github-tags extractVersion=^v(?<version>.*)$ versioning=loose depName=golang/go
 	GoVersion = "1.20"
 	// GrpcGatewayVersion is the version of grpc-gateway.
 	// renovate: datasource=go depName=github.com/grpc-ecosystem/grpc-gateway
-	GrpcGatewayVersion = "v2.16.0"
+	GrpcGatewayVersion = "v2.16.2"
 	// GrpcGoVersion is the version of grpc.
 	// renovate: datasource=go depName=google.golang.org/grpc/cmd/protoc-gen-go-grpc
 	GrpcGoVersion = "v1.3.0"
 	// MardownLintCLIVersion is the version of markdownlint.
 	// renovate: datasource=npm depName=markdownlint-cli
-	MardownLintCLIVersion = "0.34.0"
+	MardownLintCLIVersion = "0.35.0"
 	// NodeContainerImageVersion is the default node container image.
 	// renovate: datasource=docker versioning=docker depName=node
 	NodeContainerImageVersion = "20.5.0-alpine3.18"
 	// PkgsVersion is the version of pkgs.
 	// renovate: datasource=github-tags depName=siderolabs/pkgs
-	PkgsVersion = "v1.4.1"
+	PkgsVersion = "v1.5.0"
 	// ProtobufGoVersion is the version of protobuf.
 	// renovate: datasource=go depName=google.golang.org/protobuf/cmd/protoc-gen-go
 	ProtobufGoVersion = "v1.28.1"

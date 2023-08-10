@@ -2,18 +2,18 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2023-07-31T23:17:06Z by kres 88bde32.
+# Generated on 2023-08-10T13:59:39Z by kres 3ea04b4.
 
 ARG TOOLCHAIN
 
-FROM ghcr.io/siderolabs/ca-certificates:v1.4.1 AS image-ca-certificates
+FROM ghcr.io/siderolabs/ca-certificates:v1.5.0 AS image-ca-certificates
 
-FROM ghcr.io/siderolabs/fhs:v1.4.1 AS image-fhs
+FROM ghcr.io/siderolabs/fhs:v1.5.0 AS image-fhs
 
 # runs markdownlint
 FROM docker.io/node:20.5.0-alpine3.18 AS lint-markdown
 WORKDIR /src
-RUN npm i -g markdownlint-cli@0.34.0
+RUN npm i -g markdownlint-cli@0.35.0
 RUN npm i sentences-per-line@0.2.1
 COPY .markdownlint.json .
 COPY ./README.md ./README.md
@@ -28,6 +28,10 @@ FROM --platform=${BUILDPLATFORM} toolchain AS tools
 ENV GO111MODULE on
 ARG CGO_ENABLED
 ENV CGO_ENABLED ${CGO_ENABLED}
+ARG GOTOOLCHAIN
+ENV GOTOOLCHAIN ${GOTOOLCHAIN}
+ARG GOEXPERIMENT
+ENV GOEXPERIMENT ${GOEXPERIMENT}
 ENV GOPATH /go
 ARG DEEPCOPY_VERSION
 RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg go install github.com/siderolabs/deep-copy@${DEEPCOPY_VERSION} \

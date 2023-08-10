@@ -51,7 +51,15 @@ func NewToolchain(meta *meta.Options) *Toolchain {
 		Version: meta.GoContainerVersion,
 	}
 
-	meta.BuildArgs = append(meta.BuildArgs, "TOOLCHAIN", "CGO_ENABLED", "GO_BUILDFLAGS", "GO_LDFLAGS")
+	meta.BuildArgs = append(
+		meta.BuildArgs,
+		"TOOLCHAIN",
+		"CGO_ENABLED",
+		"GO_BUILDFLAGS",
+		"GO_LDFLAGS",
+		"GOTOOLCHAIN",
+		"GOEXPERIMENT",
+	)
 	meta.BinPath = toolchain.binPath()
 	meta.CachePath = toolchain.cachePath()
 	meta.GoPath = "/go"
@@ -114,7 +122,9 @@ func (toolchain *Toolchain) CompileMakefile(output *makefile.Output) error {
 	common := output.VariableGroup(makefile.VariableGroupCommon).
 		Variable(makefile.OverridableVariable("GO_BUILDFLAGS", "")).
 		Variable(makefile.OverridableVariable("GO_LDFLAGS", "")).
-		Variable(makefile.OverridableVariable("CGO_ENABLED", "0"))
+		Variable(makefile.OverridableVariable("CGO_ENABLED", "0")).
+		Variable(makefile.OverridableVariable("GOTOOLCHAIN", "local")).
+		Variable(makefile.OverridableVariable("GOEXPERIMENT", "loopvar"))
 
 	// add github token only if necessary
 	if toolchain.PrivateRepos != nil {
@@ -185,6 +195,10 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 		Step(step.Env("GO111MODULE", "on")).
 		Step(step.Arg("CGO_ENABLED")).
 		Step(step.Env("CGO_ENABLED", "${CGO_ENABLED}")).
+		Step(step.Arg("GOTOOLCHAIN")).
+		Step(step.Env("GOTOOLCHAIN", "${GOTOOLCHAIN}")).
+		Step(step.Arg("GOEXPERIMENT")).
+		Step(step.Env("GOEXPERIMENT", "${GOEXPERIMENT}")).
 		Step(step.Env("GOPATH", toolchain.meta.GoPath))
 
 	// configure git to use the github token for private repos and set GOPRIVATE

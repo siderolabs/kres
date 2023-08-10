@@ -138,7 +138,6 @@ func (r *Repository) CompileGitHub(client *github.Client) error {
 	return r.inviteBot(client)
 }
 
-//nolint:gocognit
 func (r *Repository) enableBranchProtection(client *github.Client) error {
 	branchProtection, resp, err := client.Repositories.GetBranchProtection(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, r.MainBranch)
 	if err != nil {
