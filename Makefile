@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2023-08-10T14:53:01Z by kres eee9fa2.
+# Generated on 2023-08-14T13:43:01Z by kres latest.
 
 # common variables
 
@@ -40,6 +40,7 @@ PROGRESS ?= auto
 PUSH ?= false
 CI_ARGS ?=
 COMMON_ARGS = --file=Dockerfile
+COMMON_ARGS += --provenance=false
 COMMON_ARGS += --progress=$(PROGRESS)
 COMMON_ARGS += --platform=$(PLATFORM)
 COMMON_ARGS += --push=$(PUSH)

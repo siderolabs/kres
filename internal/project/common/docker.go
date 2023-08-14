@@ -101,6 +101,7 @@ func (docker *Docker) BuildBaseDroneSteps(output drone.StepService) {
 // CompileMakefile implements makefile.Compiler.
 func (docker *Docker) CompileMakefile(output *makefile.Output) error {
 	buildArgs := makefile.RecursiveVariable("COMMON_ARGS", "--file=Dockerfile").
+		Push("--provenance=false").
 		Push("--progress=$(PROGRESS)").
 		Push("--platform=$(PLATFORM)").
 		Push("--push=$(PUSH)")
