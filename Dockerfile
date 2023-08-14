@@ -11,7 +11,7 @@ FROM ghcr.io/siderolabs/ca-certificates:v1.5.0 AS image-ca-certificates
 FROM ghcr.io/siderolabs/fhs:v1.5.0 AS image-fhs
 
 # runs markdownlint
-FROM docker.io/node:20.5.0-alpine3.18 AS lint-markdown
+FROM docker.io/node:20.5.1-alpine3.18 AS lint-markdown
 WORKDIR /src
 RUN npm i -g markdownlint-cli@0.35.0
 RUN npm i sentences-per-line@0.2.1
