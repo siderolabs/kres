@@ -15,6 +15,7 @@ import (
 	"github.com/siderolabs/kres/internal/output/conform"
 	"github.com/siderolabs/kres/internal/output/dockerfile"
 	"github.com/siderolabs/kres/internal/output/drone"
+	"github.com/siderolabs/kres/internal/output/ghworkflow"
 	"github.com/siderolabs/kres/internal/output/github"
 	"github.com/siderolabs/kres/internal/output/gitignore"
 	"github.com/siderolabs/kres/internal/output/golangci"
@@ -53,7 +54,6 @@ func runGen() error {
 		output.Wrap[golangci.Compiler](golangci.NewOutput()),
 		output.Wrap[license.Compiler](license.NewOutput()),
 		output.Wrap[gitignore.Compiler](gitignore.NewOutput()),
-		output.Wrap[drone.Compiler](drone.NewOutput()),
 		output.Wrap[codecov.Compiler](codecov.NewOutput()),
 		output.Wrap[release.Compiler](release.NewOutput()),
 		output.Wrap[markdownlint.Compiler](markdownlint.NewOutput()),
@@ -80,6 +80,13 @@ func runGen() error {
 
 	if err := proj.LoadConfig(options.Config); err != nil {
 		return err
+	}
+
+	switch options.CIProvider {
+	case "drone":
+		outputs = append(outputs, output.Wrap[drone.Compiler](drone.NewOutput()))
+	case "ghaction":
+		outputs = append(outputs, output.Wrap[ghworkflow.Compiler](ghworkflow.NewOutput()))
 	}
 
 	if err := proj.Compile(outputs); err != nil {

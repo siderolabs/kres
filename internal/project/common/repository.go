@@ -13,6 +13,7 @@ import (
 	"github.com/google/go-github/v53/github"
 	"github.com/siderolabs/gen/xslices"
 
+	"github.com/siderolabs/kres/internal/config"
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/output/conform"
 	"github.com/siderolabs/kres/internal/output/license"
@@ -60,9 +61,6 @@ func NewRepository(meta *meta.Options) *Repository {
 		meta: meta,
 
 		MainBranch: meta.MainBranch,
-		EnforceContexts: []string{
-			"continuous-integration/drone/pr",
-		},
 
 		EnableConform:     true,
 		ConformWebhookURL: "https://conform.dev.talos-systems.io/github",
@@ -138,6 +136,7 @@ func (r *Repository) CompileGitHub(client *github.Client) error {
 	return r.inviteBot(client)
 }
 
+//nolint:gocyclo,cyclop
 func (r *Repository) enableBranchProtection(client *github.Client) error {
 	branchProtection, resp, err := client.Repositories.GetBranchProtection(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, r.MainBranch)
 	if err != nil {
@@ -147,6 +146,14 @@ func (r *Repository) enableBranchProtection(client *github.Client) error {
 	}
 
 	enforceContexts := r.EnforceContexts
+
+	switch r.meta.CIProvider {
+	case config.CIProviderDrone:
+		enforceContexts = append(enforceContexts, "continuous-integration/drone/pr")
+	case config.CIProviderGitHubActions:
+		enforceContexts = append(enforceContexts, "default")
+	}
+
 	if r.EnableConform {
 		enforceContexts = append(enforceContexts,
 			"conform/commit/commit-body",

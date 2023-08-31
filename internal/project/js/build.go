@@ -12,6 +12,7 @@ import (
 	"github.com/siderolabs/kres/internal/output/dockerfile"
 	"github.com/siderolabs/kres/internal/output/dockerfile/step"
 	"github.com/siderolabs/kres/internal/output/drone"
+	"github.com/siderolabs/kres/internal/output/ghworkflow"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/output/template"
 	"github.com/siderolabs/kres/internal/project/js/templates"
@@ -83,6 +84,13 @@ func (build *Build) CompileDockerfile(output *dockerfile.Output) error {
 // CompileDrone implements drone.Compiler.
 func (build *Build) CompileDrone(output *drone.Output) error {
 	output.Step(drone.MakeStep(build.Name()).DependsOn(dag.GatherMatchingInputNames(build, dag.Implements[drone.Compiler]())...))
+
+	return nil
+}
+
+// CompileGitHubWorkflow implements ghworkflow.Compiler.
+func (build *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
+	output.AddStep("default", ghworkflow.MakeStep(build.Name()))
 
 	return nil
 }

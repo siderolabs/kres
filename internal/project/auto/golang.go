@@ -156,7 +156,7 @@ func (builder *builder) processDirectory(path string) error {
 
 	rootPath := filepath.Join(builder.rootPath, dir)
 
-	if builder.meta.VersionPackagePath == "" && builder.meta.VersionPackage == "" {
+	if builder.meta.VersionPackagePath == "" {
 		for _, candidate := range []string{"pkg/version", "internal/version"} {
 			exists, err := directoryExists(dir, candidate)
 			if err != nil {
@@ -164,7 +164,7 @@ func (builder *builder) processDirectory(path string) error {
 			}
 
 			if exists {
-				builder.meta.VersionPackage = filepath.Join(canonicalPath, filepath.Join(dir, candidate))
+				builder.meta.VersionPackagePath = filepath.Join(canonicalPath, filepath.Join(dir, candidate))
 			}
 		}
 	}

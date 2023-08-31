@@ -14,6 +14,7 @@ import (
 	"github.com/siderolabs/kres/internal/output/dockerfile"
 	"github.com/siderolabs/kres/internal/output/dockerfile/step"
 	"github.com/siderolabs/kres/internal/output/drone"
+	"github.com/siderolabs/kres/internal/output/ghworkflow"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/project/meta"
 )
@@ -82,9 +83,9 @@ func (build *Build) CompileDockerfile(output *dockerfile.Output) error {
 
 		ldflags := "${GO_LDFLAGS}"
 
-		if build.meta.VersionPackagePath == "" && build.meta.VersionPackage != "" {
+		if build.meta.VersionPackagePath != "" {
 			stage.
-				Step(step.Arg(fmt.Sprintf("VERSION_PKG=\"%s\"", build.meta.VersionPackage))).
+				Step(step.Arg(fmt.Sprintf("VERSION_PKG=\"%s\"", build.meta.VersionPackagePath))).
 				Step(step.Arg("SHA")).
 				Step(step.Arg("TAG"))
 
@@ -135,6 +136,16 @@ func (build *Build) CompileDockerfile(output *dockerfile.Output) error {
 // CompileDrone implements drone.Compiler.
 func (build *Build) CompileDrone(output *drone.Output) error {
 	output.Step(drone.MakeStep(build.Name()).DependsOn(dag.GatherMatchingInputNames(build, dag.Implements[drone.Compiler]())...))
+
+	return nil
+}
+
+// CompileGitHubWorkflow implements ghworkflow.Compiler.
+func (build *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
+	output.AddStep(
+		"default",
+		ghworkflow.MakeStep(build.Name()),
+	)
 
 	return nil
 }

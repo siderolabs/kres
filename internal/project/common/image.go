@@ -7,10 +7,12 @@ package common
 import (
 	"fmt"
 
+	"github.com/siderolabs/kres/internal/config"
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/output/dockerfile"
 	"github.com/siderolabs/kres/internal/output/dockerfile/step"
 	"github.com/siderolabs/kres/internal/output/drone"
+	"github.com/siderolabs/kres/internal/output/ghworkflow"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/project/meta"
 )
@@ -21,10 +23,10 @@ type Image struct {
 
 	meta *meta.Options
 
-	DroneExtraEnvironment map[string]string `yaml:"droneExtraEnvironment"`
-	BaseImage             string            `yaml:"baseImage"`
-	AdditionalImages      []string          `yaml:"additionalImages"`
-	CopyFrom              []struct {
+	ExtraEnvironment map[string]string `yaml:"extraEnvironment"`
+	BaseImage        string            `yaml:"baseImage"`
+	AdditionalImages []string          `yaml:"additionalImages"`
+	CopyFrom         []struct {
 		Stage       string `yaml:"stage"`
 		Source      string `yaml:"source"`
 		Destination string `yaml:"destination"`
@@ -67,7 +69,7 @@ func (image *Image) CompileDrone(output *drone.Output) error {
 		DockerLogin().
 		DependsOn(image.Name())
 
-	for k, v := range image.DroneExtraEnvironment {
+	for k, v := range image.ExtraEnvironment {
 		step.Environment(k, v)
 	}
 
@@ -82,12 +84,62 @@ func (image *Image) CompileDrone(output *drone.Output) error {
 			DockerLogin().
 			DependsOn(fmt.Sprintf("push-%s", image.ImageName))
 
-		for k, v := range image.DroneExtraEnvironment {
+		for k, v := range image.ExtraEnvironment {
 			step.Environment(k, v)
 		}
 
 		output.Step(step)
 	}
+
+	return nil
+}
+
+// CompileGitHubWorkflow implements ghworkflow.Compiler.
+func (image *Image) CompileGitHubWorkflow(output *ghworkflow.Output) error {
+	loginStep := &ghworkflow.Step{
+		Name: "Login to registry",
+		Uses: fmt.Sprintf("docker/login-action@%s", config.LoginActionVersion),
+		With: map[string]string{
+			"registry": "ghcr.io",
+			"username": "${{ github.repository_owner }}",
+			"password": "${{ secrets.GITHUB_TOKEN }}",
+		},
+	}
+
+	loginStep.ExceptPullRequest()
+
+	pushStep := ghworkflow.MakeStep(image.Name()).
+		SetName(fmt.Sprintf("push-%s", image.ImageName)).
+		SetEnv("PUSH", "true").
+		ExceptPullRequest()
+
+	for k, v := range image.ExtraEnvironment {
+		pushStep.SetEnv(k, v)
+	}
+
+	steps := []*ghworkflow.Step{
+		loginStep,
+		ghworkflow.MakeStep(image.Name()),
+		pushStep,
+	}
+
+	if image.PushLatest {
+		pushStep := ghworkflow.MakeStep(image.Name(), "TAG=latest").
+			SetName(fmt.Sprintf("push-%s-latest", image.ImageName)).
+			SetEnv("PUSH", "true").
+			ExceptPullRequest()
+
+		for k, v := range image.ExtraEnvironment {
+			pushStep.SetEnv(k, v)
+		}
+
+		steps = append(
+			steps,
+			pushStep,
+		)
+	}
+
+	output.AddStep("default", steps...)
 
 	return nil
 }

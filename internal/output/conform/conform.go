@@ -40,7 +40,7 @@ type Output struct {
 func NewOutput() *Output {
 	output := &Output{}
 
-	output.FileAdapter.FileWriter = output
+	output.FileWriter = output
 
 	return output
 }

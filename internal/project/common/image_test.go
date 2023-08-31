@@ -11,6 +11,7 @@ import (
 
 	"github.com/siderolabs/kres/internal/output/dockerfile"
 	"github.com/siderolabs/kres/internal/output/drone"
+	"github.com/siderolabs/kres/internal/output/ghworkflow"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/project/common"
 )
@@ -19,4 +20,5 @@ func TestImageInterfaces(t *testing.T) {
 	assert.Implements(t, (*makefile.Compiler)(nil), new(common.Image))
 	assert.Implements(t, (*dockerfile.Compiler)(nil), new(common.Image))
 	assert.Implements(t, (*drone.Compiler)(nil), new(common.Image))
+	assert.Implements(t, (*ghworkflow.Compiler)(nil), new(common.Image))
 }

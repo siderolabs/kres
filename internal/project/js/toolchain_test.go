@@ -11,6 +11,7 @@ import (
 
 	"github.com/siderolabs/kres/internal/output/dockerfile"
 	"github.com/siderolabs/kres/internal/output/drone"
+	"github.com/siderolabs/kres/internal/output/ghworkflow"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/output/template"
 	"github.com/siderolabs/kres/internal/project/js"
@@ -21,5 +22,6 @@ func TestToolchainInterfaces(t *testing.T) {
 	assert.Implements(t, (*template.Compiler)(nil), new(js.Toolchain))
 	assert.Implements(t, (*makefile.Compiler)(nil), new(js.Toolchain))
 	assert.Implements(t, (*drone.Compiler)(nil), new(js.Toolchain))
+	assert.Implements(t, (*ghworkflow.Compiler)(nil), new(js.Toolchain))
 	assert.Implements(t, (*makefile.SkipAsMakefileDependency)(nil), new(js.Toolchain))
 }

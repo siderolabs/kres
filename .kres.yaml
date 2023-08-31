@@ -11,13 +11,29 @@
 #
 #
 # Any node in the tree might have its configuration overridden via the config.
-
 ---
 kind: common.Image
 name: image-kres
 spec:
+    extraEnvironment:
+      PLATFORM: linux/amd64,linux/arm64
     entrypointArgs: ['gen']
-
+---
+kind: golang.Build
+spec:
+  outputs:
+    linux-amd64:
+      GOOS: linux
+      GOARCH: amd64
+    linux-arm64:
+      GOOS: linux
+      GOARCH: arm64
+    darwin-amd64:
+      GOOS: darwin
+      GOARCH: amd64
+    darwin-arm64:
+      GOOS: darwin
+      GOARCH: arm64
 ---
 kind: service.CodeCov
 spec:
@@ -31,3 +47,9 @@ spec:
 kind: golang.Generate
 spec:
     versionPackagePath: internal/version
+---
+kind: common.Release
+name: release
+spec:
+  artifacts:
+    - kres-*

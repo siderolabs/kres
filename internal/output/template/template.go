@@ -112,7 +112,7 @@ func NewOutput() *Output {
 		templates: map[string]*FileTemplate{},
 	}
 
-	output.FileAdapter.FileWriter = output
+	output.FileWriter = output
 
 	return output
 }
