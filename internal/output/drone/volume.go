@@ -8,16 +8,23 @@ import "github.com/drone/drone-yaml/yaml"
 
 // VolumeHostPath adds a host path mount.
 func (o *Output) VolumeHostPath(name, hostPath, mountPath string) *Output {
+	o.VolumeHostPathStandalone(name, hostPath)
+
+	o.standardMounts = append(o.standardMounts, &yaml.VolumeMount{
+		Name:      name,
+		MountPath: mountPath,
+	})
+
+	return o
+}
+
+// VolumeHostPathStandalone adds a host path mount, but doesn't make it default mount.
+func (o *Output) VolumeHostPathStandalone(name, hostPath string) *Output {
 	o.volumes = append(o.volumes, &yaml.Volume{
 		Name: name,
 		HostPath: &yaml.VolumeHostPath{
 			Path: hostPath,
 		},
-	})
-
-	o.standardMounts = append(o.standardMounts, &yaml.VolumeMount{
-		Name:      name,
-		MountPath: mountPath,
 	})
 
 	return o

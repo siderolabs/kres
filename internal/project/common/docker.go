@@ -48,7 +48,8 @@ func (docker *Docker) CompileDrone(output *drone.Output) error {
 		VolumeHostPath("outer-docker-socket", "/var/ci-docker", "/var/outer-run").
 		VolumeTemporary("docker-socket", "/var/run").
 		VolumeTemporary("buildx", "/root/.docker/buildx").
-		VolumeTemporary("ssh", "/root/.ssh")
+		VolumeTemporary("ssh", "/root/.ssh").
+		VolumeHostPathStandalone("dev", "/dev")
 
 	docker.BuildBaseDroneSteps(output)
 
@@ -76,6 +77,12 @@ func (docker *Docker) BuildBaseDroneSteps(output drone.StepService) {
 			"--log-level=error",
 		},
 		Resources: resources,
+		Volumes: []*yaml.VolumeMount{
+			{
+				Name:      "dev",
+				MountPath: "/dev",
+			},
+		},
 	})
 
 	builderName := "local"
