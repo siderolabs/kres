@@ -12,6 +12,7 @@ import (
 	"github.com/siderolabs/kres/internal/output/dockerfile"
 	"github.com/siderolabs/kres/internal/output/dockerfile/step"
 	"github.com/siderolabs/kres/internal/output/drone"
+	"github.com/siderolabs/kres/internal/output/ghworkflow"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/project/meta"
 )
@@ -128,6 +129,17 @@ func (tests *UnitTests) CompileDrone(output *drone.Output) error {
 
 	output.Step(drone.MakeStep(fmt.Sprintf("%s-race", tests.Name())).
 		DependsOn(dag.GatherMatchingInputNames(tests, dag.Implements[drone.Compiler]())...),
+	)
+
+	return nil
+}
+
+// CompileGitHubWorkflow implements ghworkflow.Compiler.
+func (tests *UnitTests) CompileGitHubWorkflow(output *ghworkflow.Output) error {
+	output.AddStep(
+		"default",
+		ghworkflow.MakeStep(tests.Name()),
+		ghworkflow.MakeStep(fmt.Sprintf("%s-race", tests.Name())),
 	)
 
 	return nil

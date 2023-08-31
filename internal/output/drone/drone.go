@@ -125,7 +125,7 @@ func NewOutput() *Output {
 
 	output.manifest.Resources = append(output.manifest.Resources, output.defaultPipeline)
 
-	output.FileAdapter.FileWriter = output
+	output.FileWriter = output
 
 	return output
 }

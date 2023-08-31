@@ -32,3 +32,8 @@ type CustomStep struct {
 	Inputs   []string `yaml:"inputs"`
 	Toplevel bool     `yaml:"toplevel"`
 }
+
+// CI defines CI settings.
+type CI struct {
+	Provider string `yaml:"provider"`
+}

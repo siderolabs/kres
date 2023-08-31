@@ -26,11 +26,6 @@ type Options struct { //nolint:govet
 	// CanonicalPaths, import path for Go projects.
 	CanonicalPaths []string
 
-	// VersionPackage is a canonical path to version package (if any).
-	//
-	// Deprecared: use VersionPackagePath instead.
-	VersionPackage string
-
 	// VersionPackagePath is a canonical path to version package directory.
 	VersionPackagePath string
 
@@ -87,6 +82,9 @@ type Options struct { //nolint:govet
 
 	// ArtifactsPath binary output path.
 	ArtifactsPath string
+
+	// CIProvider specifies the CI provider. Currently drone/ghaction is supported.
+	CIProvider string
 }
 
 // Command defines Golang executable build configuration.

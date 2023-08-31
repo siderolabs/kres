@@ -10,6 +10,7 @@ import (
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/output/codecov"
 	"github.com/siderolabs/kres/internal/output/drone"
+	"github.com/siderolabs/kres/internal/output/ghworkflow"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/project/meta"
 )
@@ -47,6 +48,13 @@ func (coverage *CodeCov) CompileDrone(output *drone.Output) error {
 		DependsOn(dag.GatherMatchingInputNames(coverage, dag.Implements[drone.Compiler]())...).
 		EnvironmentFromSecret("CODECOV_TOKEN", "CODECOV_TOKEN"),
 	)
+
+	return nil
+}
+
+// CompileGitHubWorkflow implements ghworkflow.Compiler.
+func (coverage *CodeCov) CompileGitHubWorkflow(output *ghworkflow.Output) error {
+	output.AddStep("default", ghworkflow.MakeStep("coverage"))
 
 	return nil
 }

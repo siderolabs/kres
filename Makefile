@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2023-09-04T14:41:14Z by kres 0c12fbf.
+# Generated on 2023-09-05T19:02:56Z by kres 0d3003d-dirty.
 
 # common variables
 
@@ -163,6 +163,20 @@ unit-tests-race:  ## Performs unit tests with race detection enabled.
 coverage:  ## Upload coverage data to codecov.io.
 	bash -c "bash <(curl -s https://codecov.io/bash) -f $(ARTIFACTS)/coverage-unit-tests.txt -X fix"
 
+.PHONY: $(ARTIFACTS)/kres-darwin-amd64
+$(ARTIFACTS)/kres-darwin-amd64:
+	@$(MAKE) local-kres-darwin-amd64 DEST=$(ARTIFACTS)
+
+.PHONY: kres-darwin-amd64
+kres-darwin-amd64: $(ARTIFACTS)/kres-darwin-amd64  ## Builds executable for kres-darwin-amd64.
+
+.PHONY: $(ARTIFACTS)/kres-darwin-arm64
+$(ARTIFACTS)/kres-darwin-arm64:
+	@$(MAKE) local-kres-darwin-arm64 DEST=$(ARTIFACTS)
+
+.PHONY: kres-darwin-arm64
+kres-darwin-arm64: $(ARTIFACTS)/kres-darwin-arm64  ## Builds executable for kres-darwin-arm64.
+
 .PHONY: $(ARTIFACTS)/kres-linux-amd64
 $(ARTIFACTS)/kres-linux-amd64:
 	@$(MAKE) local-kres-linux-amd64 DEST=$(ARTIFACTS)
@@ -170,8 +184,15 @@ $(ARTIFACTS)/kres-linux-amd64:
 .PHONY: kres-linux-amd64
 kres-linux-amd64: $(ARTIFACTS)/kres-linux-amd64  ## Builds executable for kres-linux-amd64.
 
+.PHONY: $(ARTIFACTS)/kres-linux-arm64
+$(ARTIFACTS)/kres-linux-arm64:
+	@$(MAKE) local-kres-linux-arm64 DEST=$(ARTIFACTS)
+
+.PHONY: kres-linux-arm64
+kres-linux-arm64: $(ARTIFACTS)/kres-linux-arm64  ## Builds executable for kres-linux-arm64.
+
 .PHONY: kres
-kres: kres-linux-amd64  ## Builds executables for kres.
+kres: kres-darwin-amd64 kres-darwin-arm64 kres-linux-amd64 kres-linux-arm64  ## Builds executables for kres.
 
 .PHONY: lint-markdown
 lint-markdown:  ## Runs markdownlint.

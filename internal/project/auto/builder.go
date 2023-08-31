@@ -58,6 +58,10 @@ func (builder *builder) build() error {
 			build:  builder.BuildGit,
 		},
 		{
+			detect: builder.DetectCI,
+			build:  builder.BuildCI,
+		},
+		{
 			detect:    builder.DetectJS,
 			build:     builder.BuildJS,
 			mandatory: true,
@@ -112,11 +116,12 @@ func (builder *builder) build() error {
 	rekres := common.NewReKres(builder.meta)
 	makeHelp := common.NewMakeHelp(builder.meta)
 	conformance := common.NewConformance(builder.meta)
+	slackNotify := common.NewSlackNotify(builder.meta)
 
 	release.AddInput(builder.targets...)
 
 	builder.proj.AddTarget(builder.targets...)
-	builder.proj.AddTarget(rekres, all, makeHelp, release, conformance)
+	builder.proj.AddTarget(rekres, all, makeHelp, release, slackNotify, conformance)
 
 	return nil
 }

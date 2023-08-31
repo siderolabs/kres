@@ -7,6 +7,7 @@ package common
 import (
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/output/drone"
+	"github.com/siderolabs/kres/internal/output/ghworkflow"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/project/meta"
 )
@@ -31,6 +32,16 @@ func NewLint(meta *meta.Options) *Lint {
 func (lint *Lint) CompileDrone(output *drone.Output) error {
 	output.Step(drone.MakeStep("lint").
 		DependsOn(dag.GatherMatchingInputNames(lint, dag.Implements[drone.Compiler]())...),
+	)
+
+	return nil
+}
+
+// CompileGitHubWorkflow implements ghworkflow.Compiler.
+func (lint *Lint) CompileGitHubWorkflow(output *ghworkflow.Output) error {
+	output.AddStep(
+		"default",
+		ghworkflow.MakeStep("lint"),
 	)
 
 	return nil

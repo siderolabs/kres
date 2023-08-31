@@ -34,7 +34,7 @@ func NewOutput() *Output {
 		target: 50,
 	}
 
-	output.FileAdapter.FileWriter = output
+	output.FileWriter = output
 
 	return output
 }

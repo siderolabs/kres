@@ -5,17 +5,21 @@
 package common
 
 import (
+	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/siderolabs/gen/xslices"
 
+	"github.com/siderolabs/kres/internal/config"
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/output/drone"
+	"github.com/siderolabs/kres/internal/output/ghworkflow"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/project/meta"
 )
 
-// Release provides common releasr target.
+// Release provides common release target.
 type Release struct {
 	meta *meta.Options
 	dag.BaseNode
@@ -54,6 +58,45 @@ func (release *Release) CompileDrone(output *drone.Output) error {
 		).
 		OnlyOnTag().
 		DependsOn("release-notes"),
+	)
+
+	return nil
+}
+
+// CompileGitHubWorkflow implements ghworkflow.Compiler.
+func (release *Release) CompileGitHubWorkflow(output *ghworkflow.Output) error {
+	artifacts := xslices.Map(release.Artifacts, func(artifact string) string {
+		return filepath.Join(release.meta.ArtifactsPath, artifact)
+	})
+
+	checkSumCommands := []string{
+		fmt.Sprintf("sha256sum %s > %s", strings.Join(artifacts, " "), filepath.Join(release.meta.ArtifactsPath, "sha256sum.txt")),
+		fmt.Sprintf("sha512sum %s > %s", strings.Join(artifacts, " "), filepath.Join(release.meta.ArtifactsPath, "sha512sum.txt")),
+	}
+
+	checkSumStep := &ghworkflow.Step{
+		Name: "Generate Checksums",
+		Run:  strings.Join(checkSumCommands, "\n") + "\n",
+	}
+
+	releaseStep := &ghworkflow.Step{
+		Name: "Release",
+		Uses: fmt.Sprintf("crazy-max/ghaction-github-release@%s", config.ReleaseActionVersion),
+		With: map[string]string{
+			"files":     strings.Join(artifacts, "\n") + "\n" + filepath.Join(release.meta.ArtifactsPath, "sha*.txt"),
+			"body_path": filepath.Join(release.meta.ArtifactsPath, "RELEASE_NOTES.md"),
+			"draft":     "true",
+		},
+	}
+
+	output.AddStep(
+		"default",
+		checkSumStep.
+			OnlyOnTag(),
+		ghworkflow.MakeStep("release-notes").
+			OnlyOnTag(),
+		releaseStep.
+			OnlyOnTag(),
 	)
 
 	return nil

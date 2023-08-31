@@ -2,13 +2,13 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2023-08-21T12:13:35Z by kres b3de460.
+# Generated on 2023-09-05T19:02:56Z by kres 0d3003d-dirty.
 
 ARG TOOLCHAIN
 
-FROM ghcr.io/siderolabs/ca-certificates:v1.5.0 AS image-ca-certificates
+FROM ghcr.io/siderolabs/ca-certificates:v1.6.0-alpha.0-10-gd3d7d29 AS image-ca-certificates
 
-FROM ghcr.io/siderolabs/fhs:v1.5.0 AS image-fhs
+FROM ghcr.io/siderolabs/fhs:v1.6.0-alpha.0-10-gd3d7d29 AS image-fhs
 
 # runs markdownlint
 FROM docker.io/node:20.5.1-alpine3.18 AS lint-markdown
@@ -113,6 +113,30 @@ COPY --from=unit-tests-run /src/coverage.txt /coverage-unit-tests.txt
 FROM scratch AS generate
 COPY --from=embed-abbrev-generate /src/internal/version internal/version
 
+# builds kres-darwin-amd64
+FROM base AS kres-darwin-amd64-build
+COPY --from=generate / /
+COPY --from=embed-generate / /
+WORKDIR /src/cmd/kres
+ARG GO_BUILDFLAGS
+ARG GO_LDFLAGS
+ARG VERSION_PKG="internal/version"
+ARG SHA
+ARG TAG
+RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg GOARCH=amd64 GOOS=darwin go build ${GO_BUILDFLAGS} -ldflags "${GO_LDFLAGS} -X ${VERSION_PKG}.Name=kres -X ${VERSION_PKG}.SHA=${SHA} -X ${VERSION_PKG}.Tag=${TAG}" -o /kres-darwin-amd64
+
+# builds kres-darwin-arm64
+FROM base AS kres-darwin-arm64-build
+COPY --from=generate / /
+COPY --from=embed-generate / /
+WORKDIR /src/cmd/kres
+ARG GO_BUILDFLAGS
+ARG GO_LDFLAGS
+ARG VERSION_PKG="internal/version"
+ARG SHA
+ARG TAG
+RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg GOARCH=arm64 GOOS=darwin go build ${GO_BUILDFLAGS} -ldflags "${GO_LDFLAGS} -X ${VERSION_PKG}.Name=kres -X ${VERSION_PKG}.SHA=${SHA} -X ${VERSION_PKG}.Tag=${TAG}" -o /kres-darwin-arm64
+
 # builds kres-linux-amd64
 FROM base AS kres-linux-amd64-build
 COPY --from=generate / /
@@ -120,15 +144,42 @@ COPY --from=embed-generate / /
 WORKDIR /src/cmd/kres
 ARG GO_BUILDFLAGS
 ARG GO_LDFLAGS
-RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg go build ${GO_BUILDFLAGS} -ldflags "${GO_LDFLAGS}" -o /kres-linux-amd64
+ARG VERSION_PKG="internal/version"
+ARG SHA
+ARG TAG
+RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg GOARCH=amd64 GOOS=linux go build ${GO_BUILDFLAGS} -ldflags "${GO_LDFLAGS} -X ${VERSION_PKG}.Name=kres -X ${VERSION_PKG}.SHA=${SHA} -X ${VERSION_PKG}.Tag=${TAG}" -o /kres-linux-amd64
+
+# builds kres-linux-arm64
+FROM base AS kres-linux-arm64-build
+COPY --from=generate / /
+COPY --from=embed-generate / /
+WORKDIR /src/cmd/kres
+ARG GO_BUILDFLAGS
+ARG GO_LDFLAGS
+ARG VERSION_PKG="internal/version"
+ARG SHA
+ARG TAG
+RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg GOARCH=arm64 GOOS=linux go build ${GO_BUILDFLAGS} -ldflags "${GO_LDFLAGS} -X ${VERSION_PKG}.Name=kres -X ${VERSION_PKG}.SHA=${SHA} -X ${VERSION_PKG}.Tag=${TAG}" -o /kres-linux-arm64
+
+FROM scratch AS kres-darwin-amd64
+COPY --from=kres-darwin-amd64-build /kres-darwin-amd64 /kres-darwin-amd64
+
+FROM scratch AS kres-darwin-arm64
+COPY --from=kres-darwin-arm64-build /kres-darwin-arm64 /kres-darwin-arm64
 
 FROM scratch AS kres-linux-amd64
 COPY --from=kres-linux-amd64-build /kres-linux-amd64 /kres-linux-amd64
 
+FROM scratch AS kres-linux-arm64
+COPY --from=kres-linux-arm64-build /kres-linux-arm64 /kres-linux-arm64
+
 FROM kres-linux-${TARGETARCH} AS kres
 
 FROM scratch AS kres-all
+COPY --from=kres-darwin-amd64 / /
+COPY --from=kres-darwin-arm64 / /
 COPY --from=kres-linux-amd64 / /
+COPY --from=kres-linux-arm64 / /
 
 FROM scratch AS image-kres
 ARG TARGETARCH
