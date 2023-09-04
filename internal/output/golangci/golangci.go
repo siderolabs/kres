@@ -10,8 +10,9 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
+	"slices"
 
-	"github.com/siderolabs/gen/slices"
+	"github.com/siderolabs/gen/xslices"
 
 	"github.com/siderolabs/kres/internal/output"
 )
@@ -69,16 +70,12 @@ func (o *Output) Filenames() []string {
 		return nil
 	}
 
-	return slices.Map(o.files, func(f file) string { return f.path })
+	return xslices.Map(o.files, func(f file) string { return f.path })
 }
 
 // GenerateFile implements output.FileWriter interface.
 func (o *Output) GenerateFile(filename string, w io.Writer) error {
-	index := slices.IndexFunc(o.files, func(f file) bool {
-		return f.path == filename
-	})
-
-	if index >= 0 {
+	if index := slices.IndexFunc(o.files, func(f file) bool { return f.path == filename }); index >= 0 {
 		return o.config(o.files[index], w)
 	}
 

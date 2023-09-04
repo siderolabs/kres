@@ -1,13 +1,13 @@
 module github.com/siderolabs/kres
 
-go 1.20
+go 1.21.0
 
 require (
 	github.com/drone/drone-yaml v1.2.3
 	github.com/go-git/go-git/v5 v5.8.1
 	github.com/google/go-github/v53 v53.2.0
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
-	github.com/siderolabs/gen v0.4.5
+	github.com/siderolabs/gen v0.4.6
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/mod v0.12.0

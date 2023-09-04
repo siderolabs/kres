@@ -11,7 +11,7 @@ import (
 	"sort"
 
 	"github.com/google/go-github/v53/github"
-	"github.com/siderolabs/gen/slices"
+	"github.com/siderolabs/gen/xslices"
 
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/output/conform"
@@ -179,7 +179,7 @@ func (r *Repository) enableBranchProtection(client *github.Client) error {
 
 		RequiredStatusChecks: &github.RequiredStatusChecks{
 			Strict: true,
-			Checks: slices.Map(enforceContexts, func(c string) *github.RequiredStatusCheck {
+			Checks: xslices.Map(enforceContexts, func(c string) *github.RequiredStatusCheck {
 				return &github.RequiredStatusCheck{
 					Context: c,
 				}
@@ -206,7 +206,7 @@ func (r *Repository) enableBranchProtection(client *github.Client) error {
 			branchProtection.GetRequiredStatusChecks() != nil &&
 			branchProtection.GetRequiredStatusChecks().Strict == req.RequiredStatusChecks.Strict &&
 			equalStringSlices(
-				slices.Map(branchProtection.GetRequiredStatusChecks().Checks,
+				xslices.Map(branchProtection.GetRequiredStatusChecks().Checks,
 					func(s *github.RequiredStatusCheck) string {
 						return s.Context
 					}), enforceContexts) &&

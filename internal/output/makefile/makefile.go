@@ -7,9 +7,8 @@ package makefile
 
 import (
 	"io"
+	"slices"
 	"sort"
-
-	"github.com/siderolabs/gen/slices"
 
 	"github.com/siderolabs/kres/internal/output"
 )
@@ -67,7 +66,7 @@ func (o *Output) Target(name string) *Target {
 
 // HasTarget checks that target exists.
 func (o *Output) HasTarget(name string) bool {
-	return slices.Contains(o.targets, func(t *Target) bool {
+	return slices.ContainsFunc(o.targets, func(t *Target) bool {
 		return t.name == name
 	})
 }

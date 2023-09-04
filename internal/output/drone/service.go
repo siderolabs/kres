@@ -5,8 +5,9 @@
 package drone
 
 import (
+	"slices"
+
 	"github.com/drone/drone-yaml/yaml"
-	"github.com/siderolabs/gen/slices"
 )
 
 // Service appends a new service.

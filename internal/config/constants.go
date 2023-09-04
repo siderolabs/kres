@@ -32,7 +32,7 @@ const (
 	GoVersion = "1.21"
 	// GrpcGatewayVersion is the version of grpc-gateway.
 	// renovate: datasource=go depName=github.com/grpc-ecosystem/grpc-gateway
-	GrpcGatewayVersion = "v2.16.2"
+	GrpcGatewayVersion = "v2.17.1"
 	// GrpcGoVersion is the version of grpc.
 	// renovate: datasource=go depName=google.golang.org/grpc/cmd/protoc-gen-go-grpc
 	GrpcGoVersion = "v1.3.0"
@@ -47,7 +47,7 @@ const (
 	PkgsVersion = "v1.5.0"
 	// ProtobufGoVersion is the version of protobuf.
 	// renovate: datasource=go depName=google.golang.org/protobuf/cmd/protoc-gen-go
-	ProtobufGoVersion = "v1.28.1"
+	ProtobufGoVersion = "v1.31.0"
 	// ProtobufTSGatewayVersion is the version of protobuf-ts.
 	// renovate: datasource=go depName=github.com/siderolabs/protoc-gen-grpc-gateway-ts
 	ProtobufTSGatewayVersion = "v1.2.0"

@@ -6,10 +6,10 @@ package drone
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/drone/drone-yaml/yaml"
-	"github.com/siderolabs/gen/slices"
 )
 
 // Step is a pipeline Step.
@@ -66,9 +66,7 @@ func (step *Step) EnvironmentFromSecret(name, secretName string) *Step {
 // DependsOn appends to a list of step dependencies.
 func (step *Step) DependsOn(depends ...string) *Step {
 	for _, dep := range depends {
-		if slices.Contains(step.container.DependsOn, func(d string) bool {
-			return d == dep
-		}) {
+		if slices.Contains(step.container.DependsOn, dep) {
 			continue
 		}
 

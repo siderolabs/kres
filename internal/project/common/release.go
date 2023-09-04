@@ -7,7 +7,7 @@ package common
 import (
 	"path/filepath"
 
-	"github.com/siderolabs/gen/slices"
+	"github.com/siderolabs/gen/xslices"
 
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/output/drone"
@@ -48,7 +48,7 @@ func (release *Release) CompileDrone(output *drone.Output) error {
 		Image("plugins/github-release").
 		PublishArtifacts(
 			filepath.Join(release.meta.ArtifactsPath, "RELEASE_NOTES.md"),
-			slices.Map(release.Artifacts, func(artifact string) string {
+			xslices.Map(release.Artifacts, func(artifact string) string {
 				return filepath.Join(release.meta.ArtifactsPath, artifact)
 			})...,
 		).

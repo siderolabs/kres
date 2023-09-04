@@ -8,10 +8,10 @@ package drone
 import (
 	"bytes"
 	"io"
+	"slices"
 
 	"github.com/drone/drone-yaml/yaml"
 	"github.com/drone/drone-yaml/yaml/pretty"
-	"github.com/siderolabs/gen/slices"
 
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/output"
@@ -152,7 +152,7 @@ func (o *Output) appendStep(originalStep *Step, pipeline *yaml.Pipeline) {
 	step.container.Volumes = append(step.container.Volumes, o.standardMounts...)
 
 	for _, volume := range step.volumes {
-		if !slices.Contains(o.volumes, func(v *yaml.Volume) bool { return v.Name == volume.Name }) {
+		if !slices.ContainsFunc(o.volumes, func(v *yaml.Volume) bool { return v.Name == volume.Name }) {
 			o.volumes = append(o.volumes, step.volumes...)
 		}
 	}

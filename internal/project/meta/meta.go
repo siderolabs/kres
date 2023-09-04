@@ -6,7 +6,7 @@
 package meta
 
 import (
-	"github.com/siderolabs/gen/slices"
+	"slices"
 
 	"github.com/siderolabs/kres/internal/config"
 )
@@ -104,9 +104,7 @@ type BuildArgs []string
 // Add adds the args to list if it doesn't exist already.
 func (args *BuildArgs) Add(arg ...string) {
 	for _, value := range arg {
-		if slices.Contains(*args, func(a string) bool {
-			return a == value
-		}) {
+		if slices.Contains(*args, value) {
 			continue
 		}
 
