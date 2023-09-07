@@ -1,0 +1,78 @@
+name: slack
+on:
+  workflow_run:
+    workflows: ["default"]
+    types:
+      - completed
+jobs:
+  default:
+    runs-on: self-hosted
+    steps:
+      - name: Slack Notify
+        if: always()
+        uses: slackapi/slack-github-action@v1
+        with:
+          channel-id: proj-talos-maintainers
+          payload: |
+            {
+                "attachments": [
+                    {
+                        "color": "${{ job.status == 'success' && '#2EB886' || job.status == 'failure' && '#A30002' || '#FFCC00' }}",
+                        "fallback": "test",
+                        "blocks": [
+                            {
+                                "type": "section",
+                                "fields": [
+                                    {
+                                        "type": "mrkdwn",
+                                        "text": "${{ github.event_name == 'pull_request' && format('*Pull Request:* {0} (`{1}`)\n<{2}|{3}>', github.repository, github.base_ref, github.event.pull_request.html_url, github.event.pull_request.title) || format('*Build:* {0}#{1} (`{2}`)', github.repository, github.sha, github.ref_name) }}"
+                                    },
+                                    {
+                                        "type": "mrkdwn",
+                                        "text": "*Status:*\n`${{ job.status }}`"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "section",
+                                "fields": [
+                                    {
+                                        "type": "mrkdwn",
+                                        "text": "*Author:*\n`${{ github.actor }}`"
+                                    },
+                                    {
+                                        "type": "mrkdwn",
+                                        "text": "*Event:*\n`${{ github.event_name }}`"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "divider"
+                            },
+                            {
+                                "type": "actions",
+                                "elements": [
+                                    {
+                                        "type": "button",
+                                        "text": {
+                                            "type": "plain_text",
+                                            "text": "Logs"
+                                        },
+                                        "url": "${{ github.event.repository.html_url }}/actions/runs/${{ github.run_id }}"
+                                    },
+                                    {
+                                        "type": "button",
+                                        "text": {
+                                            "type": "plain_text",
+                                            "text": "Commit"
+                                        },
+                                        "url": "${{ github.event.repository.html_url }}/commit/${{ github.sha }}"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
