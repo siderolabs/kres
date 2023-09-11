@@ -52,6 +52,7 @@ func NewOutput() *Output {
 			},
 			Jobs: map[string]*Job{
 				"default": {
+					If:     "${{ !startsWith(github.head_ref, 'renovate/') || !startsWith(github.head_ref, 'renovate/') }}",
 					RunsOn: []string{hostedRunner, "X64"},
 					Permissions: map[string]string{
 						"packages": "write",
