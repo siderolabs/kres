@@ -12,6 +12,7 @@ import (
 	"github.com/siderolabs/kres/internal/output/dockerfile"
 	dockerstep "github.com/siderolabs/kres/internal/output/dockerfile/step"
 	"github.com/siderolabs/kres/internal/output/drone"
+	"github.com/siderolabs/kres/internal/output/ghworkflow"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/project/meta"
 )
@@ -77,6 +78,11 @@ type Step struct {
 			EnvironmentOverride map[string]string `yaml:"environmentOverride"`
 		}
 	} `yaml:"drone"`
+
+	GHAction struct {
+		Enabled     bool              `yaml:"enabled"`
+		Environment map[string]string `yaml:"environment"`
+	} `yaml:"ghaction"`
 }
 
 // NewStep initializes Step.
@@ -242,6 +248,26 @@ func (step *Step) CompileDrone(output *drone.Output) error {
 // DroneEnabled implements drone.CustomCompiler.
 func (step *Step) DroneEnabled() bool {
 	return step.Drone.Enabled
+}
+
+// CompileGitHubWorkflow implements ghworkflow.Compiler.
+func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
+	if !step.GHAction.Enabled {
+		return nil
+	}
+
+	workflowStep := ghworkflow.MakeStep(step.Name())
+
+	for k, v := range step.GHAction.Environment {
+		workflowStep.SetEnv(k, v)
+	}
+
+	output.AddStep(
+		"default",
+		workflowStep,
+	)
+
+	return nil
 }
 
 // CompileMakefile implements makefile.Compiler.
