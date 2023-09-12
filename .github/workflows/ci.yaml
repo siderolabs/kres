@@ -1,3 +1,7 @@
+# THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
+#
+# Generated on 2023-09-12T11:35:50Z by kres 3cbfe81-dirty.
+
 name: default
 "on":
   push:

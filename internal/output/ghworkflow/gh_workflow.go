@@ -167,6 +167,12 @@ func (o *Output) GenerateFile(filename string, w io.Writer) error {
 }
 
 func (o *Output) config(w io.Writer) error {
+	preamble := output.Preamble("# ")
+
+	if _, err := w.Write([]byte(preamble)); err != nil {
+		return fmt.Errorf("failed to write preamble: %w", err)
+	}
+
 	encoder := yaml.NewEncoder(w)
 
 	defer encoder.Close() //nolint:errcheck
