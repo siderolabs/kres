@@ -16,8 +16,9 @@ type Workflow struct {
 
 // On represents GitHub Actions event triggers.
 type On struct {
-	Push        `yaml:"push"`
-	PullRequest `yaml:"pull_request"`
+	Push        `yaml:"push,omitempty"`
+	PullRequest `yaml:"pull_request,omitempty"`
+	WorkFlowRun `yaml:"workflow_run,omitempty"`
 }
 
 // Branches represents GitHub Actions branch filters.
@@ -26,6 +27,12 @@ type Branches []string
 // PullRequest represents GitHub Actions pull request filters.
 type PullRequest struct {
 	Branches `yaml:"branches,omitempty"`
+}
+
+// WorkFlowRun represents GitHub Actions workflow_run filters.
+type WorkFlowRun struct {
+	Workflows []string `yaml:"workflows"`
+	Types     []string `yaml:"types"`
 }
 
 // PullRequestTarget represents GitHub Actions pull request target filters.
@@ -49,6 +56,7 @@ type Job struct {
 // Step represents GitHub Actions step.
 type Step struct {
 	Name string            `yaml:"name"`
+	ID   string            `yaml:"id,omitempty"`
 	If   string            `yaml:"if,omitempty"`
 	Uses string            `yaml:"uses,omitempty"`
 	With map[string]string `yaml:"with,omitempty"`

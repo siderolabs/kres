@@ -36,6 +36,12 @@
             "versioning": "regex:^v(?<major>\\d+)"
         },
         {
+            "matchPackageNames": [
+                "potiuk/get-workflow-origin"
+            ],
+            "versioning": "regex:^v(?<major>\\d+)_(?<minor>\\d+)_?(?<patch>\\d+)?$"
+        },
+        {
             "matchPackagePatterns": [
                 "*"
             ],

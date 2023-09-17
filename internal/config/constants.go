@@ -22,12 +22,15 @@ const (
 	// DockerfileFrontendImageVersion is the version of the dockerfile frontend image.
 	// renovate: datasource=docker versioning=docker depName=docker/dockerfile-upstream
 	DockerfileFrontendImageVersion = "1.6.0-labs"
+	// GetWorkflowOriginActionVersion is the version of get workflow github action.
+	// renovate: datasource=github-releases depName=potiuk/get-workflow-origin
+	GetWorkflowOriginActionVersion = "v1_6"
 	// GoFmtVersion is the version of gofmt.
 	// renovate: datasource=go depName=github.com/mvdan/gofumpt
 	GoFmtVersion = "v0.5.0"
 	// GoImportsVersion is the version of goimports.
 	// renovate: datasource=go depName=golang.org/x/tools
-	GoImportsVersion = "v0.12.0"
+	GoImportsVersion = "v0.13.0"
 	// GolangCIlintVersion is the version of golangci-lint.
 	// renovate: datasource=go depName=github.com/golangci/golangci-lint
 	GolangCIlintVersion = "v1.54.2"
@@ -39,7 +42,7 @@ const (
 	GoVersion = "1.21"
 	// GrpcGatewayVersion is the version of grpc-gateway.
 	// renovate: datasource=go depName=github.com/grpc-ecosystem/grpc-gateway
-	GrpcGatewayVersion = "v2.17.1"
+	GrpcGatewayVersion = "v2.18.0"
 	// GrpcGoVersion is the version of grpc.
 	// renovate: datasource=go depName=google.golang.org/grpc/cmd/protoc-gen-go-grpc
 	GrpcGoVersion = "v1.3.0"
@@ -48,10 +51,10 @@ const (
 	LoginActionVersion = "v2"
 	// MardownLintCLIVersion is the version of markdownlint.
 	// renovate: datasource=npm depName=markdownlint-cli
-	MardownLintCLIVersion = "0.35.0"
+	MardownLintCLIVersion = "0.36.0"
 	// NodeContainerImageVersion is the default node container image.
 	// renovate: datasource=docker versioning=docker depName=node
-	NodeContainerImageVersion = "20.5.1-alpine3.18"
+	NodeContainerImageVersion = "20.6.1-alpine3.18"
 	// PkgsVersion is the version of pkgs.
 	// renovate: datasource=github-tags depName=siderolabs/pkgs
 	PkgsVersion = "v1.6.0-alpha.0-10-gd3d7d29"
@@ -75,5 +78,5 @@ const (
 	SlackNotifyActionVersion = "v1"
 	// VTProtobufVersion is the version of vtprotobuf.
 	// renovate: datasource=go depName=github.com/planetscale/vtprotobuf
-	VTProtobufVersion = "v0.4.0"
+	VTProtobufVersion = "v0.5.0"
 )

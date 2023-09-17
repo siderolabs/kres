@@ -1,7 +1,7 @@
 {
     "attachments": [
         {
-            "color": "${{ job.status == 'success' && '#2EB886' || job.status == 'failure' && '#A30002' || '#FFCC00' }}",
+            "color": "${{ github.event.workflow_run.conclusion == 'success' && '#2EB886' || github.event.workflow_run.conclusion == 'failure' && '#A30002' || '#FFCC00' }}",
             "fallback": "test",
             "blocks": [
                 {
@@ -9,11 +9,11 @@
                     "fields": [
                         {
                             "type": "mrkdwn",
-                            "text": "${{ github.event_name == 'pull_request' && format('*Pull Request:* {0} (`{1}`)\n<{2}|{3}>', github.repository, github.base_ref, github.event.pull_request.html_url, github.event.pull_request.title) || format('*Build:* {0}#{1} (`{2}`)', github.repository, github.sha, github.ref_name) }}"
+                            "text": "${{ github.event.workflow_run.event == 'pull_request' && format('*Pull Request:* {0} (`{1}`)\n<{2}/pull/{3}|{4}>', github.repository, github.ref_name, github.event.repository.html_url, steps.retrieve-workflow-run-info.outputs.pullRequestNumber, github.event.workflow_run.display_title) || format('*Build:* {0}#{1} (`{2}`)', github.repository, github.sha, github.ref_name) }}"
                         },
                         {
                             "type": "mrkdwn",
-                            "text": "*Status:*\n`${{ job.status }}`"
+                            "text": "*Status:*\n`${{ github.event.workflow_run.conclusion }}`"
                         }
                     ]
                 },
@@ -26,7 +26,7 @@
                         },
                         {
                             "type": "mrkdwn",
-                            "text": "*Event:*\n`${{ github.event_name }}`"
+                            "text": "*Event:*\n`${{ github.event.workflow_run.event }}`"
                         }
                     ]
                 },
@@ -42,7 +42,7 @@
                                 "type": "plain_text",
                                 "text": "Logs"
                             },
-                            "url": "${{ github.event.repository.html_url }}/actions/runs/${{ github.run_id }}"
+                            "url": "${{ github.event.workflow_run.html_url }}"
                         },
                         {
                             "type": "button",

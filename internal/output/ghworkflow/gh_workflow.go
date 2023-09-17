@@ -18,37 +18,44 @@ import (
 )
 
 const (
-	hostedRunner     = "self-hosted"
-	filename         = ".github/workflows/ci.yaml"
-	internalRegistry = "registry.dev.siderolabs.io"
-	cacheImagRef     = "${GITHUB_REPOSITORY}:buildcache"
-	cacheType        = "type=registry,ref=" + internalRegistry + "/" + cacheImagRef
+	hostedRunner  = "self-hosted"
+	ciWorkflow    = ".github/workflows/ci.yaml"
+	slackWorkflow = ".github/workflows/slack-notify.yaml"
 )
 
 //go:embed files/buildkitd.toml
 var buildkitdConfig string
 
+//go:embed files/slack-notify-payload.json
+var slackNotifyPayload string
+
 // Output implements GitHub Actions project config generation.
 type Output struct {
 	output.FileAdapter
 
-	workflow *Workflow
+	defaultWorkflow     *Workflow
+	slackNotifyWorkflow *Workflow
 }
 
 // NewOutput creates new .github/workflows/ci.yaml output.
 func NewOutput() *Output {
 	output := &Output{
-		workflow: &Workflow{
+		defaultWorkflow: &Workflow{
 			Name: "default",
 			On: On{
 				Push: Push{
-					Branches: []string{"main"},
-					Tags:     []string{"v*"},
+					Branches: []string{
+						"main",
+						"release-*",
+					},
+					Tags: []string{"v*"},
 				},
-				PullRequest: PullRequest{},
-			},
-			Env: map[string]string{
-				"CI_ARGS": fmt.Sprintf("--cache-from=%s --cache-to=%s,mode=max", cacheType, cacheType),
+				PullRequest: PullRequest{
+					Branches: []string{
+						"main",
+						"release-*",
+					},
+				},
 			},
 			Jobs: map[string]*Job{
 				"default": {
@@ -62,6 +69,42 @@ func NewOutput() *Output {
 				},
 			},
 		},
+		slackNotifyWorkflow: &Workflow{
+			Name: "slack-notify",
+			On: On{
+				WorkFlowRun: WorkFlowRun{
+					Workflows: []string{"default"},
+					Types:     []string{"completed"},
+				},
+			},
+			Jobs: map[string]*Job{
+				"slack-notify": {
+					RunsOn: []string{hostedRunner},
+					Steps: []*Step{
+						{
+							Name: "Retrieve Workflow Run Info",
+							ID:   "retrieve-workflow-run-info",
+							Uses: fmt.Sprintf("potiuk/get-workflow-origin@%s", config.GetWorkflowOriginActionVersion),
+							With: map[string]string{
+								"token":       "${{ secrets.GITHUB_TOKEN }}",
+								"sourceRunId": "${{ github.event.workflow_run.id }}",
+							},
+						},
+						{
+							Name: "Slack Notify",
+							Uses: fmt.Sprintf("slackapi/slack-github-action@%s", config.SlackNotifyActionVersion),
+							With: map[string]string{
+								"channel-id": "proj-talos-maintainers",
+								"payload":    slackNotifyPayload,
+							},
+							Env: map[string]string{
+								"SLACK_BOT_TOKEN": "${{ secrets.SLACK_BOT_TOKEN }}",
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 
 	output.FileWriter = output
@@ -71,12 +114,12 @@ func NewOutput() *Output {
 
 // AddJob adds job to the workflow.
 func (o *Output) AddJob(name string, job *Job) {
-	o.workflow.Jobs[name] = job
+	o.defaultWorkflow.Jobs[name] = job
 }
 
 // AddStep adds step to the job.
 func (o *Output) AddStep(jobName string, steps ...*Step) {
-	o.workflow.Jobs[jobName].Steps = append(o.workflow.Jobs[jobName].Steps, steps...)
+	o.defaultWorkflow.Jobs[jobName].Steps = append(o.defaultWorkflow.Jobs[jobName].Steps, steps...)
 }
 
 // DefaultSteps returns default steps for the workflow.
@@ -153,20 +196,22 @@ func (o *Output) Compile(compiler Compiler) error {
 
 // Filenames implements output.FileWriter interface.
 func (o *Output) Filenames() []string {
-	return []string{filename}
+	return []string{ciWorkflow, slackWorkflow}
 }
 
 // GenerateFile implements output.FileWriter interface.
 func (o *Output) GenerateFile(filename string, w io.Writer) error {
 	switch filename {
-	case filename:
-		return o.config(w)
+	case ciWorkflow:
+		return o.ghWorkflow(w)
+	case slackWorkflow:
+		return o.slackWorkflow(w)
 	default:
 		panic("unexpected filename: " + filename)
 	}
 }
 
-func (o *Output) config(w io.Writer) error {
+func (o *Output) ghWorkflow(w io.Writer) error {
 	preamble := output.Preamble("# ")
 
 	if _, err := w.Write([]byte(preamble)); err != nil {
@@ -179,7 +224,31 @@ func (o *Output) config(w io.Writer) error {
 
 	encoder.SetIndent(2)
 
-	if err := encoder.Encode(o.workflow); err != nil {
+	if err := encoder.Encode(o.defaultWorkflow); err != nil {
+		return fmt.Errorf("failed to encode workflow: %w", err)
+	}
+
+	if err := encoder.Close(); err != nil {
+		return fmt.Errorf("failed to close encoder: %w", err)
+	}
+
+	return nil
+}
+
+func (o *Output) slackWorkflow(w io.Writer) error {
+	preamble := output.Preamble("# ")
+
+	if _, err := w.Write([]byte(preamble)); err != nil {
+		return fmt.Errorf("failed to write preamble: %w", err)
+	}
+
+	encoder := yaml.NewEncoder(w)
+
+	defer encoder.Close() //nolint:errcheck
+
+	encoder.SetIndent(2)
+
+	if err := encoder.Encode(o.slackNotifyWorkflow); err != nil {
 		return fmt.Errorf("failed to encode workflow: %w", err)
 	}
 

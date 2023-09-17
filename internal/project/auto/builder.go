@@ -116,12 +116,11 @@ func (builder *builder) build() error {
 	rekres := common.NewReKres(builder.meta)
 	makeHelp := common.NewMakeHelp(builder.meta)
 	conformance := common.NewConformance(builder.meta)
-	slackNotify := common.NewSlackNotify(builder.meta)
 
 	release.AddInput(builder.targets...)
 
 	builder.proj.AddTarget(builder.targets...)
-	builder.proj.AddTarget(rekres, all, makeHelp, release, slackNotify, conformance)
+	builder.proj.AddTarget(rekres, all, makeHelp, release, conformance)
 
 	return nil
 }
