@@ -24,7 +24,7 @@ const (
 	DockerfileFrontendImageVersion = "1.6.0-labs"
 	// GetWorkflowOriginActionVersion is the version of get workflow github action.
 	// renovate: datasource=github-releases depName=potiuk/get-workflow-origin
-	GetWorkflowOriginActionVersion = "v1_6"
+	GetWorkflowOriginActionVersion = "v1_5"
 	// GoFmtVersion is the version of gofmt.
 	// renovate: datasource=go depName=github.com/mvdan/gofumpt
 	GoFmtVersion = "v0.5.0"
@@ -39,7 +39,7 @@ const (
 	GolangContainerImageVersion = "1.21-alpine"
 	// GoVersion is the version of Go.
 	// renovate: datasource=github-tags extractVersion=^go(?<version>.*)$ depName=golang/go
-	GoVersion = "1.21"
+	GoVersion = "1.21.1"
 	// GrpcGatewayVersion is the version of grpc-gateway.
 	// renovate: datasource=go depName=github.com/grpc-ecosystem/grpc-gateway
 	GrpcGatewayVersion = "v2.18.0"
