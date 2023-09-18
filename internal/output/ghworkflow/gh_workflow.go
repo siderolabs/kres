@@ -80,6 +80,7 @@ func NewOutput() *Output {
 			Jobs: map[string]*Job{
 				"slack-notify": {
 					RunsOn: []string{hostedRunner},
+					If:     "${{ github.event.workflow_run.conclusion != 'skipped' }}",
 					Steps: []*Step{
 						{
 							Name: "Retrieve Workflow Run Info",
