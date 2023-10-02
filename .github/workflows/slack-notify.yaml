@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2023-09-18T19:16:56Z by kres 0bf4591-dirty.
+# Generated on 2023-09-27T09:59:04Z by kres e52eb75-dirty.
 
 name: slack-notify
 "on":
@@ -13,6 +13,7 @@ jobs:
   slack-notify:
     runs-on:
       - self-hosted
+      - generic
     if: ${{ github.event.workflow_run.conclusion != 'skipped' }}
     steps:
       - name: Retrieve Workflow Run Info

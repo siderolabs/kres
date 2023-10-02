@@ -7,7 +7,12 @@ package custom
 
 import (
 	"fmt"
+	"strings"
 
+	"github.com/siderolabs/gen/maps"
+	"github.com/siderolabs/gen/xslices"
+
+	"github.com/siderolabs/kres/internal/config"
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/output/dockerfile"
 	dockerstep "github.com/siderolabs/kres/internal/output/dockerfile/step"
@@ -80,8 +85,24 @@ type Step struct {
 	} `yaml:"drone"`
 
 	GHAction struct {
-		Enabled     bool              `yaml:"enabled"`
 		Environment map[string]string `yaml:"environment"`
+		Jobs        []struct {
+			Name                string            `yaml:"name"`
+			EnvironmentOverride map[string]string `yaml:"environmentOverride"`
+			Crons               []string          `yaml:"crons"`
+			RunnerLabels        []string          `yaml:"runnerLabels"`
+			TriggerLabels       []string          `yaml:"triggerLabels"`
+		} `yaml:"jobs"`
+		Artifacts struct {
+			ExtraPaths []string `yaml:"extraPaths"`
+			Additional []struct {
+				Name   string   `yaml:"name"`
+				Paths  []string `yaml:"paths"`
+				Always bool     `yaml:"always"`
+			} `yaml:"additional"`
+			Enabled bool `yaml:"enabled"`
+		} `yaml:"artifacts"`
+		Enabled bool `yaml:"enabled"`
 	} `yaml:"ghaction"`
 }
 
@@ -262,10 +283,144 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		workflowStep.SetEnv(k, v)
 	}
 
+	steps := []*ghworkflow.Step{workflowStep}
+
+	if step.GHAction.Artifacts.Enabled {
+		steps = append(steps,
+			&ghworkflow.Step{
+				Name: "Generate executable list",
+				Run:  fmt.Sprintf("find %s -type f -executable > %s/executable-artifacts", step.meta.ArtifactsPath, step.meta.ArtifactsPath) + "\n",
+			},
+			&ghworkflow.Step{
+				Name: "save-artifacts",
+				Uses: fmt.Sprintf("actions/upload-artifact@%s", config.UploadArtifactActionVersion),
+				With: map[string]string{
+					"name":           "artifacts",
+					"path":           step.meta.ArtifactsPath + "\n" + strings.Join(step.GHAction.Artifacts.ExtraPaths, "\n"),
+					"retention-days": "5",
+				},
+			},
+		)
+
+		for _, additionalArtifact := range step.GHAction.Artifacts.Additional {
+			artifactStep := &ghworkflow.Step{
+				Name: fmt.Sprintf("save-%s-artifacts", additionalArtifact.Name),
+				Uses: fmt.Sprintf("actions/upload-artifact@%s", config.UploadArtifactActionVersion),
+				With: map[string]string{
+					"name":           additionalArtifact.Name,
+					"path":           strings.Join(additionalArtifact.Paths, "\n"),
+					"retention-days": "5",
+				},
+			}
+
+			if additionalArtifact.Always {
+				artifactStep.If = "always()"
+			}
+
+			steps = append(steps,
+				artifactStep,
+			)
+		}
+	}
+
 	output.AddStep(
 		"default",
-		workflowStep,
+		steps...,
 	)
+
+	runnerLabels := []string{
+		ghworkflow.HostedRunner,
+	}
+
+	labelsToMap := make(map[string]struct{}, 0)
+
+	for _, job := range step.GHAction.Jobs {
+		conditions := xslices.Map(job.TriggerLabels, func(label string) string {
+			labelsToMap["\""+label+"\""] = struct{}{}
+
+			return fmt.Sprintf("contains(github.event.pull_request.labels.*.name, '%s')", label)
+		})
+
+		output.AddJob(job.Name, &ghworkflow.Job{
+			RunsOn:   append(runnerLabels, job.RunnerLabels...),
+			If:       fmt.Sprintf("${{ %s }}", strings.Join(conditions, " || ")),
+			Needs:    []string{"default"},
+			Services: ghworkflow.DefaultServices(),
+			Steps:    ghworkflow.DefaultSteps(),
+		})
+
+		steps := []*ghworkflow.Step{
+			{
+				Name: "Download artifacts",
+				Uses: fmt.Sprintf("actions/download-artifact@%s", config.DownloadArtifactActionVersion),
+				With: map[string]string{
+					"name": "artifacts",
+					"path": step.meta.ArtifactsPath,
+				},
+			},
+			{
+				Name: "Fix artifact permissions",
+				Run:  fmt.Sprintf("xargs -a %s/executable-artifacts -I {} chmod +x {}", step.meta.ArtifactsPath) + "\n",
+			},
+		}
+
+		workflowStep := ghworkflow.MakeStep(step.Name())
+
+		for k, v := range step.GHAction.Environment {
+			workflowStep.SetEnv(k, v)
+		}
+
+		for k, v := range job.EnvironmentOverride {
+			workflowStep.SetEnv(k, v)
+		}
+
+		steps = append(steps, workflowStep)
+
+		output.AddStep(
+			job.Name,
+			steps...,
+		)
+
+		if len(job.Crons) > 0 {
+			workflowName := fmt.Sprintf("%s-cron", job.Name)
+
+			output.AddSlackNotify(workflowName)
+
+			output.AddWorkflow(
+				workflowName,
+				&ghworkflow.Workflow{
+					Name: workflowName,
+					// https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-a-fallback-value
+					Concurrency: ghworkflow.Concurrency{
+						Group:            "${{ github.head_ref || github.run_id }}",
+						CancelInProgress: true,
+					},
+					On: ghworkflow.On{
+						Schedule: xslices.Map(job.Crons, func(cron string) ghworkflow.Schedule {
+							return ghworkflow.Schedule{
+								Cron: cron,
+							}
+						}),
+					},
+					Jobs: map[string]*ghworkflow.Job{
+						"default": {
+							RunsOn:   append(runnerLabels, job.RunnerLabels...),
+							Services: ghworkflow.DefaultServices(),
+							Steps:    append(ghworkflow.DefaultSteps(), workflowStep),
+						},
+					},
+				},
+			)
+		}
+	}
+
+	if len(labelsToMap) > 0 {
+		labelsJSON := fmt.Sprintf("fromJSON('[%s]')", strings.Join(maps.Keys(labelsToMap), ", "))
+		condition := fmt.Sprintf("%s && (github.event.label == null || (contains(%s, github.event.label.name)))", ghworkflow.DefaultSkipCondition, labelsJSON)
+
+		output.OverrideDefaultJobCondition(condition)
+		output.AddPullRequestLabelCondition()
+	}
 
 	return nil
 }

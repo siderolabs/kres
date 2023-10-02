@@ -17,12 +17,6 @@ import (
 	"github.com/siderolabs/kres/internal/project/meta"
 )
 
-const (
-	internalRegistry = "registry.dev.siderolabs.io"
-	cacheImage       = internalRegistry + "/" + "${GITHUB_REPOSITORY}"
-	cacheTypeMain    = "type=registry,ref=" + cacheImage + ":" + "buildcache-main"
-)
-
 // Docker provides build infrastructure via docker buildx.
 type Docker struct { //nolint:govet
 	dag.BaseNode
@@ -135,20 +129,6 @@ func (docker *Docker) CompileMakefile(output *makefile.Output) error {
 		Variable(makefile.OverridableVariable("PUSH", "false")).
 		Variable(makefile.OverridableVariable("CI_ARGS", "")).
 		Variable(buildArgs)
-
-	if docker.meta.CIProvider == config.CIProviderGitHubActions {
-		cacheTypeBranch := "type=registry,ref=" + cacheImage + ":" + "buildcache-" + "$(GITHUB_BRANCH)"
-
-		output.IfTrueCondition("CI").
-			Then(
-				makefile.SimpleVariable("GITHUB_BRANCH", "$(subst /,-,${GITHUB_HEAD_REF})"),
-				makefile.SimpleVariable("GITHUB_BRANCH", "$(subst +,-,$(GITHUB_BRANCH))"),
-				makefile.SimpleVariable(
-					"CI_ARGS",
-					fmt.Sprintf("--cache-from=%s --cache-from=%s --cache-to=%s,mode=max", cacheTypeMain, cacheTypeBranch, cacheTypeBranch),
-				),
-			)
-	}
 
 	output.Target("target-%").
 		Description("Builds the specified target defined in the Dockerfile. The build result will only remain in the build cache.").

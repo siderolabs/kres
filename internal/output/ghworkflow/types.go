@@ -8,16 +8,24 @@ package ghworkflow
 //
 //nolint:govet
 type Workflow struct {
-	Name string            `yaml:"name"`
-	On   On                `yaml:"on"`
-	Env  map[string]string `yaml:"env,omitempty"`
-	Jobs map[string]*Job   `yaml:"jobs"`
+	Name        string `yaml:"name"`
+	Concurrency `yaml:"concurrency,omitempty"`
+	On          `yaml:"on"`
+	Env         map[string]string `yaml:"env,omitempty"`
+	Jobs        map[string]*Job   `yaml:"jobs"`
+}
+
+// Concurrency represents GitHub Actions concurrency.
+type Concurrency struct {
+	Group            string `yaml:"group"`
+	CancelInProgress bool   `yaml:"cancel-in-progress"`
 }
 
 // On represents GitHub Actions event triggers.
 type On struct {
 	Push        `yaml:"push,omitempty"`
 	PullRequest `yaml:"pull_request,omitempty"`
+	Schedule    []Schedule `yaml:"schedule,omitempty"`
 	WorkFlowRun `yaml:"workflow_run,omitempty"`
 }
 
@@ -27,6 +35,12 @@ type Branches []string
 // PullRequest represents GitHub Actions pull request filters.
 type PullRequest struct {
 	Branches `yaml:"branches,omitempty"`
+	Types    []string `yaml:"types,omitempty"`
+}
+
+// Schedule represents GitHub Actions schedule filters.
+type Schedule struct {
+	Cron string `yaml:"cron"`
 }
 
 // WorkFlowRun represents GitHub Actions workflow_run filters.
@@ -46,11 +60,20 @@ type Push struct {
 
 // Job represents GitHub Actions job.
 type Job struct {
-	Permissions map[string]string `yaml:"permissions,omitempty"`
-	RunsOn      []string          `yaml:"runs-on"`
-	If          string            `yaml:"if,omitempty"`
-	Needs       []string          `yaml:"needs,omitempty"`
-	Steps       []*Step           `yaml:"steps"`
+	Permissions map[string]string  `yaml:"permissions,omitempty"`
+	RunsOn      []string           `yaml:"runs-on"`
+	If          string             `yaml:"if,omitempty"`
+	Needs       []string           `yaml:"needs,omitempty"`
+	Services    map[string]Service `yaml:"services,omitempty"`
+	Steps       []*Step            `yaml:"steps"`
+}
+
+// Service represents GitHub Actions service.
+type Service struct {
+	Image   string   `yaml:"image"`
+	Options string   `yaml:"options,omitempty"`
+	Ports   []string `yaml:"ports,omitempty"`
+	Volumes []string `yaml:"volumes,omitempty"`
 }
 
 // Step represents GitHub Actions step.

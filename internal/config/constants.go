@@ -10,6 +10,10 @@ const (
 	CIProviderDrone = "drone"
 	// CIProviderGitHubActions is the github actions ci provider.
 	CIProviderGitHubActions = "ghaction"
+
+	// BuildKitContainerVersion is the version of buildkit container image.
+	// renovate: datasource=docker versioning=docker depName=moby/buildkit
+	BuildKitContainerVersion = "v0.12.2"
 	// CheckOutActionVersion is the version of checkout github action.
 	// renovate: datasource=github-releases extractVersion=^(?<version>v\d+)\.\d+\.\d+$ depName=actions/checkout
 	CheckOutActionVersion = "v3"
@@ -22,6 +26,9 @@ const (
 	// DockerfileFrontendImageVersion is the version of the dockerfile frontend image.
 	// renovate: datasource=docker versioning=docker depName=docker/dockerfile-upstream
 	DockerfileFrontendImageVersion = "1.6.0-labs"
+	// DownloadArtifactActionVersion is the version of download artifact github action.
+	// renovate: datasource=github-releases extractVersion=^(?<version>v\d+)\.\d+\.\d+$ depName=actions/download-artifact
+	DownloadArtifactActionVersion = "v3"
 	// GetWorkflowOriginActionVersion is the version of get workflow github action.
 	// renovate: datasource=github-releases depName=potiuk/get-workflow-origin
 	GetWorkflowOriginActionVersion = "v1_5"
@@ -76,6 +83,9 @@ const (
 	// SlackNotifyActionVersion is the version of slack notify github action.
 	// renovate: datasource=github-releases extractVersion=^(?<version>v\d+)\.\d+\.\d+$ depName=slackapi/slack-github-action
 	SlackNotifyActionVersion = "v1"
+	// UploadArtifactActionVersion is the version of upload artifact github action.
+	// renovate: datasource=github-releases extractVersion=^(?<version>v\d+)\.\d+\.\d+$ depName=actions/upload-artifact
+	UploadArtifactActionVersion = "v3"
 	// VTProtobufVersion is the version of vtprotobuf.
 	// renovate: datasource=go depName=github.com/planetscale/vtprotobuf
 	VTProtobufVersion = "v0.5.0"

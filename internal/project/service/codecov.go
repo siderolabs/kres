@@ -54,6 +54,10 @@ func (coverage *CodeCov) CompileDrone(output *drone.Output) error {
 
 // CompileGitHubWorkflow implements ghworkflow.Compiler.
 func (coverage *CodeCov) CompileGitHubWorkflow(output *ghworkflow.Output) error {
+	if !coverage.Enabled {
+		return nil
+	}
+
 	output.AddStep("default", ghworkflow.MakeStep("coverage"))
 
 	return nil
