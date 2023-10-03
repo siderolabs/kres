@@ -24,7 +24,7 @@ const (
 	// GenericRunner is the name of the generic runner.
 	GenericRunner = "generic"
 	// DefaultSkipCondition is the default condition to skip the workflow.
-	DefaultSkipCondition = "(!startsWith(github.head_ref, 'renovate/') || !startsWith(github.head_ref, 'dependabot/'))"
+	DefaultSkipCondition = "(!startsWith(github.head_ref, 'renovate/') && !startsWith(github.head_ref, 'dependabot/'))"
 
 	workflowDir   = ".github/workflows"
 	ciWorkflow    = workflowDir + "/" + "ci.yaml"
@@ -48,10 +48,10 @@ func NewOutput() *Output {
 			ciWorkflow: {
 				Name: "default",
 				// https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-a-fallback-value
-				Concurrency: Concurrency{
-					Group:            "${{ github.head_ref || github.run_id }}",
-					CancelInProgress: true,
-				},
+				// Concurrency: Concurrency{
+				// 	Group:            "${{ github.head_ref || github.run_id }}",
+				// 	CancelInProgress: true,
+				// },
 				On: On{
 					Push: Push{
 						Branches: []string{

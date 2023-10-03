@@ -391,10 +391,10 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 				&ghworkflow.Workflow{
 					Name: workflowName,
 					// https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-a-fallback-value
-					Concurrency: ghworkflow.Concurrency{
-						Group:            "${{ github.head_ref || github.run_id }}",
-						CancelInProgress: true,
-					},
+					// Concurrency: ghworkflow.Concurrency{
+					// 	Group:            "${{ github.head_ref || github.run_id }}",
+					// 	CancelInProgress: true,
+					// },
 					On: ghworkflow.On{
 						Schedule: xslices.Map(job.Crons, func(cron string) ghworkflow.Schedule {
 							return ghworkflow.Schedule{

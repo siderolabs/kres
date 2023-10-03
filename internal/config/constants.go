@@ -16,7 +16,7 @@ const (
 	BuildKitContainerVersion = "v0.12.2"
 	// CheckOutActionVersion is the version of checkout github action.
 	// renovate: datasource=github-releases extractVersion=^(?<version>v\d+)\.\d+\.\d+$ depName=actions/checkout
-	CheckOutActionVersion = "v3"
+	CheckOutActionVersion = "v4"
 	// DeepCopyVersion is the version of deepcopy.
 	// renovate: datasource=go depName=github.com/siderolabs/deep-copy
 	DeepCopyVersion = "v0.5.5"
@@ -55,13 +55,13 @@ const (
 	GrpcGoVersion = "v1.3.0"
 	// LoginActionVersion is the version of login github action.
 	// renovate: datasource=github-releases extractVersion=^(?<version>v\d+)\.\d+\.\d+$ depName=docker/login-action
-	LoginActionVersion = "v2"
+	LoginActionVersion = "v3"
 	// MardownLintCLIVersion is the version of markdownlint.
 	// renovate: datasource=npm depName=markdownlint-cli
-	MardownLintCLIVersion = "0.36.0"
+	MardownLintCLIVersion = "0.37.0"
 	// NodeContainerImageVersion is the default node container image.
 	// renovate: datasource=docker versioning=docker depName=node
-	NodeContainerImageVersion = "20.6.1-alpine3.18"
+	NodeContainerImageVersion = "20.8.0-alpine3.18"
 	// PkgsVersion is the version of pkgs.
 	// renovate: datasource=github-tags depName=siderolabs/pkgs
 	PkgsVersion = "v1.6.0-alpha.0-10-gd3d7d29"
@@ -73,13 +73,13 @@ const (
 	ProtobufTSGatewayVersion = "v1.2.0"
 	// ReleaseActionVersion is the version of release github action.
 	// renovate: datasource=github-releases extractVersion=^(?<version>v\d+)\.\d+\.\d+$ depName=crazy-max/ghaction-github-release
-	ReleaseActionVersion = "v1"
+	ReleaseActionVersion = "v2"
 	// SentencesPerLineVersion is the version of sentences-per-line.
 	// renovate: datasource=npm depName=sentences-per-line
 	SentencesPerLineVersion = "0.2.1"
 	// SetupBuildxActionVersion is the version of setup-buildx github action.
 	// renovate: datasource=github-releases extractVersion=^(?<version>v\d+)\.\d+\.\d+$ depName=docker/setup-buildx-action
-	SetupBuildxActionVersion = "v2"
+	SetupBuildxActionVersion = "v3"
 	// SlackNotifyActionVersion is the version of slack notify github action.
 	// renovate: datasource=github-releases extractVersion=^(?<version>v\d+)\.\d+\.\d+$ depName=slackapi/slack-github-action
 	SlackNotifyActionVersion = "v1"
