@@ -7,6 +7,7 @@ package custom
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/siderolabs/gen/maps"
@@ -391,10 +392,10 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 				&ghworkflow.Workflow{
 					Name: workflowName,
 					// https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-a-fallback-value
-					// Concurrency: ghworkflow.Concurrency{
-					// 	Group:            "${{ github.head_ref || github.run_id }}",
-					// 	CancelInProgress: true,
-					// },
+					Concurrency: ghworkflow.Concurrency{
+						Group:            "${{ github.event.label == null && github.head_ref || github.run_id }}",
+						CancelInProgress: true,
+					},
 					On: ghworkflow.On{
 						Schedule: xslices.Map(job.Crons, func(cron string) ghworkflow.Schedule {
 							return ghworkflow.Schedule{
@@ -415,7 +416,10 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	}
 
 	if len(labelsToMap) > 0 {
-		labelsJSON := fmt.Sprintf("fromJSON('[%s]')", strings.Join(maps.Keys(labelsToMap), ", "))
+		labels := maps.Keys(labelsToMap)
+		slices.Sort(labels)
+
+		labelsJSON := fmt.Sprintf("fromJSON('[%s]')", strings.Join(labels, ", "))
 		condition := fmt.Sprintf("%s && (github.event.label == null || (contains(%s, github.event.label.name)))", ghworkflow.DefaultSkipCondition, labelsJSON)
 
 		output.OverrideDefaultJobCondition(condition)

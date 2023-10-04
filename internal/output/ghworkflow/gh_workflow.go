@@ -48,10 +48,10 @@ func NewOutput() *Output {
 			ciWorkflow: {
 				Name: "default",
 				// https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-a-fallback-value
-				// Concurrency: Concurrency{
-				// 	Group:            "${{ github.head_ref || github.run_id }}",
-				// 	CancelInProgress: true,
-				// },
+				Concurrency: Concurrency{
+					Group:            "${{ github.event.label == null && github.head_ref || github.run_id }}",
+					CancelInProgress: true,
+				},
 				On: On{
 					Push: Push{
 						Branches: []string{
