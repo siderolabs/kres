@@ -24,7 +24,7 @@ const (
 	// GenericRunner is the name of the generic runner.
 	GenericRunner = "generic"
 	// DefaultSkipCondition is the default condition to skip the workflow.
-	DefaultSkipCondition = "(!startsWith(github.head_ref, 'renovate/') && !startsWith(github.head_ref, 'dependabot/'))"
+	DefaultSkipCondition = "(!startsWith(github.head_ref, 'renovate/') && !startsWith(github.head_ref, 'dependabot/')) && contains(github.event.pull_request.labels.*.name, 'status/ok-to-test')"
 
 	workflowDir   = ".github/workflows"
 	ciWorkflow    = workflowDir + "/" + "ci.yaml"

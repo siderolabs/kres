@@ -419,6 +419,8 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		labels := maps.Keys(labelsToMap)
 		slices.Sort(labels)
 
+		labels = append(labels, `"status/ok-to-test"`)
+
 		labelsJSON := fmt.Sprintf("fromJSON('[%s]')", strings.Join(labels, ", "))
 		condition := fmt.Sprintf("%s && (github.event.label == null || (contains(%s, github.event.label.name)))", ghworkflow.DefaultSkipCondition, labelsJSON)
 
