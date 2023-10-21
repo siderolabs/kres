@@ -44,7 +44,7 @@ func (suite *DockerfileSuite) TestGenerateFile() {
 	err := output.GenerateFile("Dockerfile", &buf)
 	suite.Require().NoError(err)
 
-	suite.Assert().Equal(fmt.Sprintf(`# syntax = docker/dockerfile-upstream:%s
+	suite.Equal(fmt.Sprintf(`# syntax = docker/dockerfile-upstream:%s
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #

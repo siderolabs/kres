@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/siderolabs/kres/internal/output/dockerfile/step"
 )
@@ -81,7 +82,7 @@ func TestGenerate(t *testing.T) {
 	} {
 		var buf bytes.Buffer
 
-		assert.NoError(t, tt.step.Generate(&buf))
+		require.NoError(t, tt.step.Generate(&buf))
 
 		assert.Equal(t, tt.expected, buf.String())
 	}

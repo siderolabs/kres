@@ -8,13 +8,14 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/siderolabs/kres/internal/config"
 )
 
 func TestMissingFile(t *testing.T) {
 	provider, err := config.NewProvider("testdata/nosuchfile.yaml")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, provider)
 }
 
@@ -34,14 +35,14 @@ type Other struct{}
 
 func TestLoad(t *testing.T) {
 	provider, err := config.NewProvider("testdata/.kres.yaml")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	foo := Foo{
 		name: "Bar",
 	}
 
 	err = provider.Load(&foo)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	assert.Equal(t, "xyz", foo.Contents)
 	assert.Equal(t, 5, foo.Len)
@@ -51,20 +52,20 @@ func TestLoad(t *testing.T) {
 		name: "Bad",
 	}
 	err = provider.Load(&bad)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	err = provider.Load(&Other{})
-	assert.EqualError(t, err, "config has name blah for kind config_test.Other, while object doesn't support names")
+	require.EqualError(t, err, "config has name blah for kind config_test.Other, while object doesn't support names")
 
 	reallyBad := Foo{
 		name: "ReallyBad",
 	}
 	err = provider.Load(&reallyBad)
-	assert.EqualError(t, err, "error decoding config block config_test.Foo/ReallyBad into &{ 0 same ReallyBad}: yaml: unmarshal errors:\n  line 32: cannot unmarshal !!str `infinite` into int")
+	require.EqualError(t, err, "error decoding config block config_test.Foo/ReallyBad into &{ 0 same ReallyBad}: yaml: unmarshal errors:\n  line 32: cannot unmarshal !!str `infinite` into int")
 
 	noSpec := Foo{
 		name: "NoSpec",
 	}
 	err = provider.Load(&noSpec)
-	assert.EqualError(t, err, "missing spec for config block config_test.Foo/NoSpec")
+	require.EqualError(t, err, "missing spec for config block config_test.Foo/NoSpec")
 }

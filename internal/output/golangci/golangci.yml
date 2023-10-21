@@ -146,6 +146,7 @@ linters:
     - wrapcheck
     - depguard # Disabled because starting with golangci-lint 1.53.0 it doesn't allow denylist alone anymore
     - tagalign
+    - inamedparam
     # abandoned linters for which golangci shows the warning that the repo is archived by the owner
     - interfacer
     - maligned

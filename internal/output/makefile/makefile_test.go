@@ -63,7 +63,7 @@ func (suite *MakefileSuite) TestGenerateFile() {
 	err := output.GenerateFile("Makefile", &buf)
 	suite.Require().NoError(err)
 
-	suite.Assert().Equal(`# THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
+	suite.Equal(`# THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
 # Generated on 2006-01-02T15:04:05Z by test.
 

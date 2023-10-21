@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2023-06-04T10:03:16Z by kres 3673829.
+# Generated on 2023-10-21T08:31:28Z by kres e863876-dirty.
 
 # options for analysis running
 run:
@@ -150,6 +150,7 @@ linters:
     - wrapcheck
     - depguard # Disabled because starting with golangci-lint 1.53.0 it doesn't allow denylist alone anymore
     - tagalign
+    - inamedparam
     # abandoned linters for which golangci shows the warning that the repo is archived by the owner
     - interfacer
     - maligned
