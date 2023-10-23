@@ -147,6 +147,8 @@ linters:
     - depguard # Disabled because starting with golangci-lint 1.53.0 it doesn't allow denylist alone anymore
     - tagalign
     - inamedparam
+    - testifylint # complains about our assert recorder and has a number of false positives for assert.Greater(t, thing, 1)
+    - protogetter # complains about us using Value field on typed spec, instead of GetValue which has a different signature
     # abandoned linters for which golangci shows the warning that the repo is archived by the owner
     - interfacer
     - maligned
