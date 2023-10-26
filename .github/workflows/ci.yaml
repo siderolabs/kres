@@ -1,10 +1,10 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2023-10-04T07:25:28Z by kres bf04273-dirty.
+# Generated on 2023-10-27T10:34:11Z by kres b20f191-dirty.
 
 name: default
 concurrency:
-  group: ${{ github.event.label == null && github.head_ref || github.run_id }}
+  group: ${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 "on":
   push:
@@ -20,8 +20,10 @@ concurrency:
 jobs:
   default:
     permissions:
+      actions: read
       contents: write
       packages: write
+      pull-requests: read
     runs-on:
       - self-hosted
       - generic

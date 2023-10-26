@@ -49,7 +49,7 @@ func NewOutput() *Output {
 				Name: "default",
 				// https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-a-fallback-value
 				Concurrency: Concurrency{
-					Group:            "${{ github.event.label == null && github.head_ref || github.run_id }}",
+					Group:            "${{ github.head_ref || github.run_id }}",
 					CancelInProgress: true,
 				},
 				On: On{
@@ -75,8 +75,10 @@ func NewOutput() *Output {
 							GenericRunner,
 						},
 						Permissions: map[string]string{
-							"packages": "write",
-							"contents": "write",
+							"packages":      "write",
+							"contents":      "write",
+							"actions":       "read",
+							"pull-requests": "read",
 						},
 						Services: DefaultServices(),
 						Steps:    DefaultSteps(),
@@ -151,6 +153,11 @@ func (o *Output) AddJob(name string, job *Job) {
 // AddStep adds step to the job.
 func (o *Output) AddStep(jobName string, steps ...*Step) {
 	o.workflows[ciWorkflow].Jobs[jobName].Steps = append(o.workflows[ciWorkflow].Jobs[jobName].Steps, steps...)
+}
+
+// AddOutputs adds outputs to the job.
+func (o *Output) AddOutputs(jobName string, outputs map[string]string) {
+	o.workflows[ciWorkflow].Jobs[jobName].Outputs = outputs
 }
 
 // AddSlackNotify adds the workflow to notify slack dependencies.

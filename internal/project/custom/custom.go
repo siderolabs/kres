@@ -7,10 +7,8 @@ package custom
 
 import (
 	"fmt"
-	"slices"
 	"strings"
 
-	"github.com/siderolabs/gen/maps"
 	"github.com/siderolabs/gen/xslices"
 
 	"github.com/siderolabs/kres/internal/config"
@@ -284,7 +282,23 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		workflowStep.SetEnv(k, v)
 	}
 
-	steps := []*ghworkflow.Step{workflowStep}
+	steps := []*ghworkflow.Step{
+		workflowStep,
+		{
+			Name: "Retrieve workflow info",
+			ID:   "workflow-run-info",
+			Uses: fmt.Sprintf("potiuk/get-workflow-origin@%s", config.GetWorkflowOriginActionVersion),
+			With: map[string]string{
+				"token": "${{ secrets.GITHUB_TOKEN }}",
+			},
+		},
+	}
+
+	output.AddOutputs("default", map[string]string{
+		"labels": "${{ steps.workflow-run-info.outputs.pullRequestLabels }}",
+	})
+
+	additionalArtifactsSteps := []*ghworkflow.Step{}
 
 	if step.GHAction.Artifacts.Enabled {
 		steps = append(steps,
@@ -318,11 +332,11 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 				artifactStep.If = "always()"
 			}
 
-			steps = append(steps,
-				artifactStep,
-			)
+			additionalArtifactsSteps = append(additionalArtifactsSteps, artifactStep)
 		}
 	}
+
+	steps = append(steps, additionalArtifactsSteps...)
 
 	output.AddStep(
 		"default",
@@ -333,18 +347,14 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		ghworkflow.HostedRunner,
 	}
 
-	labelsToMap := make(map[string]struct{}, 0)
-
 	for _, job := range step.GHAction.Jobs {
 		conditions := xslices.Map(job.TriggerLabels, func(label string) string {
-			labelsToMap["\""+label+"\""] = struct{}{}
-
-			return fmt.Sprintf("contains(github.event.pull_request.labels.*.name, '%s')", label)
+			return fmt.Sprintf("contains(needs.default.outputs.labels, '%s')", label)
 		})
 
 		output.AddJob(job.Name, &ghworkflow.Job{
 			RunsOn:   append(runnerLabels, job.RunnerLabels...),
-			If:       fmt.Sprintf("${{ %s }}", strings.Join(conditions, " || ")),
+			If:       strings.Join(conditions, " || "),
 			Needs:    []string{"default"},
 			Services: ghworkflow.DefaultServices(),
 			Steps:    ghworkflow.DefaultSteps(),
@@ -387,13 +397,16 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 
 			output.AddSlackNotify(workflowName)
 
+			steps := []*ghworkflow.Step{workflowStep}
+			steps = append(steps, additionalArtifactsSteps...)
+
 			output.AddWorkflow(
 				workflowName,
 				&ghworkflow.Workflow{
 					Name: workflowName,
 					// https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-a-fallback-value
 					Concurrency: ghworkflow.Concurrency{
-						Group:            "${{ github.event.label == null && github.head_ref || github.run_id }}",
+						Group:            "${{ github.head_ref || github.run_id }}",
 						CancelInProgress: true,
 					},
 					On: ghworkflow.On{
@@ -407,23 +420,15 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 						"default": {
 							RunsOn:   append(runnerLabels, job.RunnerLabels...),
 							Services: ghworkflow.DefaultServices(),
-							Steps:    append(ghworkflow.DefaultSteps(), workflowStep),
+							Steps: append(
+								ghworkflow.DefaultSteps(),
+								steps...,
+							),
 						},
 					},
 				},
 			)
 		}
-	}
-
-	if len(labelsToMap) > 0 {
-		labels := maps.Keys(labelsToMap)
-		slices.Sort(labels)
-
-		labelsJSON := fmt.Sprintf("fromJSON('[%s]')", strings.Join(labels, ", "))
-		condition := fmt.Sprintf("%s && (github.event.label == null || (contains(%s, github.event.label.name)))", ghworkflow.DefaultSkipCondition, labelsJSON)
-
-		output.OverrideDefaultJobCondition(condition)
-		output.AddPullRequestLabelCondition()
 	}
 
 	return nil

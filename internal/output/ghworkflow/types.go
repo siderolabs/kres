@@ -64,6 +64,7 @@ type Job struct {
 	RunsOn      []string           `yaml:"runs-on"`
 	If          string             `yaml:"if,omitempty"`
 	Needs       []string           `yaml:"needs,omitempty"`
+	Outputs     map[string]string  `yaml:"outputs,omitempty"`
 	Services    map[string]Service `yaml:"services,omitempty"`
 	Steps       []*Step            `yaml:"steps"`
 }

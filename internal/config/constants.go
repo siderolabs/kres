@@ -40,7 +40,7 @@ const (
 	GoImportsVersion = "v0.14.0"
 	// GolangCIlintVersion is the version of golangci-lint.
 	// renovate: datasource=go depName=github.com/golangci/golangci-lint
-	GolangCIlintVersion = "v1.55.0"
+	GolangCIlintVersion = "v1.55.1"
 	// GolangContainerImageVersion is the default golang container image.
 	// renovate: datasource=docker versioning=docker depName=golang
 	GolangContainerImageVersion = "1.21-alpine"
