@@ -65,38 +65,50 @@ func (release *Release) CompileDrone(output *drone.Output) error {
 
 // CompileGitHubWorkflow implements ghworkflow.Compiler.
 func (release *Release) CompileGitHubWorkflow(output *ghworkflow.Output) error {
-	artifacts := xslices.Map(release.Artifacts, func(artifact string) string {
-		return filepath.Join(release.meta.ArtifactsPath, artifact)
-	})
+	steps := []*ghworkflow.Step{}
 
-	checkSumCommands := []string{
-		fmt.Sprintf("sha256sum %s > %s", strings.Join(artifacts, " "), filepath.Join(release.meta.ArtifactsPath, "sha256sum.txt")),
-		fmt.Sprintf("sha512sum %s > %s", strings.Join(artifacts, " "), filepath.Join(release.meta.ArtifactsPath, "sha512sum.txt")),
+	releaseStepOptions := map[string]string{
+		"body_path": filepath.Join(release.meta.ArtifactsPath, "RELEASE_NOTES.md"),
+		"draft":     "true",
 	}
 
-	checkSumStep := &ghworkflow.Step{
-		Name: "Generate Checksums",
-		Run:  strings.Join(checkSumCommands, "\n") + "\n",
+	if len(release.meta.Commands) > 0 {
+		artifacts := xslices.Map(release.Artifacts, func(artifact string) string {
+			return filepath.Join(release.meta.ArtifactsPath, artifact)
+		})
+
+		checkSumCommands := []string{
+			fmt.Sprintf("sha256sum %s > %s", strings.Join(artifacts, " "), filepath.Join(release.meta.ArtifactsPath, "sha256sum.txt")),
+			fmt.Sprintf("sha512sum %s > %s", strings.Join(artifacts, " "), filepath.Join(release.meta.ArtifactsPath, "sha512sum.txt")),
+		}
+
+		checkSumStep := &ghworkflow.Step{
+			Name: "Generate Checksums",
+			Run:  strings.Join(checkSumCommands, "\n") + "\n",
+		}
+
+		releaseStepOptions["files"] = strings.Join(artifacts, "\n") + "\n" + filepath.Join(release.meta.ArtifactsPath, "sha*.txt")
+
+		steps = append(steps, checkSumStep.OnlyOnTag())
 	}
 
 	releaseStep := &ghworkflow.Step{
 		Name: "Release",
 		Uses: fmt.Sprintf("crazy-max/ghaction-github-release@%s", config.ReleaseActionVersion),
-		With: map[string]string{
-			"files":     strings.Join(artifacts, "\n") + "\n" + filepath.Join(release.meta.ArtifactsPath, "sha*.txt"),
-			"body_path": filepath.Join(release.meta.ArtifactsPath, "RELEASE_NOTES.md"),
-			"draft":     "true",
-		},
+		With: releaseStepOptions,
 	}
 
-	output.AddStep(
-		"default",
-		checkSumStep.
-			OnlyOnTag(),
+	steps = append(
+		steps,
 		ghworkflow.MakeStep("release-notes").
 			OnlyOnTag(),
 		releaseStep.
 			OnlyOnTag(),
+	)
+
+	output.AddStep(
+		"default",
+		steps...,
 	)
 
 	return nil
