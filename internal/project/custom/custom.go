@@ -352,6 +352,28 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 			return fmt.Sprintf("contains(needs.default.outputs.labels, '%s')", label)
 		})
 
+		artifactSteps := []*ghworkflow.Step{}
+
+		if step.GHAction.Artifacts.Enabled {
+			for _, additionalArtifact := range step.GHAction.Artifacts.Additional {
+				artifactStep := &ghworkflow.Step{
+					Name: fmt.Sprintf("save-%s-artifacts", additionalArtifact.Name),
+					Uses: fmt.Sprintf("actions/upload-artifact@%s", config.UploadArtifactActionVersion),
+					With: map[string]string{
+						"name":           fmt.Sprintf("%s-%s", additionalArtifact.Name, job.Name),
+						"path":           strings.Join(additionalArtifact.Paths, "\n"),
+						"retention-days": "5",
+					},
+				}
+
+				if additionalArtifact.Always {
+					artifactStep.If = "always()"
+				}
+
+				artifactSteps = append(artifactSteps, artifactStep)
+			}
+		}
+
 		output.AddJob(job.Name, &ghworkflow.Job{
 			RunsOn:   append(runnerLabels, job.RunnerLabels...),
 			If:       strings.Join(conditions, " || "),
@@ -386,6 +408,7 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		}
 
 		steps = append(steps, workflowStep)
+		steps = append(steps, artifactSteps...)
 
 		output.AddStep(
 			job.Name,
