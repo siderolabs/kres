@@ -26,18 +26,20 @@ type Release struct {
 
 	// List of file patterns relative to the ArtifactsPath to include in the release.
 	//
-	// If not specified, defaults to '["*"]'.
+	// If not specified, defaults to the auto-detected commands.
 	Artifacts []string `yaml:"artifacts"`
 }
 
 // NewRelease initializes Release.
-func NewRelease(meta *meta.Options) *Release {
+func NewRelease(m *meta.Options) *Release {
 	return &Release{
 		BaseNode: dag.NewBaseNode("release"),
 
-		meta: meta,
+		meta: m,
 
-		Artifacts: []string{"*"},
+		Artifacts: xslices.Map(m.Commands, func(cmd meta.Command) string {
+			return cmd.Name + "-*"
+		}),
 	}
 }
 
