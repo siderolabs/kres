@@ -26,7 +26,33 @@ type Build struct {
 	ReproducibleTargetName string              `yaml:"reproducibleTargetName"`
 	AdditionalTargets      map[string][]string `yaml:"additionalTargets"`
 	Targets                []string            `yaml:"targets"`
+	ExtraBuildArgs         []string            `yaml:"extraBuildArgs"`
+	UseBldrPkgTagResolver  bool                `yaml:"useBldrPkgTagResolver"`
 }
+
+var (
+	goarchDef = `
+$(shell uname -m | tr '[:upper:]' '[:lower:]')
+
+ifeq ($(GOARCH),x86_64)
+  GOARCH := amd64
+endif
+`
+
+	reproducibilityTestScript = `
+@rm -rf $(ARTIFACTS)/build-a $(ARTIFACTS)/build-b
+@$(MAKE) local-$* DEST=$(ARTIFACTS)/build-a
+@$(MAKE) local-$* DEST=$(ARTIFACTS)/build-b TARGET_ARGS="--no-cache"
+@touch -ch -t $$(date -d @$(SOURCE_DATE_EPOCH) +%Y%m%d0000) $(ARTIFACTS)/build-a $(ARTIFACTS)/build-b
+@diffoscope $(ARTIFACTS)/build-a $(ARTIFACTS)/build-b
+@rm -rf $(ARTIFACTS)/build-a $(ARTIFACTS)/build-b
+`
+
+	bldrDownloadScript = `
+@curl -sSL https://github.com/siderolabs/bldr/releases/download/$(BLDR_RELEASE)/bldr-$(OPERATING_SYSTEM)-$(GOARCH) -o $(ARTIFACTS)/bldr
+@chmod +x $(ARTIFACTS)/bldr
+`
+)
 
 // NewBuild initializes Build.
 func NewBuild(meta *meta.Options) *Build {
@@ -37,15 +63,6 @@ func NewBuild(meta *meta.Options) *Build {
 	}
 }
 
-var reproducibilityTestScript = `
-@rm -rf $(ARTIFACTS)/build-a $(ARTIFACTS)/build-b
-@$(MAKE) local-$* DEST=$(ARTIFACTS)/build-a
-@$(MAKE) local-$* DEST=$(ARTIFACTS)/build-b TARGET_ARGS="--no-cache"
-@touch -ch -t $$(date -d @$(SOURCE_DATE_EPOCH) +%Y%m%d0000) $(ARTIFACTS)/build-a $(ARTIFACTS)/build-b
-@diffoscope $(ARTIFACTS)/build-a $(ARTIFACTS)/build-b
-@rm -rf $(ARTIFACTS)/build-a $(ARTIFACTS)/build-b
-`
-
 // CompileDockerignore implements dockerignore.Compiler.
 func (pkgfile *Build) CompileDockerignore(output *dockerignore.Output) error {
 	output.AllowLocalPath("pkg.yaml")
@@ -55,12 +72,17 @@ func (pkgfile *Build) CompileDockerignore(output *dockerignore.Output) error {
 
 // CompileMakefile implements makefile.Compiler.
 func (pkgfile *Build) CompileMakefile(output *makefile.Output) error {
+	output.VariableGroup(makefile.VariableGroupCommon).
+		Variable(makefile.SimpleVariable("OPERATING_SYSTEM", "$(shell uname -s | tr '[:upper:]' '[:lower:]')")).
+		Variable(makefile.SimpleVariable("GOARCH", strings.TrimPrefix(goarchDef, "\n")))
+
 	output.VariableGroup(makefile.VariableGroupSourceDateEpoch).
 		Variable(makefile.SimpleVariable("INITIAL_COMMIT_SHA", "$(shell git rev-list --max-parents=0 HEAD)")).
 		Variable(makefile.SimpleVariable("SOURCE_DATE_EPOCH", "$(shell git log $(INITIAL_COMMIT_SHA) --pretty=%ct)"))
 
 	output.VariableGroup("sync bldr image with pkgfile").
-		Variable(makefile.SimpleVariable("BLDR_IMAGE", fmt.Sprintf("ghcr.io/siderolabs/bldr:%s", config.BldrImageVersion))).
+		Variable(makefile.SimpleVariable("BLDR_RELEASE", config.BldrImageVersion)).
+		Variable(makefile.SimpleVariable("BLDR_IMAGE", "ghcr.io/siderolabs/bldr:$(BLDR_RELEASE)")).
 		Variable(makefile.SimpleVariable("BLDR", "docker run --rm --user $(shell id -u):$(shell id -g) --volume $(PWD):/src --entrypoint=/bldr $(BLDR_IMAGE) --root=/src"))
 
 	buildArgs := makefile.RecursiveVariable("COMMON_ARGS", "--file=Pkgfile").
@@ -68,6 +90,10 @@ func (pkgfile *Build) CompileMakefile(output *makefile.Output) error {
 		Push("--progress=$(PROGRESS)").
 		Push("--platform=$(PLATFORM)").
 		Push("--build-arg=SOURCE_DATE_EPOCH=$(SOURCE_DATE_EPOCH)")
+
+	for _, arg := range pkgfile.ExtraBuildArgs {
+		buildArgs.Push(fmt.Sprintf("--build-arg=%s=\"$(%s)\"", arg, arg))
+	}
 
 	output.VariableGroup(makefile.VariableGroupCommon).
 		Variable(makefile.OverridableVariable("REGISTRY", "ghcr.io")).
@@ -81,6 +107,10 @@ func (pkgfile *Build) CompileMakefile(output *makefile.Output) error {
 		Variable(makefile.OverridableVariable("PUSH", "false")).
 		Variable(makefile.OverridableVariable("CI_ARGS", "")).
 		Variable(buildArgs)
+
+	output.Target("$(ARTIFACTS)").
+		Description("Creates artifacts directory.").
+		Script("@mkdir -p $(ARTIFACTS)")
 
 	output.Target("target-%").
 		Description("Builds the specified target defined in the Pkgfile. The build result will only remain in the build cache.").
@@ -126,9 +156,21 @@ func (pkgfile *Build) CompileMakefile(output *makefile.Output) error {
 			Depends(targetNameVariable)
 	}
 
-	output.Target(defaultTarget).
-		Script("@$(MAKE) docker-$@ TARGET_ARGS=\"--tag=$(REGISTRY_AND_USERNAME)/$@:$(TAG) --push=$(PUSH)\"").
-		Phony()
+	if pkgfile.UseBldrPkgTagResolver {
+		output.Target(defaultTarget).
+			Script("@$(MAKE) docker-$@ TARGET_ARGS=\"--tag=$(REGISTRY)/$(USERNAME)/$@:$(shell $(ARTIFACTS)/bldr eval --target $@ --build-arg TAG=$(TAG) '{{.VERSION}}' 2>/dev/null) --push=$(PUSH)\"").
+			Phony().
+			Depends("$(ARTIFACTS)/bldr")
+
+		output.Target("$(ARTIFACTS)/bldr").
+			Description("Downloads bldr binary.").
+			Script(bldrDownloadScript).
+			Depends("$(ARTIFACTS)")
+	} else {
+		output.Target(defaultTarget).
+			Script("@$(MAKE) docker-$@ TARGET_ARGS=\"--tag=$(REGISTRY_AND_USERNAME)/$@:$(TAG) --push=$(PUSH)\"").
+			Phony()
+	}
 
 	output.Target("deps.png").
 		Description("Generates a dependency graph of the Pkgfile.").
@@ -162,9 +204,28 @@ func (pkgfile *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	output.AddStep(
 		"default",
 		ghworkflow.MakeStep("").SetName("Build"),
+	)
+
+	steps := []*ghworkflow.Step{
 		loginStep,
 		pushStep,
-	)
+	}
+
+	for name := range pkgfile.AdditionalTargets {
+		output.AddStep(
+			"default",
+			ghworkflow.MakeStep(name).SetName(fmt.Sprintf("Build %s", name)),
+		)
+
+		steps = append(
+			steps,
+			ghworkflow.MakeStep(name, "PUSH=true").
+				SetName(fmt.Sprintf("Push %s", name)).
+				ExceptPullRequest(),
+		)
+	}
+
+	output.AddStep("default", steps...)
 
 	if pkgfile.ReproducibleTargetName != "" {
 		output.AddStep(
