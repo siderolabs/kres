@@ -10,6 +10,14 @@ const (
 	CIProviderDrone = "drone"
 	// CIProviderGitHubActions is the github actions ci provider.
 	CIProviderGitHubActions = "ghaction"
+	// ContainerImageFrontendDockerfile is the dockerfile frontend.
+	ContainerImageFrontendDockerfile = "Dockerfile"
+	// ContainerImageFrontendPkgfile is the pkgfile frontend.
+	ContainerImageFrontendPkgfile = "Pkgfile"
+
+	// BldrImageVersion is the version of bldr image.
+	// renovate: datasource=github-releases depName=siderolabs/bldr
+	BldrImageVersion = "v0.2.3"
 
 	// BuildKitContainerVersion is the version of buildkit container image.
 	// renovate: datasource=docker versioning=docker depName=moby/buildkit

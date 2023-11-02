@@ -5,6 +5,7 @@
 package common
 
 import (
+	"github.com/siderolabs/kres/internal/config"
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/project/meta"
@@ -28,6 +29,10 @@ func NewAll(meta *meta.Options) *All {
 
 // CompileMakefile implements makefile.Compiler.
 func (all *All) CompileMakefile(output *makefile.Output) error {
+	if all.meta.ContainerImageFrontend != config.ContainerImageFrontendDockerfile {
+		return nil
+	}
+
 	output.Target("all").
 		Depends(dag.GatherMatchingInputNames(all, dag.Not(dag.Implements[makefile.SkipAsMakefileDependency]()))...)
 

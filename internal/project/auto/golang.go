@@ -12,6 +12,7 @@ import (
 
 	"golang.org/x/mod/modfile"
 
+	"github.com/siderolabs/kres/internal/config"
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/project/common"
 	"github.com/siderolabs/kres/internal/project/golang"
@@ -22,6 +23,10 @@ import (
 
 // DetectGolang checks if project at rootPath is Go-based project.
 func (builder *builder) DetectGolang() (bool, error) {
+	if builder.meta.ContainerImageFrontend != config.ContainerImageFrontendDockerfile {
+		return false, nil
+	}
+
 	var lookupDirs []string
 
 	err := filepath.Walk(builder.rootPath, func(path string, info os.FileInfo, err error) error {

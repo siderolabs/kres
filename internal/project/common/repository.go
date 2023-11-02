@@ -108,6 +108,10 @@ func (r *Repository) CompileConform(o *conform.Output) error {
 
 // CompileLicense implements license.Compiler.
 func (r *Repository) CompileLicense(o *license.Output) error {
+	if r.meta.ContainerImageFrontend != config.ContainerImageFrontendDockerfile {
+		return nil
+	}
+
 	if r.DeprecatedEnableLicense != nil {
 		r.License.Enabled = *r.DeprecatedEnableLicense
 	}

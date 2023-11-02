@@ -12,10 +12,13 @@ import (
 
 // Descriptions (used as keys) of some predefined variable groups.
 const (
-	VariableGroupCommon = "common variables"
-	VariableGroupDocker = "docker build settings"
-	VariableGroupHelp   = "help menu"
-	VariableGroupExtra  = "extra variables"
+	VariableGroupCommon            = "common variables"
+	VariableGroupDocker            = "docker build settings"
+	VariableGroupExtra             = "extra variables"
+	VariableGroupHelp              = "help menu"
+	VariableGroupSourceDateEpoch   = "source date epoch of first commit"
+	VariableGroupTargets           = "targets defines all the available targets"
+	VariableGroupAdditionalTargets = "additional targets defines all the additional targets"
 )
 
 // VariableGroup is a way to group nicely variables in Makefile.

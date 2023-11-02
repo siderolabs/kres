@@ -23,6 +23,8 @@ const (
 	HostedRunner = "self-hosted"
 	// GenericRunner is the name of the generic runner.
 	GenericRunner = "generic"
+	// PkgsRunner is the name of the default runner for packages.
+	PkgsRunner = "pkgs"
 	// DefaultSkipCondition is the default condition to skip the workflow.
 	DefaultSkipCondition = "(!startsWith(github.head_ref, 'renovate/') && !startsWith(github.head_ref, 'dependabot/'))"
 
@@ -165,23 +167,22 @@ func (o *Output) AddSlackNotify(workflow string) {
 	o.workflows[slackWorkflow].Workflows = append(o.workflows[slackWorkflow].Workflows, workflow)
 }
 
-// OverrideDefaultJobCondition overrides default job condition.
-func (o *Output) OverrideDefaultJobCondition(condition string) {
-	o.workflows[ciWorkflow].Jobs["default"].If = condition
-}
-
-// AddPullRequestLabelCondition adds condition to default job to also run on PRs with labels.
-func (o *Output) AddPullRequestLabelCondition() {
-	o.workflows[ciWorkflow].On.PullRequest.Types = []string{
-		"opened",
-		"synchronize",
-		"reopened",
-		"labeled",
+// SetDefaultJobRunnerAsPkgs sets default job runner as pkgs.
+func (o *Output) SetDefaultJobRunnerAsPkgs() {
+	o.workflows[ciWorkflow].Jobs["default"].RunsOn = []string{
+		HostedRunner,
+		PkgsRunner,
 	}
 }
 
-// DefaultSteps returns default steps for the workflow.
-func DefaultSteps() []*Step {
+// OverwriteDefaultJobStepsAsPkgs overwrites default job steps as pkgs.
+// Note that calling this method will overwrite any existing steps.
+func (o *Output) OverwriteDefaultJobStepsAsPkgs() {
+	o.workflows[ciWorkflow].Jobs["default"].Steps = DefaultPkgsSteps()
+}
+
+// CommonSteps returns common steps for the workflow.
+func CommonSteps() []*Step {
 	return []*Step{
 		{
 			Name: "checkout",
@@ -191,7 +192,14 @@ func DefaultSteps() []*Step {
 			Name: "Unshallow",
 			Run:  "git fetch --prune --unshallow\n",
 		},
-		{
+	}
+}
+
+// DefaultSteps returns default steps for the workflow.
+func DefaultSteps() []*Step {
+	return append(
+		CommonSteps(),
+		&Step{
 			Name: "Set up Docker Buildx",
 			Uses: fmt.Sprintf("docker/setup-buildx-action@%s", config.SetupBuildxActionVersion),
 			With: map[string]string{
@@ -199,7 +207,28 @@ func DefaultSteps() []*Step {
 				"endpoint": "tcp://localhost:1234",
 			},
 		},
-	}
+	)
+}
+
+// DefaultPkgsSteps returns default pkgs steps for the workflow.
+func DefaultPkgsSteps() []*Step {
+	armbuildkitdEnpointConfig := `
+- endpoint: tcp://buildkit-arm64.ci.svc.cluster.local:1234
+  platforms: linux/arm64
+`
+
+	return append(
+		CommonSteps(),
+		&Step{
+			Name: "Set up Docker Buildx",
+			Uses: fmt.Sprintf("docker/setup-buildx-action@%s", config.SetupBuildxActionVersion),
+			With: map[string]string{
+				"driver":   "remote",
+				"endpoint": "tcp://localhost:1234",
+				"append":   strings.TrimPrefix(armbuildkitdEnpointConfig, "\n"),
+			},
+		},
+	)
 }
 
 // DefaultServices returns default services for the workflow.
@@ -220,6 +249,10 @@ func DefaultServices() map[string]Service {
 // MakeStep creates a step with make command.
 func MakeStep(name string, args ...string) *Step {
 	command := fmt.Sprintf("make %s\n", name)
+
+	if name == "" {
+		command = "make\n"
+	}
 
 	if len(args) > 0 {
 		command = fmt.Sprintf("make %s %s\n", name, strings.Join(args, " "))

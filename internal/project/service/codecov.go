@@ -7,6 +7,7 @@ package service
 import (
 	"fmt"
 
+	"github.com/siderolabs/kres/internal/config"
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/output/codecov"
 	"github.com/siderolabs/kres/internal/output/drone"
@@ -81,7 +82,7 @@ func (coverage *CodeCov) CompileMakefile(output *makefile.Output) error {
 
 // CompileCodeCov implements codecov.Compiler.
 func (coverage *CodeCov) CompileCodeCov(output *codecov.Output) error {
-	if !coverage.Enabled {
+	if !coverage.Enabled || coverage.meta.ContainerImageFrontend != config.ContainerImageFrontendDockerfile {
 		return nil
 	}
 

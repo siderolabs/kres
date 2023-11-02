@@ -17,19 +17,17 @@ import (
 )
 
 const (
-	dockerfile   = "Dockerfile"
-	dockerignore = ".dockerignore"
-	syntax       = "docker/dockerfile-upstream:" + config.DockerfileFrontendImageVersion
+	filename = "Dockerfile"
+	syntax   = "docker/dockerfile-upstream:" + config.DockerfileFrontendImageVersion
 )
 
 // Output implements Dockerfile and .dockerignore generation.
 type Output struct {
 	output.FileAdapter
 
-	args   []*step.ArgStep
-	stages map[string]*Stage
-
-	allowedLocalPaths []string
+	stages  map[string]*Stage
+	args    []*step.ArgStep
+	enabled bool
 }
 
 // NewOutput creates new dockerfile output.
@@ -46,18 +44,25 @@ func (o *Output) Compile(compiler Compiler) error {
 	return compiler.CompileDockerfile(o)
 }
 
+// Enable should be called to enable config generation.
+func (o *Output) Enable() {
+	o.enabled = true
+}
+
 // Filenames implements output.FileWriter interface.
 func (o *Output) Filenames() []string {
-	return []string{dockerfile, dockerignore}
+	if !o.enabled {
+		return nil
+	}
+
+	return []string{filename}
 }
 
 // GenerateFile implements output.FileWriter interface.
 func (o *Output) GenerateFile(filename string, w io.Writer) error {
 	switch filename {
-	case dockerfile:
+	case filename:
 		return o.dockerfile(w)
-	case dockerignore:
-		return o.dockerignore(w)
 	default:
 		panic("unexpected filename: " + filename)
 	}
@@ -79,13 +84,6 @@ func (o *Output) Stage(name string) *Stage {
 // Arg appends new arg.
 func (o *Output) Arg(arg *step.ArgStep) *Output {
 	o.args = append(o.args, arg)
-
-	return o
-}
-
-// AllowLocalPath adds path to the list of paths to be copied into the context.
-func (o *Output) AllowLocalPath(paths ...string) *Output {
-	o.allowedLocalPaths = append(o.allowedLocalPaths, paths...)
 
 	return o
 }
@@ -122,24 +120,6 @@ func (o *Output) dockerfile(w io.Writer) error {
 
 	for _, stageNode := range sortedStages {
 		if err := stageNode.Generate(w); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (o *Output) dockerignore(w io.Writer) error {
-	if _, err := w.Write([]byte(output.Preamble("# "))); err != nil {
-		return err
-	}
-
-	if _, err := fmt.Fprintln(w, "*"); err != nil {
-		return err
-	}
-
-	for _, path := range o.allowedLocalPaths {
-		if _, err := fmt.Fprintf(w, "!%s\n", path); err != nil {
 			return err
 		}
 	}

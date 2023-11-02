@@ -14,6 +14,7 @@ import (
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/output/dockerfile"
 	"github.com/siderolabs/kres/internal/output/dockerfile/step"
+	"github.com/siderolabs/kres/internal/output/dockerignore"
 	"github.com/siderolabs/kres/internal/output/license"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/output/template"
@@ -142,6 +143,15 @@ func (generate *Generate) ToolchainBuild(stage *dockerfile.Stage) error {
 				MountCache(filepath.Join(generate.meta.GoPath, "pkg")),
 			).
 			Step(step.Run("mv", filepath.Join(generate.meta.GoPath, "bin", "protoc-gen-go-vtproto"), generate.meta.BinPath))
+	}
+
+	return nil
+}
+
+// CompileDockerignore implements dockerignore.Compiler.
+func (generate *Generate) CompileDockerignore(output *dockerignore.Output) error {
+	if len(generate.GoGenerateSpecs) > 0 {
+		output.AllowLocalPath(license.Header)
 	}
 
 	return nil
@@ -286,10 +296,6 @@ func (generate *Generate) CompileDockerfile(output *dockerfile.Output) error {
 
 		generateStage.Step(step.Copy(filepath.Clean(generate.BaseSpecPath)+"/", filepath.Clean(generate.BaseSpecPath)+"/").
 			From("proto-compile"))
-	}
-
-	if len(generate.GoGenerateSpecs) > 0 {
-		output.AllowLocalPath(license.Header)
 	}
 
 	for index, spec := range generate.GoGenerateSpecs {

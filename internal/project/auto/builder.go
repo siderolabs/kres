@@ -62,6 +62,11 @@ func (builder *builder) build() error {
 			build:  builder.BuildCI,
 		},
 		{
+			detect:    builder.DetectPkgFile,
+			build:     builder.BuildPkgFile,
+			mandatory: true,
+		},
+		{
 			detect:    builder.DetectJS,
 			build:     builder.BuildJS,
 			mandatory: true,
@@ -100,7 +105,7 @@ func (builder *builder) build() error {
 	}
 
 	if !mandatoryReached {
-		return errors.New("no Go or JS files were found")
+		return errors.New("no Go or JS or Pkgfile files were found")
 	}
 
 	if len(builder.lintInputs) > 0 {

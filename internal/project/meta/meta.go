@@ -85,6 +85,9 @@ type Options struct { //nolint:govet
 
 	// CIProvider specifies the CI provider. Currently drone/ghaction is supported.
 	CIProvider string
+
+	// ContainerImageFrontend is the default frontend container image.
+	ContainerImageFrontend string
 }
 
 // Command defines Golang executable build configuration.

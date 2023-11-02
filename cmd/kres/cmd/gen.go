@@ -14,6 +14,7 @@ import (
 	"github.com/siderolabs/kres/internal/output/codecov"
 	"github.com/siderolabs/kres/internal/output/conform"
 	"github.com/siderolabs/kres/internal/output/dockerfile"
+	"github.com/siderolabs/kres/internal/output/dockerignore"
 	"github.com/siderolabs/kres/internal/output/drone"
 	"github.com/siderolabs/kres/internal/output/ghworkflow"
 	"github.com/siderolabs/kres/internal/output/github"
@@ -50,6 +51,7 @@ func runGen() error {
 
 	outputs := []output.Writer{
 		output.Wrap[dockerfile.Compiler](dockerfile.NewOutput()),
+		output.Wrap[dockerignore.Compiler](dockerignore.NewOutput()),
 		output.Wrap[makefile.Compiler](makefile.NewOutput()),
 		output.Wrap[golangci.Compiler](golangci.NewOutput()),
 		output.Wrap[license.Compiler](license.NewOutput()),
@@ -65,7 +67,8 @@ func runGen() error {
 	var err error
 
 	options := meta.Options{
-		GoContainerVersion: config.GolangContainerImageVersion,
+		GoContainerVersion:     config.GolangContainerImageVersion,
+		ContainerImageFrontend: config.ContainerImageFrontendDockerfile,
 	}
 
 	options.Config, err = config.NewProvider(".kres.yaml")

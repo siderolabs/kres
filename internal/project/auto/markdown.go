@@ -5,6 +5,7 @@
 package auto
 
 import (
+	"github.com/siderolabs/kres/internal/config"
 	"github.com/siderolabs/kres/internal/project/markdown"
 )
 
@@ -22,16 +23,14 @@ func (builder *builder) DetectMarkdown() (bool, error) {
 		}
 	}
 
-	{
-		list, err := listFilesWithSuffix(builder.rootPath, ".md")
-		if err != nil {
-			return false, err
-		}
+	list, err := listFilesWithSuffix(builder.rootPath, ".md")
+	if err != nil {
+		return false, err
+	}
 
-		for _, item := range list {
-			builder.meta.SourceFiles = append(builder.meta.SourceFiles, item)
-			builder.meta.MarkdownSourceFiles = append(builder.meta.MarkdownSourceFiles, item)
-		}
+	for _, item := range list {
+		builder.meta.SourceFiles = append(builder.meta.SourceFiles, item)
+		builder.meta.MarkdownSourceFiles = append(builder.meta.MarkdownSourceFiles, item)
 	}
 
 	return len(builder.meta.MarkdownDirectories)+len(builder.meta.MarkdownSourceFiles) > 0, nil
@@ -39,6 +38,10 @@ func (builder *builder) DetectMarkdown() (bool, error) {
 
 // BuildMarkdown builds project structure for Markdown.
 func (builder *builder) BuildMarkdown() error {
+	if builder.meta.ContainerImageFrontend != config.ContainerImageFrontendDockerfile {
+		return nil
+	}
+
 	// linters
 	linter := markdown.NewLint(builder.meta)
 
