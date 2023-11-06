@@ -21,7 +21,7 @@ const (
 
 	// BuildKitContainerVersion is the version of buildkit container image.
 	// renovate: datasource=docker versioning=docker depName=moby/buildkit
-	BuildKitContainerVersion = "v0.12.2"
+	BuildKitContainerVersion = "v0.12.3"
 	// CheckOutActionVersion is the version of checkout github action.
 	// renovate: datasource=github-releases extractVersion=^(?<version>v\d+)\.\d+\.\d+$ depName=actions/checkout
 	CheckOutActionVersion = "v4"
@@ -37,9 +37,9 @@ const (
 	// DownloadArtifactActionVersion is the version of download artifact github action.
 	// renovate: datasource=github-releases extractVersion=^(?<version>v\d+)\.\d+\.\d+$ depName=actions/download-artifact
 	DownloadArtifactActionVersion = "v3"
-	// GetWorkflowOriginActionVersion is the version of get workflow github action.
-	// renovate: datasource=github-releases depName=potiuk/get-workflow-origin
-	GetWorkflowOriginActionVersion = "v1_5"
+	// GitHubScriptActionVersion is the version of github script action.
+	// renovate: datasource=github-releases extractVersion=^(?<version>v\d+)\.\d+\.\d+$ depName=actions/github-script
+	GitHubScriptActionVersion = "v6"
 	// GoFmtVersion is the version of gofmt.
 	// renovate: datasource=go depName=github.com/mvdan/gofumpt
 	GoFmtVersion = "v0.5.0"
@@ -48,7 +48,7 @@ const (
 	GoImportsVersion = "v0.14.0"
 	// GolangCIlintVersion is the version of golangci-lint.
 	// renovate: datasource=go depName=github.com/golangci/golangci-lint
-	GolangCIlintVersion = "v1.55.1"
+	GolangCIlintVersion = "v1.55.2"
 	// GolangContainerImageVersion is the default golang container image.
 	// renovate: datasource=docker versioning=docker depName=golang
 	GolangContainerImageVersion = "1.21-alpine"
@@ -69,7 +69,7 @@ const (
 	MardownLintCLIVersion = "0.37.0"
 	// NodeContainerImageVersion is the default node container image.
 	// renovate: datasource=docker versioning=docker depName=node
-	NodeContainerImageVersion = "20.8.0-alpine3.18"
+	NodeContainerImageVersion = "21.1.0-alpine3.18"
 	// PkgsVersion is the version of pkgs.
 	// renovate: datasource=github-tags depName=siderolabs/pkgs
 	PkgsVersion = "v1.6.0-alpha.0-10-gd3d7d29"

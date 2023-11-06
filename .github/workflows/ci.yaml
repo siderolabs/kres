@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2023-11-01T13:20:25Z by kres 97da358-dirty.
+# Generated on 2023-11-06T14:32:24Z by kres 2e2aa5d-dirty.
 
 name: default
 concurrency:
@@ -30,7 +30,7 @@ jobs:
     if: (!startsWith(github.head_ref, 'renovate/') && !startsWith(github.head_ref, 'dependabot/'))
     services:
       buildkitd:
-        image: moby/buildkit:v0.12.2
+        image: moby/buildkit:v0.12.3
         options: --privileged
         ports:
           - 1234:1234
@@ -48,6 +48,17 @@ jobs:
         with:
           driver: remote
           endpoint: tcp://localhost:1234
+      - name: Save PR number
+        if: github.event_name == 'pull_request' && always()
+        run: |
+          echo ${{ github.event.number }} > pr-number.txt
+      - name: Upload PR number
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: pr-number
+          path: pr-number.txt
+          retention-days: "1"
       - name: base
         run: |
           make base

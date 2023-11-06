@@ -231,16 +231,17 @@ func (pkgfile *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		output.AddStep(
 			"default",
 			&ghworkflow.Step{
-				Name: "Retrieve workflow info",
-				ID:   "workflow-run-info",
-				Uses: fmt.Sprintf("potiuk/get-workflow-origin@%s", config.GetWorkflowOriginActionVersion),
+				Name: "Retrieve PR labels",
+				ID:   "retrieve-pr-labels",
+				Uses: fmt.Sprintf("actions/github-script@%s", config.GitHubScriptActionVersion),
 				With: map[string]string{
-					"token": "${{ secrets.GITHUB_TOKEN }}",
+					"retries": "3",
+					"script":  strings.TrimPrefix(ghworkflow.IssueLabelRetrieveScript, "\n"),
 				},
 			},
 		)
 		output.AddOutputs("default", map[string]string{
-			"labels": "${{ steps.workflow-run-info.outputs.pullRequestLabels }}",
+			"labels": "${{ steps.retrieve-pr-labels.outputs.result }}",
 		})
 
 		runnerLabels := []string{

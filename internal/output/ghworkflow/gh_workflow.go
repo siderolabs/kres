@@ -28,13 +28,49 @@ const (
 	// DefaultSkipCondition is the default condition to skip the workflow.
 	DefaultSkipCondition = "(!startsWith(github.head_ref, 'renovate/') && !startsWith(github.head_ref, 'dependabot/'))"
 
+	// IssueLabelRetrieveScript is the default script to retrieve issue labels.
+	IssueLabelRetrieveScript = `
+const resp = await github.rest.issues.get({
+    issue_number: context.issue.number,
+    owner: context.repo.owner,
+    repo: context.repo.repo,
+})
+
+return resp.data.labels
+`
+
 	workflowDir   = ".github/workflows"
 	ciWorkflow    = workflowDir + "/" + "ci.yaml"
 	slackWorkflow = workflowDir + "/" + "slack-notify.yaml"
 )
 
-//go:embed files/slack-notify-payload.json
-var slackNotifyPayload string
+var (
+	//go:embed files/slack-notify-payload.json
+	slackNotifyPayload string
+
+	armbuildkitdEnpointConfig = `
+- endpoint: tcp://buildkit-arm64.ci.svc.cluster.local:1234
+  platforms: linux/arm64
+`
+
+	prArtifactDownloadScript = `
+let allArtifacts = await github.rest.actions.listWorkflowRunArtifacts({
+    owner: context.repo.owner,
+    repo: context.repo.repo,
+    run_id: context.payload.workflow_run.id,
+});
+let matchArtifact = allArtifacts.data.artifacts.filter((artifact) => {
+    return artifact.name == "pr-number"
+})[0];
+let download = await github.rest.actions.downloadArtifact({
+    owner: context.repo.owner,
+    repo: context.repo.repo,
+    artifact_id: matchArtifact.id,
+    archive_format: 'zip',
+});
+let fs = require('fs');
+fs.writeFileSync(` + "`${process.env.GITHUB_WORKSPACE}/pr-number.zip`, Buffer.from(download.data));"
+)
 
 // Output implements GitHub Actions project config generation.
 type Output struct {
@@ -83,7 +119,7 @@ func NewOutput() *Output {
 							"pull-requests": "read",
 						},
 						Services: DefaultServices(),
-						Steps:    DefaultSteps(),
+						Steps:    defaultStepsWithPRArtifactUpload(),
 					},
 				},
 			},
@@ -101,16 +137,21 @@ func NewOutput() *Output {
 							HostedRunner,
 							GenericRunner,
 						},
-						If: "${{ github.event.workflow_run.conclusion != 'skipped' }}",
+						If: "github.event.workflow_run.conclusion != 'skipped'",
 						Steps: []*Step{
 							{
-								Name: "Retrieve Workflow Run Info",
-								ID:   "retrieve-workflow-run-info",
-								Uses: fmt.Sprintf("potiuk/get-workflow-origin@%s", config.GetWorkflowOriginActionVersion),
+								Name: "Download PR artifact",
+								If:   "github.event.workflow_run.event == 'pull_request'",
+								Uses: fmt.Sprintf("actions/github-script@%s", config.GitHubScriptActionVersion),
 								With: map[string]string{
-									"token":       "${{ secrets.GITHUB_TOKEN }}",
-									"sourceRunId": "${{ github.event.workflow_run.id }}",
+									"script": strings.TrimPrefix(prArtifactDownloadScript, "\n"),
 								},
+							},
+							{
+								Name: "Get PR number",
+								ID:   "get-pr-number",
+								If:   "github.event.workflow_run.event == 'pull_request'",
+								Run:  "unzip pr-number.zip\necho pull_request_number=$(cat pr-number.txt) >> $GITHUB_OUTPUT\n",
 							},
 							{
 								Name: "Slack Notify",
@@ -178,7 +219,7 @@ func (o *Output) SetDefaultJobRunnerAsPkgs() {
 // OverwriteDefaultJobStepsAsPkgs overwrites default job steps as pkgs.
 // Note that calling this method will overwrite any existing steps.
 func (o *Output) OverwriteDefaultJobStepsAsPkgs() {
-	o.workflows[ciWorkflow].Jobs["default"].Steps = DefaultPkgsSteps()
+	o.workflows[ciWorkflow].Jobs["default"].Steps = defaultPkgsStepsWithPRArtifactUpload()
 }
 
 // CommonSteps returns common steps for the workflow.
@@ -212,11 +253,6 @@ func DefaultSteps() []*Step {
 
 // DefaultPkgsSteps returns default pkgs steps for the workflow.
 func DefaultPkgsSteps() []*Step {
-	armbuildkitdEnpointConfig := `
-- endpoint: tcp://buildkit-arm64.ci.svc.cluster.local:1234
-  platforms: linux/arm64
-`
-
 	return append(
 		CommonSteps(),
 		&Step{
@@ -228,6 +264,43 @@ func DefaultPkgsSteps() []*Step {
 				"append":   strings.TrimPrefix(armbuildkitdEnpointConfig, "\n"),
 			},
 		},
+	)
+}
+
+// prArtifactUploadSteps returns common steps with PR artifact upload for the workflow.
+func prArtifactUploadSteps() []*Step {
+	return []*Step{
+		{
+			Name: "Save PR number",
+			If:   "github.event_name == 'pull_request' && always()",
+			Run:  "echo ${{ github.event.number }} > pr-number.txt\n",
+		},
+		{
+			Name: "Upload PR number",
+			If:   "github.event_name == 'pull_request' && always()",
+			Uses: fmt.Sprintf("actions/upload-artifact@%s", config.UploadArtifactActionVersion),
+			With: map[string]string{
+				"name":           "pr-number",
+				"path":           "pr-number.txt",
+				"retention-days": "1",
+			},
+		},
+	}
+}
+
+// defaultStepsWithPRArtifactUpload returns default steps with PR artifact upload for the workflow.
+func defaultStepsWithPRArtifactUpload() []*Step {
+	return append(
+		DefaultSteps(),
+		prArtifactUploadSteps()...,
+	)
+}
+
+// defaultPkgsStepsWithPRArtifactUpload returns default pkgs steps with PR artifact upload for the workflow.
+func defaultPkgsStepsWithPRArtifactUpload() []*Step {
+	return append(
+		DefaultPkgsSteps(),
+		prArtifactUploadSteps()...,
 	)
 }
 
