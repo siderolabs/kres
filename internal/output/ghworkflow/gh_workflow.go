@@ -117,6 +117,7 @@ func NewOutput() *Output {
 							"contents":      "write",
 							"actions":       "read",
 							"pull-requests": "read",
+							"issues":        "read",
 						},
 						Services: DefaultServices(),
 						Steps:    defaultStepsWithPRArtifactUpload(),

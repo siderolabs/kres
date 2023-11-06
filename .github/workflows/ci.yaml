@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2023-11-06T14:32:24Z by kres 2e2aa5d-dirty.
+# Generated on 2023-11-06T19:00:22Z by kres cfdd6d5-dirty.
 
 name: default
 concurrency:
@@ -22,6 +22,7 @@ jobs:
     permissions:
       actions: read
       contents: write
+      issues: read
       packages: write
       pull-requests: read
     runs-on:
