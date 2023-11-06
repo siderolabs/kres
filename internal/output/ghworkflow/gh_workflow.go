@@ -337,6 +337,13 @@ func MakeStep(name string, args ...string) *Step {
 	}
 }
 
+// SetSudo sets step to run with sudo.
+func (step *Step) SetSudo() *Step {
+	step.Run = "sudo -E " + step.Run
+
+	return step
+}
+
 // SetName sets step name.
 func (step *Step) SetName(name string) *Step {
 	step.Name = name

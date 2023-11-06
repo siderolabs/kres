@@ -103,6 +103,8 @@ type Step struct {
 		} `yaml:"artifacts"`
 		Enabled bool `yaml:"enabled"`
 	} `yaml:"ghaction"`
+
+	SudoInCI bool `yaml:"sudoInCI"`
 }
 
 // NewStep initializes Step.
@@ -278,6 +280,10 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 
 	workflowStep := ghworkflow.MakeStep(step.Name())
 
+	if step.SudoInCI {
+		workflowStep.SetSudo()
+	}
+
 	for k, v := range step.GHAction.Environment {
 		workflowStep.SetEnv(k, v)
 	}
@@ -399,6 +405,10 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		}
 
 		workflowStep := ghworkflow.MakeStep(step.Name())
+
+		if step.SudoInCI {
+			workflowStep.SetSudo()
+		}
 
 		for k, v := range step.GHAction.Environment {
 			workflowStep.SetEnv(k, v)
