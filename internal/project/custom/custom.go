@@ -293,6 +293,7 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		{
 			Name: "Retrieve PR labels",
 			ID:   "retrieve-pr-labels",
+			If:   "github.event_name == 'pull_request' && always()",
 			Uses: fmt.Sprintf("actions/github-script@%s", config.GitHubScriptActionVersion),
 			With: map[string]string{
 				"retries": "3",
@@ -389,19 +390,24 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 			Steps:    ghworkflow.DefaultSteps(),
 		})
 
-		steps := []*ghworkflow.Step{
-			{
-				Name: "Download artifacts",
-				Uses: fmt.Sprintf("actions/download-artifact@%s", config.DownloadArtifactActionVersion),
-				With: map[string]string{
-					"name": "artifacts",
-					"path": step.meta.ArtifactsPath,
+		steps := []*ghworkflow.Step{}
+
+		if step.GHAction.Artifacts.Enabled {
+			steps = append(
+				steps,
+				&ghworkflow.Step{
+					Name: "Download artifacts",
+					Uses: fmt.Sprintf("actions/download-artifact@%s", config.DownloadArtifactActionVersion),
+					With: map[string]string{
+						"name": "artifacts",
+						"path": step.meta.ArtifactsPath,
+					},
 				},
-			},
-			{
-				Name: "Fix artifact permissions",
-				Run:  fmt.Sprintf("xargs -a %s/executable-artifacts -I {} chmod +x {}", step.meta.ArtifactsPath) + "\n",
-			},
+				&ghworkflow.Step{
+					Name: "Fix artifact permissions",
+					Run:  fmt.Sprintf("xargs -a %s/executable-artifacts -I {} chmod +x {}", step.meta.ArtifactsPath) + "\n",
+				},
+			)
 		}
 
 		workflowStep := ghworkflow.MakeStep(step.Name())
