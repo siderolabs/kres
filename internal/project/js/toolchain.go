@@ -147,7 +147,7 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 		Step(step.Copy(filepath.Join(toolchain.sourceDir, "package-lock.json"), "./")).
 		Step(step.Script("npm version ${VERSION}").
 			MountCache(toolchain.meta.NpmCachePath)).
-		Step(step.Script("npm install").
+		Step(step.Script("npm ci").
 			MountCache(toolchain.meta.NpmCachePath)).
 		Step(step.Copy("frontend/.eslintrc.yaml", "./")).
 		Step(step.Copy(filepath.Join(toolchain.sourceDir, "babel.config.js"), "./")).
