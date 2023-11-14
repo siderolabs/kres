@@ -252,7 +252,7 @@ func (pkgfile *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 
 		output.AddJob("reproducibility", &ghworkflow.Job{
 			RunsOn:   runnerLabels,
-			If:       "contains(needs.default.outputs.labels, 'integration/reproducibility')",
+			If:       "contains(fromJSON(needs.default.outputs.labels), 'integration/reproducibility')",
 			Needs:    []string{"default"},
 			Services: ghworkflow.DefaultServices(),
 			Steps:    ghworkflow.DefaultPkgsSteps(),

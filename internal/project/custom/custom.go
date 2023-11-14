@@ -357,7 +357,7 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 
 	for _, job := range step.GHAction.Jobs {
 		conditions := xslices.Map(job.TriggerLabels, func(label string) string {
-			return fmt.Sprintf("contains(needs.default.outputs.labels, '%s')", label)
+			return fmt.Sprintf("contains(fromJSON(needs.default.outputs.labels), '%s')", label)
 		})
 
 		artifactSteps := []*ghworkflow.Step{}

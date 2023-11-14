@@ -36,7 +36,7 @@ const resp = await github.rest.issues.get({
     repo: context.repo.repo,
 })
 
-return resp.data.labels
+return resp.data.labels.map(label => label.name)
 `
 
 	workflowDir   = ".github/workflows"
