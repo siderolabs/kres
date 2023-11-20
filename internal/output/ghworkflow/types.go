@@ -79,11 +79,12 @@ type Service struct {
 
 // Step represents GitHub Actions step.
 type Step struct {
-	Name string            `yaml:"name"`
-	ID   string            `yaml:"id,omitempty"`
-	If   string            `yaml:"if,omitempty"`
-	Uses string            `yaml:"uses,omitempty"`
-	With map[string]string `yaml:"with,omitempty"`
-	Env  map[string]string `yaml:"env,omitempty"`
-	Run  string            `yaml:"run,omitempty"`
+	Name            string            `yaml:"name"`
+	ID              string            `yaml:"id,omitempty"`
+	If              string            `yaml:"if,omitempty"`
+	Uses            string            `yaml:"uses,omitempty"`
+	With            map[string]string `yaml:"with,omitempty"`
+	Env             map[string]string `yaml:"env,omitempty"`
+	Run             string            `yaml:"run,omitempty"`
+	ContinueOnError bool              `yaml:"continue-on-error,omitempty"`
 }

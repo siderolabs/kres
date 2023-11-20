@@ -95,11 +95,13 @@ type Step struct {
 		Artifacts struct {
 			ExtraPaths []string `yaml:"extraPaths"`
 			Additional []struct {
-				Name   string   `yaml:"name"`
-				Paths  []string `yaml:"paths"`
-				Always bool     `yaml:"always"`
+				Name            string   `yaml:"name"`
+				Paths           []string `yaml:"paths"`
+				Always          bool     `yaml:"always"`
+				ContinueOnError bool     `yaml:"continueOnError"`
 			} `yaml:"additional"`
-			Enabled bool `yaml:"enabled"`
+			Enabled         bool `yaml:"enabled"`
+			ContinueOnError bool `yaml:"continueOnError"`
 		} `yaml:"artifacts"`
 		Enabled bool `yaml:"enabled"`
 	} `yaml:"ghaction"`
@@ -315,8 +317,9 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 				Run:  fmt.Sprintf("find %s -type f -executable > %s/executable-artifacts", step.meta.ArtifactsPath, step.meta.ArtifactsPath) + "\n",
 			},
 			&ghworkflow.Step{
-				Name: "save-artifacts",
-				Uses: fmt.Sprintf("actions/upload-artifact@%s", config.UploadArtifactActionVersion),
+				Name:            "save-artifacts",
+				Uses:            fmt.Sprintf("actions/upload-artifact@%s", config.UploadArtifactActionVersion),
+				ContinueOnError: step.GHAction.Artifacts.ContinueOnError,
 				With: map[string]string{
 					"name":           "artifacts",
 					"path":           step.meta.ArtifactsPath + "\n" + strings.Join(step.GHAction.Artifacts.ExtraPaths, "\n"),
@@ -327,8 +330,9 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 
 		for _, additionalArtifact := range step.GHAction.Artifacts.Additional {
 			artifactStep := &ghworkflow.Step{
-				Name: fmt.Sprintf("save-%s-artifacts", additionalArtifact.Name),
-				Uses: fmt.Sprintf("actions/upload-artifact@%s", config.UploadArtifactActionVersion),
+				Name:            fmt.Sprintf("save-%s-artifacts", additionalArtifact.Name),
+				Uses:            fmt.Sprintf("actions/upload-artifact@%s", config.UploadArtifactActionVersion),
+				ContinueOnError: step.GHAction.Artifacts.ContinueOnError,
 				With: map[string]string{
 					"name":           additionalArtifact.Name,
 					"path":           strings.Join(additionalArtifact.Paths, "\n"),
@@ -365,8 +369,9 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		if step.GHAction.Artifacts.Enabled {
 			for _, additionalArtifact := range step.GHAction.Artifacts.Additional {
 				artifactStep := &ghworkflow.Step{
-					Name: fmt.Sprintf("save-%s-artifacts", additionalArtifact.Name),
-					Uses: fmt.Sprintf("actions/upload-artifact@%s", config.UploadArtifactActionVersion),
+					Name:            fmt.Sprintf("save-%s-artifacts", additionalArtifact.Name),
+					Uses:            fmt.Sprintf("actions/upload-artifact@%s", config.UploadArtifactActionVersion),
+					ContinueOnError: additionalArtifact.ContinueOnError,
 					With: map[string]string{
 						"name":           fmt.Sprintf("%s-%s", additionalArtifact.Name, job.Name),
 						"path":           strings.Join(additionalArtifact.Paths, "\n"),
