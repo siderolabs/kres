@@ -85,6 +85,7 @@ type Step struct {
 
 	GHAction struct {
 		Environment map[string]string `yaml:"environment"`
+		Condition   string            `yaml:"condition"`
 		Jobs        []struct {
 			Name                string            `yaml:"name"`
 			EnvironmentOverride map[string]string `yaml:"environmentOverride"`
@@ -275,6 +276,8 @@ func (step *Step) DroneEnabled() bool {
 }
 
 // CompileGitHubWorkflow implements ghworkflow.Compiler.
+//
+//nolint:gocognit,cyclop
 func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	if !step.GHAction.Enabled {
 		return nil
@@ -290,23 +293,38 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		workflowStep.SetEnv(k, v)
 	}
 
-	steps := []*ghworkflow.Step{
-		workflowStep,
-		{
-			Name: "Retrieve PR labels",
-			ID:   "retrieve-pr-labels",
-			If:   "github.event_name == 'pull_request' && always()",
-			Uses: fmt.Sprintf("actions/github-script@%s", config.GitHubScriptActionVersion),
-			With: map[string]string{
-				"retries": "3",
-				"script":  strings.TrimPrefix(ghworkflow.IssueLabelRetrieveScript, "\n"),
-			},
-		},
+	if step.GHAction.Condition != "" {
+		switch step.GHAction.Condition {
+		case "except-pull-request":
+			workflowStep.ExceptPullRequest()
+		case "only-on-tag":
+			workflowStep.OnlyOnTag()
+		default:
+			return fmt.Errorf("unknown condition: %s", step.GHAction.Condition)
+		}
 	}
 
-	output.AddOutputs("default", map[string]string{
-		"labels": "${{ steps.retrieve-pr-labels.outputs.result }}",
-	})
+	steps := []*ghworkflow.Step{workflowStep}
+
+	if len(step.GHAction.Jobs) > 0 {
+		steps = append(
+			steps,
+			&ghworkflow.Step{
+				Name: "Retrieve PR labels",
+				ID:   "retrieve-pr-labels",
+				If:   "github.event_name == 'pull_request' && always()",
+				Uses: fmt.Sprintf("actions/github-script@%s", config.GitHubScriptActionVersion),
+				With: map[string]string{
+					"retries": "3",
+					"script":  strings.TrimPrefix(ghworkflow.IssueLabelRetrieveScript, "\n"),
+				},
+			},
+		)
+
+		output.AddOutputs("default", map[string]string{
+			"labels": "${{ steps.retrieve-pr-labels.outputs.result }}",
+		})
+	}
 
 	additionalArtifactsSteps := []*ghworkflow.Step{}
 
