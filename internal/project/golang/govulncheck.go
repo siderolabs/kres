@@ -15,8 +15,10 @@ import (
 )
 
 // GoVulnCheck provides GoVulnCheck linter.
-type GoVulnCheck struct {
+type GoVulnCheck struct { //nolint:govet
 	dag.BaseNode
+
+	Disabled bool `yaml:"disabled"`
 
 	meta        *meta.Options
 	projectPath string
@@ -34,6 +36,12 @@ func NewGoVulnCheck(meta *meta.Options, projectPath string) *GoVulnCheck {
 
 // CompileMakefile implements makefile.Compiler.
 func (lint *GoVulnCheck) CompileMakefile(output *makefile.Output) error {
+	if lint.Disabled {
+		output.Target(lint.Name()).Description("Disabled govulncheck linter.")
+
+		return nil
+	}
+
 	output.Target(lint.Name()).Description("Runs govulncheck linter.").
 		Script("@$(MAKE) target-$@")
 
@@ -42,6 +50,10 @@ func (lint *GoVulnCheck) CompileMakefile(output *makefile.Output) error {
 
 // CompileDockerfile implements dockerfile.Compiler.
 func (lint *GoVulnCheck) CompileDockerfile(output *dockerfile.Output) error {
+	if lint.Disabled {
+		return nil
+	}
+
 	output.Stage(lint.Name()).
 		Description("runs govulncheck").
 		From("base").
