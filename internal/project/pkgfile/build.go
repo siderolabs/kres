@@ -233,7 +233,6 @@ func (pkgfile *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 			&ghworkflow.Step{
 				Name: "Retrieve PR labels",
 				ID:   "retrieve-pr-labels",
-				If:   "github.event_name == 'pull_request' && always()",
 				Uses: fmt.Sprintf("actions/github-script@%s", config.GitHubScriptActionVersion),
 				With: map[string]string{
 					"retries": "3",

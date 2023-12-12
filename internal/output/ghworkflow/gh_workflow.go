@@ -30,6 +30,8 @@ const (
 
 	// IssueLabelRetrieveScript is the default script to retrieve issue labels.
 	IssueLabelRetrieveScript = `
+if (context.eventName != "pull_request") { return "[]" }
+
 const resp = await github.rest.issues.get({
     issue_number: context.issue.number,
     owner: context.repo.owner,
