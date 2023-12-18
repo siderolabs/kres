@@ -45,7 +45,7 @@ const (
 	GoFmtVersion = "v0.5.0"
 	// GoImportsVersion is the version of goimports.
 	// renovate: datasource=go depName=golang.org/x/tools
-	GoImportsVersion = "v0.16.0"
+	GoImportsVersion = "v0.16.1"
 	// GolangCIlintVersion is the version of golangci-lint.
 	// renovate: datasource=go depName=github.com/golangci/golangci-lint
 	GolangCIlintVersion = "v1.55.2"
