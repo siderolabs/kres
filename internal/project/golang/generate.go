@@ -42,10 +42,17 @@ type Generate struct {
 	GoGenerateSpecs []GoGenerateSpec `yaml:"goGenerateSpecs"`
 
 	ExperimentalFlags []string `yaml:"experimentalFlags"`
+	Files             []File   `yaml:"files"`
 
 	VTProtobufEnabled bool `yaml:"vtProtobufEnabled"`
 
 	VersionPackagePath string `yaml:"versionPackagePath"`
+}
+
+// File represents a file to be fetched/copied into the image.
+type File struct {
+	Source      string `yaml:"source"`
+	Destination string `yaml:"destination"`
 }
 
 // ProtoSpec describes a set of protobuf specs to be compiled.
@@ -164,6 +171,10 @@ func (generate *Generate) CompileDockerfile(output *dockerfile.Output) error {
 	generateStage := output.Stage("generate").
 		Description("cleaned up specs and compiled versions").
 		From("scratch")
+
+	for _, file := range generate.Files {
+		generateStage.Step(step.Add(file.Source, file.Destination))
+	}
 
 	if len(generate.Specs) > 0 {
 		specs := output.Stage("proto-specs").

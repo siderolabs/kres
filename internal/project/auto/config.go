@@ -37,3 +37,6 @@ type CustomStep struct {
 type CI struct {
 	Provider string `yaml:"provider"`
 }
+
+// CustomStepsGenerate defines custom steps that run before the build.
+type CustomStepsGenerate = CustomSteps
