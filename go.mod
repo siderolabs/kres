@@ -5,7 +5,7 @@ go 1.21.6
 require (
 	github.com/drone/drone-yaml v1.2.3
 	github.com/go-git/go-git/v5 v5.11.0
-	github.com/google/go-github/v57 v57.0.0
+	github.com/google/go-github/v58 v58.0.0
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/siderolabs/gen v0.4.7
 	github.com/spf13/cobra v1.8.0

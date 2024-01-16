@@ -36,10 +36,10 @@ const (
 	DockerfileFrontendImageVersion = "1.6.0-labs"
 	// DownloadArtifactActionVersion is the version of download artifact github action.
 	// renovate: datasource=github-releases extractVersion=^(?<version>v\d+)\.\d+\.\d+$ depName=actions/download-artifact
-	DownloadArtifactActionVersion = "v3"
+	DownloadArtifactActionVersion = "v4"
 	// GitHubScriptActionVersion is the version of github script action.
 	// renovate: datasource=github-releases extractVersion=^(?<version>v\d+)\.\d+\.\d+$ depName=actions/github-script
-	GitHubScriptActionVersion = "v6"
+	GitHubScriptActionVersion = "v7"
 	// GoFmtVersion is the version of gofmt.
 	// renovate: datasource=go depName=github.com/mvdan/gofumpt
 	GoFmtVersion = "v0.5.0"
@@ -66,10 +66,10 @@ const (
 	LoginActionVersion = "v3"
 	// MardownLintCLIVersion is the version of markdownlint.
 	// renovate: datasource=npm depName=markdownlint-cli
-	MardownLintCLIVersion = "0.37.0"
+	MardownLintCLIVersion = "0.38.0"
 	// NodeContainerImageVersion is the default node container image.
 	// renovate: datasource=docker versioning=docker depName=node
-	NodeContainerImageVersion = "21.4.0-alpine3.18"
+	NodeContainerImageVersion = "21.5.0-alpine3.19"
 	// PkgsVersion is the version of pkgs.
 	// renovate: datasource=github-tags depName=siderolabs/pkgs
 	PkgsVersion = "v1.6.0"
@@ -93,7 +93,7 @@ const (
 	SlackNotifyActionVersion = "v1"
 	// UploadArtifactActionVersion is the version of upload artifact github action.
 	// renovate: datasource=github-releases extractVersion=^(?<version>v\d+)\.\d+\.\d+$ depName=actions/upload-artifact
-	UploadArtifactActionVersion = "v3"
+	UploadArtifactActionVersion = "v4"
 	// VTProtobufVersion is the version of vtprotobuf.
 	// renovate: datasource=go depName=github.com/planetscale/vtprotobuf
 	VTProtobufVersion = "v0.5.0"

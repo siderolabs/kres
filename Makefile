@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-01-12T13:58:52Z by kres 0e666ea-dirty.
+# Generated on 2024-01-16T06:01:05Z by kres 6e83212-dirty.
 
 # common variables
 
@@ -88,6 +88,23 @@ To create a builder instance, run:
 
 	docker buildx create --name local --use
 
+If running builds that needs to be cached aggresively create a builder instance with the following:
+
+	docker buildx create --name local --use --config=config.toml
+
+config.toml contents:
+
+[worker.oci]
+  gc = true
+  gckeepstorage = 50000
+
+  [[worker.oci.gcpolicy]]
+    keepBytes = 10737418240
+    keepDuration = 604800
+    filters = [ "type==source.local", "type==exec.cachemount", "type==source.git.checkout"]
+  [[worker.oci.gcpolicy]]
+    all = true
+    keepBytes = 53687091200
 
 If you already have a compatible builder instance, you may use that instead.
 
