@@ -66,7 +66,7 @@ const (
 	LoginActionVersion = "v3"
 	// MardownLintCLIVersion is the version of markdownlint.
 	// renovate: datasource=npm depName=markdownlint-cli
-	MardownLintCLIVersion = "0.37.0"
+	MardownLintCLIVersion = "0.38.0"
 	// NodeContainerImageVersion is the default node container image.
 	// renovate: datasource=docker versioning=docker depName=node
 	NodeContainerImageVersion = "21.4.0-alpine3.18"
