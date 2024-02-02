@@ -265,7 +265,6 @@ func (r *Repository) enableConform(client *github.Client) error {
 			"pull_request",
 		},
 	})
-
 	if err != nil {
 		return err
 	}
