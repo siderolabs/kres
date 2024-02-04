@@ -227,6 +227,7 @@ func DefaultSteps() []*Step {
 				"driver":   "remote",
 				"endpoint": "tcp://localhost:1234",
 			},
+			TimeoutMinutes: 1,
 		},
 	)
 }

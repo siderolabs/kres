@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-02-02T15:47:02Z by kres cdedbc0-dirty.
+# Generated on 2024-02-05T10:58:13Z by kres eb955e2-dirty.
 
 name: default
 concurrency:
@@ -49,6 +49,7 @@ jobs:
         with:
           driver: remote
           endpoint: tcp://localhost:1234
+        timeout-minutes: 1
       - name: base
         run: |
           make base

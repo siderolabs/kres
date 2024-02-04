@@ -87,4 +87,5 @@ type Step struct {
 	Env             map[string]string `yaml:"env,omitempty"`
 	Run             string            `yaml:"run,omitempty"`
 	ContinueOnError bool              `yaml:"continue-on-error,omitempty"`
+	TimeoutMinutes  int               `yaml:"timeout-minutes,omitempty"`
 }
