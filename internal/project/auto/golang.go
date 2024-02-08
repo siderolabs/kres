@@ -31,6 +31,10 @@ func (builder *builder) DetectGolang() (bool, error) {
 	var lookupDirs []string
 
 	err := filepath.Walk(builder.rootPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
 		if info.IsDir() {
 			return nil
 		}

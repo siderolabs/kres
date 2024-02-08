@@ -41,7 +41,7 @@ var genCmd = &cobra.Command{
 	  * Makefile
 	  * Dockerfile`,
 	Args: cobra.NoArgs,
-	RunE: func(cmd *cobra.Command, _ []string) error {
+	RunE: func(*cobra.Command, []string) error {
 		return runGen()
 	},
 }

@@ -142,7 +142,7 @@ func (toolchain *Toolchain) CompileMakefile(output *makefile.Output) error {
 			makefile.AppendVariable("GO_BUILDFLAGS", "-tags sidero.debug"),
 		).
 		Else(
-			makefile.AppendVariable("GO_LDFLAGS", "-s -w"),
+			makefile.AppendVariable("GO_LDFLAGS", "-s"),
 		)
 
 	output.Target("base").

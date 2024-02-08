@@ -70,8 +70,6 @@ linters-settings:
   govet:
     check-shadowing: true
     enable-all: true
-    disable:
-      - loopclosure
   lll:
     line-length: 200
     tab-width: 4

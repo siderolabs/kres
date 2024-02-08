@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-02-08T17:40:59Z by kres 0bff90e-dirty.
+# Generated on 2024-02-08T23:52:25Z by kres fd08664-dirty.
 
 # options for analysis running
 run:
@@ -74,8 +74,6 @@ linters-settings:
   govet:
     check-shadowing: true
     enable-all: true
-    disable:
-      - loopclosure
   lll:
     line-length: 200
     tab-width: 4

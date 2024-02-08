@@ -17,7 +17,7 @@ var versionCmd = &cobra.Command{
 	Short: "Prints Kres version.",
 	Long:  `Prints Kres version.`,
 	Args:  cobra.NoArgs,
-	Run: func(cmd *cobra.Command, _ []string) {
+	Run: func(*cobra.Command, []string) {
 		line := fmt.Sprintf("%s version %s (%s)", version.Name, version.Tag, version.SHA)
 		fmt.Println(line)
 	},

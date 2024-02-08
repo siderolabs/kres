@@ -121,7 +121,7 @@ func (o *Output) makefile(w io.Writer) error {
 		}
 	}
 
-	sort.SliceStable(o.targets, func(i, j int) bool {
+	sort.SliceStable(o.targets, func(i, _ int) bool {
 		return o.targets[i].name == "all"
 	})
 

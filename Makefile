@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-02-08T18:12:15Z by kres e29ccc9-dirty.
+# Generated on 2024-02-09T00:25:37Z by kres decf506.
 
 # common variables
 
@@ -19,7 +19,7 @@ GRPC_GO_VERSION ?= 1.3.0
 GRPC_GATEWAY_VERSION ?= 2.19.1
 VTPROTOBUF_VERSION ?= 0.6.0
 DEEPCOPY_VERSION ?= v0.5.5
-GOLANGCILINT_VERSION ?= v1.56.0
+GOLANGCILINT_VERSION ?= v1.56.1
 GOFUMPT_VERSION ?= v0.6.0
 GO_VERSION ?= 1.22.0
 GOIMPORTS_VERSION ?= v0.17.0
@@ -125,7 +125,7 @@ endif
 ifneq (, $(filter $(WITH_DEBUG), t true TRUE y yes 1))
 GO_BUILDFLAGS += -tags sidero.debug
 else
-GO_LDFLAGS += -s -w
+GO_LDFLAGS += -s
 endif
 
 all: unit-tests kres image-kres lint
