@@ -51,7 +51,7 @@ const (
 	GolangCIlintVersion = "v1.55.2"
 	// GolangContainerImageVersion is the default golang container image.
 	// renovate: datasource=docker versioning=docker depName=golang
-	GolangContainerImageVersion = "1.21-alpine"
+	GolangContainerImageVersion = "1.22-alpine"
 	// GoVersion is the version of Go.
 	// renovate: datasource=github-tags extractVersion=^go(?<version>.*)$ depName=golang/go
 	GoVersion = "1.21.6"
