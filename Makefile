@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-02-08T11:37:56Z by kres e87aefd-dirty.
+# Generated on 2024-02-08T18:12:15Z by kres e29ccc9-dirty.
 
 # common variables
 
@@ -27,7 +27,6 @@ GO_BUILDFLAGS ?=
 GO_LDFLAGS ?=
 CGO_ENABLED ?= 0
 GOTOOLCHAIN ?= local
-GOEXPERIMENT ?= loopvar
 TESTPKGS ?= ./...
 KRES_IMAGE ?= ghcr.io/siderolabs/kres:latest
 CONFORMANCE_IMAGE ?= ghcr.io/siderolabs/conform:latest
@@ -153,7 +152,7 @@ lint-gofumpt:  ## Runs gofumpt linter.
 .PHONY: fmt
 fmt:  ## Formats the source code
 	@docker run --rm -it -v $(PWD):/src -w /src golang:$(GO_VERSION) \
-		bash -c "export GOEXPERIMENT=loopvar; export GOTOOLCHAIN=local; \
+		bash -c "export GOTOOLCHAIN=local; \
 		export GO111MODULE=on; export GOPROXY=https://proxy.golang.org; \
 		go install mvdan.cc/gofumpt@$(GOFUMPT_VERSION) && \
 		gofumpt -w ."

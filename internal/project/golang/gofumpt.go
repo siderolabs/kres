@@ -55,7 +55,7 @@ func (lint *Gofumpt) CompileMakefile(output *makefile.Output) error {
 			Phony().
 			Script(
 				`@docker run --rm -it -v $(PWD):/src -w /src golang:$(GO_VERSION) \
-	bash -c "export GOEXPERIMENT=loopvar; export GOTOOLCHAIN=local; \
+	bash -c "export GOTOOLCHAIN=local; \
 	export GO111MODULE=on; export GOPROXY=https://proxy.golang.org; \
 	go install mvdan.cc/gofumpt@$(GOFUMPT_VERSION) && \
 	gofumpt -w ."`,
