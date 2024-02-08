@@ -219,10 +219,7 @@ func (step *Step) CompileDrone(output *drone.Output) error {
 		pipeline.Step(
 			drone.CustomStep("load-artifacts",
 				`az login --service-principal -u "$${AZURE_STORAGE_USER}" -p "$${AZURE_STORAGE_PASS}" --tenant "$${AZURE_TENANT}"`,
-				fmt.Sprintf(
-					`mkdir -p %s`,
-					step.meta.ArtifactsPath,
-				),
+				`mkdir -p `+step.meta.ArtifactsPath,
 				fmt.Sprintf(
 					`az storage blob download-batch --overwrite true -d %s -s ${CI_COMMIT_SHA}${DRONE_TAG//./-}`,
 					step.meta.ArtifactsPath,
@@ -312,7 +309,7 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 			&ghworkflow.Step{
 				Name: "Retrieve PR labels",
 				ID:   "retrieve-pr-labels",
-				Uses: fmt.Sprintf("actions/github-script@%s", config.GitHubScriptActionVersion),
+				Uses: "actions/github-script@" + config.GitHubScriptActionVersion,
 				With: map[string]string{
 					"retries": "3",
 					"script":  strings.TrimPrefix(ghworkflow.IssueLabelRetrieveScript, "\n"),
@@ -335,7 +332,7 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 			},
 			&ghworkflow.Step{
 				Name:            "save-artifacts",
-				Uses:            fmt.Sprintf("actions/upload-artifact@%s", config.UploadArtifactActionVersion),
+				Uses:            "actions/upload-artifact@" + config.UploadArtifactActionVersion, //nolint:goconst
 				ContinueOnError: step.GHAction.Artifacts.ContinueOnError,
 				With: map[string]string{
 					"name":           "artifacts",
@@ -348,7 +345,7 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		for _, additionalArtifact := range step.GHAction.Artifacts.Additional {
 			artifactStep := &ghworkflow.Step{
 				Name:            fmt.Sprintf("save-%s-artifacts", additionalArtifact.Name),
-				Uses:            fmt.Sprintf("actions/upload-artifact@%s", config.UploadArtifactActionVersion),
+				Uses:            "actions/upload-artifact@" + config.UploadArtifactActionVersion,
 				ContinueOnError: step.GHAction.Artifacts.ContinueOnError,
 				With: map[string]string{
 					"name":           additionalArtifact.Name,
@@ -381,16 +378,16 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 			return fmt.Sprintf("contains(fromJSON(needs.default.outputs.labels), '%s')", label)
 		})
 
-		artifactSteps := []*ghworkflow.Step{}
+		var artifactSteps []*ghworkflow.Step
 
 		if step.GHAction.Artifacts.Enabled {
 			for _, additionalArtifact := range step.GHAction.Artifacts.Additional {
 				artifactStep := &ghworkflow.Step{
 					Name:            fmt.Sprintf("save-%s-artifacts", additionalArtifact.Name),
-					Uses:            fmt.Sprintf("actions/upload-artifact@%s", config.UploadArtifactActionVersion),
+					Uses:            "actions/upload-artifact@" + config.UploadArtifactActionVersion,
 					ContinueOnError: additionalArtifact.ContinueOnError,
 					With: map[string]string{
-						"name":           fmt.Sprintf("%s-%s", additionalArtifact.Name, job.Name),
+						"name":           additionalArtifact.Name + "-" + job.Name,
 						"path":           strings.Join(additionalArtifact.Paths, "\n"),
 						"retention-days": "5",
 					},
@@ -412,14 +409,14 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 			Steps:    ghworkflow.DefaultSteps(),
 		})
 
-		steps := []*ghworkflow.Step{}
+		var steps []*ghworkflow.Step
 
 		if step.GHAction.Artifacts.Enabled {
 			steps = append(
 				steps,
 				&ghworkflow.Step{
 					Name: "Download artifacts",
-					Uses: fmt.Sprintf("actions/download-artifact@%s", config.DownloadArtifactActionVersion),
+					Uses: "actions/download-artifact@" + config.DownloadArtifactActionVersion,
 					With: map[string]string{
 						"name": "artifacts",
 						"path": step.meta.ArtifactsPath,
@@ -455,7 +452,7 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		)
 
 		if len(job.Crons) > 0 {
-			workflowName := fmt.Sprintf("%s-cron", job.Name)
+			workflowName := job.Name + "-cron"
 
 			output.AddSlackNotify(workflowName)
 

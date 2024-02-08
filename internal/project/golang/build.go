@@ -5,10 +5,13 @@
 package golang
 
 import (
+	"cmp"
 	"fmt"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
+
+	"github.com/siderolabs/gen/maps"
 
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/output/dockerfile"
@@ -42,13 +45,9 @@ type artifact struct {
 }
 
 func (c CompileConfig) set(script *step.RunStep) {
-	keys := make([]string, 0, len(c))
+	keys := maps.Keys(c)
 
-	for key := range c {
-		keys = append(keys, key)
-	}
-
-	sort.Strings(keys)
+	slices.Sort(keys)
 
 	for _, key := range keys {
 		script.Env(key, c[key])
@@ -67,8 +66,8 @@ func NewBuild(meta *meta.Options, name, sourcePath string) *Build {
 // CompileDockerfile implements dockerfile.Compiler.
 func (build *Build) CompileDockerfile(output *dockerfile.Output) error {
 	addBuildSteps := func(name string, opts CompileConfig) {
-		stage := output.Stage(fmt.Sprintf("%s-build", name)).
-			Description(fmt.Sprintf("builds %s", name)).
+		stage := output.Stage(name + "-build").
+			Description("builds " + name).
 			From("base").
 			Step(step.Copy("/", "/").From("generate"))
 
@@ -89,7 +88,7 @@ func (build *Build) CompileDockerfile(output *dockerfile.Output) error {
 				Step(step.Arg("SHA")).
 				Step(step.Arg("TAG"))
 
-			ldflags += fmt.Sprintf(" -X ${VERSION_PKG}.Name=%s", build.Name())
+			ldflags += " -X ${VERSION_PKG}.Name=" + build.Name()
 			ldflags += " -X ${VERSION_PKG}.SHA=${SHA} -X ${VERSION_PKG}.Tag=${TAG}"
 		}
 
@@ -111,7 +110,7 @@ func (build *Build) CompileDockerfile(output *dockerfile.Output) error {
 
 		output.Stage(name).
 			From("scratch").
-			Step(step.Copy("/"+name, "/"+name).From(fmt.Sprintf("%s-build", name)))
+			Step(step.Copy("/"+name, "/"+name).From(name + "-build"))
 	}
 
 	for _, artifact := range build.getArtifacts() {
@@ -119,14 +118,14 @@ func (build *Build) CompileDockerfile(output *dockerfile.Output) error {
 	}
 
 	// combine all binaries built for each arch into '-all' stage
-	all := output.Stage(fmt.Sprintf("%s-all", build.Name())).
+	all := output.Stage(build.Name() + "-all").
 		From("scratch")
 
 	for _, artifact := range build.getArtifacts() {
 		all.Step(step.Copy("/", "/").From(artifact.name))
 	}
 
-	build.entrypoint = fmt.Sprintf("%s-linux-${TARGETARCH}", build.Name())
+	build.entrypoint = build.Name() + "-linux-${TARGETARCH}"
 	output.Stage(build.Name()).
 		From(build.entrypoint)
 
@@ -156,7 +155,7 @@ func (build *Build) CompileMakefile(output *makefile.Output) error {
 	deps := make([]string, 0, len(artifacts))
 
 	for _, artifact := range artifacts {
-		output.Target(fmt.Sprintf("$(ARTIFACTS)/%s", artifact.name)).
+		output.Target("$(ARTIFACTS)/" + artifact.name).
 			Script(fmt.Sprintf("@$(MAKE) local-%s DEST=$(ARTIFACTS)", artifact.name)).
 			Phony()
 
@@ -164,7 +163,7 @@ func (build *Build) CompileMakefile(output *makefile.Output) error {
 
 		output.Target(artifact.name).
 			Description(fmt.Sprintf("Builds executable for %s.", artifact.name)).
-			Depends(fmt.Sprintf("$(ARTIFACTS)/%s", artifact.name)).
+			Depends("$(ARTIFACTS)/" + artifact.name).
 			Phony()
 	}
 
@@ -191,21 +190,19 @@ func (build *Build) getArtifacts() []artifact {
 	if len(build.Outputs) == 0 {
 		build.artifacts = []artifact{
 			{
-				name: fmt.Sprintf("%s-linux-amd64", build.Name()),
+				name: build.Name() + "-linux-amd64",
 			},
 		}
 	} else {
-		build.artifacts = make([]artifact, 0, len(build.Outputs))
-
-		for name, config := range build.Outputs {
-			build.artifacts = append(build.artifacts, artifact{
+		build.artifacts = maps.ToSlice(build.Outputs, func(name string, config CompileConfig) artifact {
+			return artifact{
 				name:   strings.Join([]string{build.Name(), name}, "-"),
 				config: config,
-			})
-		}
+			}
+		})
 
-		sort.Slice(build.artifacts, func(i, j int) bool {
-			return build.artifacts[i].name < build.artifacts[j].name
+		slices.SortFunc(build.artifacts, func(a, b artifact) int {
+			return cmp.Compare(a.name, b.name)
 		})
 	}
 

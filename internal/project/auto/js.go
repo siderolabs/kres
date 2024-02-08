@@ -5,7 +5,6 @@
 package auto
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -70,7 +69,7 @@ func (builder *builder) BuildJS() error {
 	toolchain.AddInput(builder.commonInputs...)
 
 	// unit-tests
-	unitTests := js.NewUnitTests(builder.meta, fmt.Sprintf("unit-tests-%s", name))
+	unitTests := js.NewUnitTests(builder.meta, "unit-tests-"+name)
 	unitTests.AddInput(toolchain)
 	builder.targets = append(builder.targets, unitTests)
 

@@ -59,7 +59,7 @@ func (target *Target) Generate(w io.Writer) error {
 
 	description := target.description
 	if description != "" {
-		description = fmt.Sprintf("  ## %s", description)
+		description = "  ## " + description
 	}
 
 	depends := strings.Join(target.depends, " ")

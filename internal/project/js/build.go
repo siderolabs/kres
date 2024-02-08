@@ -68,7 +68,7 @@ func (build *Build) CompileDockerfile(output *dockerfile.Output) error {
 	outputDir := fmt.Sprintf("/internal/%s/dist", build.Name())
 
 	output.Stage(build.Name()).
-		Description(fmt.Sprintf("builds %s", build.Name())).
+		Description("builds " + build.Name()).
 		From("js").
 		Step(step.Arg(nodeBuildArgsVarName)).
 		Step(step.Script("npm run build ${" + nodeBuildArgsVarName + "}").
@@ -101,7 +101,7 @@ func (build *Build) CompileMakefile(output *makefile.Output) error {
 		Variable(makefile.OverridableVariable(nodeBuildArgsVarName, ""))
 
 	output.Target(fmt.Sprintf("$(ARTIFACTS)/%s-js", build.Name())).
-		Script(fmt.Sprintf("@$(MAKE) target-%s", build.Name())).
+		Script("@$(MAKE) target-" + build.Name()).
 		Phony()
 
 	output.Target(build.Name()).

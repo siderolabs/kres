@@ -19,8 +19,7 @@ func (o *Output) appendService(originalService *yaml.Container, pipeline *yaml.P
 	// perform a shallow copy of the step to avoid modifying the original
 	spec := *originalService
 
-	spec.Volumes = slices.Clone(spec.Volumes)
-	spec.Volumes = append(spec.Volumes, o.standardMounts...)
+	spec.Volumes = slices.Concat(spec.Volumes, o.standardMounts)
 
 	pipeline.Services = append(pipeline.Services, &spec)
 }

@@ -5,6 +5,7 @@
 package common
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/siderolabs/kres/internal/config"
@@ -63,7 +64,7 @@ func (image *Image) CompileDrone(output *drone.Output) error {
 	)
 
 	step := drone.MakeStep(image.Name()).
-		Name(fmt.Sprintf("push-%s", image.ImageName)).
+		Name("push-"+image.ImageName). //nolint:goconst
 		Environment("PUSH", "true").
 		ExceptPullRequest().
 		DockerLogin().
@@ -82,7 +83,7 @@ func (image *Image) CompileDrone(output *drone.Output) error {
 			OnlyOnBranch(image.meta.MainBranch).
 			ExceptPullRequest().
 			DockerLogin().
-			DependsOn(fmt.Sprintf("push-%s", image.ImageName))
+			DependsOn("push-" + image.ImageName)
 
 		for k, v := range image.ExtraEnvironment {
 			step.Environment(k, v)
@@ -98,7 +99,7 @@ func (image *Image) CompileDrone(output *drone.Output) error {
 func (image *Image) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	loginStep := &ghworkflow.Step{
 		Name: "Login to registry",
-		Uses: fmt.Sprintf("docker/login-action@%s", config.LoginActionVersion),
+		Uses: "docker/login-action@" + config.LoginActionVersion,
 		With: map[string]string{
 			"registry": "ghcr.io",
 			"username": "${{ github.repository_owner }}",
@@ -109,7 +110,7 @@ func (image *Image) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	loginStep.ExceptPullRequest()
 
 	pushStep := ghworkflow.MakeStep(image.Name()).
-		SetName(fmt.Sprintf("push-%s", image.ImageName)).
+		SetName("push-"+image.ImageName).
 		SetEnv("PUSH", "true").
 		ExceptPullRequest()
 
@@ -161,10 +162,10 @@ func (image *Image) CompileDockerfile(output *dockerfile.Output) error {
 	if image.BaseImage == "scratch" {
 		stage.From(image.BaseImage)
 	} else {
-		output.Stage(fmt.Sprintf("base-%s", image.Name())).
+		output.Stage("base-" + image.Name()).
 			From(image.BaseImage)
 
-		stage.From(fmt.Sprintf("base-%s", image.Name()))
+		stage.From("base-" + image.Name())
 	}
 
 	for _, command := range image.CustomCommands {
@@ -173,7 +174,7 @@ func (image *Image) CompileDockerfile(output *dockerfile.Output) error {
 
 	inputs := dag.GatherMatchingInputs(image, dag.Implements[dockerfile.Compiler]())
 	if len(inputs) == 0 {
-		return fmt.Errorf("no inputs for Image block")
+		return errors.New("no inputs for Image block")
 	}
 
 	for _, addImage := range image.AdditionalImages {

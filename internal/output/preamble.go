@@ -31,7 +31,7 @@ Generated on %s by %s.
 	}
 
 	if PreambleCreator == "" {
-		PreambleCreator = fmt.Sprintf("%s %s", version.Name, version.Tag)
+		PreambleCreator = version.Name + " " + version.Tag
 	}
 
 	preambleStr := fmt.Sprintf(preamble, PreambleTimestamp.Format(time.RFC3339), PreambleCreator)

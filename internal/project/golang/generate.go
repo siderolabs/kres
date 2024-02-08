@@ -215,12 +215,12 @@ func (generate *Generate) CompileDockerfile(output *dockerfile.Output) error {
 			}
 
 			flags := []string{
-				fmt.Sprintf("-I%s", generate.BaseSpecPath),
+				"-I" + generate.BaseSpecPath,
 			}
 
 			if spec.GenGateway {
 				flags = append(flags,
-					fmt.Sprintf("--grpc-gateway_out=paths=source_relative:%s", generate.BaseSpecPath),
+					"--grpc-gateway_out=paths=source_relative:"+generate.BaseSpecPath,
 					"--grpc-gateway_opt=generate_unbound_methods=true",
 				)
 
@@ -233,13 +233,13 @@ func (generate *Generate) CompileDockerfile(output *dockerfile.Output) error {
 
 			if !spec.GenGateway || !spec.external {
 				flags = append(flags,
-					fmt.Sprintf("--go_out=paths=source_relative:%s", generate.BaseSpecPath),
-					fmt.Sprintf("--go-grpc_out=paths=source_relative:%s", generate.BaseSpecPath),
+					"--go_out=paths=source_relative:"+generate.BaseSpecPath,
+					"--go-grpc_out=paths=source_relative:"+generate.BaseSpecPath,
 				)
 
 				if generate.VTProtobufEnabled {
 					flags = append(flags,
-						fmt.Sprintf("--go-vtproto_out=paths=source_relative:%s", generate.BaseSpecPath),
+						"--go-vtproto_out=paths=source_relative:"+generate.BaseSpecPath,
 						"--go-vtproto_opt=features=marshal+unmarshal+size+equal+clone",
 					)
 				}
@@ -347,7 +347,7 @@ func (generate *Generate) CompileDockerfile(output *dockerfile.Output) error {
 			Step(step.Arg("ABBREV_TAG")).
 			Step(step.Script(fmt.Sprintf(abbrevCommand, generate.versionPackagePath())))
 
-		src := fmt.Sprintf("/src/%s", generate.versionPackagePath())
+		src := "/src/" + generate.versionPackagePath()
 
 		generateStage.Step(step.Copy(src, generate.versionPackagePath()).From("embed-abbrev-generate"))
 
@@ -363,7 +363,7 @@ func (generate *Generate) CompileTemplates(output *template.Output) error {
 		return nil
 	}
 
-	output.Define(fmt.Sprintf("%s/version.go", generate.versionPackagePath()), templates.VersionGo).
+	output.Define(generate.versionPackagePath()+"/version.go", templates.VersionGo).
 		PreamblePrefix("// ").
 		WithLicense().
 		NoOverwrite()

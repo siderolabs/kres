@@ -8,7 +8,6 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -33,7 +32,7 @@ type FileAdapter struct {
 }
 
 // ErrSkip makes file adapter skip the file write.
-var ErrSkip = fmt.Errorf("skip file")
+var ErrSkip = errors.New("skip file")
 
 // Generate implements outout.Writer.
 //

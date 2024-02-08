@@ -8,7 +8,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"sort"
+	"slices"
 
 	"github.com/google/go-github/v58/github"
 	"github.com/siderolabs/gen/xslices"
@@ -303,23 +303,13 @@ func (r *Repository) inviteBot(client *github.Client) error {
 }
 
 func equalStringSlices(a, b []string) bool {
-	a = append([]string(nil), a...)
-	b = append([]string(nil), b...)
+	a = slices.Clone(a)
+	b = slices.Clone(b)
 
-	sort.Strings(a)
-	sort.Strings(b)
+	slices.Sort(a)
+	slices.Sort(b)
 
-	if len(a) != len(b) {
-		return false
-	}
-
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-
-	return true
+	return slices.Equal(a, b)
 }
 
 const mplHeader = `// This Source Code Form is subject to the terms of the Mozilla Public

@@ -78,7 +78,7 @@ func (provider *Provider) Load(obj any) error {
 	}
 
 	typ := reflect.TypeOf(obj).Elem()
-	kind := fmt.Sprintf("%s.%s", path.Base(typ.PkgPath()), typ.Name())
+	kind := path.Base(typ.PkgPath()) + "." + typ.Name()
 
 	name := ""
 	if namedObj, ok := obj.(named); ok {

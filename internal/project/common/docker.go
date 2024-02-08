@@ -38,7 +38,7 @@ func NewDocker(meta *meta.Options) *Docker {
 
 		meta: meta,
 
-		DockerImage: fmt.Sprintf("docker:%s", config.DindContainerImageVersion),
+		DockerImage: "docker:" + config.DindContainerImageVersion,
 	}
 }
 

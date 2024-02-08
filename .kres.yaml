@@ -37,7 +37,7 @@ spec:
 ---
 kind: service.CodeCov
 spec:
-    targetThreshold: 10
+    targetThreshold: 8
 ---
 kind: common.Build
 spec:

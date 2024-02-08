@@ -5,6 +5,7 @@
 package auto
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 
@@ -82,7 +83,7 @@ func (builder *builder) DetectGit() (bool, error) {
 	}
 
 	if upstreamRemote == nil {
-		return true, fmt.Errorf("neither 'origin' or 'upstream' remote found")
+		return true, errors.New("neither 'origin' or 'upstream' remote found")
 	}
 
 	for _, remoteURL := range upstreamRemote.Config().URLs {

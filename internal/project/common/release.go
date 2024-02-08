@@ -96,7 +96,7 @@ func (release *Release) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 
 	releaseStep := &ghworkflow.Step{
 		Name: "Release",
-		Uses: fmt.Sprintf("crazy-max/ghaction-github-release@%s", config.ReleaseActionVersion),
+		Uses: "crazy-max/ghaction-github-release@" + config.ReleaseActionVersion,
 		With: releaseStepOptions,
 	}
 

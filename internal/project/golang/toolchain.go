@@ -5,7 +5,6 @@
 package golang
 
 import (
-	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -85,9 +84,9 @@ func (toolchain *Toolchain) image() string {
 
 	switch toolchain.Kind {
 	case ToolchainOfficial:
-		return fmt.Sprintf("docker.io/golang:%s", toolchain.Version)
+		return "docker.io/golang:" + toolchain.Version
 	case ToolchainTools:
-		return fmt.Sprintf("ghcr.io/siderolabs/tools:%s", toolchain.Version)
+		return "ghcr.io/siderolabs/tools:" + toolchain.Version
 	default:
 		panic("unsupported toolchain kind")
 	}

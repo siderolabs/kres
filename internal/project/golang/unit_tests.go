@@ -56,7 +56,7 @@ func (tests *UnitTests) CompileDockerfile(output *dockerfile.Output) error {
 	}
 
 	workdir := step.WorkDir(filepath.Join("/src", tests.packagePath))
-	testRun := fmt.Sprintf("%s-run", tests.Name())
+	testRun := tests.Name() + "-run"
 
 	output.Stage(testRun).
 		Description("runs unit-tests").
@@ -77,7 +77,8 @@ func (tests *UnitTests) CompileDockerfile(output *dockerfile.Output) error {
 		From("scratch").
 		Step(step.Copy(filepath.Join("/src", tests.packagePath, "coverage.txt"), fmt.Sprintf("/coverage-%s.txt", tests.Name())).From(testRun))
 
-	output.Stage(fmt.Sprintf("%s-race", tests.Name())).
+	//nolint:goconst
+	output.Stage(tests.Name() + "-race").
 		Description("runs unit-tests with race detector").
 		From("base").
 		Step(workdir).
@@ -110,12 +111,12 @@ func (tests *UnitTests) CompileMakefile(output *makefile.Output) error {
 
 	output.Target(tests.Name()).
 		Description("Performs unit tests").
-		Script(fmt.Sprintf("@$(MAKE) local-$@ DEST=$(ARTIFACTS)%s", scriptExtraArgs)).
+		Script("@$(MAKE) local-$@ DEST=$(ARTIFACTS)" + scriptExtraArgs).
 		Phony()
 
-	output.Target(fmt.Sprintf("%s-race", tests.Name())).
+	output.Target(tests.Name() + "-race").
 		Description("Performs unit tests with race detection enabled.").
-		Script(fmt.Sprintf("@$(MAKE) target-$@%s", scriptExtraArgs)).
+		Script("@$(MAKE) target-$@" + scriptExtraArgs).
 		Phony()
 
 	return nil
@@ -127,7 +128,7 @@ func (tests *UnitTests) CompileDrone(output *drone.Output) error {
 		DependsOn(dag.GatherMatchingInputNames(tests, dag.Implements[drone.Compiler]())...),
 	)
 
-	output.Step(drone.MakeStep(fmt.Sprintf("%s-race", tests.Name())).
+	output.Step(drone.MakeStep(fmt.Sprintf(tests.Name(), "-race")).
 		DependsOn(dag.GatherMatchingInputNames(tests, dag.Implements[drone.Compiler]())...),
 	)
 
@@ -139,7 +140,7 @@ func (tests *UnitTests) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	output.AddStep(
 		"default",
 		ghworkflow.MakeStep(tests.Name()),
-		ghworkflow.MakeStep(fmt.Sprintf("%s-race", tests.Name())),
+		ghworkflow.MakeStep(tests.Name()+"-race"),
 	)
 
 	return nil

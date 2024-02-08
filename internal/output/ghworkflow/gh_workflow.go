@@ -135,7 +135,7 @@ func NewOutput() *Output {
 							},
 							{
 								Name: "Slack Notify",
-								Uses: fmt.Sprintf("slackapi/slack-github-action@%s", config.SlackNotifyActionVersion),
+								Uses: "slackapi/slack-github-action@" + config.SlackNotifyActionVersion,
 								With: map[string]string{
 									"channel-id": "proj-talos-maintainers",
 									"payload":    slackNotifyPayload,
@@ -207,7 +207,7 @@ func CommonSteps() []*Step {
 	return []*Step{
 		{
 			Name: "checkout",
-			Uses: fmt.Sprintf("actions/checkout@%s", config.CheckOutActionVersion),
+			Uses: "actions/checkout@" + config.CheckOutActionVersion,
 		},
 		{
 			Name: "Unshallow",
@@ -222,7 +222,7 @@ func DefaultSteps() []*Step {
 		CommonSteps(),
 		&Step{
 			Name: "Set up Docker Buildx",
-			Uses: fmt.Sprintf("docker/setup-buildx-action@%s", config.SetupBuildxActionVersion),
+			Uses: "docker/setup-buildx-action@" + config.SetupBuildxActionVersion,
 			With: map[string]string{
 				"driver":   "remote",
 				"endpoint": "tcp://localhost:1234",
@@ -238,7 +238,7 @@ func DefaultPkgsSteps() []*Step {
 		CommonSteps(),
 		&Step{
 			Name: "Set up Docker Buildx",
-			Uses: fmt.Sprintf("docker/setup-buildx-action@%s", config.SetupBuildxActionVersion),
+			Uses: "docker/setup-buildx-action@" + config.SetupBuildxActionVersion,
 			With: map[string]string{
 				"driver":   "remote",
 				"endpoint": "tcp://localhost:1234",
@@ -252,7 +252,7 @@ func DefaultPkgsSteps() []*Step {
 func DefaultServices() map[string]Service {
 	return map[string]Service{
 		"buildkitd": {
-			Image:   fmt.Sprintf("moby/buildkit:%s", config.BuildKitContainerVersion),
+			Image:   "moby/buildkit:" + config.BuildKitContainerVersion,
 			Options: "--privileged",
 			Ports:   []string{"1234:1234"},
 			Volumes: []string{

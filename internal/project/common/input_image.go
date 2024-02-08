@@ -5,8 +5,6 @@
 package common
 
 import (
-	"fmt"
-
 	"github.com/siderolabs/kres/internal/config"
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/output/dockerfile"
@@ -24,7 +22,7 @@ type InputImage struct {
 // CompileDockerfile implements dockerfile.Compiler.
 func (inputImage *InputImage) CompileDockerfile(output *dockerfile.Output) error {
 	output.Stage(inputImage.Name()).
-		From(fmt.Sprintf("%s:%s", inputImage.Image, inputImage.Version))
+		From(inputImage.Image + ":" + inputImage.Version)
 
 	return nil
 }
@@ -32,7 +30,7 @@ func (inputImage *InputImage) CompileDockerfile(output *dockerfile.Output) error
 // NewFHS builds standard input image for FHS.
 func NewFHS(_ *meta.Options) *InputImage {
 	return &InputImage{
-		BaseNode: dag.NewBaseNode(fmt.Sprintf("image-%s", "fhs")),
+		BaseNode: dag.NewBaseNode("image-fhs"),
 
 		Image:   "ghcr.io/siderolabs/fhs",
 		Version: config.PkgsVersion,
@@ -42,7 +40,7 @@ func NewFHS(_ *meta.Options) *InputImage {
 // NewCACerts builds standard input image for ca-certificates.
 func NewCACerts(_ *meta.Options) *InputImage {
 	return &InputImage{
-		BaseNode: dag.NewBaseNode(fmt.Sprintf("image-%s", "ca-certificates")),
+		BaseNode: dag.NewBaseNode("image-ca-certificates"),
 
 		Image:   "ghcr.io/siderolabs/ca-certificates",
 		Version: config.PkgsVersion,

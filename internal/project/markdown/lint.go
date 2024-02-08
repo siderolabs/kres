@@ -5,8 +5,6 @@
 package markdown
 
 import (
-	"fmt"
-
 	"github.com/siderolabs/kres/internal/config"
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/output/dockerfile"
@@ -45,10 +43,10 @@ func NewLint(meta *meta.Options) *Lint {
 // CompileDockerfile implements dockerfile.Compiler.
 func (lint *Lint) CompileDockerfile(output *dockerfile.Output) error {
 	stage := output.Stage(lint.Name()).Description("runs markdownlint").
-		From(fmt.Sprintf("docker.io/node:%s", lint.BaseImage)).
+		From("docker.io/node:" + lint.BaseImage).
 		Step(step.WorkDir("/src")).
-		Step(step.Run("npm", "i", "-g", fmt.Sprintf("markdownlint-cli@%s", lint.MardownLintCLIVersion))).
-		Step(step.Run("npm", "i", fmt.Sprintf("sentences-per-line@%s", lint.SentencesPerLineVersion))).
+		Step(step.Run("npm", "i", "-g", "markdownlint-cli@"+lint.MardownLintCLIVersion)).
+		Step(step.Run("npm", "i", "sentences-per-line@"+lint.SentencesPerLineVersion)).
 		Step(step.Copy(".markdownlint.json", "."))
 
 	for _, directory := range lint.meta.MarkdownDirectories {

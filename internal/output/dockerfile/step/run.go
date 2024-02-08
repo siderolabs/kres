@@ -7,6 +7,7 @@ package step
 import (
 	"fmt"
 	"io"
+	"slices"
 	"strings"
 
 	"github.com/kballard/go-shellquote"
@@ -48,14 +49,14 @@ func (step *RunStep) SecurityInsecure() *RunStep {
 
 // Env sets up environment variables for the step.
 func (step *RunStep) Env(name, value string) *RunStep {
-	step.env = append(step.env, fmt.Sprintf("%s=%s", name, value))
+	step.env = append(step.env, name+"="+value)
 
 	return step
 }
 
 // MountCache mounts cache at specified target path.
 func (step *RunStep) MountCache(target string) *RunStep {
-	step.mounts = append(step.mounts, fmt.Sprintf("type=cache,target=%s", target))
+	step.mounts = append(step.mounts, "type=cache,target="+target)
 
 	return step
 }
@@ -75,7 +76,7 @@ func (step *RunStep) Generate(w io.Writer) error {
 		env += " "
 	}
 
-	mounts := append([]string(nil), step.mounts...)
+	mounts := slices.Clone(step.mounts)
 	for i := range mounts {
 		mounts[i] = "--mount=" + mounts[i]
 	}
@@ -87,7 +88,7 @@ func (step *RunStep) Generate(w io.Writer) error {
 
 	script := step.script
 	if script == "" {
-		script = fmt.Sprintf("%s %s", step.command, shellquote.Join(step.args...))
+		script = step.command + " " + shellquote.Join(step.args...)
 	}
 
 	_, err := fmt.Fprintf(w, "RUN %s%s%s%s\n", security, mount, env, script)

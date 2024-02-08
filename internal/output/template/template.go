@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"sort"
+	"slices"
 	"text/template"
 
 	"github.com/siderolabs/kres/internal/output"
@@ -144,7 +144,7 @@ func (o *Output) Filenames() []string {
 		files[index] = name
 	}
 
-	sort.Strings(files)
+	slices.Sort(files)
 
 	return files
 }

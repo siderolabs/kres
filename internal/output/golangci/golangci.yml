@@ -149,6 +149,7 @@ linters:
     - inamedparam
     - testifylint # complains about our assert recorder and has a number of false positives for assert.Greater(t, thing, 1)
     - protogetter # complains about us using Value field on typed spec, instead of GetValue which has a different signature
+    - perfsprint # complains about us using fmt.Sprintf in non-performance critical code, updating just kres took too long
     # abandoned linters for which golangci shows the warning that the repo is archived by the owner
     - interfacer
     - maligned

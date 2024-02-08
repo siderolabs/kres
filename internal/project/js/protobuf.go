@@ -5,7 +5,6 @@
 package js
 
 import (
-	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -75,7 +74,8 @@ func (proto *Protobuf) CompileMakefile(output *makefile.Output) error {
 		return nil
 	}
 
-	output.Target(fmt.Sprintf("generate-%s", proto.Name())).Description("Generate .proto definitions.").
+	output.Target("generate-" + proto.Name()).
+		Description("Generate .proto definitions.").
 		Script("@$(MAKE) local-$@ DEST=./")
 
 	return nil
@@ -101,9 +101,9 @@ func (proto *Protobuf) ToolchainBuild(stage *dockerfile.Stage) error {
 // CompileDockerfile implements dockerfile.Compiler.
 func (proto *Protobuf) CompileDockerfile(output *dockerfile.Output) error {
 	rootDir := "/" + proto.Name()
-	generateContainer := fmt.Sprintf("generate-%s", proto.Name())
-	specsContainer := fmt.Sprintf("proto-specs-%s", proto.Name())
-	compileContainer := fmt.Sprintf("proto-compile-%s", proto.Name())
+	generateContainer := "generate-" + proto.Name()
+	specsContainer := "proto-specs-" + proto.Name()
+	compileContainer := "proto-compile-" + proto.Name()
 
 	generate := output.Stage(generateContainer).
 		Description("cleaned up specs and compiled versions").
@@ -149,11 +149,11 @@ func (proto *Protobuf) CompileDockerfile(output *dockerfile.Output) error {
 		source := filepath.Join(dir, spec.SubDirectory, filepath.Base(spec.Source))
 
 		args := []string{
-			fmt.Sprintf("-I%s", dir),
+			"-I" + dir,
 		}
 
 		args = append(args,
-			fmt.Sprintf("--grpc-gateway-ts_out=source_relative:%s", dir),
+			"--grpc-gateway-ts_out=source_relative:"+dir,
 			"--grpc-gateway-ts_opt=use_proto_names=true",
 		)
 		args = append(args, proto.ExperimentalFlags...)
@@ -168,7 +168,7 @@ func (proto *Protobuf) CompileDockerfile(output *dockerfile.Output) error {
 
 		if !strings.HasPrefix(spec.Source, "http") {
 			cleanupSteps = append(cleanupSteps,
-				step.Script(fmt.Sprintf("rm %s", source)),
+				step.Script("rm "+source),
 			)
 		}
 	}

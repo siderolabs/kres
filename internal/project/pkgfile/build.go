@@ -127,7 +127,7 @@ func (pkgfile *Build) CompileMakefile(output *makefile.Output) error {
 	if pkgfile.ReproducibleTargetName != "" {
 		output.Target("reproducibility-test").
 			Description("Builds the reproducibility test target").
-			Script(fmt.Sprintf("@$(MAKE) reproducibility-test-local-%s", pkgfile.ReproducibleTargetName))
+			Script("@$(MAKE) reproducibility-test-local-" + pkgfile.ReproducibleTargetName)
 	}
 
 	output.Target("reproducibility-test-local-%").
@@ -144,7 +144,7 @@ func (pkgfile *Build) CompileMakefile(output *makefile.Output) error {
 	defaultTarget := "$(TARGETS)"
 
 	for name, targets := range pkgfile.AdditionalTargets {
-		targetName := fmt.Sprintf("%s_TARGETS", strings.ToUpper(name))
+		targetName := strings.ToUpper(name) + "_TARGETS"
 		targetNameVariable := fmt.Sprintf("$(%s)", targetName)
 		defaultTarget += " " + targetNameVariable
 
@@ -187,7 +187,7 @@ func (pkgfile *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 
 	loginStep := &ghworkflow.Step{
 		Name: "Login to registry",
-		Uses: fmt.Sprintf("docker/login-action@%s", config.LoginActionVersion),
+		Uses: "docker/login-action@" + config.LoginActionVersion,
 		With: map[string]string{
 			"registry": "ghcr.io",
 			"username": "${{ github.repository_owner }}",
@@ -214,13 +214,13 @@ func (pkgfile *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	for name := range pkgfile.AdditionalTargets {
 		output.AddStep(
 			"default",
-			ghworkflow.MakeStep(name).SetName(fmt.Sprintf("Build %s", name)),
+			ghworkflow.MakeStep(name).SetName("Build "+name),
 		)
 
 		steps = append(
 			steps,
 			ghworkflow.MakeStep(name, "PUSH=true").
-				SetName(fmt.Sprintf("Push %s", name)).
+				SetName("Push "+name).
 				ExceptPullRequest(),
 		)
 	}
@@ -233,7 +233,7 @@ func (pkgfile *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 			&ghworkflow.Step{
 				Name: "Retrieve PR labels",
 				ID:   "retrieve-pr-labels",
-				Uses: fmt.Sprintf("actions/github-script@%s", config.GitHubScriptActionVersion),
+				Uses: "actions/github-script@" + config.GitHubScriptActionVersion,
 				With: map[string]string{
 					"retries": "3",
 					"script":  strings.TrimPrefix(ghworkflow.IssueLabelRetrieveScript, "\n"),

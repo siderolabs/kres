@@ -5,7 +5,6 @@
 package js
 
 import (
-	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -80,7 +79,7 @@ func (toolchain *Toolchain) image() string {
 		return toolchain.Image
 	}
 
-	return fmt.Sprintf("docker.io/node:%s", toolchain.Version)
+	return "docker.io/node:" + toolchain.Version
 }
 
 // CompileMakefile implements makefile.Compiler.
@@ -121,7 +120,7 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 	output.Stage("js-toolchain").
 		Description("base toolchain image").
 		From("${JS_TOOLCHAIN}").
-		Step(step.Copy("/usr/local/go", "/usr/local/go").From(fmt.Sprintf("golang:%s", toolchain.meta.GoContainerVersion))).
+		Step(step.Copy("/usr/local/go", "/usr/local/go").From("golang:" + toolchain.meta.GoContainerVersion)).
 		Step(step.Run("apk", "--update", "--no-cache", "add", "bash", "curl", "protoc", "protobuf-dev")).
 		Step(step.Copy("./go.mod", ".")).
 		Step(step.Copy("./go.sum", ".")).

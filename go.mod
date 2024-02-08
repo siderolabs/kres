@@ -1,6 +1,6 @@
 module github.com/siderolabs/kres
 
-go 1.21.6
+go 1.22.0
 
 require (
 	github.com/drone/drone-yaml v1.2.3
@@ -10,7 +10,7 @@ require (
 	github.com/siderolabs/gen v0.4.7
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
-	golang.org/x/mod v0.14.0
+	golang.org/x/mod v0.15.0
 	golang.org/x/oauth2 v0.16.0
 	gopkg.in/yaml.v3 v3.0.1
 )

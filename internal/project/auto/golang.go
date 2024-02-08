@@ -5,6 +5,7 @@
 package auto
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -62,7 +63,7 @@ func (builder *builder) DetectGolang() (bool, error) {
 	}
 
 	if len(builder.meta.GoSourceFiles) == 0 && len(builder.meta.GoDirectories) == 0 {
-		return false, fmt.Errorf("no Go source files found")
+		return false, errors.New("no Go source files found")
 	}
 
 	return true, nil
