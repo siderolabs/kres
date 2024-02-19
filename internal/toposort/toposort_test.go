@@ -40,7 +40,7 @@ func (n testNode) Before(m testNode) bool {
 }
 
 func TestSort(t *testing.T) {
-	for i := 0; i < 10000; i++ {
+	for range 10000 {
 		testnodes := []testNode{
 			testNode(10),
 			testNode(2),

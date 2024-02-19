@@ -27,7 +27,7 @@ const (
 	CheckOutActionVersion = "v4"
 	// DeepCopyVersion is the version of deepcopy.
 	// renovate: datasource=go depName=github.com/siderolabs/deep-copy
-	DeepCopyVersion = "v0.5.5"
+	DeepCopyVersion = "v0.5.6"
 	// DindContainerImageVersion is the version of the dind container image.
 	// renovate: datasource=docker versioning=docker depName=docker
 	DindContainerImageVersion = "25.0-dind"
@@ -45,10 +45,10 @@ const (
 	GoFmtVersion = "v0.6.0"
 	// GoImportsVersion is the version of goimports.
 	// renovate: datasource=go depName=golang.org/x/tools
-	GoImportsVersion = "v0.17.0"
+	GoImportsVersion = "v0.18.0"
 	// GolangCIlintVersion is the version of golangci-lint.
 	// renovate: datasource=go depName=github.com/golangci/golangci-lint
-	GolangCIlintVersion = "v1.56.1"
+	GolangCIlintVersion = "v1.56.2"
 	// GolangContainerImageVersion is the default golang container image.
 	// renovate: datasource=docker versioning=docker depName=golang
 	GolangContainerImageVersion = "1.22-alpine"
@@ -69,7 +69,7 @@ const (
 	MardownLintCLIVersion = "0.39.0"
 	// NodeContainerImageVersion is the default node container image.
 	// renovate: datasource=docker versioning=docker depName=node
-	NodeContainerImageVersion = "21.6.1-alpine3.19"
+	NodeContainerImageVersion = "21.6.2-alpine3.19"
 	// PkgsVersion is the version of pkgs.
 	// renovate: datasource=github-tags depName=siderolabs/pkgs
 	PkgsVersion = "v1.6.0"
