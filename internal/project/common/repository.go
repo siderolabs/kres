@@ -89,6 +89,13 @@ func NewRepository(meta *meta.Options) *Repository {
 	}
 }
 
+// AfterLoad maps back main branch override to meta.
+func (r *Repository) AfterLoad() error {
+	r.meta.MainBranch = r.MainBranch
+
+	return nil
+}
+
 // CompileConform implements conform.Compiler.
 func (r *Repository) CompileConform(o *conform.Output) error {
 	if !r.EnableConform {

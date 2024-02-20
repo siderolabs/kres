@@ -64,7 +64,7 @@ type Output struct {
 }
 
 // NewOutput creates new .github/workflows/ci.yaml output.
-func NewOutput() *Output {
+func NewOutput(mainBranch string) *Output {
 	output := &Output{
 		workflows: map[string]*Workflow{
 			ciWorkflow: {
@@ -77,14 +77,14 @@ func NewOutput() *Output {
 				On: On{
 					Push: Push{
 						Branches: []string{
-							"main",
+							mainBranch,
 							"release-*",
 						},
 						Tags: []string{"v*"},
 					},
 					PullRequest: PullRequest{
 						Branches: []string{
-							"main",
+							mainBranch,
 							"release-*",
 						},
 					},
