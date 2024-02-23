@@ -4,7 +4,7 @@
 
 // THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 //
-// Generated on 2023-06-27T03:07:43Z by kres b93f606.
+// Generated on 2024-02-23T02:19:49Z by kres 279c0a2-dirty.
 
 // Package version contains variables such as project name, tag and sha. It's a proper alternative to using
 // -ldflags '-X ...'.

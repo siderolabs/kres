@@ -46,16 +46,11 @@ Generated on %s by %s.
 }
 
 // License returns file auto-generated license.
-func License(commentPrefix string) string {
-	const license = `This Source Code Form is subject to the terms of the Mozilla Public
-License, v. 2.0. If a copy of the MPL was not distributed with this
-file, You can obtain one at http://mozilla.org/MPL/2.0/.
-`
-
+func License(license, commentPrefix string) string {
 	byLines := strings.Split(strings.TrimSpace(license), "\n")
 	for i := range byLines {
 		byLines[i] = strings.TrimSpace(commentPrefix + byLines[i])
 	}
 
-	return strings.Join(byLines, "\n") + "\n\n"
+	return strings.Join(byLines, "\n") + "\n"
 }

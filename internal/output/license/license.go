@@ -9,6 +9,7 @@ import (
 	_ "embed"
 	"fmt"
 	"io"
+	"path/filepath"
 	"text/template"
 
 	"github.com/siderolabs/kres/internal/output"
@@ -31,18 +32,24 @@ var licenseTemplates = map[string]string{
 	"BSL-1.1": bsl11,
 }
 
-// Output implements LICENSE generation.
-type Output struct {
-	output.FileAdapter
-
+type dirConfig struct {
 	templateParams  any
 	licenseTemplate string
 	licenseHeader   string
 }
 
+// Output implements LICENSE generation.
+type Output struct {
+	output.FileAdapter
+
+	dirConfigs map[string]*dirConfig
+}
+
 // NewOutput creates new Makefile output.
 func NewOutput() *Output {
-	output := &Output{}
+	output := &Output{
+		dirConfigs: map[string]*dirConfig{},
+	}
 
 	output.FileWriter = output
 
@@ -55,52 +62,65 @@ func (o *Output) Compile(compiler Compiler) error {
 }
 
 // SetLicenseHeader configures license header.
-func (o *Output) SetLicenseHeader(header string) {
-	o.licenseHeader = header
+func (o *Output) SetLicenseHeader(dir, header string) {
+	o.getDirConfig(dir).licenseHeader = header
 }
 
 // Enable should be called to enable config generation.
-func (o *Output) Enable(licenseID string, params any) error {
+func (o *Output) Enable(dir, licenseID string, params any) error {
+	config := o.getDirConfig(dir)
+
 	var ok bool
 
-	o.licenseTemplate, ok = licenseTemplates[licenseID]
+	config.licenseTemplate, ok = licenseTemplates[licenseID]
 	if !ok {
 		return fmt.Errorf("unsupported license %q: missing LICENSE template", licenseID)
 	}
 
-	o.templateParams = params
+	config.templateParams = params
 
 	return nil
 }
 
 // Filenames implements output.FileWriter interface.
 func (o *Output) Filenames() []string {
-	if o.licenseTemplate == "" {
-		return nil
+	filenames := make([]string, 0, len(o.dirConfigs)*2)
+
+	for dir, config := range o.dirConfigs {
+		if config.licenseTemplate == "" {
+			continue
+		}
+
+		filenames = append(filenames, filepath.Join(dir, filename), filepath.Join(dir, Header))
 	}
 
-	return []string{filename, Header}
+	return filenames
 }
 
 // GenerateFile implements output.FileWriter interface.
 func (o *Output) GenerateFile(path string, w io.Writer) error {
-	switch path {
+	dir := filepath.Dir(path)
+	base := filepath.Base(path)
+
+	switch base {
 	case filename:
-		return o.license(w)
+		return o.license(dir, w)
 	case Header:
-		return o.boilerplate(w)
+		return o.boilerplate(dir, w)
 	default:
 		panic("unexpected filename: " + filename)
 	}
 }
 
-func (o *Output) license(w io.Writer) error {
-	tmpl, err := template.New("license").Parse(o.licenseTemplate)
+func (o *Output) license(dir string, w io.Writer) error {
+	config := o.getDirConfig(dir)
+
+	tmpl, err := template.New("license").Parse(config.licenseTemplate)
 	if err != nil {
 		return err
 	}
 
-	err = tmpl.Execute(w, o.templateParams)
+	err = tmpl.Execute(w, config.templateParams)
 	if err != nil {
 		return fmt.Errorf("failed to execute license template: %w", err)
 	}
@@ -108,22 +128,38 @@ func (o *Output) license(w io.Writer) error {
 	return nil
 }
 
-func (o *Output) boilerplate(w io.Writer) error {
-	if o.licenseHeader == "" {
+func (o *Output) boilerplate(dir string, w io.Writer) error {
+	config := o.getDirConfig(dir)
+
+	if config.licenseHeader == "" {
 		return nil
 	}
 
-	tmpl, err := template.New("licenseHeader").Parse(o.licenseHeader)
+	tmpl, err := template.New("licenseHeader").Parse(config.licenseHeader)
 	if err != nil {
 		return err
 	}
 
-	err = tmpl.Execute(w, o.templateParams)
+	err = tmpl.Execute(w, config.templateParams)
 	if err != nil {
 		return fmt.Errorf("failed to execute license header template: %w", err)
 	}
 
 	return nil
+}
+
+func (o *Output) getDirConfig(dir string) *dirConfig {
+	if dir == "" {
+		dir = "."
+	}
+
+	config, ok := o.dirConfigs[dir]
+	if !ok {
+		config = &dirConfig{}
+		o.dirConfigs[dir] = config
+	}
+
+	return config
 }
 
 // Compiler is implemented by project blocks which support LICENSE generation.

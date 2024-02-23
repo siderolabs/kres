@@ -15,7 +15,9 @@ import (
 
 	"github.com/siderolabs/kres/internal/config"
 	"github.com/siderolabs/kres/internal/dag"
+	"github.com/siderolabs/kres/internal/output"
 	"github.com/siderolabs/kres/internal/output/conform"
+	"github.com/siderolabs/kres/internal/output/conform/licensepolicy"
 	"github.com/siderolabs/kres/internal/output/license"
 	"github.com/siderolabs/kres/internal/project/meta"
 )
@@ -38,16 +40,18 @@ type Repository struct { //nolint:govet,maligned
 
 	DeprecatedEnableLicense *bool `yaml:"enableLicense"`
 
-	License LicenseConfig `yaml:"license"`
+	DeprecatedLicense *LicenseConfig `yaml:"license"`
+
+	Licenses      []LicenseConfig      `yaml:"licenses"`
+	LicenseChecks []licensepolicy.Spec `yaml:"licenseChecks"`
 
 	BotName string `yaml:"botName"`
 }
 
 // LicenseConfig configures the license.
-//
-//nolint:govet
 type LicenseConfig struct {
-	Enabled bool           `yaml:"enabled"`
+	Enabled *bool          `yaml:"enabled"`
+	Root    string         `yaml:"root"`
 	ID      string         `yaml:"id"`
 	Params  map[string]any `yaml:"params"`
 	Header  string         `yaml:"header"`
@@ -79,10 +83,12 @@ func NewRepository(meta *meta.Options) *Repository {
 		ConformLicenseCheck:      true,
 		ConformGPGSignatureCheck: true,
 
-		License: LicenseConfig{
-			Enabled: true,
-			ID:      "MPL-2.0",
-			Header:  mplHeader,
+		Licenses: []LicenseConfig{
+			{
+				ID:     "MPL-2.0",
+				Header: output.License(MPLHeader, "// "),
+				Root:   ".",
+			},
 		},
 
 		BotName: "talos-bot",
@@ -102,13 +108,23 @@ func (r *Repository) CompileConform(o *conform.Output) error {
 		return nil
 	}
 
+	// If license specs are not defined, generate the default one from the licenses section
+	if r.LicenseChecks == nil {
+		r.LicenseChecks = xslices.Map(r.Licenses, func(lc LicenseConfig) licensepolicy.Spec {
+			return licensepolicy.Spec{
+				Root:   lc.Root,
+				Header: lc.Header,
+			}
+		})
+	}
+
 	o.Enable()
 	o.SetScopes(r.ConformScopes)
 	o.SetTypes(r.ConformTypes)
 	o.SetLicenseCheck(r.ConformLicenseCheck)
-	o.SetLicenseHeader(r.License.Header)
 	o.SetGPGSignatureCheck(r.ConformGPGSignatureCheck)
 	o.SetGitHubOrganization(r.meta.GitHubOrganization)
+	o.SetLicensePolicySpecs(r.LicenseChecks)
 
 	return nil
 }
@@ -119,17 +135,29 @@ func (r *Repository) CompileLicense(o *license.Output) error {
 		return nil
 	}
 
-	if r.DeprecatedEnableLicense != nil {
-		r.License.Enabled = *r.DeprecatedEnableLicense
+	if r.DeprecatedLicense != nil {
+		// prepend to licenses
+		r.Licenses = append([]LicenseConfig{*r.DeprecatedLicense}, r.Licenses...)
 	}
 
-	if !r.License.Enabled {
-		return nil
+	for _, lcs := range r.Licenses {
+		if r.DeprecatedEnableLicense != nil {
+			lcs.Enabled = r.DeprecatedEnableLicense
+		}
+
+		// If enabled is unset (nil), default to true.
+		if lcs.Enabled != nil && !*lcs.Enabled {
+			continue
+		}
+
+		if err := o.Enable(lcs.Root, lcs.ID, lcs.Params); err != nil {
+			return err
+		}
+
+		o.SetLicenseHeader(lcs.Root, lcs.Header)
 	}
 
-	o.SetLicenseHeader(r.License.Header)
-
-	return o.Enable(r.License.ID, r.License.Params)
+	return nil
 }
 
 // CompileGitHub implements github.Compiler.
@@ -319,7 +347,7 @@ func equalStringSlices(a, b []string) bool {
 	return slices.Equal(a, b)
 }
 
-const mplHeader = `// This Source Code Form is subject to the terms of the Mozilla Public
-// License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
-`
+// MPLHeader is the Mozilla Public License 2.0 header.
+const MPLHeader = `This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at http://mozilla.org/MPL/2.0/.`

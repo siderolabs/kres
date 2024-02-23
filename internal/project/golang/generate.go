@@ -47,6 +47,8 @@ type Generate struct {
 	VTProtobufEnabled bool `yaml:"vtProtobufEnabled"`
 
 	VersionPackagePath string `yaml:"versionPackagePath"`
+
+	LicenseText string `yaml:"licenseText"`
 }
 
 // File represents a file to be fetched/copied into the image.
@@ -366,6 +368,7 @@ func (generate *Generate) CompileTemplates(output *template.Output) error {
 	output.Define(generate.versionPackagePath()+"/version.go", templates.VersionGo).
 		PreamblePrefix("// ").
 		WithLicense().
+		WithLicenseText(generate.LicenseText).
 		NoOverwrite()
 
 	return nil

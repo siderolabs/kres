@@ -21,11 +21,13 @@ import (
 
 // Build produces binaries for Go programs.
 type Build struct {
+	meta *meta.Options
+
 	dag.BaseNode
 
-	embedFile string
-	meta      *meta.Options
-	artifacts []string
+	embedFile   string
+	LicenseText string `yaml:"licenseText"`
+	artifacts   []string
 }
 
 const nodeBuildArgsVarName = "NODE_BUILD_ARGS"
@@ -50,7 +52,8 @@ func (build *Build) CompileTemplates(output *template.Output) error {
 			"project": build.Name(),
 		}).
 		PreamblePrefix("// ").
-		WithLicense()
+		WithLicense().
+		WithLicenseText(build.LicenseText)
 
 	distDir := filepath.Join(
 		filepath.Dir(build.embedFile),

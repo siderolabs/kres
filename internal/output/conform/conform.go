@@ -6,30 +6,29 @@
 package conform
 
 import (
-	_ "embed"
-	"encoding/json"
 	"fmt"
 	"io"
-	"text/template"
+
+	"gopkg.in/yaml.v3"
 
 	"github.com/siderolabs/kres/internal/output"
+	"github.com/siderolabs/kres/internal/output/conform/commitpolicy"
+	"github.com/siderolabs/kres/internal/output/conform/licensepolicy"
 )
 
 const (
 	filename = ".conform.yaml"
 )
 
-//go:embed conform.yaml
-var configTemplate string
-
 // Output implements .conform.yaml generation.
 type Output struct {
 	output.FileAdapter
 
-	githubOrg         string
-	licenseHeader     string
-	scopes            []string
-	types             []string
+	githubOrg          string
+	scopes             []string
+	types              []string
+	licensePolicySpecs []licensepolicy.Spec
+
 	licenseCheck      bool
 	gpgSignatureCheck bool
 
@@ -70,9 +69,9 @@ func (o *Output) SetLicenseCheck(enable bool) {
 	o.licenseCheck = enable
 }
 
-// SetLicenseHeader configures license header.
-func (o *Output) SetLicenseHeader(header string) {
-	o.licenseHeader = header
+// SetLicensePolicySpecs sets the license policy specs.
+func (o *Output) SetLicensePolicySpecs(licensePolicySpecs []licensepolicy.Spec) {
+	o.licensePolicySpecs = licensePolicySpecs
 }
 
 // SetGPGSignatureCheck enables GPG signature check.
@@ -109,40 +108,23 @@ func (o *Output) config(w io.Writer) error {
 		return err
 	}
 
-	tmpl, err := template.New("config").Parse(configTemplate)
-	if err != nil {
-		return err
+	policyList := []any{
+		commitpolicy.New(o.githubOrg, o.gpgSignatureCheck, o.types, o.scopes),
 	}
 
-	types, err := json.Marshal(o.types)
-	if err != nil {
-		return err
+	for _, spec := range o.licensePolicySpecs {
+		policyList = append(policyList, licensepolicy.New(spec))
 	}
 
-	scopes, err := json.Marshal(o.scopes)
-	if err != nil {
-		return err
+	policies := map[string]any{
+		"policies": policyList,
 	}
 
-	vars := struct {
-		Types                   string
-		Scopes                  string
-		Organization            string
-		LicenseHeader           string
-		EnableLicenseCheck      bool
-		EnableGPGSignatureCheck bool
-	}{
-		Types:                   string(types),
-		Scopes:                  string(scopes),
-		Organization:            o.githubOrg,
-		EnableLicenseCheck:      o.licenseCheck,
-		LicenseHeader:           o.licenseHeader,
-		EnableGPGSignatureCheck: o.gpgSignatureCheck,
-	}
+	encoder := yaml.NewEncoder(w)
+	encoder.SetIndent(2)
 
-	err = tmpl.Execute(w, vars)
-	if err != nil {
-		return fmt.Errorf("failed to execute conform template: %w", err)
+	if err := encoder.Encode(policies); err != nil {
+		return fmt.Errorf("failed to encode policies: %w", err)
 	}
 
 	return nil
