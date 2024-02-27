@@ -30,7 +30,7 @@ const (
 
 	// IssueLabelRetrieveScript is the default script to retrieve issue labels.
 	IssueLabelRetrieveScript = `
-if (context.eventName != "pull_request") { return "[]" }
+if (context.eventName != "pull_request" && context.eventName != "pull_request_target") { return "[]" }
 
 const resp = await github.rest.issues.get({
     issue_number: context.issue.number,
@@ -44,6 +44,8 @@ return resp.data.labels.map(label => label.name)
 	workflowDir   = ".github/workflows"
 	ciWorkflow    = workflowDir + "/" + "ci.yaml"
 	slackWorkflow = workflowDir + "/" + "slack-notify.yaml"
+
+	checkoutStepName = "checkout"
 )
 
 var (
@@ -61,6 +63,9 @@ type Output struct {
 	output.FileAdapter
 
 	workflows map[string]*Workflow
+
+	UsePullRequestTargetEventType   bool
+	CheckoutForkOnPullRequestTarget bool
 }
 
 // NewOutput creates new .github/workflows/ci.yaml output.
@@ -82,7 +87,7 @@ func NewOutput(mainBranch string) *Output {
 						},
 						Tags: []string{"v*"},
 					},
-					PullRequest: PullRequest{
+					PullRequest: &PullRequest{
 						Branches: []string{
 							mainBranch,
 							"release-*",
@@ -127,7 +132,7 @@ func NewOutput(mainBranch string) *Output {
 							{
 								Name: "Get PR number",
 								ID:   "get-pr-number",
-								If:   "github.event.workflow_run.event == 'pull_request'",
+								If:   "github.event.workflow_run.event == 'pull_request' || github.event.workflow_run.event == 'pull_request_target'",
 								Env: map[string]string{
 									"GH_TOKEN": "${{ github.token }}",
 								},
@@ -206,7 +211,7 @@ func (o *Output) OverwriteDefaultJobStepsAsPkgs() {
 func CommonSteps() []*Step {
 	return []*Step{
 		{
-			Name: "checkout",
+			Name: checkoutStepName,
 			Uses: "actions/checkout@" + config.CheckOutActionVersion,
 		},
 		{
@@ -308,7 +313,7 @@ func (step *Step) SetEnv(name, value string) *Step {
 
 // ExceptPullRequest adds condition to skip step on PRs.
 func (step *Step) ExceptPullRequest() *Step {
-	step.If = "github.event_name != 'pull_request'"
+	step.If = "github.event_name != 'pull_request' && github.event_name != 'pull_request_target'"
 
 	return step
 }
@@ -336,6 +341,31 @@ func (o *Output) GenerateFile(filename string, w io.Writer) error {
 }
 
 func (o *Output) ghWorkflow(w io.Writer, name string) error {
+	if o.UsePullRequestTargetEventType {
+		for _, workflow := range o.workflows {
+			if workflow.On.PullRequest != nil { // replace pull_request config with pull_request_target config
+				workflow.On.PullRequestTarget = workflow.On.PullRequest
+				workflow.On.PullRequest = nil
+			}
+
+			if workflow.On.PullRequestTarget == nil || !o.CheckoutForkOnPullRequestTarget { // nothing more to change
+				continue
+			}
+
+			// set the fork repository and ref for checkout step
+			for _, job := range workflow.Jobs {
+				for _, step := range job.Steps {
+					if step.Name == checkoutStepName {
+						step.With = map[string]string{
+							"repository": "${{ github.event.pull_request.head.repo.full_name }}",
+							"ref":        "${{ github.event.pull_request.head.ref }}",
+						}
+					}
+				}
+			}
+		}
+	}
+
 	preamble := output.Preamble("# ")
 
 	if _, err := w.Write([]byte(preamble)); err != nil {

@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/siderolabs/kres/internal/config"
+	"github.com/siderolabs/kres/internal/project/ghactions"
 )
 
 // DetectCI checks the ci settings.
@@ -30,6 +31,7 @@ func (builder *builder) BuildCI() error {
 	switch ci.Provider {
 	case config.CIProviderDrone:
 	case config.CIProviderGitHubActions:
+		builder.commonInputs = append(builder.commonInputs, ghactions.NewConfig(builder.meta))
 	default:
 		return fmt.Errorf("unknown ci provider: %s", ci.Provider)
 	}
