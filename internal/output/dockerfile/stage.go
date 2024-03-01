@@ -19,6 +19,7 @@ var stripVars = regexp.MustCompile(`\$\{\w*\}`)
 type Stage struct {
 	name        string
 	from        string
+	platform    string
 	description string
 
 	steps []step.Step
@@ -27,6 +28,13 @@ type Stage struct {
 // From sets FROM propery of stage.
 func (stage *Stage) From(from string) *Stage {
 	stage.from = from
+
+	return stage
+}
+
+// Platform sets platform property of stage.
+func (stage *Stage) Platform(platform string) *Stage {
+	stage.platform = platform
 
 	return stage
 }
@@ -82,7 +90,13 @@ func (stage *Stage) Generate(w io.Writer) error {
 		}
 	}
 
-	if _, err := fmt.Fprintf(w, "FROM %s AS %s\n", stage.from, stage.name); err != nil {
+	fromStage := fmt.Sprintf("FROM %s AS %s\n", stage.from, stage.name)
+
+	if stage.platform != "" {
+		fromStage = fmt.Sprintf("FROM --platform=%s %s AS %s\n", stage.platform, stage.from, stage.name)
+	}
+
+	if _, err := fmt.Fprint(w, fromStage); err != nil {
 		return err
 	}
 

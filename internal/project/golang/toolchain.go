@@ -38,6 +38,17 @@ type Toolchain struct { //nolint:govet
 	Image         string
 	ExtraPackages []string `yaml:"extraPackages"`
 	PrivateRepos  []string `yaml:"privateRepos"`
+	Options       struct {
+		Makefile struct {
+			ExtraArgs []struct {
+				Name         string `yaml:"name"`
+				DefaultValue string `yaml:"defaultValue"`
+			} `yaml:"extraArgs"`
+		} `yaml:"makefile"`
+		Docker struct {
+			ExtraArgs []string `yaml:"extraArgs"`
+		} `yaml:"docker"`
+	} `yaml:"options"`
 }
 
 // NewToolchain builds Toolchain with default values.
@@ -119,6 +130,12 @@ func (toolchain *Toolchain) CompileMakefile(output *makefile.Output) error {
 	output.VariableGroup(makefile.VariableGroupDocker).
 		Variable(makefile.OverridableVariable("TOOLCHAIN", toolchain.image()))
 
+	variableGroup := output.VariableGroup(makefile.VariableGroupExtra)
+
+	for _, arg := range toolchain.Options.Makefile.ExtraArgs {
+		variableGroup.Variable(makefile.OverridableVariable(arg.Name, arg.DefaultValue))
+	}
+
 	common := output.VariableGroup(makefile.VariableGroupCommon).
 		Variable(makefile.OverridableVariable("GO_BUILDFLAGS", "")).
 		Variable(makefile.OverridableVariable("GO_LDFLAGS", "")).
@@ -177,6 +194,10 @@ func (toolchain *Toolchain) CompileGitHubWorkflow(output *ghworkflow.Output) err
 // CompileDockerfile implements dockerfile.Compiler.
 func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 	output.Arg(step.Arg("TOOLCHAIN"))
+
+	for _, arg := range toolchain.Options.Docker.ExtraArgs {
+		output.Arg(step.Arg(arg))
+	}
 
 	toolchainStage := output.Stage("toolchain").
 		Description("base toolchain image").

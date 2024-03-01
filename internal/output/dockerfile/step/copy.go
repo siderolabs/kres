@@ -11,9 +11,10 @@ import (
 
 // CopyStep implements Dockerfile COPY step.
 type CopyStep struct {
-	from string
-	src  string
-	dst  string
+	from     string
+	platform string
+	src      string
+	dst      string
 }
 
 // Copy creates new CopyStep.
@@ -30,6 +31,13 @@ func (step *CopyStep) Step() {}
 // From sets --from argument.
 func (step *CopyStep) From(stage string) *CopyStep {
 	step.from = stage
+
+	return step
+}
+
+// Platform sets --platform argument.
+func (step *CopyStep) Platform(platform string) *CopyStep {
+	step.platform = platform
 
 	return step
 }

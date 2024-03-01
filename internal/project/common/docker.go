@@ -23,8 +23,9 @@ type Docker struct { //nolint:govet
 
 	meta *meta.Options
 
-	DockerImage   string `yaml:"dockerImage"`
-	AllowInsecure bool   `yaml:"allowInsecure"`
+	DockerImage    string   `yaml:"dockerImage"`
+	AllowInsecure  bool     `yaml:"allowInsecure"`
+	ExtraBuildArgs []string `yaml:"extraBuildArgs"`
 
 	DockerResourceRequests *yaml.ResourceObject `yaml:"dockerResourceRequests"`
 }
@@ -114,6 +115,10 @@ func (docker *Docker) CompileMakefile(output *makefile.Output) error {
 		Push("--push=$(PUSH)")
 
 	for _, arg := range docker.meta.BuildArgs {
+		buildArgs.Push(fmt.Sprintf("--build-arg=%s=\"$(%s)\"", arg, arg))
+	}
+
+	for _, arg := range docker.ExtraBuildArgs {
 		buildArgs.Push(fmt.Sprintf("--build-arg=%s=\"$(%s)\"", arg, arg))
 	}
 

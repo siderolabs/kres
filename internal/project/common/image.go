@@ -12,6 +12,7 @@ import (
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/output/dockerfile"
 	"github.com/siderolabs/kres/internal/output/dockerfile/step"
+	"github.com/siderolabs/kres/internal/output/dockerignore"
 	"github.com/siderolabs/kres/internal/output/drone"
 	"github.com/siderolabs/kres/internal/output/ghworkflow"
 	"github.com/siderolabs/kres/internal/output/makefile"
@@ -32,11 +33,12 @@ type Image struct {
 		Source      string `yaml:"source"`
 		Destination string `yaml:"destination"`
 	} `yaml:"copyFrom"`
-	ImageName      string   `yaml:"imageName"`
-	Entrypoint     string   `yaml:"entrypoint"`
-	EntrypointArgs []string `yaml:"entrypointArgs"`
-	CustomCommands []string `yaml:"customCommands"`
-	PushLatest     bool     `yaml:"pushLatest"`
+	ImageName         string   `yaml:"imageName"`
+	Entrypoint        string   `yaml:"entrypoint"`
+	EntrypointArgs    []string `yaml:"entrypointArgs"`
+	CustomCommands    []string `yaml:"customCommands"`
+	AllowedLocalPaths []string `yaml:"allowedLocalPaths"`
+	PushLatest        bool     `yaml:"pushLatest"`
 }
 
 // ImageSourceLabel is a docker image label to specify image source.
@@ -151,6 +153,14 @@ func (image *Image) CompileMakefile(output *makefile.Output) error {
 		Description(fmt.Sprintf("Builds image for %s.", image.ImageName)).
 		Script(fmt.Sprintf(`@$(MAKE) target-$@ TARGET_ARGS="--tag=$(REGISTRY)/$(USERNAME)/%s:$(TAG)"`, image.ImageName)).
 		Phony()
+
+	return nil
+}
+
+// CompileDockerignore implements dockerignore.Compiler.
+func (image *Image) CompileDockerignore(output *dockerignore.Output) error {
+	output.
+		AllowLocalPath(image.AllowedLocalPaths...)
 
 	return nil
 }

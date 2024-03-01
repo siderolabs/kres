@@ -34,15 +34,17 @@ type Step struct {
 			Name        string `yaml:"name"`
 			Description string `yaml:"description"`
 			From        string `yaml:"from"`
+			Platform    string `yaml:"platform"`
 			Steps       []struct {
 				Script *struct {
 					Command string   `yaml:"command"`
 					Cache   []string `yaml:"cache"`
 				} `yaml:"script"`
 				Copy *struct {
-					From string `yaml:"from"`
-					Src  string `yaml:"src"`
-					Dst  string `yaml:"dst"`
+					From     string `yaml:"from"`
+					Platform string `yaml:"platform"`
+					Src      string `yaml:"src"`
+					Dst      string `yaml:"dst"`
 				} `yaml:"copy"`
 				Arg string `yaml:"arg"`
 			} `yaml:"steps"`
@@ -133,6 +135,10 @@ func (step *Step) CompileDockerfile(output *dockerfile.Output) error {
 			s.From("scratch")
 		}
 
+		if stage.Platform != "" {
+			s.Platform(stage.Platform)
+		}
+
 		for _, stageStep := range stage.Steps {
 			switch {
 			case stageStep.Arg != "":
@@ -148,6 +154,10 @@ func (step *Step) CompileDockerfile(output *dockerfile.Output) error {
 				copyStep := dockerstep.Copy(stageStep.Copy.Src, stageStep.Copy.Dst)
 				if stageStep.Copy.From != "" {
 					copyStep.From(stageStep.Copy.From)
+				}
+
+				if stageStep.Copy.Platform != "" {
+					copyStep.Platform(stageStep.Copy.Platform)
 				}
 
 				s.Step(copyStep)
