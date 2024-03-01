@@ -27,7 +27,13 @@ type Build struct {
 	AdditionalTargets      map[string][]string `yaml:"additionalTargets"`
 	Targets                []string            `yaml:"targets"`
 	ExtraBuildArgs         []string            `yaml:"extraBuildArgs"`
-	UseBldrPkgTagResolver  bool                `yaml:"useBldrPkgTagResolver"`
+	Makefile               struct {
+		ExtraVariables []struct {
+			Name         string `yaml:"name"`
+			DefaultValue string `yaml:"defaultValue"`
+		} `yaml:"extraVariables"`
+	} `yaml:"makefile"`
+	UseBldrPkgTagResolver bool `yaml:"useBldrPkgTagResolver"`
 }
 
 var (
@@ -107,6 +113,12 @@ func (pkgfile *Build) CompileMakefile(output *makefile.Output) error {
 		Variable(makefile.OverridableVariable("PUSH", "false")).
 		Variable(makefile.OverridableVariable("CI_ARGS", "")).
 		Variable(buildArgs)
+
+	variableGroup := output.VariableGroup(makefile.VariableGroupExtra)
+
+	for _, arg := range pkgfile.Makefile.ExtraVariables {
+		variableGroup.Variable(makefile.OverridableVariable(arg.Name, arg.DefaultValue))
+	}
 
 	output.Target("$(ARTIFACTS)").
 		Description("Creates artifacts directory.").
