@@ -137,7 +137,8 @@ func splitIgnoringPreamble(r io.Reader) ([]string, error) {
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		line := scanner.Text()
-		if inPreamble && (strings.HasPrefix(line, "#") || strings.HasPrefix(line, "<!--") || line == "" || line == "---") { // comments, skip as it might be a preamble
+
+		if inPreamble && (stringContainsPreamble(line, "#", "<!--") || line == "" || line == "---") {
 			continue
 		}
 
@@ -147,4 +148,20 @@ func splitIgnoringPreamble(r io.Reader) ([]string, error) {
 	}
 
 	return contents, scanner.Err()
+}
+
+func stringContainsPreamble(s string, substrs ...string) bool {
+	// `# syntax = ...` is a special case, it's not a preamble
+	// comments, skip as it might be a preamble
+	if strings.HasPrefix(s, "# syntax") {
+		return false
+	}
+
+	for _, substr := range substrs {
+		if strings.Contains(s, substr) {
+			return true
+		}
+	}
+
+	return false
 }

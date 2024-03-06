@@ -128,10 +128,9 @@ func (toolchain *Toolchain) CompileMakefile(output *makefile.Output) error {
 	output.VariableGroup(makefile.VariableGroupDocker).
 		Variable(makefile.OverridableVariable("TOOLCHAIN", toolchain.image()))
 
-	variableGroup := output.VariableGroup(makefile.VariableGroupExtra)
-
 	for _, arg := range toolchain.Makefile.ExtraVariables {
-		variableGroup.Variable(makefile.OverridableVariable(arg.Name, arg.DefaultValue))
+		output.VariableGroup(makefile.VariableGroupExtra).
+			Variable(makefile.OverridableVariable(arg.Name, arg.DefaultValue))
 	}
 
 	common := output.VariableGroup(makefile.VariableGroupCommon).

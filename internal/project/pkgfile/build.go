@@ -114,10 +114,9 @@ func (pkgfile *Build) CompileMakefile(output *makefile.Output) error {
 		Variable(makefile.OverridableVariable("CI_ARGS", "")).
 		Variable(buildArgs)
 
-	variableGroup := output.VariableGroup(makefile.VariableGroupExtra)
-
 	for _, arg := range pkgfile.Makefile.ExtraVariables {
-		variableGroup.Variable(makefile.OverridableVariable(arg.Name, arg.DefaultValue))
+		output.VariableGroup(makefile.VariableGroupExtra).
+			Variable(makefile.OverridableVariable(arg.Name, arg.DefaultValue))
 	}
 
 	output.Target("$(ARTIFACTS)").

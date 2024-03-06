@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"slices"
 
-	"github.com/google/go-github/v59/github"
+	"github.com/google/go-github/v60/github"
 	"github.com/siderolabs/gen/xslices"
 
 	"github.com/siderolabs/kres/internal/config"
@@ -213,6 +213,12 @@ func (r *Repository) enableBranchProtection(client *github.Client) error {
 		}
 	}
 
+	statusChecks := xslices.Map(enforceContexts, func(c string) *github.RequiredStatusCheck {
+		return &github.RequiredStatusCheck{
+			Context: c,
+		}
+	})
+
 	req := github.ProtectionRequest{
 		RequireLinearHistory: github.Bool(true),
 		AllowDeletions:       github.Bool(false),
@@ -225,11 +231,7 @@ func (r *Repository) enableBranchProtection(client *github.Client) error {
 
 		RequiredStatusChecks: &github.RequiredStatusChecks{
 			Strict: true,
-			Checks: xslices.Map(enforceContexts, func(c string) *github.RequiredStatusCheck {
-				return &github.RequiredStatusCheck{
-					Context: c,
-				}
-			}),
+			Checks: &statusChecks,
 		},
 	}
 
@@ -252,7 +254,7 @@ func (r *Repository) enableBranchProtection(client *github.Client) error {
 			branchProtection.GetRequiredStatusChecks() != nil &&
 			branchProtection.GetRequiredStatusChecks().Strict == req.RequiredStatusChecks.Strict &&
 			equalStringSlices(
-				xslices.Map(branchProtection.GetRequiredStatusChecks().Checks,
+				xslices.Map(*branchProtection.GetRequiredStatusChecks().Checks,
 					func(s *github.RequiredStatusCheck) string {
 						return s.Context
 					}), enforceContexts) &&
@@ -283,17 +285,17 @@ func (r *Repository) enableConform(client *github.Client) error {
 	}
 
 	for _, hook := range hooks {
-		if hook.Config["url"].(string) == r.ConformWebhookURL { //nolint:forcetypeassert
+		if *hook.Config.URL == r.ConformWebhookURL {
 			return nil
 		}
 	}
 
 	_, _, err = client.Repositories.CreateHook(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, &github.Hook{
 		Active: github.Bool(true),
-		Config: map[string]any{
-			"url":          r.ConformWebhookURL,
-			"content_type": "json",
-			"insecure_ssl": "0",
+		Config: &github.HookConfig{
+			URL:         &r.ConformWebhookURL,
+			ContentType: github.String("json"),
+			InsecureSSL: github.String("0"),
 		},
 		Events: []string{
 			"push",
