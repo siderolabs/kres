@@ -130,7 +130,10 @@ func (adapter *FileAdapter) Generate() error {
 }
 
 func splitIgnoringPreamble(r io.Reader) ([]string, error) {
-	var contents []string
+	var (
+		contents []string
+		comments = []string{"#", "<!--"}
+	)
 
 	inPreamble := true
 
@@ -138,7 +141,12 @@ func splitIgnoringPreamble(r io.Reader) ([]string, error) {
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		if inPreamble && (stringContainsPreamble(line, "#", "<!--") || line == "" || line == "---") {
+		// `# syntax = ...` is a special case, it's not a preamble
+		if strings.HasPrefix(line, "# syntax") {
+			contents = append(contents, line)
+		}
+
+		if inPreamble && (stringContainsPreamble(line, comments...) || line == "" || line == "---") {
 			continue
 		}
 
@@ -151,12 +159,6 @@ func splitIgnoringPreamble(r io.Reader) ([]string, error) {
 }
 
 func stringContainsPreamble(s string, substrs ...string) bool {
-	// `# syntax = ...` is a special case, it's not a preamble
-	// comments, skip as it might be a preamble
-	if strings.HasPrefix(s, "# syntax") {
-		return false
-	}
-
 	for _, substr := range substrs {
 		if strings.Contains(s, substr) {
 			return true
