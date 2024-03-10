@@ -225,7 +225,7 @@ func DefaultSteps() []*Step {
 			Uses: "docker/setup-buildx-action@" + config.SetupBuildxActionVersion,
 			With: map[string]string{
 				"driver":   "remote",
-				"endpoint": "tcp://localhost:1234",
+				"endpoint": "tcp://127.0.0.1:1234",
 			},
 			TimeoutMinutes: 1,
 		},
@@ -241,7 +241,7 @@ func DefaultPkgsSteps() []*Step {
 			Uses: "docker/setup-buildx-action@" + config.SetupBuildxActionVersion,
 			With: map[string]string{
 				"driver":   "remote",
-				"endpoint": "tcp://localhost:1234",
+				"endpoint": "tcp://127.0.0.1:1234",
 				"append":   strings.TrimPrefix(armbuildkitdEnpointConfig, "\n"),
 			},
 		},
