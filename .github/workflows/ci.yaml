@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-03-10T20:46:28Z by kres ae93276.
+# Generated on 2024-03-12T12:42:36Z by kres 62d22e7.
 
 name: default
 concurrency:
@@ -49,7 +49,7 @@ jobs:
         with:
           driver: remote
           endpoint: tcp://127.0.0.1:1234
-        timeout-minutes: 1
+        timeout-minutes: 10
       - name: base
         run: |
           make base
