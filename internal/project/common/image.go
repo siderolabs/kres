@@ -33,6 +33,7 @@ type Image struct {
 		Source      string `yaml:"source"`
 		Destination string `yaml:"destination"`
 	} `yaml:"copyFrom"`
+	DependsOn         []string `yaml:"dependsOn"`
 	ImageName         string   `yaml:"imageName"`
 	Entrypoint        string   `yaml:"entrypoint"`
 	EntrypointArgs    []string `yaml:"entrypointArgs"`
@@ -149,10 +150,14 @@ func (image *Image) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 
 // CompileMakefile implements makefile.Compiler.
 func (image *Image) CompileMakefile(output *makefile.Output) error {
-	output.Target(image.Name()).
+	target := output.Target(image.Name()).
 		Description(fmt.Sprintf("Builds image for %s.", image.ImageName)).
 		Script(fmt.Sprintf(`@$(MAKE) target-$@ TARGET_ARGS="--tag=$(REGISTRY)/$(USERNAME)/%s:$(TAG)"`, image.ImageName)).
 		Phony()
+
+	for _, dependsOn := range image.DependsOn {
+		target.Depends(dependsOn)
+	}
 
 	return nil
 }

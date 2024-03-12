@@ -35,6 +35,7 @@ type Step struct {
 			Description string `yaml:"description"`
 			From        string `yaml:"from"`
 			Platform    string `yaml:"platform"`
+			Workdir     string `yaml:"workdir"`
 			Steps       []struct {
 				Script *struct {
 					Command string   `yaml:"command"`
@@ -137,6 +138,10 @@ func (step *Step) CompileDockerfile(output *dockerfile.Output) error {
 
 		if stage.Platform != "" {
 			s.Platform(stage.Platform)
+		}
+
+		if stage.Workdir != "" {
+			s.Workdir(stage.Workdir)
 		}
 
 		for _, stageStep := range stage.Steps {

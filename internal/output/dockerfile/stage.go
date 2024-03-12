@@ -20,6 +20,7 @@ type Stage struct {
 	name        string
 	from        string
 	platform    string
+	workdir     string
 	description string
 
 	steps []step.Step
@@ -35,6 +36,13 @@ func (stage *Stage) From(from string) *Stage {
 // Platform sets platform property of stage.
 func (stage *Stage) Platform(platform string) *Stage {
 	stage.platform = platform
+
+	return stage
+}
+
+// Workdir sets WORKDIR property of stage.
+func (stage *Stage) Workdir(workdir string) *Stage {
+	stage.workdir = workdir
 
 	return stage
 }
@@ -98,6 +106,12 @@ func (stage *Stage) Generate(w io.Writer) error {
 
 	if _, err := fmt.Fprint(w, fromStage); err != nil {
 		return err
+	}
+
+	if stage.workdir != "" {
+		if _, err := fmt.Fprintf(w, "WORKDIR %s\n", stage.workdir); err != nil {
+			return err
+		}
 	}
 
 	for _, step := range stage.steps {
