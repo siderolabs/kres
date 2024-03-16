@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 
 	"github.com/siderolabs/kres/internal/config"
-	"github.com/siderolabs/kres/internal/project/common"
 	"github.com/siderolabs/kres/internal/project/pkgfile"
 )
 
@@ -26,8 +25,8 @@ func (builder *builder) BuildPkgFile() error {
 
 	pkgfile := pkgfile.NewBuild(builder.meta)
 
-	builder.targets = append(builder.targets, common.NewBuild(builder.meta), pkgfile)
-	builder.commonInputs = append(builder.commonInputs, pkgfile)
+	builder.targets = append(builder.targets, pkgfile)
+	pkgfile.AddInput(builder.commonInputs...)
 
 	return nil
 }

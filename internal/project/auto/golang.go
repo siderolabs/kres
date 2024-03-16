@@ -24,6 +24,7 @@ import (
 
 // DetectGolang checks if project at rootPath is Go-based project.
 func (builder *builder) DetectGolang() (bool, error) {
+	// skip detecting additional go build steps if Pkgfile is detected
 	if builder.meta.ContainerImageFrontend != config.ContainerImageFrontendDockerfile {
 		return false, nil
 	}

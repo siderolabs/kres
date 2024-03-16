@@ -108,6 +108,11 @@ func (docker *Docker) BuildBaseDroneSteps(output drone.StepService) {
 
 // CompileMakefile implements makefile.Compiler.
 func (docker *Docker) CompileMakefile(output *makefile.Output) error {
+	// Only compile if the Dockerfile is used.
+	if docker.meta.ContainerImageFrontend != config.ContainerImageFrontendDockerfile {
+		return nil
+	}
+
 	buildArgs := makefile.RecursiveVariable("COMMON_ARGS", "--file=Dockerfile").
 		Push("--provenance=false").
 		Push("--progress=$(PROGRESS)").
