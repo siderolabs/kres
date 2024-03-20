@@ -28,7 +28,7 @@ func (inputImage *InputImage) CompileDockerfile(output *dockerfile.Output) error
 }
 
 // NewFHS builds standard input image for FHS.
-func NewFHS(_ *meta.Options) *InputImage {
+func NewFHS(*meta.Options) *InputImage {
 	return &InputImage{
 		BaseNode: dag.NewBaseNode("image-fhs"),
 

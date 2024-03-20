@@ -21,7 +21,7 @@ const (
 
 	// BuildKitContainerVersion is the version of buildkit container image.
 	// renovate: datasource=docker versioning=docker depName=moby/buildkit
-	BuildKitContainerVersion = "v0.12.5"
+	BuildKitContainerVersion = "v0.13.1"
 	// CheckOutActionVersion is the version of checkout github action.
 	// renovate: datasource=github-releases extractVersion=^(?<version>v\d+)\.\d+\.\d+$ depName=actions/checkout
 	CheckOutActionVersion = "v4"
@@ -48,7 +48,7 @@ const (
 	GoImportsVersion = "v0.19.0"
 	// GolangCIlintVersion is the version of golangci-lint.
 	// renovate: datasource=go depName=github.com/golangci/golangci-lint
-	GolangCIlintVersion = "v1.56.2"
+	GolangCIlintVersion = "v1.57.0"
 	// GolangContainerImageVersion is the default golang container image.
 	// renovate: datasource=docker versioning=docker depName=golang
 	GolangContainerImageVersion = "1.22-alpine"

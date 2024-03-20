@@ -85,9 +85,8 @@ func Stable[N Node[N]](nodes []N) (output []N, cycle []N) {
 	roots := make([]nodeNumber, 0, len(nodes))
 
 	for mInt := range nodes {
-		m := mInt
-		if _, hasBefore := edges.index[1][m]; !hasBefore {
-			roots = append(roots, m)
+		if _, hasBefore := edges.index[1][mInt]; !hasBefore {
+			roots = append(roots, mInt)
 		}
 	}
 

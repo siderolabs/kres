@@ -7,7 +7,7 @@ require (
 	github.com/go-git/go-git/v5 v5.11.0
 	github.com/google/go-github/v60 v60.0.0
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
-	github.com/siderolabs/gen v0.4.7
+	github.com/siderolabs/gen v0.4.8
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/mod v0.16.0

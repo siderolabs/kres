@@ -30,7 +30,7 @@ var Jest string
 var TSConfig string
 
 // GoEmbed is a complimentary file that is generated for each JS distribution.
-// it allows embedding the data into a Go service.
+// It allows embedding the data into a Go service.
 var GoEmbed = `package {{.project}}
 
 import "embed"

@@ -14,14 +14,14 @@ import (
 	"github.com/siderolabs/kres/internal/project/meta"
 )
 
-// EsLint provides golangci-lint.
+// EsLint provides eslint.
 type EsLint struct {
 	meta *meta.Options
 
 	dag.BaseNode
 }
 
-// NewEsLint builds golangci-lint node.
+// NewEsLint builds eslint node.
 func NewEsLint(meta *meta.Options) *EsLint {
 	meta.SourceFiles = append(meta.SourceFiles, "frontend/.eslintrc.yaml")
 

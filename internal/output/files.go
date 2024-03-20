@@ -69,8 +69,6 @@ func (adapter *FileAdapter) Generate() error {
 			continue
 		}
 
-		filename := filename
-
 		var oldContents []string
 
 		if err := func() error {
