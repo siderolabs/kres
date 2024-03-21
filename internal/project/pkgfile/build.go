@@ -103,7 +103,7 @@ func (pkgfile *Build) CompileMakefile(output *makefile.Output) error {
 
 	output.VariableGroup(makefile.VariableGroupCommon).
 		Variable(makefile.OverridableVariable("REGISTRY", "ghcr.io")).
-		Variable(makefile.OverridableVariable("USERNAME", pkgfile.meta.GitHubOrganization)).
+		Variable(makefile.OverridableVariable("USERNAME", strings.ToLower(pkgfile.meta.GitHubOrganization))).
 		Variable(makefile.OverridableVariable("REGISTRY_AND_USERNAME", "$(REGISTRY)/$(USERNAME)"))
 
 	output.VariableGroup(makefile.VariableGroupDocker).
