@@ -67,7 +67,7 @@ func (image *Image) CompileDrone(output *drone.Output) error {
 	)
 
 	step := drone.MakeStep(image.Name()).
-		Name("push-"+image.ImageName). //nolint:goconst
+		Name("push-"+image.ImageName).
 		Environment("PUSH", "true").
 		ExceptPullRequest().
 		DockerLogin().

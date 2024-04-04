@@ -77,7 +77,6 @@ func (tests *UnitTests) CompileDockerfile(output *dockerfile.Output) error {
 		From("scratch").
 		Step(step.Copy(filepath.Join("/src", tests.packagePath, "coverage.txt"), fmt.Sprintf("/coverage-%s.txt", tests.Name())).From(testRun))
 
-	//nolint:goconst
 	output.Stage(tests.Name() + "-race").
 		Description("runs unit-tests with race detector").
 		From("base").

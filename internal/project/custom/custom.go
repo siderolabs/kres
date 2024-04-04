@@ -347,7 +347,7 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 			},
 			&ghworkflow.Step{
 				Name:            "save-artifacts",
-				Uses:            "actions/upload-artifact@" + config.UploadArtifactActionVersion, //nolint:goconst
+				Uses:            "actions/upload-artifact@" + config.UploadArtifactActionVersion,
 				ContinueOnError: step.GHAction.Artifacts.ContinueOnError,
 				With: map[string]string{
 					"name":           "artifacts",
