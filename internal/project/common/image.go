@@ -131,7 +131,8 @@ func (image *Image) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		pushStep := ghworkflow.MakeStep(image.Name(), "IMAGE_TAG=latest").
 			SetName(fmt.Sprintf("push-%s-latest", image.ImageName)).
 			SetEnv("PUSH", "true").
-			ExceptPullRequest()
+			ExceptPullRequest().
+			OnlyOnBranch(image.meta.MainBranch)
 
 		for k, v := range image.ExtraEnvironment {
 			pushStep.SetEnv(k, v)

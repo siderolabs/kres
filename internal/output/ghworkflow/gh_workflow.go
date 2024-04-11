@@ -306,16 +306,31 @@ func (step *Step) SetEnv(name, value string) *Step {
 	return step
 }
 
+func (step *Step) appendIf(condition string) {
+	if step.If == "" {
+		step.If = condition
+	} else {
+		step.If += " && " + condition
+	}
+}
+
 // ExceptPullRequest adds condition to skip step on PRs.
 func (step *Step) ExceptPullRequest() *Step {
-	step.If = "github.event_name != 'pull_request'"
+	step.appendIf("github.event_name != 'pull_request'")
 
 	return step
 }
 
 // OnlyOnTag adds condition to run step only on tags.
 func (step *Step) OnlyOnTag() *Step {
-	step.If = "startsWith(github.ref, 'refs/tags/')"
+	step.appendIf("startsWith(github.ref, 'refs/tags/')")
+
+	return step
+}
+
+// OnlyOnBranch adds condition to run step only on a specific branch name.
+func (step *Step) OnlyOnBranch(name string) *Step {
+	step.appendIf(fmt.Sprintf("github.ref == 'refs/heads/%s'", name))
 
 	return step
 }
