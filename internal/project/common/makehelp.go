@@ -85,7 +85,7 @@ If you already have a compatible builder instance, you may use that instead.
 ## Artifacts
 
 All artifacts will be output to ./$(ARTIFACTS). Images will be tagged with the
-registry "$(REGISTRY)", username "$(USERNAME)", and a dynamic tag (e.g. $(IMAGE):$(TAG)).
+registry "$(REGISTRY)", username "$(USERNAME)", and a dynamic tag (e.g. $(IMAGE):$(IMAGE_TAG)).
 The registry and username can be overridden by exporting REGISTRY, and USERNAME
 respectively.
 `

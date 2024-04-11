@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-03-20T15:59:12Z by kres c2d361c-dirty.
+# Generated on 2024-04-11T10:24:57Z by kres 1d71efa-dirty.
 
 name: default
 concurrency:
@@ -91,7 +91,7 @@ jobs:
           PLATFORM: linux/amd64,linux/arm64
           PUSH: "true"
         run: |
-          make image-kres TAG=latest
+          make image-kres IMAGE_TAG=latest
       - name: Generate Checksums
         if: startsWith(github.ref, 'refs/tags/')
         run: |

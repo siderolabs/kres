@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-04-04T10:18:05Z by kres 5f30198-dirty.
+# Generated on 2024-04-11T10:31:30Z by kres 04ebe4d-dirty.
 
 # common variables
 
@@ -9,6 +9,7 @@ TAG := $(shell git describe --tag --always --dirty --match v[0-9]\*)
 ABBREV_TAG := $(shell git describe --tags >/dev/null 2>/dev/null && git describe --tag --always --match v[0-9]\* --abbrev=0 || echo 'undefined')
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 ARTIFACTS := _out
+IMAGE_TAG ?= $(TAG)
 WITH_DEBUG ?= false
 WITH_RACE ?= false
 REGISTRY ?= ghcr.io
@@ -110,7 +111,7 @@ If you already have a compatible builder instance, you may use that instead.
 ## Artifacts
 
 All artifacts will be output to ./$(ARTIFACTS). Images will be tagged with the
-registry "$(REGISTRY)", username "$(USERNAME)", and a dynamic tag (e.g. $(IMAGE):$(TAG)).
+registry "$(REGISTRY)", username "$(USERNAME)", and a dynamic tag (e.g. $(IMAGE):$(IMAGE_TAG)).
 The registry and username can be overridden by exporting REGISTRY, and USERNAME
 respectively.
 
@@ -219,7 +220,7 @@ lint: lint-golangci-lint lint-gofumpt lint-govulncheck lint-goimports lint-markd
 
 .PHONY: image-kres
 image-kres:  ## Builds image for kres.
-	@$(MAKE) target-$@ TARGET_ARGS="--tag=$(REGISTRY)/$(USERNAME)/kres:$(TAG)"
+	@$(MAKE) target-$@ TARGET_ARGS="--tag=$(REGISTRY)/$(USERNAME)/kres:$(IMAGE_TAG)"
 
 .PHONY: rekres
 rekres:

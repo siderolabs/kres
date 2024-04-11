@@ -80,7 +80,7 @@ func (image *Image) CompileDrone(output *drone.Output) error {
 	output.Step(step)
 
 	if image.PushLatest {
-		step := drone.MakeStep(image.Name(), "TAG=latest").
+		step := drone.MakeStep(image.Name(), "IMAGE_TAG=latest").
 			Name(fmt.Sprintf("push-%s-latest", image.ImageName)).
 			Environment("PUSH", "true").
 			OnlyOnBranch(image.meta.MainBranch).
@@ -128,7 +128,7 @@ func (image *Image) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	}
 
 	if image.PushLatest {
-		pushStep := ghworkflow.MakeStep(image.Name(), "TAG=latest").
+		pushStep := ghworkflow.MakeStep(image.Name(), "IMAGE_TAG=latest").
 			SetName(fmt.Sprintf("push-%s-latest", image.ImageName)).
 			SetEnv("PUSH", "true").
 			ExceptPullRequest()
@@ -152,7 +152,7 @@ func (image *Image) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 func (image *Image) CompileMakefile(output *makefile.Output) error {
 	target := output.Target(image.Name()).
 		Description(fmt.Sprintf("Builds image for %s.", image.ImageName)).
-		Script(fmt.Sprintf(`@$(MAKE) target-$@ TARGET_ARGS="--tag=$(REGISTRY)/$(USERNAME)/%s:$(TAG)"`, image.ImageName)).
+		Script(fmt.Sprintf(`@$(MAKE) target-$@ TARGET_ARGS="--tag=$(REGISTRY)/$(USERNAME)/%s:$(IMAGE_TAG)"`, image.ImageName)).
 		Phony()
 
 	for _, dependsOn := range image.DependsOn {
