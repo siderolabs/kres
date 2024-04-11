@@ -31,12 +31,13 @@ type Repository struct { //nolint:govet,maligned
 	MainBranch      string   `yaml:"mainBranch"`
 	EnforceContexts []string `yaml:"enforceContexts"`
 
-	EnableConform            bool     `yaml:"enableConform"`
-	ConformWebhookURL        string   `yaml:"conformWebhookURL"`
-	ConformTypes             []string `yaml:"conformTypes"`
-	ConformScopes            []string `yaml:"conformScopes"`
-	ConformLicenseCheck      bool     `yaml:"conformLicenseCheck"`
-	ConformGPGSignatureCheck bool     `yaml:"conformGPGSignatureCheck"`
+	EnableConform             bool     `yaml:"enableConform"`
+	ConformWebhookURL         string   `yaml:"conformWebhookURL"`
+	ConformTypes              []string `yaml:"conformTypes"`
+	ConformScopes             []string `yaml:"conformScopes"`
+	ConformLicenseCheck       bool     `yaml:"conformLicenseCheck"`
+	ConformGPGSignatureCheck  bool     `yaml:"conformGPGSignatureCheck"`
+	ConformMaximumOfOneCommit bool     `yaml:"conformMaximumOfOneCommit"`
 
 	DeprecatedEnableLicense *bool `yaml:"enableLicense"`
 
@@ -80,8 +81,9 @@ func NewRepository(meta *meta.Options) *Repository {
 		ConformScopes: []string{
 			".*",
 		},
-		ConformLicenseCheck:      true,
-		ConformGPGSignatureCheck: true,
+		ConformLicenseCheck:       true,
+		ConformGPGSignatureCheck:  true,
+		ConformMaximumOfOneCommit: true,
 
 		Licenses: []LicenseConfig{
 			{
@@ -125,6 +127,7 @@ func (r *Repository) CompileConform(o *conform.Output) error {
 	o.SetGPGSignatureCheck(r.ConformGPGSignatureCheck)
 	o.SetGitHubOrganization(r.meta.GitHubOrganization)
 	o.SetLicensePolicySpecs(r.LicenseChecks)
+	o.SetMaximumOfOneCommit(r.ConformMaximumOfOneCommit)
 
 	return nil
 }

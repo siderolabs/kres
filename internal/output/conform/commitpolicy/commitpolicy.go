@@ -60,14 +60,14 @@ type Conventional struct {
 }
 
 // New creates a new commit policy.
-func New(organization string, enableGPGSignatureCheck bool, types, scopes []string) Policy {
+func New(organization string, enableGPGSignatureCheck bool, types, scopes []string, maximumOfOneCommit bool) Policy {
 	return Policy{
 		Type: "commit",
 		Spec: Spec{
 			DCO:                true,
 			GPG:                GPG{Required: enableGPGSignatureCheck, Identity: Identity{GithubOrganization: organization}},
 			Spellcheck:         Spellcheck{Locale: "US"},
-			MaximumOfOneCommit: true,
+			MaximumOfOneCommit: maximumOfOneCommit,
 			Header:             Header{Length: 89, Imperative: true, Case: "lower", InvalidLastCharacters: "."},
 			Body:               Body{Required: true},
 			Conventional:       Conventional{Types: types, Scopes: scopes},

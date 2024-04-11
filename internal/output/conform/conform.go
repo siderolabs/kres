@@ -28,6 +28,7 @@ type Output struct {
 	scopes             []string
 	types              []string
 	licensePolicySpecs []licensepolicy.Spec
+	maxOfOneCommit     bool
 
 	licenseCheck      bool
 	gpgSignatureCheck bool
@@ -79,6 +80,11 @@ func (o *Output) SetGPGSignatureCheck(enable bool) {
 	o.gpgSignatureCheck = enable
 }
 
+// SetMaximumOfOneCommit enables single commit check.
+func (o *Output) SetMaximumOfOneCommit(enable bool) {
+	o.maxOfOneCommit = enable
+}
+
 // SetGitHubOrganization scopes GPG identity check to the GitHub organization.
 func (o *Output) SetGitHubOrganization(org string) {
 	o.githubOrg = org
@@ -109,7 +115,7 @@ func (o *Output) config(w io.Writer) error {
 	}
 
 	policyList := []any{
-		commitpolicy.New(o.githubOrg, o.gpgSignatureCheck, o.types, o.scopes),
+		commitpolicy.New(o.githubOrg, o.gpgSignatureCheck, o.types, o.scopes, o.maxOfOneCommit),
 	}
 
 	for _, spec := range o.licensePolicySpecs {
