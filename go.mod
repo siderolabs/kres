@@ -1,6 +1,6 @@
 module github.com/siderolabs/kres
 
-go 1.22.0
+go 1.22.2
 
 require (
 	github.com/drone/drone-yaml v1.2.3
