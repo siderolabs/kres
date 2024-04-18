@@ -108,6 +108,7 @@ type Step struct {
 			ContinueOnError bool `yaml:"continueOnError"`
 		} `yaml:"artifacts"`
 		Enabled bool `yaml:"enabled"`
+		SOPS    bool `yaml:"sops"`
 	} `yaml:"ghaction"`
 
 	SudoInCI bool `yaml:"sudoInCI"`
@@ -289,7 +290,7 @@ func (step *Step) DroneEnabled() bool {
 
 // CompileGitHubWorkflow implements ghworkflow.Compiler.
 //
-//nolint:gocognit,cyclop
+//nolint:gocognit,cyclop,gocyclo,maintidx
 func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	if !step.GHAction.Enabled {
 		return nil
@@ -416,12 +417,21 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 			}
 		}
 
+		defaultSteps := ghworkflow.DefaultSteps()
+
+		if step.GHAction.SOPS {
+			defaultSteps = append(
+				defaultSteps,
+				ghworkflow.SOPSSteps()...,
+			)
+		}
+
 		output.AddJob(job.Name, &ghworkflow.Job{
 			RunsOn:   append(runnerLabels, job.RunnerLabels...),
 			If:       strings.Join(conditions, " || "),
 			Needs:    []string{"default"},
 			Services: ghworkflow.DefaultServices(),
-			Steps:    ghworkflow.DefaultSteps(),
+			Steps:    defaultSteps,
 		})
 
 		var steps []*ghworkflow.Step
@@ -474,6 +484,15 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 			steps := []*ghworkflow.Step{workflowStep}
 			steps = append(steps, additionalArtifactsSteps...)
 
+			defaultSteps := ghworkflow.DefaultSteps()
+
+			if step.GHAction.SOPS {
+				defaultSteps = append(
+					defaultSteps,
+					ghworkflow.SOPSSteps()...,
+				)
+			}
+
 			output.AddWorkflow(
 				workflowName,
 				&ghworkflow.Workflow{
@@ -495,7 +514,7 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 							RunsOn:   append(runnerLabels, job.RunnerLabels...),
 							Services: ghworkflow.DefaultServices(),
 							Steps: append(
-								ghworkflow.DefaultSteps(),
+								defaultSteps,
 								steps...,
 							),
 						},

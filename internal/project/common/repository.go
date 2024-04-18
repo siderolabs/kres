@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"slices"
 
-	"github.com/google/go-github/v60/github"
+	"github.com/google/go-github/v61/github"
 	"github.com/siderolabs/gen/xslices"
 
 	"github.com/siderolabs/kres/internal/config"

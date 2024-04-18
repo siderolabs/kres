@@ -121,11 +121,12 @@ func (builder *builder) build() error {
 	rekres := common.NewReKres(builder.meta)
 	makeHelp := common.NewMakeHelp(builder.meta)
 	conformance := common.NewConformance(builder.meta)
+	sops := common.NewSOPS(builder.meta)
 
 	release.AddInput(builder.targets...)
 
 	builder.proj.AddTarget(builder.targets...)
-	builder.proj.AddTarget(rekres, all, makeHelp, release, conformance)
+	builder.proj.AddTarget(rekres, all, makeHelp, release, conformance, sops)
 
 	return nil
 }

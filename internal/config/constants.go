@@ -30,7 +30,7 @@ const (
 	DeepCopyVersion = "v0.5.6"
 	// DindContainerImageVersion is the version of the dind container image.
 	// renovate: datasource=docker versioning=docker depName=docker
-	DindContainerImageVersion = "25.0-dind"
+	DindContainerImageVersion = "26.0-dind"
 	// DockerfileFrontendImageVersion is the version of the dockerfile frontend image.
 	// renovate: datasource=docker versioning=docker depName=docker/dockerfile-upstream
 	DockerfileFrontendImageVersion = "1.7.0-labs"
@@ -69,10 +69,10 @@ const (
 	MardownLintCLIVersion = "0.39.0"
 	// NodeContainerImageVersion is the default node container image.
 	// renovate: datasource=docker versioning=docker depName=node
-	NodeContainerImageVersion = "21.7.1-alpine3.19"
+	NodeContainerImageVersion = "21.7.3-alpine3.19"
 	// PkgsVersion is the version of pkgs.
 	// renovate: datasource=github-tags depName=siderolabs/pkgs
-	PkgsVersion = "v1.6.0"
+	PkgsVersion = "v1.7.0"
 	// ProtobufGoVersion is the version of protobuf.
 	// renovate: datasource=go depName=google.golang.org/protobuf/cmd/protoc-gen-go
 	ProtobufGoVersion = "v1.33.0"

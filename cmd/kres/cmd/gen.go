@@ -24,6 +24,7 @@ import (
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/output/markdownlint"
 	"github.com/siderolabs/kres/internal/output/release"
+	"github.com/siderolabs/kres/internal/output/sops"
 	"github.com/siderolabs/kres/internal/output/template"
 	"github.com/siderolabs/kres/internal/project/auto"
 	"github.com/siderolabs/kres/internal/project/meta"
@@ -62,6 +63,7 @@ func runGen() error {
 		output.Wrap[github.Compiler](github.NewOutput()),
 		output.Wrap[conform.Compiler](conform.NewOutput()),
 		output.Wrap[template.Compiler](template.NewOutput()),
+		output.Wrap[sops.Compiler](sops.NewOutput()),
 	}
 
 	var err error

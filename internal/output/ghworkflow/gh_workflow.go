@@ -9,6 +9,7 @@ import (
 	_ "embed"
 	"fmt"
 	"io"
+	"slices"
 	"strings"
 
 	"github.com/siderolabs/gen/maps"
@@ -178,6 +179,27 @@ func (o *Output) AddStep(jobName string, steps ...*Step) {
 	o.workflows[ciWorkflow].Jobs[jobName].Steps = append(o.workflows[ciWorkflow].Jobs[jobName].Steps, steps...)
 }
 
+// AddStepBefore adds step before another step in the job.
+func (o *Output) AddStepBefore(jobName, beforeStepID string, steps ...*Step) {
+	job := o.workflows[ciWorkflow].Jobs[jobName]
+
+	idx := slices.IndexFunc(job.Steps, func(s *Step) bool { return s.ID == beforeStepID })
+	if idx != -1 {
+		job.Steps = slices.Insert(job.Steps, idx, steps...)
+	}
+}
+
+// AddStepAfter adds step after another step in the job.
+func (o *Output) AddStepAfter(jobName, afterStepID string, steps ...*Step) {
+	job := o.workflows[ciWorkflow].Jobs[jobName]
+
+	idx := slices.IndexFunc(job.Steps, func(s *Step) bool { return s.ID == afterStepID })
+
+	if idx != -1 {
+		job.Steps = slices.Insert(job.Steps, idx+1, steps...)
+	}
+}
+
 // AddOutputs adds outputs to the job.
 func (o *Output) AddOutputs(jobName string, outputs map[string]string) {
 	o.workflows[ciWorkflow].Jobs[jobName].Outputs = outputs
@@ -222,6 +244,7 @@ func DefaultSteps() []*Step {
 		CommonSteps(),
 		&Step{
 			Name: "Set up Docker Buildx",
+			ID:   "setup-buildx",
 			Uses: "docker/setup-buildx-action@" + config.SetupBuildxActionVersion,
 			With: map[string]string{
 				"driver":   "remote",
@@ -238,6 +261,7 @@ func DefaultPkgsSteps() []*Step {
 		CommonSteps(),
 		&Step{
 			Name: "Set up Docker Buildx",
+			ID:   "setup-buildx",
 			Uses: "docker/setup-buildx-action@" + config.SetupBuildxActionVersion,
 			With: map[string]string{
 				"driver":   "remote",
@@ -246,6 +270,20 @@ func DefaultPkgsSteps() []*Step {
 			},
 		},
 	)
+}
+
+// SOPSSteps returns SOPS steps for the workflow.
+func SOPSSteps() []*Step {
+	return []*Step{
+		{
+			Name: "Mask secrets",
+			Run:  "echo -e \"$(sops -d .secrets.yaml | yq '.secrets | to_entries[] | \"::add-mask::\" + .value')\"\n",
+		},
+		{
+			Name: "Set secrets for job",
+			Run:  "sops -d .secrets.yaml | yq '.secrets | to_entries[] | .key + \"=\" + .value' >> \"$GITHUB_ENV\"\n",
+		},
+	}
 }
 
 // DefaultServices returns default services for the workflow.
