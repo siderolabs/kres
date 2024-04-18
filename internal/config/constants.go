@@ -72,7 +72,7 @@ const (
 	NodeContainerImageVersion = "21.7.1-alpine3.19"
 	// PkgsVersion is the version of pkgs.
 	// renovate: datasource=github-tags depName=siderolabs/pkgs
-	PkgsVersion = "v1.6.0"
+	PkgsVersion = "v1.7.0"
 	// ProtobufGoVersion is the version of protobuf.
 	// renovate: datasource=go depName=google.golang.org/protobuf/cmd/protoc-gen-go
 	ProtobufGoVersion = "v1.33.0"
