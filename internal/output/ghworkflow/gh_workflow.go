@@ -277,11 +277,11 @@ func SOPSSteps() []*Step {
 	return []*Step{
 		{
 			Name: "Mask secrets",
-			Run:  "echo -e \"$(sops -d .secrets.yaml | yq '.secrets | to_entries[] | \"::add-mask::\" + .value')\"\n",
+			Run:  "echo -e \"$(sops -d .secrets.yaml | yq -e '.secrets | to_entries[] | \"::add-mask::\" + .value')\"\n",
 		},
 		{
 			Name: "Set secrets for job",
-			Run:  "sops -d .secrets.yaml | yq '.secrets | to_entries[] | .key + \"=\" + .value' >> \"$GITHUB_ENV\"\n",
+			Run:  "sops -d .secrets.yaml | yq -e '.secrets | to_entries[] | .key + \"=\" + .value' >> \"$GITHUB_ENV\"\n",
 		},
 	}
 }
