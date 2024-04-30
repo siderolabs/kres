@@ -6,6 +6,9 @@ package service
 
 import (
 	"fmt"
+	"strings"
+
+	"github.com/siderolabs/gen/xslices"
 
 	"github.com/siderolabs/kres/internal/config"
 	"github.com/siderolabs/kres/internal/dag"
@@ -59,24 +62,28 @@ func (coverage *CodeCov) CompileGitHubWorkflow(output *ghworkflow.Output) error 
 		return nil
 	}
 
-	output.AddStep("default", ghworkflow.MakeStep("coverage"))
+	paths := xslices.Map(coverage.InputPaths, func(path string) string {
+		return fmt.Sprintf("%s/%s", coverage.meta.ArtifactsPath, path)
+	})
+
+	output.AddStep(
+		"default",
+		&ghworkflow.Step{
+			Name: "coverage",
+			Uses: fmt.Sprintf("codecov/codecov-action@%s", config.CodeCovActionVersion),
+			With: map[string]string{
+				"files": strings.Join(paths, ","),
+				"token": "${{ secrets.CODECOV_TOKEN }}",
+			},
+			TimeoutMinutes: 3,
+		},
+	)
 
 	return nil
 }
 
 // CompileMakefile implements makefile.Compiler.
-func (coverage *CodeCov) CompileMakefile(output *makefile.Output) error {
-	if !coverage.Enabled {
-		return nil
-	}
-
-	target := output.Target("coverage").Description("Upload coverage data to codecov.io.")
-
-	for _, inputPath := range coverage.InputPaths {
-		target.Script(fmt.Sprintf(`bash -c "bash <(curl -s https://codecov.io/bash) -f $(ARTIFACTS)/%s -X fix"`, inputPath)).
-			Phony()
-	}
-
+func (coverage *CodeCov) CompileMakefile(_ *makefile.Output) error {
 	return nil
 }
 
