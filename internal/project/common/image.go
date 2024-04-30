@@ -100,39 +100,44 @@ func (image *Image) CompileDrone(output *drone.Output) error {
 
 // CompileGitHubWorkflow implements ghworkflow.Compiler.
 func (image *Image) CompileGitHubWorkflow(output *ghworkflow.Output) error {
-	loginStep := &ghworkflow.Step{
-		Name: "Login to registry",
-		Uses: "docker/login-action@" + config.LoginActionVersion,
-		With: map[string]string{
-			"registry": "ghcr.io",
-			"username": "${{ github.repository_owner }}",
-			"password": "${{ secrets.GITHUB_TOKEN }}",
-		},
+	loginStep := ghworkflow.Step("Login to registry").
+		SetUses("docker/login-action@"+config.LoginActionVersion).
+		SetWith("registry", "ghcr.io").
+		SetWith("username", "${{ github.repository_owner }}").
+		SetWith("password", "${{ secrets.GITHUB_TOKEN }}")
+
+	if err := loginStep.SetConditions("except-pull-request"); err != nil {
+		return err
 	}
 
-	loginStep.ExceptPullRequest()
+	pushStep := ghworkflow.Step("push-"+image.ImageName).
+		SetMakeStep(image.Name()).
+		SetEnv("PUSH", "true")
 
-	pushStep := ghworkflow.MakeStep(image.Name()).
-		SetName("push-"+image.ImageName).
-		SetEnv("PUSH", "true").
-		ExceptPullRequest()
+	if err := pushStep.SetConditions("except-pull-request"); err != nil {
+		return err
+	}
 
 	for k, v := range image.ExtraEnvironment {
 		pushStep.SetEnv(k, v)
 	}
 
-	steps := []*ghworkflow.Step{
+	steps := []*ghworkflow.JobStep{
 		loginStep,
-		ghworkflow.MakeStep(image.Name()),
+		ghworkflow.Step(image.Name()).SetMakeStep(image.Name()),
 		pushStep,
 	}
 
 	if image.PushLatest {
-		pushStep := ghworkflow.MakeStep(image.Name(), "IMAGE_TAG=latest").
-			SetName(fmt.Sprintf("push-%s-latest", image.ImageName)).
-			SetEnv("PUSH", "true").
-			ExceptPullRequest().
-			OnlyOnBranch(image.meta.MainBranch)
+		pushStep := ghworkflow.Step(fmt.Sprintf("push-%s-latest", image.ImageName)).
+			SetMakeStep(image.Name(), "IMAGE_TAG=latest").
+			SetEnv("PUSH", "true")
+
+		if err := pushStep.SetConditions("except-pull-request"); err != nil {
+			return err
+		}
+
+		pushStep.SetConditionOnlyOnBranch(image.meta.MainBranch)
 
 		for k, v := range image.ExtraEnvironment {
 			pushStep.SetEnv(k, v)

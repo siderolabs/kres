@@ -50,22 +50,6 @@ var genCmd = &cobra.Command{
 func runGen() error {
 	fmt.Println("gen started")
 
-	outputs := []output.Writer{
-		output.Wrap[dockerfile.Compiler](dockerfile.NewOutput()),
-		output.Wrap[dockerignore.Compiler](dockerignore.NewOutput()),
-		output.Wrap[makefile.Compiler](makefile.NewOutput()),
-		output.Wrap[golangci.Compiler](golangci.NewOutput()),
-		output.Wrap[license.Compiler](license.NewOutput()),
-		output.Wrap[gitignore.Compiler](gitignore.NewOutput()),
-		output.Wrap[codecov.Compiler](codecov.NewOutput()),
-		output.Wrap[release.Compiler](release.NewOutput()),
-		output.Wrap[markdownlint.Compiler](markdownlint.NewOutput()),
-		output.Wrap[github.Compiler](github.NewOutput()),
-		output.Wrap[conform.Compiler](conform.NewOutput()),
-		output.Wrap[template.Compiler](template.NewOutput()),
-		output.Wrap[sops.Compiler](sops.NewOutput()),
-	}
-
 	var err error
 
 	options := meta.Options{
@@ -87,11 +71,33 @@ func runGen() error {
 		return err
 	}
 
+	outputs := []output.Writer{
+		output.Wrap[github.Compiler](github.NewOutput()),
+		output.Wrap[sops.Compiler](sops.NewOutput()),
+		output.Wrap[conform.Compiler](conform.NewOutput()),
+	}
+
+	if !options.CompileGithubWorkflowsOnly {
+		outputs = append(
+			outputs,
+			output.Wrap[dockerfile.Compiler](dockerfile.NewOutput()),
+			output.Wrap[dockerignore.Compiler](dockerignore.NewOutput()),
+			output.Wrap[makefile.Compiler](makefile.NewOutput()),
+			output.Wrap[golangci.Compiler](golangci.NewOutput()),
+			output.Wrap[license.Compiler](license.NewOutput()),
+			output.Wrap[gitignore.Compiler](gitignore.NewOutput()),
+			output.Wrap[codecov.Compiler](codecov.NewOutput()),
+			output.Wrap[release.Compiler](release.NewOutput()),
+			output.Wrap[markdownlint.Compiler](markdownlint.NewOutput()),
+			output.Wrap[template.Compiler](template.NewOutput()),
+		)
+	}
+
 	switch options.CIProvider {
 	case "drone":
 		outputs = append(outputs, output.Wrap[drone.Compiler](drone.NewOutput()))
 	case "ghaction":
-		outputs = append(outputs, output.Wrap[ghworkflow.Compiler](ghworkflow.NewOutput(options.MainBranch)))
+		outputs = append(outputs, output.Wrap[ghworkflow.Compiler](ghworkflow.NewOutput(options.MainBranch, !options.CompileGithubWorkflowsOnly)))
 	}
 
 	if err := proj.Compile(outputs); err != nil {

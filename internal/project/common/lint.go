@@ -41,7 +41,7 @@ func (lint *Lint) CompileDrone(output *drone.Output) error {
 func (lint *Lint) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	output.AddStep(
 		"default",
-		ghworkflow.MakeStep("lint"),
+		ghworkflow.Step("lint").SetMakeStep("lint"),
 	)
 
 	return nil

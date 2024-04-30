@@ -290,14 +290,13 @@ func (step *Step) DroneEnabled() bool {
 
 // CompileGitHubWorkflow implements ghworkflow.Compiler.
 //
-//nolint:gocognit,cyclop,gocyclo,maintidx
+//nolint:gocognit,gocyclo,cyclop,maintidx
 func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	if !step.GHAction.Enabled {
 		return nil
 	}
 
-	workflowStep := ghworkflow.MakeStep(step.Name())
-
+	workflowStep := ghworkflow.Step(step.Name()).SetMakeStep(step.Name())
 	if step.SudoInCI {
 		workflowStep.SetSudo()
 	}
@@ -306,31 +305,20 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		workflowStep.SetEnv(k, v)
 	}
 
-	if step.GHAction.Condition != "" {
-		switch step.GHAction.Condition {
-		case "except-pull-request":
-			workflowStep.ExceptPullRequest()
-		case "only-on-tag":
-			workflowStep.OnlyOnTag()
-		default:
-			return fmt.Errorf("unknown condition: %s", step.GHAction.Condition)
-		}
+	if err := workflowStep.SetConditions(step.GHAction.Condition); err != nil {
+		return err
 	}
 
-	steps := []*ghworkflow.Step{workflowStep}
+	steps := []*ghworkflow.JobStep{workflowStep}
 
 	if len(step.GHAction.Jobs) > 0 {
 		steps = append(
 			steps,
-			&ghworkflow.Step{
-				Name: "Retrieve PR labels",
-				ID:   "retrieve-pr-labels",
-				Uses: "actions/github-script@" + config.GitHubScriptActionVersion,
-				With: map[string]string{
-					"retries": "3",
-					"script":  strings.TrimPrefix(ghworkflow.IssueLabelRetrieveScript, "\n"),
-				},
-			},
+			ghworkflow.Step("Retrieve PR labels").
+				SetID("retrieve-pr-labels").
+				SetUses("actions/github-script@"+config.GitHubScriptActionVersion).
+				SetWith("retries", "3").
+				SetWith("script", strings.TrimPrefix(ghworkflow.IssueLabelRetrieveScript, "\n")),
 		)
 
 		output.AddOutputs("default", map[string]string{
@@ -338,40 +326,37 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		})
 	}
 
-	additionalArtifactsSteps := []*ghworkflow.Step{}
+	additionalArtifactsSteps := []*ghworkflow.JobStep{}
 
 	if step.GHAction.Artifacts.Enabled {
-		steps = append(steps,
-			&ghworkflow.Step{
-				Name: "Generate executable list",
-				Run:  fmt.Sprintf("find %s -type f -executable > %s/executable-artifacts", step.meta.ArtifactsPath, step.meta.ArtifactsPath) + "\n",
-			},
-			&ghworkflow.Step{
-				Name:            "save-artifacts",
-				Uses:            "actions/upload-artifact@" + config.UploadArtifactActionVersion,
-				ContinueOnError: step.GHAction.Artifacts.ContinueOnError,
-				With: map[string]string{
-					"name":           "artifacts",
-					"path":           step.meta.ArtifactsPath + "\n" + strings.Join(step.GHAction.Artifacts.ExtraPaths, "\n"),
-					"retention-days": "5",
-				},
-			},
+		saveArtifactsStep := ghworkflow.Step("save-artifacts").
+			SetUses("actions/upload-artifact@"+config.UploadArtifactActionVersion).
+			SetWith("name", "artifacts").
+			SetWith("path", step.meta.ArtifactsPath+"\n"+strings.Join(step.GHAction.Artifacts.ExtraPaths, "\n")).
+			SetWith("retention-days", "5")
+
+		if step.GHAction.Artifacts.ContinueOnError {
+			saveArtifactsStep.SetContinueOnError()
+		}
+
+		steps = append(
+			steps,
+			ghworkflow.Step("Generate executable list").
+				SetCommand(fmt.Sprintf("find %s -type f -executable > %s/executable-artifacts", step.meta.ArtifactsPath, step.meta.ArtifactsPath)),
+			saveArtifactsStep,
 		)
 
 		for _, additionalArtifact := range step.GHAction.Artifacts.Additional {
-			artifactStep := &ghworkflow.Step{
-				Name:            fmt.Sprintf("save-%s-artifacts", additionalArtifact.Name),
-				Uses:            "actions/upload-artifact@" + config.UploadArtifactActionVersion,
-				ContinueOnError: step.GHAction.Artifacts.ContinueOnError,
-				With: map[string]string{
-					"name":           additionalArtifact.Name,
-					"path":           strings.Join(additionalArtifact.Paths, "\n"),
-					"retention-days": "5",
-				},
-			}
+			artifactStep := ghworkflow.Step(fmt.Sprintf("save-%s-artifacts", additionalArtifact.Name)).
+				SetUses("actions/upload-artifact@"+config.UploadArtifactActionVersion).
+				SetWith("name", additionalArtifact.Name).
+				SetWith("path", strings.Join(additionalArtifact.Paths, "\n")).
+				SetWith("retention-days", "5")
 
 			if additionalArtifact.Always {
-				artifactStep.If = "always()"
+				if err := artifactStep.SetConditions("always"); err != nil {
+					return err
+				}
 			}
 
 			additionalArtifactsSteps = append(additionalArtifactsSteps, artifactStep)
@@ -394,23 +379,24 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 			return fmt.Sprintf("contains(fromJSON(needs.default.outputs.labels), '%s')", label)
 		})
 
-		var artifactSteps []*ghworkflow.Step
+		var artifactSteps []*ghworkflow.JobStep
 
 		if step.GHAction.Artifacts.Enabled {
 			for _, additionalArtifact := range step.GHAction.Artifacts.Additional {
-				artifactStep := &ghworkflow.Step{
-					Name:            fmt.Sprintf("save-%s-artifacts", additionalArtifact.Name),
-					Uses:            "actions/upload-artifact@" + config.UploadArtifactActionVersion,
-					ContinueOnError: additionalArtifact.ContinueOnError,
-					With: map[string]string{
-						"name":           additionalArtifact.Name + "-" + job.Name,
-						"path":           strings.Join(additionalArtifact.Paths, "\n"),
-						"retention-days": "5",
-					},
-				}
+				artifactStep := ghworkflow.Step(fmt.Sprintf("save-%s-artifacts", additionalArtifact.Name)).
+					SetUses("actions/upload-artifact@"+config.UploadArtifactActionVersion).
+					SetWith("name", additionalArtifact.Name+"-"+job.Name).
+					SetWith("path", strings.Join(additionalArtifact.Paths, "\n")).
+					SetWith("retention-days", "5")
 
 				if additionalArtifact.Always {
-					artifactStep.If = "always()"
+					if err := artifactStep.SetConditions("always"); err != nil {
+						return err
+					}
+				}
+
+				if additionalArtifact.ContinueOnError {
+					artifactStep.SetContinueOnError()
 				}
 
 				artifactSteps = append(artifactSteps, artifactStep)
@@ -434,27 +420,21 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 			Steps:    defaultSteps,
 		})
 
-		var steps []*ghworkflow.Step
+		var steps []*ghworkflow.JobStep
 
 		if step.GHAction.Artifacts.Enabled {
 			steps = append(
 				steps,
-				&ghworkflow.Step{
-					Name: "Download artifacts",
-					Uses: "actions/download-artifact@" + config.DownloadArtifactActionVersion,
-					With: map[string]string{
-						"name": "artifacts",
-						"path": step.meta.ArtifactsPath,
-					},
-				},
-				&ghworkflow.Step{
-					Name: "Fix artifact permissions",
-					Run:  fmt.Sprintf("xargs -a %s/executable-artifacts -I {} chmod +x {}", step.meta.ArtifactsPath) + "\n",
-				},
+				ghworkflow.Step("Download artifacts").
+					SetUses("actions/download-artifact@"+config.DownloadArtifactActionVersion).
+					SetWith("name", "artifacts").
+					SetWith("path", step.meta.ArtifactsPath),
+				ghworkflow.Step("Fix artifact permissions").
+					SetCommand(fmt.Sprintf("xargs -a %s/executable-artifacts -I {} chmod +x {}", step.meta.ArtifactsPath)),
 			)
 		}
 
-		workflowStep := ghworkflow.MakeStep(step.Name())
+		workflowStep := ghworkflow.Step(step.Name()).SetMakeStep(step.Name())
 
 		if step.SudoInCI {
 			workflowStep.SetSudo()
@@ -481,7 +461,7 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 
 			output.AddSlackNotify(workflowName)
 
-			steps := []*ghworkflow.Step{workflowStep}
+			steps := []*ghworkflow.JobStep{workflowStep}
 			steps = append(steps, additionalArtifactsSteps...)
 
 			defaultSteps := ghworkflow.DefaultSteps()

@@ -66,7 +66,7 @@ type Job struct {
 	Needs       []string           `yaml:"needs,omitempty"`
 	Outputs     map[string]string  `yaml:"outputs,omitempty"`
 	Services    map[string]Service `yaml:"services,omitempty"`
-	Steps       []*Step            `yaml:"steps"`
+	Steps       []*JobStep         `yaml:"steps"`
 }
 
 // Service represents GitHub Actions service.
@@ -77,8 +77,8 @@ type Service struct {
 	Volumes []string `yaml:"volumes,omitempty"`
 }
 
-// Step represents GitHub Actions step.
-type Step struct {
+// JobStep represents GitHub Actions job step.
+type JobStep struct {
 	Name            string            `yaml:"name"`
 	ID              string            `yaml:"id,omitempty"`
 	If              string            `yaml:"if,omitempty"`

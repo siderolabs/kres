@@ -37,14 +37,6 @@ type Build struct {
 }
 
 var (
-	goarchDef = `
-$(shell uname -m | tr '[:upper:]' '[:lower:]')
-
-ifeq ($(GOARCH),x86_64)
-  GOARCH := amd64
-endif
-`
-
 	reproducibilityTestScript = `
 @rm -rf $(ARTIFACTS)/build-a $(ARTIFACTS)/build-b
 @$(MAKE) local-$* DEST=$(ARTIFACTS)/build-a
@@ -78,14 +70,6 @@ func (pkgfile *Build) CompileDockerignore(output *dockerignore.Output) error {
 
 // CompileMakefile implements makefile.Compiler.
 func (pkgfile *Build) CompileMakefile(output *makefile.Output) error {
-	output.VariableGroup(makefile.VariableGroupCommon).
-		Variable(makefile.SimpleVariable("OPERATING_SYSTEM", "$(shell uname -s | tr '[:upper:]' '[:lower:]')")).
-		Variable(makefile.SimpleVariable("GOARCH", strings.TrimPrefix(goarchDef, "\n")))
-
-	output.VariableGroup(makefile.VariableGroupSourceDateEpoch).
-		Variable(makefile.SimpleVariable("INITIAL_COMMIT_SHA", "$(shell git rev-list --max-parents=0 HEAD)")).
-		Variable(makefile.SimpleVariable("SOURCE_DATE_EPOCH", "$(shell git log $(INITIAL_COMMIT_SHA) --pretty=%ct)"))
-
 	output.VariableGroup("sync bldr image with pkgfile").
 		Variable(makefile.SimpleVariable("BLDR_RELEASE", config.BldrImageVersion)).
 		Variable(makefile.SimpleVariable("BLDR_IMAGE", "ghcr.io/siderolabs/bldr:$(BLDR_RELEASE)")).
@@ -118,10 +102,6 @@ func (pkgfile *Build) CompileMakefile(output *makefile.Output) error {
 		output.VariableGroup(makefile.VariableGroupExtra).
 			Variable(makefile.OverridableVariable(arg.Name, arg.DefaultValue))
 	}
-
-	output.Target("$(ARTIFACTS)").
-		Description("Creates artifacts directory.").
-		Script("@mkdir -p $(ARTIFACTS)")
 
 	output.Target("target-%").
 		Description("Builds the specified target defined in the Pkgfile. The build result will only remain in the build cache.").
@@ -196,28 +176,28 @@ func (pkgfile *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	output.SetDefaultJobRunnerAsPkgs()
 	output.OverwriteDefaultJobStepsAsPkgs()
 
-	loginStep := &ghworkflow.Step{
-		Name: "Login to registry",
-		Uses: "docker/login-action@" + config.LoginActionVersion,
-		With: map[string]string{
-			"registry": "ghcr.io",
-			"username": "${{ github.repository_owner }}",
-			"password": "${{ secrets.GITHUB_TOKEN }}",
-		},
+	loginStep := ghworkflow.Step("Login to registry").
+		SetUses("docker/login-action@"+config.LoginActionVersion).
+		SetWith("registry", "ghcr.io").
+		SetWith("username", "${{ github.repository_owner }}").
+		SetWith("password", "${{ secrets.GITHUB_TOKEN }}")
+
+	if err := loginStep.SetConditions("except-pull-request"); err != nil {
+		return err
 	}
 
-	loginStep.ExceptPullRequest()
+	pushStep := ghworkflow.Step("Push to registry").SetMakeStep("", "PUSH=true")
 
-	pushStep := ghworkflow.MakeStep("", "PUSH=true").
-		SetName("Push to registry").
-		ExceptPullRequest()
+	if err := pushStep.SetConditions("except-pull-request"); err != nil {
+		return err
+	}
 
 	output.AddStep(
 		"default",
-		ghworkflow.MakeStep("").SetName("Build"),
+		ghworkflow.Step("Build").SetMakeStep(""),
 	)
 
-	steps := []*ghworkflow.Step{
+	steps := []*ghworkflow.JobStep{
 		loginStep,
 		pushStep,
 	}
@@ -225,14 +205,18 @@ func (pkgfile *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	for name := range pkgfile.AdditionalTargets {
 		output.AddStep(
 			"default",
-			ghworkflow.MakeStep(name).SetName("Build "+name),
+			ghworkflow.Step("Build "+name).SetMakeStep(name),
 		)
+
+		pushStep := ghworkflow.Step("Push "+name).SetMakeStep(name, "PUSH=true")
+
+		if err := pushStep.SetConditions("except-pull-request"); err != nil {
+			return err
+		}
 
 		steps = append(
 			steps,
-			ghworkflow.MakeStep(name, "PUSH=true").
-				SetName("Push "+name).
-				ExceptPullRequest(),
+			pushStep,
 		)
 	}
 
@@ -241,16 +225,13 @@ func (pkgfile *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	if pkgfile.ReproducibleTargetName != "" {
 		output.AddStep(
 			"default",
-			&ghworkflow.Step{
-				Name: "Retrieve PR labels",
-				ID:   "retrieve-pr-labels",
-				Uses: "actions/github-script@" + config.GitHubScriptActionVersion,
-				With: map[string]string{
-					"retries": "3",
-					"script":  strings.TrimPrefix(ghworkflow.IssueLabelRetrieveScript, "\n"),
-				},
-			},
+			ghworkflow.Step("Retrieve PR labels").
+				SetID("retrieve-pr-labels").
+				SetUses("actions/github-script@"+config.GitHubScriptActionVersion).
+				SetWith("retries", "3").
+				SetWith("script", strings.TrimPrefix(ghworkflow.IssueLabelRetrieveScript, "\n")),
 		)
+
 		output.AddOutputs("default", map[string]string{
 			"labels": "${{ steps.retrieve-pr-labels.outputs.result }}",
 		})
@@ -267,7 +248,7 @@ func (pkgfile *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 			Services: ghworkflow.DefaultServices(),
 			Steps:    ghworkflow.DefaultPkgsSteps(),
 		})
-		output.AddStep("reproducibility", ghworkflow.MakeStep("reproducibility-test"))
+		output.AddStep("reproducibility", ghworkflow.Step("reproducibility-test").SetMakeStep("reproducibility-test"))
 
 		output.AddSlackNotify("weekly")
 		output.AddWorkflow(
@@ -292,7 +273,7 @@ func (pkgfile *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 						Services: ghworkflow.DefaultServices(),
 						Steps: append(
 							ghworkflow.DefaultPkgsSteps(),
-							ghworkflow.MakeStep("reproducibility-test"),
+							ghworkflow.Step("reproducibility-test").SetMakeStep("reproducibility-test"),
 						),
 					},
 				},

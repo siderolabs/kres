@@ -67,12 +67,12 @@ func (release *Release) CompileDrone(output *drone.Output) error {
 
 // CompileGitHubWorkflow implements ghworkflow.Compiler.
 func (release *Release) CompileGitHubWorkflow(output *ghworkflow.Output) error {
-	steps := []*ghworkflow.Step{}
+	steps := []*ghworkflow.JobStep{}
 
-	releaseStepOptions := map[string]string{
-		"body_path": filepath.Join(release.meta.ArtifactsPath, "RELEASE_NOTES.md"),
-		"draft":     "true",
-	}
+	releaseStep := ghworkflow.Step("Release").
+		SetUses("crazy-max/ghaction-github-release@"+config.ReleaseActionVersion).
+		SetWith("body_path", filepath.Join(release.meta.ArtifactsPath, "RELEASE_NOTES.md")).
+		SetWith("draft", "true")
 
 	if len(release.meta.Commands) > 0 {
 		artifacts := xslices.Map(release.Artifacts, func(artifact string) string {
@@ -84,28 +84,33 @@ func (release *Release) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 			fmt.Sprintf("sha512sum %s > %s", strings.Join(artifacts, " "), filepath.Join(release.meta.ArtifactsPath, "sha512sum.txt")),
 		}
 
-		checkSumStep := &ghworkflow.Step{
-			Name: "Generate Checksums",
-			Run:  strings.Join(checkSumCommands, "\n") + "\n",
+		checkSumStep := ghworkflow.Step("Generate Checksums").
+			SetCommand(strings.Join(checkSumCommands, "\n"))
+
+		releaseStep.SetWith("files", strings.Join(artifacts, "\n")+"\n"+filepath.Join(release.meta.ArtifactsPath, "sha*.txt"))
+
+		if err := checkSumStep.SetConditions("only-on-tag"); err != nil {
+			return err
 		}
 
-		releaseStepOptions["files"] = strings.Join(artifacts, "\n") + "\n" + filepath.Join(release.meta.ArtifactsPath, "sha*.txt")
-
-		steps = append(steps, checkSumStep.OnlyOnTag())
+		steps = append(steps, checkSumStep)
 	}
 
-	releaseStep := &ghworkflow.Step{
-		Name: "Release",
-		Uses: "crazy-max/ghaction-github-release@" + config.ReleaseActionVersion,
-		With: releaseStepOptions,
+	if err := releaseStep.SetConditions("only-on-tag"); err != nil {
+		return err
+	}
+
+	releaseNotesStep := ghworkflow.Step("release-notes").
+		SetMakeStep("release-notes")
+
+	if err := releaseNotesStep.SetConditions("only-on-tag"); err != nil {
+		return err
 	}
 
 	steps = append(
 		steps,
-		ghworkflow.MakeStep("release-notes").
-			OnlyOnTag(),
-		releaseStep.
-			OnlyOnTag(),
+		releaseNotesStep,
+		releaseStep,
 	)
 
 	output.AddStep(
@@ -119,7 +124,7 @@ func (release *Release) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 // CompileMakefile implements makefile.Compiler.
 func (release *Release) CompileMakefile(output *makefile.Output) error {
 	output.Target("release-notes").
-		Script("mkdir -p $(ARTIFACTS)").
+		Depends("$(ARTIFACTS)").
 		Script("@ARTIFACTS=$(ARTIFACTS) ./hack/release.sh $@ $(ARTIFACTS)/RELEASE_NOTES.md $(TAG)").
 		Phony()
 

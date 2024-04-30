@@ -67,7 +67,7 @@ func (tests *UnitTests) CompileDrone(output *drone.Output) error {
 func (tests *UnitTests) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	output.AddStep(
 		"default",
-		ghworkflow.MakeStep(tests.Name()),
+		ghworkflow.Step(tests.Name()).SetMakeStep(tests.Name()),
 	)
 
 	return nil

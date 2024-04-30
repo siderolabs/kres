@@ -86,6 +86,8 @@ type Options struct { //nolint:govet
 	// CIProvider specifies the CI provider. Currently drone/ghaction is supported.
 	CIProvider string
 
+	CompileGithubWorkflowsOnly bool
+
 	// ContainerImageFrontend is the default frontend container image.
 	ContainerImageFrontend string
 }

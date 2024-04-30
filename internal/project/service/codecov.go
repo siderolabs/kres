@@ -68,15 +68,11 @@ func (coverage *CodeCov) CompileGitHubWorkflow(output *ghworkflow.Output) error 
 
 	output.AddStep(
 		"default",
-		&ghworkflow.Step{
-			Name: "coverage",
-			Uses: fmt.Sprintf("codecov/codecov-action@%s", config.CodeCovActionVersion),
-			With: map[string]string{
-				"files": strings.Join(paths, ","),
-				"token": "${{ secrets.CODECOV_TOKEN }}",
-			},
-			TimeoutMinutes: 3,
-		},
+		ghworkflow.Step("coverage").
+			SetUses(fmt.Sprintf("codecov/codecov-action@%s", config.CodeCovActionVersion)).
+			SetWith("files", strings.Join(paths, ",")).
+			SetWith("token", "${{ secrets.CODECOV_TOKEN }}").
+			SetTimeoutMinutes(3),
 	)
 
 	return nil

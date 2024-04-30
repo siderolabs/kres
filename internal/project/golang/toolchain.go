@@ -183,7 +183,7 @@ func (toolchain *Toolchain) CompileDrone(output *drone.Output) error {
 
 // CompileGitHubWorkflow implements ghworkflow.Compiler.
 func (toolchain *Toolchain) CompileGitHubWorkflow(output *ghworkflow.Output) error {
-	output.AddStep("default", ghworkflow.MakeStep("base"))
+	output.AddStep("default", ghworkflow.Step("base").SetMakeStep("base"))
 
 	return nil
 }

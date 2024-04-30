@@ -66,12 +66,19 @@ func (build *Build) CompileMakefile(output *makefile.Output) error {
 		Variable(makefile.SimpleVariable("ABBREV_TAG", "$(shell git describe --tags >/dev/null 2>/dev/null && git describe --tag --always --match v[0-9]\\* --abbrev=0 || echo 'undefined')")).
 		Variable(makefile.SimpleVariable("BRANCH", "$(shell git rev-parse --abbrev-ref HEAD)")).
 		Variable(makefile.SimpleVariable("ARTIFACTS", build.ArtifactsPath)).
-		Variable(makefile.OverridableVariable("IMAGE_TAG", "$(TAG)"))
+		Variable(makefile.OverridableVariable("IMAGE_TAG", "$(TAG)")).
+		Variable(makefile.SimpleVariable("OPERATING_SYSTEM", "$(shell uname -s | tr '[:upper:]' '[:lower:]')")).
+		Variable(makefile.SimpleVariable("GOARCH", "$(shell uname -m | sed 's/x86_64/amd64/' | sed 's/aarch64/arm64/')")).
+		Variable(makefile.SimpleVariable("SOURCE_DATE_EPOCH", "$(shell git log -1 --pretty=%ct)"))
 
 	if build.meta.ContainerImageFrontend == config.ContainerImageFrontendDockerfile {
 		variableGroup.Variable(makefile.OverridableVariable("WITH_DEBUG", "false")).
 			Variable(makefile.OverridableVariable("WITH_RACE", "false"))
 	}
+
+	output.Target("$(ARTIFACTS)").
+		Description("Creates artifacts directory.").
+		Script("@mkdir -p $(ARTIFACTS)")
 
 	output.Target("clean").
 		Description("Cleans up all artifacts.").

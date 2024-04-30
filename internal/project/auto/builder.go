@@ -104,6 +104,10 @@ func (builder *builder) build() error {
 		}
 	}
 
+	if builder.meta.CompileGithubWorkflowsOnly {
+		return nil
+	}
+
 	if !mandatoryReached {
 		return errors.New("no Go or JS or Pkgfile files were found")
 	}

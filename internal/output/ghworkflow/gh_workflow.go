@@ -65,91 +65,80 @@ type Output struct {
 }
 
 // NewOutput creates new .github/workflows/ci.yaml output.
-func NewOutput(mainBranch string) *Output {
-	output := &Output{
-		workflows: map[string]*Workflow{
-			ciWorkflow: {
-				Name: "default",
-				// https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-a-fallback-value
-				Concurrency: Concurrency{
-					Group:            "${{ github.head_ref || github.run_id }}",
-					CancelInProgress: true,
-				},
-				On: On{
-					Push: Push{
-						Branches: []string{
-							mainBranch,
-							"release-*",
-						},
-						Tags: []string{"v*"},
-					},
-					PullRequest: PullRequest{
-						Branches: []string{
-							mainBranch,
-							"release-*",
-						},
-					},
-				},
-				Jobs: map[string]*Job{
-					"default": {
-						If: DefaultSkipCondition,
-						RunsOn: []string{
-							HostedRunner,
-							GenericRunner,
-						},
-						Permissions: map[string]string{
-							"packages":      "write",
-							"contents":      "write",
-							"actions":       "read",
-							"pull-requests": "read",
-							"issues":        "read",
-						},
-						Services: DefaultServices(),
-						Steps:    DefaultSteps(),
-					},
-				},
+func NewOutput(mainBranch string, withDefaultJob bool) *Output {
+	workflows := map[string]*Workflow{
+		ciWorkflow: {
+			Name: "default",
+			// https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-a-fallback-value
+			Concurrency: Concurrency{
+				Group:            "${{ github.head_ref || github.run_id }}",
+				CancelInProgress: true,
 			},
-			slackWorkflow: {
-				Name: "slack-notify",
-				On: On{
-					WorkFlowRun: WorkFlowRun{
-						Workflows: []string{"default"},
-						Types:     []string{"completed"},
+			On: On{
+				Push: Push{
+					Branches: []string{
+						mainBranch,
+						"release-*",
 					},
+					Tags: []string{"v*"},
 				},
-				Jobs: map[string]*Job{
-					"slack-notify": {
-						RunsOn: []string{
-							HostedRunner,
-							GenericRunner,
-						},
-						If: "github.event.workflow_run.conclusion != 'skipped'",
-						Steps: []*Step{
-							{
-								Name: "Get PR number",
-								ID:   "get-pr-number",
-								If:   "github.event.workflow_run.event == 'pull_request'",
-								Env: map[string]string{
-									"GH_TOKEN": "${{ github.token }}",
-								},
-								Run: "echo pull_request_number=$(gh pr view -R ${{ github.repository }} ${{ github.event.workflow_run.head_repository.owner.login }}:${{ github.event.workflow_run.head_branch }} --json number --jq .number) >> $GITHUB_OUTPUT\n", //nolint:lll
-							},
-							{
-								Name: "Slack Notify",
-								Uses: "slackapi/slack-github-action@" + config.SlackNotifyActionVersion,
-								With: map[string]string{
-									"channel-id": "proj-talos-maintainers",
-									"payload":    slackNotifyPayload,
-								},
-								Env: map[string]string{
-									"SLACK_BOT_TOKEN": "${{ secrets.SLACK_BOT_TOKEN }}",
-								},
-							},
-						},
+				PullRequest: PullRequest{
+					Branches: []string{
+						mainBranch,
+						"release-*",
 					},
 				},
 			},
 		},
+		slackWorkflow: {
+			Name: "slack-notify",
+			On: On{
+				WorkFlowRun: WorkFlowRun{
+					Workflows: []string{"default"},
+					Types:     []string{"completed"},
+				},
+			},
+			Jobs: map[string]*Job{
+				"slack-notify": {
+					RunsOn: []string{
+						HostedRunner,
+						GenericRunner,
+					},
+					If: "github.event.workflow_run.conclusion != 'skipped'",
+					Steps: []*JobStep{
+						Step("Get PR number").
+							SetID("get-pr-number").
+							SetEnv("GH_TOKEN", "${{ github.token }}").
+							SetCommand("echo pull_request_number=$(gh pr view -R ${{ github.repository }} ${{ github.event.workflow_run.head_repository.owner.login }}:${{ github.event.workflow_run.head_branch }} --json number --jq .number) >> $GITHUB_OUTPUT"). //nolint:lll
+							SetCustomCondition("github.event.workflow_run.event == 'pull_request'"),
+						Step("Slack Notify").
+							SetUses("slackapi/slack-github-action@"+config.SlackNotifyActionVersion).
+							SetEnv("SLACK_BOT_TOKEN", "${{ secrets.SLACK_BOT_TOKEN }}").
+							SetWith("channel-id", "proj-talos-maintainers").
+							SetWith("payload", slackNotifyPayload),
+					},
+				},
+			},
+		},
+	}
+
+	if withDefaultJob {
+		workflows[ciWorkflow].Jobs = map[string]*Job{
+			"default": {
+				If: DefaultSkipCondition,
+				RunsOn: []string{
+					HostedRunner,
+					GenericRunner,
+				},
+				Permissions: DefaultJobPermissions(),
+				Services:    DefaultServices(),
+				Steps:       DefaultSteps(),
+			},
+		}
+	}
+
+	output := &Output{
+		workflows: workflows,
 	}
 
 	output.FileWriter = output
@@ -171,29 +160,37 @@ func (o *Output) AddWorkflow(name string, workflow *Workflow) {
 
 // AddJob adds job to the default workflow.
 func (o *Output) AddJob(name string, job *Job) {
+	if o.workflows[ciWorkflow].Jobs == nil {
+		o.workflows[ciWorkflow].Jobs = map[string]*Job{}
+	}
+
 	o.workflows[ciWorkflow].Jobs[name] = job
 }
 
 // AddStep adds step to the job.
-func (o *Output) AddStep(jobName string, steps ...*Step) {
+func (o *Output) AddStep(jobName string, steps ...*JobStep) {
 	o.workflows[ciWorkflow].Jobs[jobName].Steps = append(o.workflows[ciWorkflow].Jobs[jobName].Steps, steps...)
 }
 
 // AddStepBefore adds step before another step in the job.
-func (o *Output) AddStepBefore(jobName, beforeStepID string, steps ...*Step) {
+func (o *Output) AddStepBefore(jobName, beforeStepID string, steps ...*JobStep) {
 	job := o.workflows[ciWorkflow].Jobs[jobName]
 
-	idx := slices.IndexFunc(job.Steps, func(s *Step) bool { return s.ID == beforeStepID })
+	idx := slices.IndexFunc(job.Steps, func(s *JobStep) bool { return s.ID == beforeStepID })
 	if idx != -1 {
 		job.Steps = slices.Insert(job.Steps, idx, steps...)
 	}
 }
 
 // AddStepAfter adds step after another step in the job.
-func (o *Output) AddStepAfter(jobName, afterStepID string, steps ...*Step) {
+func (o *Output) AddStepAfter(jobName, afterStepID string, steps ...*JobStep) {
 	job := o.workflows[ciWorkflow].Jobs[jobName]
 
-	idx := slices.IndexFunc(job.Steps, func(s *Step) bool { return s.ID == afterStepID })
+	if job == nil {
+		return
+	}
+
+	idx := slices.IndexFunc(job.Steps, func(s *JobStep) bool { return s.ID == afterStepID })
 
 	if idx != -1 {
 		job.Steps = slices.Insert(job.Steps, idx+1, steps...)
@@ -225,24 +222,32 @@ func (o *Output) OverwriteDefaultJobStepsAsPkgs() {
 }
 
 // CommonSteps returns common steps for the workflow.
-func CommonSteps() []*Step {
-	return []*Step{
+func CommonSteps() []*JobStep {
+	return []*JobStep{
 		{
 			Name: "checkout",
 			Uses: "actions/checkout@" + config.CheckOutActionVersion,
 		},
-		{
-			Name: "Unshallow",
-			Run:  "git fetch --prune --unshallow\n",
-		},
+		Step("Unshallow").SetCommand("git fetch --prune --unshallow"),
+	}
+}
+
+// DefaultJobPermissions returns default job permissions.
+func DefaultJobPermissions() map[string]string {
+	return map[string]string{
+		"packages":      "write",
+		"contents":      "write",
+		"actions":       "read",
+		"pull-requests": "read",
+		"issues":        "read",
 	}
 }
 
 // DefaultSteps returns default steps for the workflow.
-func DefaultSteps() []*Step {
+func DefaultSteps() []*JobStep {
 	return append(
 		CommonSteps(),
-		&Step{
+		&JobStep{
 			Name: "Set up Docker Buildx",
 			ID:   "setup-buildx",
 			Uses: "docker/setup-buildx-action@" + config.SetupBuildxActionVersion,
@@ -256,10 +261,10 @@ func DefaultSteps() []*Step {
 }
 
 // DefaultPkgsSteps returns default pkgs steps for the workflow.
-func DefaultPkgsSteps() []*Step {
+func DefaultPkgsSteps() []*JobStep {
 	return append(
 		CommonSteps(),
-		&Step{
+		&JobStep{
 			Name: "Set up Docker Buildx",
 			ID:   "setup-buildx",
 			Uses: "docker/setup-buildx-action@" + config.SetupBuildxActionVersion,
@@ -273,8 +278,8 @@ func DefaultPkgsSteps() []*Step {
 }
 
 // SOPSSteps returns SOPS steps for the workflow.
-func SOPSSteps() []*Step {
-	return []*Step{
+func SOPSSteps() []*JobStep {
+	return []*JobStep{
 		{
 			Name: "Mask secrets",
 			Run:  "echo -e \"$(sops -d .secrets.yaml | yq -e '.secrets | to_entries[] | \"::add-mask::\" + .value')\"\n",
@@ -301,40 +306,51 @@ func DefaultServices() map[string]Service {
 	}
 }
 
-// MakeStep creates a step with make command.
-func MakeStep(name string, args ...string) *Step {
-	command := fmt.Sprintf("make %s\n", name)
-
-	if name == "" {
-		command = "make\n"
-	}
-
-	if len(args) > 0 {
-		command = fmt.Sprintf("make %s %s\n", name, strings.Join(args, " "))
-	}
-
-	return &Step{
+// Step creates a step with name.
+func Step(name string) *JobStep {
+	return &JobStep{
 		Name: name,
-		Run:  command,
 	}
 }
 
+// SetUses sets step to use action.
+func (step *JobStep) SetUses(uses string) *JobStep {
+	step.Uses = uses
+
+	return step
+}
+
+// SetMakeStep sets step to run make command.
+func (step *JobStep) SetMakeStep(target string, args ...string) *JobStep {
+	command := fmt.Sprintf("make %s", target)
+
+	if target == "" {
+		command = "make"
+	}
+
+	if len(args) > 0 {
+		command = fmt.Sprintf("make %s %s", target, strings.Join(args, " "))
+	}
+
+	return step.SetCommand(command)
+}
+
 // SetSudo sets step to run with sudo.
-func (step *Step) SetSudo() *Step {
+func (step *JobStep) SetSudo() *JobStep {
 	step.Run = "sudo -E " + step.Run
 
 	return step
 }
 
-// SetName sets step name.
-func (step *Step) SetName(name string) *Step {
-	step.Name = name
+// SetCommand sets step command.
+func (step *JobStep) SetCommand(command string) *JobStep {
+	step.Run = command + "\n"
 
 	return step
 }
 
 // SetEnv sets step environment variables.
-func (step *Step) SetEnv(name, value string) *Step {
+func (step *JobStep) SetEnv(name, value string) *JobStep {
 	if step.Env == nil {
 		step.Env = map[string]string{}
 	}
@@ -344,7 +360,39 @@ func (step *Step) SetEnv(name, value string) *Step {
 	return step
 }
 
-func (step *Step) appendIf(condition string) {
+// SetTimeoutMinutes sets step timeout in minutes.
+func (step *JobStep) SetTimeoutMinutes(minutes int) *JobStep {
+	step.TimeoutMinutes = minutes
+
+	return step
+}
+
+// SetContinueOnError sets step to continue on error.
+func (step *JobStep) SetContinueOnError() *JobStep {
+	step.ContinueOnError = true
+
+	return step
+}
+
+// SetWith sets step with key and value.
+func (step *JobStep) SetWith(key, value string) *JobStep {
+	if step.With == nil {
+		step.With = map[string]string{}
+	}
+
+	step.With[key] = value
+
+	return step
+}
+
+// SetID sets step ID.
+func (step *JobStep) SetID(id string) *JobStep {
+	step.ID = id
+
+	return step
+}
+
+func (step *JobStep) appendIf(condition string) {
 	if step.If == "" {
 		step.If = condition
 	} else {
@@ -352,25 +400,74 @@ func (step *Step) appendIf(condition string) {
 	}
 }
 
-// ExceptPullRequest adds condition to skip step on PRs.
-func (step *Step) ExceptPullRequest() *Step {
-	step.appendIf("github.event_name != 'pull_request'")
+// SetCustomCondition sets a custom condition clearing out any previously set conditions.
+func (step *JobStep) SetCustomCondition(condition string) *JobStep {
+	step.If = condition
 
 	return step
 }
 
-// OnlyOnTag adds condition to run step only on tags.
-func (step *Step) OnlyOnTag() *Step {
-	step.appendIf("startsWith(github.ref, 'refs/tags/')")
-
-	return step
-}
-
-// OnlyOnBranch adds condition to run step only on a specific branch name.
-func (step *Step) OnlyOnBranch(name string) *Step {
+// SetConditionOnlyOnBranch adds condition to run step only on a specific branch name.
+func (step *JobStep) SetConditionOnlyOnBranch(name string) *JobStep {
 	step.appendIf(fmt.Sprintf("github.ref == 'refs/heads/%s'", name))
 
 	return step
+}
+
+// SetConditions sets step conditions.
+func (step *JobStep) SetConditions(conditions ...string) error {
+	for _, condition := range conditions {
+		switch condition {
+		case "except-pull-request":
+			step.appendIf("github.event_name != 'pull_request'")
+		case "on-pull-request":
+			step.appendIf("github.event_name == 'pull_request'")
+		case "only-on-tag":
+			step.appendIf("startsWith(github.ref, 'refs/tags/')")
+		case "not-on-tag":
+			step.appendIf("!startsWith(github.ref, 'refs/tags/')")
+		case "always":
+			step.appendIf("always()")
+		case "":
+			return nil
+		default:
+			return fmt.Errorf("unknown condition: %s", condition)
+		}
+	}
+
+	return nil
+}
+
+func (job *Job) appendIf(condition string) {
+	if job.If == "" {
+		job.If = condition
+	} else {
+		job.If += " && " + condition
+	}
+}
+
+// SetConditions sets job conditions.
+func (job *Job) SetConditions(conditions ...string) error {
+	for _, condition := range conditions {
+		switch condition {
+		case "except-pull-request":
+			job.appendIf("github.event_name != 'pull_request'")
+		case "on-pull-request":
+			job.appendIf("github.event_name == 'pull_request'")
+		case "only-on-tag":
+			job.appendIf("startsWith(github.ref, 'refs/tags/')")
+		case "not-on-tag":
+			job.appendIf("!startsWith(github.ref, 'refs/tags/')")
+		case "always":
+			job.appendIf("always()")
+		case "":
+			return nil
+		default:
+			return fmt.Errorf("unknown condition: %s", condition)
+		}
+	}
+
+	return nil
 }
 
 // Compile implements [output.TypedWriter] interface.

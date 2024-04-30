@@ -36,6 +36,8 @@ type CustomStep struct {
 // CI defines CI settings.
 type CI struct {
 	Provider string `yaml:"provider"`
+	// CompileGHWorkflowsOnly is a flag to generate only GitHub Actions.
+	CompileGHWorkflowsOnly bool `yaml:"compileGHWorkflowsOnly"`
 }
 
 // CustomStepsGenerate defines custom steps that run before the build.

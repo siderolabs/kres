@@ -91,6 +91,9 @@ const (
 	// SetupBuildxActionVersion is the version of setup-buildx github action.
 	// renovate: datasource=github-releases extractVersion=^(?<version>v\d+)\.\d+\.\d+$ depName=docker/setup-buildx-action
 	SetupBuildxActionVersion = "v3"
+	// SetupTerraformActionVersion is the version of setup terraform github action.
+	// renovate: datasource=github-releases extractVersion=^(?<version>v\d+)\.\d+\.\d+$ depName=hashicorp/setup-terraform
+	SetupTerraformActionVersion = "v3"
 	// SlackNotifyActionVersion is the version of slack notify github action.
 	// renovate: datasource=github-releases extractVersion=^(?<version>v\d+)\.\d+\.\d+$ depName=slackapi/slack-github-action
 	SlackNotifyActionVersion = "v1"
