@@ -23,7 +23,19 @@ type UnitTests struct { //nolint:govet
 
 	RequiresInsecure bool `yaml:"requiresInsecure"`
 	// ExtraArgs are extra arguments for `go test`.
-	ExtraArgs   string `yaml:"extraArgs"`
+	ExtraArgs string `yaml:"extraArgs"`
+	Docker    struct {
+		Steps []struct {
+			Copy *struct {
+				From     string `yaml:"from"`
+				Platform string `yaml:"platform"`
+				Src      string `yaml:"src"`
+				Dst      string `yaml:"dst"`
+			} `yaml:"copy"`
+			Arg string `yaml:"arg"`
+		} `yaml:"steps"`
+	} `yaml:"docker"`
+
 	packagePath string
 
 	meta *meta.Options
@@ -58,10 +70,26 @@ func (tests *UnitTests) CompileDockerfile(output *dockerfile.Output) error {
 	workdir := step.WorkDir(filepath.Join("/src", tests.packagePath))
 	testRun := tests.Name() + "-run"
 
-	output.Stage(testRun).
+	testRunStage := output.Stage(testRun).
 		Description("runs unit-tests").
-		From("base").
-		Step(workdir).
+		From("base")
+
+	for _, dockerStep := range tests.Docker.Steps {
+		if dockerStep.Copy != nil {
+			copyStep := step.Copy(dockerStep.Copy.Src, dockerStep.Copy.Dst)
+			if dockerStep.Copy.From != "" {
+				copyStep.From(dockerStep.Copy.From)
+			}
+
+			if dockerStep.Copy.Platform != "" {
+				copyStep.Platform(dockerStep.Copy.Platform)
+			}
+
+			testRunStage.Step(copyStep)
+		}
+	}
+
+	testRunStage.Step(workdir).
 		Step(step.Arg("TESTPKGS")).
 		Step(wrapAsInsecure(
 			step.Script(
@@ -77,10 +105,26 @@ func (tests *UnitTests) CompileDockerfile(output *dockerfile.Output) error {
 		From("scratch").
 		Step(step.Copy(filepath.Join("/src", tests.packagePath, "coverage.txt"), fmt.Sprintf("/coverage-%s.txt", tests.Name())).From(testRun))
 
-	output.Stage(tests.Name() + "-race").
+	testRunRaceStage := output.Stage(tests.Name() + "-race").
 		Description("runs unit-tests with race detector").
-		From("base").
-		Step(workdir).
+		From("base")
+
+	for _, dockerStep := range tests.Docker.Steps {
+		if dockerStep.Copy != nil {
+			copyStep := step.Copy(dockerStep.Copy.Src, dockerStep.Copy.Dst)
+			if dockerStep.Copy.From != "" {
+				copyStep.From(dockerStep.Copy.From)
+			}
+
+			if dockerStep.Copy.Platform != "" {
+				copyStep.Platform(dockerStep.Copy.Platform)
+			}
+
+			testRunRaceStage.Step(copyStep)
+		}
+	}
+
+	testRunRaceStage.Step(workdir).
 		Step(step.Arg("TESTPKGS")).
 		Step(wrapAsInsecure(
 			step.Script(
