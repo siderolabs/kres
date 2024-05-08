@@ -1,8 +1,8 @@
-# syntax = docker/dockerfile-upstream:1.7.0-labs
+# syntax = docker/dockerfile-upstream:1.7.1-labs
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-04-20T16:39:33Z by kres add13d7.
+# Generated on 2024-05-08T09:34:37Z by kres d15226e-dirty.
 
 ARG TOOLCHAIN
 

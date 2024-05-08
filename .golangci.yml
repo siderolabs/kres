@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-03-20T17:12:43Z by kres 3d7964d-dirty.
+# Generated on 2024-05-08T10:33:39Z by kres d15226e-dirty.
 
 # options for analysis running
 run:
@@ -54,7 +54,6 @@ linters-settings:
   goimports:
     local-prefixes: github.com/siderolabs/kres/
   gomodguard: { }
-  gomnd: { }
   govet:
     enable-all: true
   lll:
@@ -109,17 +108,18 @@ linters:
   disable:
     - exhaustivestruct
     - exhaustruct
+    - err113
     - forbidigo
     - funlen
     - gochecknoglobals
     - gochecknoinits
     - godox
-    - goerr113
     - gomnd
     - gomoddirectives
     - gosec
     - inamedparam
     - ireturn
+    - mnd
     - nestif
     - nonamedreturns
     - nosnakecase

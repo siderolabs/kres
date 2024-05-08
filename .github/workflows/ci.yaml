@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-04-30T10:47:51Z by kres ebc009d-dirty.
+# Generated on 2024-05-08T09:34:37Z by kres d15226e-dirty.
 
 name: default
 concurrency:
@@ -31,7 +31,7 @@ jobs:
     if: (!startsWith(github.head_ref, 'renovate/') && !startsWith(github.head_ref, 'dependabot/'))
     services:
       buildkitd:
-        image: moby/buildkit:v0.13.1
+        image: moby/buildkit:v0.13.2
         options: --privileged
         ports:
           - 1234:1234

@@ -50,7 +50,6 @@ linters-settings:
   goimports:
     local-prefixes: %[1]s
   gomodguard: { }
-  gomnd: { }
   govet:
     enable-all: true
   lll:
@@ -105,17 +104,18 @@ linters:
   disable:
     - exhaustivestruct
     - exhaustruct
+    - err113
     - forbidigo
     - funlen
     - gochecknoglobals
     - gochecknoinits
     - godox
-    - goerr113
     - gomnd
     - gomoddirectives
     - gosec
     - inamedparam
     - ireturn
+    - mnd
     - nestif
     - nonamedreturns
     - nosnakecase
