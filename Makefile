@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-05-01T14:56:14Z by kres fcfe226-dirty.
+# Generated on 2024-05-16T12:04:37Z by kres 9305c02-dirty.
 
 # common variables
 
@@ -26,7 +26,6 @@ DEEPCOPY_VERSION ?= v0.5.6
 GOLANGCILINT_VERSION ?= v1.58.0
 GOFUMPT_VERSION ?= v0.6.0
 GO_VERSION ?= 1.22.3
-GOIMPORTS_VERSION ?= v0.20.0
 GO_BUILDFLAGS ?=
 GO_LDFLAGS ?=
 CGO_ENABLED ?= 0
@@ -65,7 +64,6 @@ COMMON_ARGS += --build-arg=GRPC_GATEWAY_VERSION="$(GRPC_GATEWAY_VERSION)"
 COMMON_ARGS += --build-arg=VTPROTOBUF_VERSION="$(VTPROTOBUF_VERSION)"
 COMMON_ARGS += --build-arg=DEEPCOPY_VERSION="$(DEEPCOPY_VERSION)"
 COMMON_ARGS += --build-arg=GOLANGCILINT_VERSION="$(GOLANGCILINT_VERSION)"
-COMMON_ARGS += --build-arg=GOIMPORTS_VERSION="$(GOIMPORTS_VERSION)"
 COMMON_ARGS += --build-arg=GOFUMPT_VERSION="$(GOFUMPT_VERSION)"
 COMMON_ARGS += --build-arg=TESTPKGS="$(TESTPKGS)"
 TOOLCHAIN ?= docker.io/golang:1.22-alpine
@@ -167,9 +165,6 @@ fmt:  ## Formats the source code
 lint-govulncheck:  ## Runs govulncheck linter.
 	@$(MAKE) target-$@
 
-lint-goimports:  ## Runs goimports linter.
-	@$(MAKE) target-$@
-
 .PHONY: base
 base:  ## Prepare base toolchain
 	@$(MAKE) target-$@
@@ -218,7 +213,7 @@ lint-markdown:  ## Runs markdownlint.
 	@$(MAKE) target-$@
 
 .PHONY: lint
-lint: lint-golangci-lint lint-gofumpt lint-govulncheck lint-goimports lint-markdown  ## Run all linters for the project.
+lint: lint-golangci-lint lint-gofumpt lint-govulncheck lint-markdown  ## Run all linters for the project.
 
 .PHONY: image-kres
 image-kres:  ## Builds image for kres.

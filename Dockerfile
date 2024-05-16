@@ -2,7 +2,7 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-05-08T09:34:37Z by kres d15226e-dirty.
+# Generated on 2024-05-16T12:04:37Z by kres 9305c02-dirty.
 
 ARG TOOLCHAIN
 
@@ -41,9 +41,6 @@ RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/g
 	&& mv /go/bin/golangci-lint /bin/golangci-lint
 RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg go install golang.org/x/vuln/cmd/govulncheck@latest \
 	&& mv /go/bin/govulncheck /bin/govulncheck
-ARG GOIMPORTS_VERSION
-RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg go install golang.org/x/tools/cmd/goimports@${GOIMPORTS_VERSION} \
-	&& mv /go/bin/goimports /bin/goimports
 ARG GOFUMPT_VERSION
 RUN go install mvdan.cc/gofumpt@${GOFUMPT_VERSION} \
 	&& mv /go/bin/gofumpt /bin/gofumpt
@@ -71,10 +68,6 @@ RUN mkdir -p internal/version/data && \
 # runs gofumpt
 FROM base AS lint-gofumpt
 RUN FILES="$(gofumpt -l .)" && test -z "${FILES}" || (echo -e "Source code is not formatted with 'gofumpt -w .':\n${FILES}"; exit 1)
-
-# runs goimports
-FROM base AS lint-goimports
-RUN FILES="$(goimports -l -local github.com/siderolabs/kres/ .)" && test -z "${FILES}" || (echo -e "Source code is not formatted with 'goimports -w -local github.com/siderolabs/kres/ .':\n${FILES}"; exit 1)
 
 # runs golangci-lint
 FROM base AS lint-golangci-lint

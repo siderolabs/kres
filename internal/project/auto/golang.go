@@ -229,19 +229,15 @@ func (builder *builder) BuildGolang() error {
 	allUnitTests := make([]dag.Node, 0, len(builder.meta.CanonicalPaths))
 
 	// linters
-	for index, canonicalPath := range builder.meta.CanonicalPaths {
-		projectPath := builder.meta.GoRootDirectories[index]
-		canonicalPath += "/"
-
-		golangciLint := golang.NewGolangciLint(builder.meta, projectPath, canonicalPath)
+	for _, projectPath := range builder.meta.GoRootDirectories {
+		golangciLint := golang.NewGolangciLint(builder.meta, projectPath)
 		gofumpt := golang.NewGofumpt(builder.meta, projectPath)
 		govulncheck := golang.NewGoVulnCheck(builder.meta, projectPath)
-		goimports := golang.NewGoimports(builder.meta, projectPath, canonicalPath)
 
 		// linters are input to the toolchain as they inject into toolchain build
-		toolchain.AddInput(golangciLint, gofumpt, govulncheck, goimports)
+		toolchain.AddInput(golangciLint, gofumpt, govulncheck)
 
-		builder.lintInputs = append(builder.lintInputs, toolchain, golangciLint, gofumpt, govulncheck, goimports)
+		builder.lintInputs = append(builder.lintInputs, toolchain, golangciLint, gofumpt, govulncheck)
 
 		// unit-tests
 		unitTests := golang.NewUnitTests(builder.meta, projectPath)

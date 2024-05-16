@@ -25,7 +25,6 @@ type Linters struct {
 func NewLinters(meta *meta.Options) *Linters {
 	meta.BuildArgs.Add(
 		"GOLANGCILINT_VERSION",
-		"GOIMPORTS_VERSION",
 		"GOFUMPT_VERSION",
 	)
 
@@ -51,13 +50,6 @@ func (linters *Linters) ToolchainBuild(stage *dockerfile.Stage) error {
 		Step(step.Script(fmt.Sprintf(
 			`go install golang.org/x/vuln/cmd/govulncheck@latest \
 	&& mv /go/bin/govulncheck %s/govulncheck`, linters.meta.BinPath)).
-			MountCache(filepath.Join(linters.meta.CachePath, "go-build")).
-			MountCache(filepath.Join(linters.meta.GoPath, "pkg")),
-		).
-		Step(step.Arg("GOIMPORTS_VERSION")).
-		Step(step.Script(fmt.Sprintf(
-			`go install golang.org/x/tools/cmd/goimports@${GOIMPORTS_VERSION} \
-	&& mv /go/bin/goimports %s/goimports`, linters.meta.BinPath)).
 			MountCache(filepath.Join(linters.meta.CachePath, "go-build")).
 			MountCache(filepath.Join(linters.meta.GoPath, "pkg")),
 		).

@@ -22,13 +22,12 @@ type GolangciLint struct {
 
 	meta *meta.Options
 
-	Version       string
-	canonicalPath string
-	projectPath   string
+	Version     string
+	projectPath string
 }
 
 // NewGolangciLint builds golangci-lint node.
-func NewGolangciLint(meta *meta.Options, projectPath, canonicalPath string) *GolangciLint {
+func NewGolangciLint(meta *meta.Options, projectPath string) *GolangciLint {
 	meta.SourceFiles = append(meta.SourceFiles, filepath.Join(projectPath, ".golangci.yml"))
 
 	return &GolangciLint{
@@ -36,16 +35,15 @@ func NewGolangciLint(meta *meta.Options, projectPath, canonicalPath string) *Gol
 
 		meta: meta,
 
-		Version:       config.GolangCIlintVersion,
-		canonicalPath: canonicalPath,
-		projectPath:   projectPath,
+		Version:     config.GolangCIlintVersion,
+		projectPath: projectPath,
 	}
 }
 
 // CompileGolangci implements golangci.Compiler.
 func (lint *GolangciLint) CompileGolangci(output *golangci.Output) error {
 	output.Enable()
-	output.NewFile(lint.canonicalPath, lint.projectPath)
+	output.NewFile(lint.projectPath)
 
 	return nil
 }

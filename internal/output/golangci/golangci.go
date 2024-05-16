@@ -7,10 +7,8 @@ package golangci
 
 import (
 	_ "embed"
-	"fmt"
 	"io"
 	"path/filepath"
-	"slices"
 
 	"github.com/siderolabs/gen/xslices"
 
@@ -22,7 +20,7 @@ const (
 )
 
 //go:embed golangci.yml
-var configTemplate string
+var configTemplate []byte
 
 // Output implements .golangci.yml generation.
 type Output struct {
@@ -33,8 +31,7 @@ type Output struct {
 }
 
 type file struct {
-	path          string
-	canonicalPath string
+	path string
 }
 
 // NewOutput creates new Makefile output.
@@ -56,11 +53,10 @@ func (o *Output) Enable() {
 	o.enabled = true
 }
 
-// NewFile sets canonical import path and project path.
-func (o *Output) NewFile(canonicalPath, path string) {
+// NewFile sets project path.
+func (o *Output) NewFile(path string) {
 	o.files = append(o.files, file{
-		path:          filepath.Join(path, filename),
-		canonicalPath: canonicalPath,
+		path: filepath.Join(path, filename),
 	})
 }
 
@@ -74,20 +70,16 @@ func (o *Output) Filenames() []string {
 }
 
 // GenerateFile implements output.FileWriter interface.
-func (o *Output) GenerateFile(filename string, w io.Writer) error {
-	if index := slices.IndexFunc(o.files, func(f file) bool { return f.path == filename }); index >= 0 {
-		return o.config(o.files[index], w)
-	}
-
-	panic("unexpected filename: " + filename)
+func (o *Output) GenerateFile(_ string, w io.Writer) error {
+	return o.config(w)
 }
 
-func (o *Output) config(f file, w io.Writer) error {
+func (o *Output) config(w io.Writer) error {
 	if _, err := w.Write([]byte(output.Preamble("# "))); err != nil {
 		return err
 	}
 
-	if _, err := fmt.Fprintf(w, configTemplate, f.canonicalPath); err != nil {
+	if _, err := w.Write(configTemplate); err != nil {
 		return err
 	}
 

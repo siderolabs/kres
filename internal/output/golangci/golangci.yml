@@ -31,7 +31,7 @@ linters-settings:
     sections:
       - standard # Standard section: captures all standard packages.
       - default # Default section: contains all imports that could not be matched to another section type.
-      - prefix(%[1]s) # Custom section: groups all imports with the specified Prefix.
+      - localmodule # Imports from the same module.
   gocognit:
     min-complexity: 30
   nestif:
@@ -47,8 +47,6 @@ linters-settings:
     scope: declarations
   gofmt:
     simplify: true
-  goimports:
-    local-prefixes: %[1]s
   gomodguard: { }
   govet:
     enable-all: true
@@ -141,6 +139,7 @@ linters:
     - varcheck
     # disabled as it seems to be broken - goes into imported libraries and reports issues there
     - musttag
+    - goimports # same as gci
 
 issues:
   exclude: [ ]

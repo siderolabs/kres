@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-05-08T10:33:39Z by kres d15226e-dirty.
+# Generated on 2024-05-16T11:57:58Z by kres 48517a9-dirty.
 
 # options for analysis running
 run:
@@ -35,7 +35,7 @@ linters-settings:
     sections:
       - standard # Standard section: captures all standard packages.
       - default # Default section: contains all imports that could not be matched to another section type.
-      - prefix(github.com/siderolabs/kres/) # Custom section: groups all imports with the specified Prefix.
+      - localmodule # Imports from the same module.
   gocognit:
     min-complexity: 30
   nestif:
@@ -51,8 +51,6 @@ linters-settings:
     scope: declarations
   gofmt:
     simplify: true
-  goimports:
-    local-prefixes: github.com/siderolabs/kres/
   gomodguard: { }
   govet:
     enable-all: true
@@ -145,6 +143,7 @@ linters:
     - varcheck
     # disabled as it seems to be broken - goes into imported libraries and reports issues there
     - musttag
+    - goimports # same as gci
 
 issues:
   exclude: [ ]
