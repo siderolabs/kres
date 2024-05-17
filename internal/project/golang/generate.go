@@ -35,6 +35,7 @@ type Generate struct {
 	GrpcGoVersion      string `yaml:"grpcGoVersion"`
 	GrpcGatewayVersion string `yaml:"grpcGatewayVersion"`
 	VTProtobufVersion  string `yaml:"vtProtobufVersion"`
+	GoImportsVersion   string `yaml:"goImportsVersion"`
 
 	BaseSpecPath string `yaml:"baseSpecPath"`
 
@@ -84,6 +85,7 @@ func NewGenerate(meta *meta.Options) *Generate {
 		"GRPC_GO_VERSION",
 		"GRPC_GATEWAY_VERSION",
 		"VTPROTOBUF_VERSION",
+		"GOIMPORTS_VERSION",
 	)
 
 	return &Generate{
@@ -95,6 +97,7 @@ func NewGenerate(meta *meta.Options) *Generate {
 		GrpcGoVersion:      config.GrpcGoVersion,
 		GrpcGatewayVersion: config.GrpcGatewayVersion,
 		VTProtobufVersion:  config.VTProtobufVersion,
+		GoImportsVersion:   config.GoImportsVersion,
 
 		BaseSpecPath: "/api",
 	}
@@ -106,7 +109,8 @@ func (generate *Generate) CompileMakefile(output *makefile.Output) error {
 		Variable(makefile.OverridableVariable("PROTOBUF_GO_VERSION", strings.TrimLeft(generate.ProtobufGoVersion, "v"))).
 		Variable(makefile.OverridableVariable("GRPC_GO_VERSION", strings.TrimLeft(generate.GrpcGoVersion, "v"))).
 		Variable(makefile.OverridableVariable("GRPC_GATEWAY_VERSION", strings.TrimLeft(generate.GrpcGatewayVersion, "v"))).
-		Variable(makefile.OverridableVariable("VTPROTOBUF_VERSION", strings.TrimLeft(generate.VTProtobufVersion, "v")))
+		Variable(makefile.OverridableVariable("VTPROTOBUF_VERSION", strings.TrimLeft(generate.VTProtobufVersion, "v"))).
+		Variable(makefile.OverridableVariable("GOIMPORTS_VERSION", strings.TrimLeft(generate.GoImportsVersion, "v")))
 
 	if len(generate.Specs) == 0 && len(generate.GoGenerateSpecs) == 0 && generate.versionPackagePath() == "" {
 		return nil
@@ -142,7 +146,13 @@ func (generate *Generate) ToolchainBuild(stage *dockerfile.Stage) error {
 			MountCache(filepath.Join(generate.meta.CachePath, "go-build")).
 			MountCache(filepath.Join(generate.meta.GoPath, "pkg")),
 		).
-		Step(step.Run("mv", filepath.Join(generate.meta.GoPath, "bin", "protoc-gen-grpc-gateway"), generate.meta.BinPath))
+		Step(step.Run("mv", filepath.Join(generate.meta.GoPath, "bin", "protoc-gen-grpc-gateway"), generate.meta.BinPath)).
+		Step(step.Arg("GOIMPORTS_VERSION")).
+		Step(step.Script("go install golang.org/x/tools/cmd/goimports@v${GOIMPORTS_VERSION}").
+			MountCache(filepath.Join(generate.meta.CachePath, "go-build")).
+			MountCache(filepath.Join(generate.meta.GoPath, "pkg")),
+		).
+		Step(step.Run("mv", filepath.Join(generate.meta.GoPath, "bin", "goimports"), generate.meta.BinPath))
 
 	if generate.VTProtobufEnabled {
 		stage.
