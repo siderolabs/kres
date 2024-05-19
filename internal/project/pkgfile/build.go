@@ -70,6 +70,10 @@ func (pkgfile *Build) CompileDockerignore(output *dockerignore.Output) error {
 
 // CompileMakefile implements makefile.Compiler.
 func (pkgfile *Build) CompileMakefile(output *makefile.Output) error {
+	output.VariableGroup(makefile.VariableGroupSourceDateEpoch).
+		Variable(makefile.SimpleVariable("INITIAL_COMMIT_SHA", "$(shell git rev-list --max-parents=0 HEAD)")).
+		Variable(makefile.SimpleVariable("SOURCE_DATE_EPOCH", "$(shell git log $(INITIAL_COMMIT_SHA) --pretty=%ct)"))
+
 	output.VariableGroup("sync bldr image with pkgfile").
 		Variable(makefile.SimpleVariable("BLDR_RELEASE", config.BldrImageVersion)).
 		Variable(makefile.SimpleVariable("BLDR_IMAGE", "ghcr.io/siderolabs/bldr:$(BLDR_RELEASE)")).

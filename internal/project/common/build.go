@@ -68,8 +68,7 @@ func (build *Build) CompileMakefile(output *makefile.Output) error {
 		Variable(makefile.SimpleVariable("ARTIFACTS", build.ArtifactsPath)).
 		Variable(makefile.OverridableVariable("IMAGE_TAG", "$(TAG)")).
 		Variable(makefile.SimpleVariable("OPERATING_SYSTEM", "$(shell uname -s | tr '[:upper:]' '[:lower:]')")).
-		Variable(makefile.SimpleVariable("GOARCH", "$(shell uname -m | sed 's/x86_64/amd64/' | sed 's/aarch64/arm64/')")).
-		Variable(makefile.SimpleVariable("SOURCE_DATE_EPOCH", "$(shell git log -1 --pretty=%ct)"))
+		Variable(makefile.SimpleVariable("GOARCH", "$(shell uname -m | sed 's/x86_64/amd64/' | sed 's/aarch64/arm64/')"))
 
 	if build.meta.ContainerImageFrontend == config.ContainerImageFrontendDockerfile {
 		variableGroup.Variable(makefile.OverridableVariable("WITH_DEBUG", "false")).

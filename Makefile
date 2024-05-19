@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-05-17T13:09:55Z by kres f04fa9c.
+# Generated on 2024-05-19T09:30:04Z by kres cba521d-dirty.
 
 # common variables
 
@@ -12,7 +12,6 @@ ARTIFACTS := _out
 IMAGE_TAG ?= $(TAG)
 OPERATING_SYSTEM := $(shell uname -s | tr '[:upper:]' '[:lower:]')
 GOARCH := $(shell uname -m | sed 's/x86_64/amd64/' | sed 's/aarch64/arm64/')
-SOURCE_DATE_EPOCH := $(shell git log -1 --pretty=%ct)
 WITH_DEBUG ?= false
 WITH_RACE ?= false
 REGISTRY ?= ghcr.io
