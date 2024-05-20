@@ -221,6 +221,10 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 					registryLoginStep.SetWith("password", "${{ secrets.GITHUB_TOKEN }}")
 				}
 
+				if err := registryLoginStep.SetConditions(step.Conditions...); err != nil {
+					return err
+				}
+
 				jobDef.Steps = append(jobDef.Steps, registryLoginStep)
 
 				continue
