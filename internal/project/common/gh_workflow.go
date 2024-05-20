@@ -19,15 +19,21 @@ import (
 
 // Job defines options for jobs.
 type Job struct {
-	Name          string   `yaml:"name"`
-	Conditions    []string `yaml:"conditions,omitempty"`
-	Crons         []string `yaml:"crons,omitempty"`
-	Depends       []string `yaml:"depends,omitempty"`
-	Runners       []string `yaml:"runners,omitempty"`
-	TriggerLabels []string `yaml:"triggerLabels,omitempty"`
-	Steps         []Step   `yaml:"steps,omitempty"`
-	SOPS          bool     `yaml:"sops"`
-	SetupBuildx   bool     `yaml:"setupBuildx"`
+	Name          string         `yaml:"name"`
+	BuildxOptions *BuildxOptions `yaml:"buildxOptions,omitempty"`
+	Conditions    []string       `yaml:"conditions,omitempty"`
+	Crons         []string       `yaml:"crons,omitempty"`
+	Depends       []string       `yaml:"depends,omitempty"`
+	Runners       []string       `yaml:"runners,omitempty"`
+	TriggerLabels []string       `yaml:"triggerLabels,omitempty"`
+	Steps         []Step         `yaml:"steps,omitempty"`
+	SOPS          bool           `yaml:"sops"`
+}
+
+// BuildxOptions defines options for buildx.
+type BuildxOptions struct {
+	Enabled      bool `yaml:"enabled"`
+	CrossBuilder bool `yaml:"crossBuilder"`
 }
 
 // Step defines options for steps.
@@ -118,10 +124,14 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 			return err
 		}
 
-		if job.SetupBuildx {
+		if job.BuildxOptions != nil && job.BuildxOptions.Enabled {
 			jobDef.Services = ghworkflow.DefaultServices()
 
 			jobDef.Steps = ghworkflow.DefaultSteps()
+
+			if job.BuildxOptions.CrossBuilder {
+				jobDef.Steps = ghworkflow.DefaultPkgsSteps()
+			}
 		}
 
 		if job.SOPS {

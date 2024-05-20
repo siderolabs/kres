@@ -102,6 +102,10 @@ func (builder *builder) build() error {
 		if projectType.mandatory {
 			mandatoryReached = true
 		}
+
+		if builder.meta.CompileGithubWorkflowsOnly {
+			break
+		}
 	}
 
 	if builder.meta.CompileGithubWorkflowsOnly {
