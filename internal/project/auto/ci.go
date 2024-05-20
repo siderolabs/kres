@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/siderolabs/kres/internal/config"
+	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/project/common"
 )
 
@@ -38,13 +39,16 @@ func (builder *builder) DetectCI() (bool, error) {
 
 // BuildCI builds the ci settings.
 func (builder *builder) BuildCI() error {
-	if builder.meta.CompileGithubWorkflowsOnly {
-		repository := common.NewRepository(builder.meta)
-		sops := common.NewSOPS(builder.meta)
-		ghworkflow := common.NewGHWorkflow(builder.meta)
+	var targets []dag.Node
 
-		builder.proj.AddTarget(repository, sops, ghworkflow)
+	targets = append(targets, common.NewGHWorkflow(builder.meta))
+
+	if builder.meta.CompileGithubWorkflowsOnly {
+		targets = append(targets, common.NewRepository(builder.meta))
+		targets = append(targets, common.NewSOPS(builder.meta))
 	}
+
+	builder.proj.AddTarget(targets...)
 
 	return nil
 }

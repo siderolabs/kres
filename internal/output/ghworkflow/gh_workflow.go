@@ -125,13 +125,8 @@ func NewOutput(mainBranch string, withDefaultJob bool) *Output {
 	if withDefaultJob {
 		workflows[ciWorkflow].Jobs = map[string]*Job{
 			"default": {
-				If: DefaultSkipCondition,
-				RunsOn: []string{
-					HostedRunner,
-					GenericRunner,
-				},
+				If:          DefaultSkipCondition,
 				Permissions: DefaultJobPermissions(),
-				Services:    DefaultServices(),
 				Steps:       DefaultSteps(),
 			},
 		}
@@ -207,18 +202,28 @@ func (o *Output) AddSlackNotify(workflow string) {
 	o.workflows[slackWorkflow].Workflows = append(o.workflows[slackWorkflow].Workflows, workflow)
 }
 
-// SetDefaultJobRunnerAsPkgs sets default job runner as pkgs.
-func (o *Output) SetDefaultJobRunnerAsPkgs() {
-	o.workflows[ciWorkflow].Jobs["default"].RunsOn = []string{
-		HostedRunner,
-		PkgsRunner,
+// SetRunners allows to set custom runners for the default job.
+// If runners are not provided, the default runners will be used.
+func (o *Output) SetRunners(runners ...string) {
+	if len(runners) == 0 {
+		o.workflows[ciWorkflow].Jobs["default"].RunsOn = []string{
+			HostedRunner,
+			GenericRunner,
+		}
+
+		return
 	}
+
+	o.workflows[ciWorkflow].Jobs["default"].RunsOn = runners
 }
 
-// OverwriteDefaultJobStepsAsPkgs overwrites default job steps as pkgs.
+// SetOptionsForPkgs overwrites default job steps and services for pkgs.
 // Note that calling this method will overwrite any existing steps.
-func (o *Output) OverwriteDefaultJobStepsAsPkgs() {
+func (o *Output) SetOptionsForPkgs() {
+	o.SetRunners(HostedRunner, PkgsRunner)
+
 	o.workflows[ciWorkflow].Jobs["default"].Steps = DefaultPkgsSteps()
+	o.workflows[ciWorkflow].Jobs["default"].Services = DefaultServices()
 }
 
 // CommonSteps returns common steps for the workflow.
@@ -253,7 +258,7 @@ func DefaultSteps() []*JobStep {
 			Uses: "docker/setup-buildx-action@" + config.SetupBuildxActionVersion,
 			With: map[string]string{
 				"driver":   "remote",
-				"endpoint": "tcp://127.0.0.1:1234",
+				"endpoint": "tcp://buildkit-amd64.ci.svc.cluster.local:1234",
 			},
 			TimeoutMinutes: 10,
 		},

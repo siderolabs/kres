@@ -177,8 +177,7 @@ func (pkgfile *Build) CompileMakefile(output *makefile.Output) error {
 
 // CompileGitHubWorkflow implements ghworkflow.Compiler.
 func (pkgfile *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
-	output.SetDefaultJobRunnerAsPkgs()
-	output.OverwriteDefaultJobStepsAsPkgs()
+	output.SetOptionsForPkgs()
 
 	loginStep := ghworkflow.Step("Login to registry").
 		SetUses("docker/login-action@"+config.LoginActionVersion).

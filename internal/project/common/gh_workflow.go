@@ -93,7 +93,8 @@ type GHWorkflow struct {
 
 	meta *meta.Options
 
-	Jobs []Job `yaml:"jobs"`
+	CustomRunners []string `yaml:"customRunners,omitempty"`
+	Jobs          []Job    `yaml:"jobs"`
 }
 
 // NewGHWorkflow creates a new GHWorkflow node.
@@ -109,6 +110,12 @@ func NewGHWorkflow(meta *meta.Options) *GHWorkflow {
 //
 //nolint:gocognit,gocyclo,cyclop,maintidx
 func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
+	if !gh.meta.CompileGithubWorkflowsOnly {
+		o.SetRunners(gh.CustomRunners...)
+
+		return nil
+	}
+
 	touchedJobs := make(map[string]struct{})
 
 	for _, job := range gh.Jobs {
@@ -125,8 +132,6 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 		}
 
 		if job.BuildxOptions != nil && job.BuildxOptions.Enabled {
-			jobDef.Services = ghworkflow.DefaultServices()
-
 			jobDef.Steps = ghworkflow.DefaultSteps()
 
 			if job.BuildxOptions.CrossBuilder {
@@ -359,9 +364,8 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 					},
 					Jobs: map[string]*ghworkflow.Job{
 						"default": {
-							RunsOn:   job.Runners,
-							Services: ghworkflow.DefaultServices(),
-							Steps:    jobDef.Steps,
+							RunsOn: job.Runners,
+							Steps:  jobDef.Steps,
 						},
 					},
 				},

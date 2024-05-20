@@ -290,7 +290,7 @@ func (step *Step) DroneEnabled() bool {
 
 // CompileGitHubWorkflow implements ghworkflow.Compiler.
 //
-//nolint:gocognit,gocyclo,cyclop,maintidx
+//nolint:gocognit,gocyclo,cyclop
 func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	if !step.GHAction.Enabled {
 		return nil
@@ -413,11 +413,10 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		}
 
 		output.AddJob(job.Name, &ghworkflow.Job{
-			RunsOn:   append(runnerLabels, job.RunnerLabels...),
-			If:       strings.Join(conditions, " || "),
-			Needs:    []string{"default"},
-			Services: ghworkflow.DefaultServices(),
-			Steps:    defaultSteps,
+			RunsOn: append(runnerLabels, job.RunnerLabels...),
+			If:     strings.Join(conditions, " || "),
+			Needs:  []string{"default"},
+			Steps:  defaultSteps,
 		})
 
 		var steps []*ghworkflow.JobStep
@@ -491,8 +490,7 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 					},
 					Jobs: map[string]*ghworkflow.Job{
 						"default": {
-							RunsOn:   append(runnerLabels, job.RunnerLabels...),
-							Services: ghworkflow.DefaultServices(),
+							RunsOn: append(runnerLabels, job.RunnerLabels...),
 							Steps: append(
 								defaultSteps,
 								steps...,
