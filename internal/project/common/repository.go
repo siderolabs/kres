@@ -193,7 +193,9 @@ func (r *Repository) enableBranchProtection(client *github.Client) error {
 	case config.CIProviderDrone:
 		enforceContexts = append(enforceContexts, "continuous-integration/drone/pr")
 	case config.CIProviderGitHubActions:
-		enforceContexts = append(enforceContexts, "default")
+		if !r.meta.CompileGithubWorkflowsOnly {
+			enforceContexts = append(enforceContexts, "default")
+		}
 	}
 
 	if r.EnableConform {

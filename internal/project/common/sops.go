@@ -46,7 +46,8 @@ func (sops *SOPS) CompileSops(o *sops.Output) error {
 
 // CompileGitHubWorkflow implements ghworkflow.Compiler.
 func (sops *SOPS) CompileGitHubWorkflow(o *ghworkflow.Output) error {
-	if !sops.Enabled {
+	// If sops is disabled or we are only compiling github workflows (since sops can be optionally enabled there), return early.
+	if !sops.Enabled || sops.meta.CompileGithubWorkflowsOnly {
 		return nil
 	}
 
