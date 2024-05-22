@@ -119,9 +119,8 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 
 	output.Stage("js-toolchain").
 		Description("base toolchain image").
-		From("${JS_TOOLCHAIN}").
-		Step(step.Copy("/usr/local/go", "/usr/local/go").From("golang:" + toolchain.meta.GoContainerVersion)).
-		Step(step.Run("apk", "--update", "--no-cache", "add", "bash", "curl", "protoc", "protobuf-dev")).
+		From("--platform=${BUILDPLATFORM} ${JS_TOOLCHAIN}").
+		Step(step.Run("apk", "--update", "--no-cache", "add", "bash", "curl", "protoc", "protobuf-dev", "go")).
 		Step(step.Copy("./go.mod", ".")).
 		Step(step.Copy("./go.sum", ".")).
 		Step(step.Env("GOPATH", toolchain.meta.GoPath)).
@@ -129,7 +128,7 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 
 	base := output.Stage("js").
 		Description("tools and sources").
-		From("js-toolchain").
+		From("--platform=${BUILDPLATFORM} js-toolchain").
 		Step(step.WorkDir("/src"))
 
 	if err := dag.WalkNode(toolchain, func(node dag.Node) error {

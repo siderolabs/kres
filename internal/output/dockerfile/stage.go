@@ -63,7 +63,9 @@ func (stage *Stage) Step(step step.Step) *Stage {
 
 // Dependencies calculates dependencies of this stage on other stages.
 func (stage *Stage) Dependencies() []string {
-	result := []string{stage.from}
+	parts := strings.Split(stage.from, " ")
+
+	result := []string{parts[len(parts)-1]}
 
 	for _, st := range stage.steps {
 		if deps, ok := st.(step.StageDependencies); ok {

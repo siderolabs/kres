@@ -72,7 +72,7 @@ func (build *Build) CompileDockerfile(output *dockerfile.Output) error {
 
 	output.Stage(build.Name()).
 		Description("builds " + build.Name()).
-		From("js").
+		From("--platform=${BUILDPLATFORM} js").
 		Step(step.Arg(nodeBuildArgsVarName)).
 		Step(step.Script("npm run build ${" + nodeBuildArgsVarName + "}").
 			MountCache(build.meta.NpmCachePath)).
