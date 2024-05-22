@@ -41,6 +41,27 @@ const resp = await github.rest.issues.get({
 
 return resp.data.labels.map(label => label.name)
 `
+	// SystemInfoPrintScript is the script to print system info.
+	SystemInfoPrintScript = `
+MEMORY_GB=$((${{ steps.system-info.outputs.totalmem }}/1024/1024/1024))
+
+OUTPUTS=(
+  "CPU Core: ${{ steps.system-info.outputs.cpu-core }}"
+  "CPU Model: ${{ steps.system-info.outputs.cpu-model }}"
+  "Hostname: ${{ steps.system-info.outputs.hostname }}"
+  "NodeName: ${NODE_NAME}"
+  "Kernel release: ${{ steps.system-info.outputs.kernel-release }}"
+  "Kernel version: ${{ steps.system-info.outputs.kernel-version }}"
+  "Name: ${{ steps.system-info.outputs.name }}"
+  "Platform: ${{ steps.system-info.outputs.platform }}"
+  "Release: ${{ steps.system-info.outputs.release }}"
+  "Total memory: ${MEMORY_GB} GB"
+)
+
+for OUTPUT in "${OUTPUTS[@]}";do
+  echo "${OUTPUT}"
+done
+`
 
 	workflowDir   = ".github/workflows"
 	ciWorkflow    = workflowDir + "/" + "ci.yaml"
@@ -229,11 +250,17 @@ func (o *Output) SetOptionsForPkgs() {
 // CommonSteps returns common steps for the workflow.
 func CommonSteps() []*JobStep {
 	return []*JobStep{
-		{
-			Name: "checkout",
-			Uses: "actions/checkout@" + config.CheckOutActionVersion,
-		},
-		Step("Unshallow").SetCommand("git fetch --prune --unshallow"),
+		Step("gather-system-info").
+			SetUses("kenchan0130/actions-system-info@" + config.SystemInfoActionVersion).
+			SetID("system-info").
+			SetContinueOnError(),
+		Step("print-system-info").
+			SetCommand(strings.Trim(SystemInfoPrintScript, "\n")).
+			SetContinueOnError(),
+		Step("checkout").
+			SetUses("actions/checkout@" + config.CheckOutActionVersion),
+		Step("Unshallow").
+			SetCommand("git fetch --prune --unshallow"),
 	}
 }
 

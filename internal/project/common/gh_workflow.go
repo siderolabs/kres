@@ -163,9 +163,15 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 						return err
 					}
 
+					generateExecutableListStep := ghworkflow.Step("Generate executable list").
+						SetCommand(fmt.Sprintf("find %s -type f -executable > %s/executable-artifacts", step.ArtifactStep.ArtifactPath, step.ArtifactStep.ArtifactPath))
+
+					if err := generateExecutableListStep.SetConditions(step.Conditions...); err != nil {
+						return err
+					}
+
 					steps = []*ghworkflow.JobStep{
-						ghworkflow.Step("Generate executable list").
-							SetCommand(fmt.Sprintf("find %s -type f -executable > %s/executable-artifacts", step.ArtifactStep.ArtifactPath, step.ArtifactStep.ArtifactPath)),
+						generateExecutableListStep,
 						saveArtifactsStep,
 					}
 				case "download":
@@ -182,10 +188,16 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 						return err
 					}
 
+					fixArtifactPermissionsStep := ghworkflow.Step("Fix artifact permissions").
+						SetCommand(fmt.Sprintf("xargs -a %s/executable-artifacts -I {} chmod +x {}", step.ArtifactStep.ArtifactPath))
+
+					if err := fixArtifactPermissionsStep.SetConditions(step.Conditions...); err != nil {
+						return err
+					}
+
 					steps = []*ghworkflow.JobStep{
 						downloadArtifactsStep,
-						ghworkflow.Step("Fix artifact permissions").
-							SetCommand(fmt.Sprintf("xargs -a %s/executable-artifacts -I {} chmod +x {}", step.ArtifactStep.ArtifactPath)),
+						fixArtifactPermissionsStep,
 					}
 				default:
 					return fmt.Errorf("unknown artifact step type: %s", step.ArtifactStep.Type)
