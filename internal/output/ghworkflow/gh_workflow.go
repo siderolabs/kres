@@ -431,6 +431,10 @@ func (step *JobStep) SetConditions(conditions ...string) error {
 			step.appendIf("startsWith(github.ref, 'refs/tags/')")
 		case "not-on-tag":
 			step.appendIf("!startsWith(github.ref, 'refs/tags/')")
+		case "only-on-schedule":
+			step.appendIf("github.event_name == 'schedule'")
+		case "not-on-schedule":
+			step.appendIf("github.event_name != 'schedule'")
 		case "always":
 			step.appendIf("always()")
 		case "":
@@ -463,6 +467,10 @@ func (job *Job) SetConditions(conditions ...string) error {
 			job.appendIf("startsWith(github.ref, 'refs/tags/')")
 		case "not-on-tag":
 			job.appendIf("!startsWith(github.ref, 'refs/tags/')")
+		case "only-on-schedule":
+			job.appendIf("github.event_name == 'schedule'")
+		case "not-on-schedule":
+			job.appendIf("github.event_name != 'schedule'")
 		case "always":
 			job.appendIf("always()")
 		case "":

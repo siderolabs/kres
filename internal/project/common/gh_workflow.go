@@ -159,17 +159,31 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 						saveArtifactsStep.SetContinueOnError()
 					}
 
+					if err := saveArtifactsStep.SetConditions(step.Conditions...); err != nil {
+						return err
+					}
+
 					steps = []*ghworkflow.JobStep{
 						ghworkflow.Step("Generate executable list").
 							SetCommand(fmt.Sprintf("find %s -type f -executable > %s/executable-artifacts", step.ArtifactStep.ArtifactPath, step.ArtifactStep.ArtifactPath)),
 						saveArtifactsStep,
 					}
 				case "download":
+					downloadArtifactsStep := ghworkflow.Step("Download artifacts").
+						SetUses("actions/download-artifact@"+config.DownloadArtifactActionVersion).
+						SetWith("name", "artifacts").
+						SetWith("path", step.ArtifactStep.ArtifactPath)
+
+					if step.ContinueOnError {
+						downloadArtifactsStep.SetContinueOnError()
+					}
+
+					if err := downloadArtifactsStep.SetConditions(step.Conditions...); err != nil {
+						return err
+					}
+
 					steps = []*ghworkflow.JobStep{
-						ghworkflow.Step("Download artifacts").
-							SetUses("actions/download-artifact@"+config.DownloadArtifactActionVersion).
-							SetWith("name", "artifacts").
-							SetWith("path", step.ArtifactStep.ArtifactPath),
+						downloadArtifactsStep,
 						ghworkflow.Step("Fix artifact permissions").
 							SetCommand(fmt.Sprintf("xargs -a %s/executable-artifacts -I {} chmod +x {}", step.ArtifactStep.ArtifactPath)),
 					}
