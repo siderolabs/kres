@@ -2,7 +2,7 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-05-23T10:13:37Z by kres 1ba3ec6-dirty.
+# Generated on 2024-05-27T15:18:38Z by kres b5844f8-dirty.
 
 ARG TOOLCHAIN
 
@@ -13,7 +13,7 @@ FROM ghcr.io/siderolabs/fhs:v1.7.0 AS image-fhs
 # runs markdownlint
 FROM docker.io/node:22.2.0-alpine3.19 AS lint-markdown
 WORKDIR /src
-RUN npm i -g markdownlint-cli@0.40.0
+RUN npm i -g markdownlint-cli@0.41.0
 RUN npm i sentences-per-line@0.2.1
 COPY .markdownlint.json .
 COPY ./README.md ./README.md

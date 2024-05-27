@@ -57,9 +57,11 @@ type Step struct { //nolint:govet
 
 // ArtifactStep defines options for artifact steps.
 type ArtifactStep struct {
-	Type                string   `yaml:"type"`
-	ArtifactPath        string   `yaml:"artifactPath"`
-	AdditionalArtifacts []string `yaml:"additionalArtifacts,omitempty"`
+	Type                            string   `yaml:"type"`
+	ArtifactName                    string   `yaml:"artifactName"`
+	ArtifactPath                    string   `yaml:"artifactPath"`
+	AdditionalArtifacts             []string `yaml:"additionalArtifacts,omitempty"`
+	DisableExecutableListGeneration bool     `yaml:"disableExecutableListGeneration"`
 }
 
 // CheckoutStep defines options for checkout steps.
@@ -151,7 +153,7 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 				case "upload":
 					saveArtifactsStep := ghworkflow.Step("save artifacts").
 						SetUses("actions/upload-artifact@"+config.UploadArtifactActionVersion).
-						SetWith("name", "artifacts").
+						SetWith("name", step.ArtifactStep.ArtifactName).
 						SetWith("path", step.ArtifactStep.ArtifactPath+"\n"+strings.Join(step.ArtifactStep.AdditionalArtifacts, "\n")).
 						SetWith("retention-days", "5")
 
@@ -163,21 +165,22 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 						return err
 					}
 
-					generateExecutableListStep := ghworkflow.Step("Generate executable list").
-						SetCommand(fmt.Sprintf("find %s -type f -executable > %s/executable-artifacts", step.ArtifactStep.ArtifactPath, step.ArtifactStep.ArtifactPath))
+					if !step.ArtifactStep.DisableExecutableListGeneration {
+						generateExecutableListStep := ghworkflow.Step("Generate executable list").
+							SetCommand(fmt.Sprintf("find %s -type f -executable > %s/executable-artifacts", step.ArtifactStep.ArtifactPath, step.ArtifactStep.ArtifactPath))
 
-					if err := generateExecutableListStep.SetConditions(step.Conditions...); err != nil {
-						return err
+						if err := generateExecutableListStep.SetConditions(step.Conditions...); err != nil {
+							return err
+						}
+
+						steps = append(steps, generateExecutableListStep)
 					}
 
-					steps = []*ghworkflow.JobStep{
-						generateExecutableListStep,
-						saveArtifactsStep,
-					}
+					steps = append(steps, saveArtifactsStep)
 				case "download":
 					downloadArtifactsStep := ghworkflow.Step("Download artifacts").
 						SetUses("actions/download-artifact@"+config.DownloadArtifactActionVersion).
-						SetWith("name", "artifacts").
+						SetWith("name", step.ArtifactStep.ArtifactName).
 						SetWith("path", step.ArtifactStep.ArtifactPath)
 
 					if step.ContinueOnError {
@@ -188,16 +191,17 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 						return err
 					}
 
-					fixArtifactPermissionsStep := ghworkflow.Step("Fix artifact permissions").
-						SetCommand(fmt.Sprintf("xargs -a %s/executable-artifacts -I {} chmod +x {}", step.ArtifactStep.ArtifactPath))
+					steps = append(steps, downloadArtifactsStep)
 
-					if err := fixArtifactPermissionsStep.SetConditions(step.Conditions...); err != nil {
-						return err
-					}
+					if !step.ArtifactStep.DisableExecutableListGeneration {
+						fixArtifactPermissionsStep := ghworkflow.Step("Fix artifact permissions").
+							SetCommand(fmt.Sprintf("xargs -a %s/executable-artifacts -I {} chmod +x {}", step.ArtifactStep.ArtifactPath))
 
-					steps = []*ghworkflow.JobStep{
-						downloadArtifactsStep,
-						fixArtifactPermissionsStep,
+						if err := fixArtifactPermissionsStep.SetConditions(step.Conditions...); err != nil {
+							return err
+						}
+
+						steps = append(steps, fixArtifactPermissionsStep)
 					}
 				default:
 					return fmt.Errorf("unknown artifact step type: %s", step.ArtifactStep.Type)

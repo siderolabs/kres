@@ -17,7 +17,7 @@ const (
 
 	// BldrImageVersion is the version of bldr image.
 	// renovate: datasource=github-releases depName=siderolabs/bldr
-	BldrImageVersion = "v0.3.0"
+	BldrImageVersion = "v0.3.1"
 
 	// BuildKitContainerVersion is the version of buildkit container image.
 	// renovate: datasource=docker versioning=docker depName=moby/buildkit
@@ -51,7 +51,7 @@ const (
 	GoImportsVersion = "v0.21.0"
 	// GolangCIlintVersion is the version of golangci-lint.
 	// renovate: datasource=go depName=github.com/golangci/golangci-lint
-	GolangCIlintVersion = "v1.58.2"
+	GolangCIlintVersion = "v1.59.0"
 	// GolangContainerImageVersion is the default golang container image.
 	// renovate: datasource=docker versioning=docker depName=golang
 	GolangContainerImageVersion = "1.22-alpine"
@@ -69,7 +69,7 @@ const (
 	LoginActionVersion = "v3"
 	// MardownLintCLIVersion is the version of markdownlint.
 	// renovate: datasource=npm depName=markdownlint-cli
-	MardownLintCLIVersion = "0.40.0"
+	MardownLintCLIVersion = "0.41.0"
 	// NodeContainerImageVersion is the default node container image.
 	// renovate: datasource=docker versioning=docker depName=node
 	NodeContainerImageVersion = "22.2.0-alpine3.19"
