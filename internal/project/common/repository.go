@@ -23,7 +23,7 @@ import (
 )
 
 // Repository sets up repository settings.
-type Repository struct { //nolint:govet,maligned
+type Repository struct { //nolint:govet
 	dag.BaseNode
 
 	meta *meta.Options
