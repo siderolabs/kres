@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-05-28T08:10:29Z by kres 7e28d9f.
+# Generated on 2024-05-29T17:36:13Z by kres a914cae-dirty.
 
 # options for analysis running
 run:
@@ -97,7 +97,7 @@ linters-settings:
   depguard:
     rules:
       prevent_unmaintained_packages:
-        list-mode: lax # allow unless explicitely denied
+        list-mode: lax # allow unless explicitly denied
         files:
           - $all
         deny:

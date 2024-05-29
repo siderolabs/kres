@@ -124,7 +124,20 @@ func (generate *Generate) CompileMakefile(output *makefile.Output) error {
 
 // ToolchainBuild implements common.ToolchainBuilder hook.
 func (generate *Generate) ToolchainBuild(stage *dockerfile.Stage) error {
+	if len(generate.Specs) == 0 && len(generate.GoGenerateSpecs) == 0 {
+		return nil
+	}
+
+	stage.
+		Step(step.Arg("GOIMPORTS_VERSION")).
+		Step(step.Script("go install golang.org/x/tools/cmd/goimports@v${GOIMPORTS_VERSION}").
+			MountCache(filepath.Join(generate.meta.CachePath, "go-build")).
+			MountCache(filepath.Join(generate.meta.GoPath, "pkg")),
+		).
+		Step(step.Run("mv", filepath.Join(generate.meta.GoPath, "bin", "goimports"), generate.meta.BinPath))
+
 	if len(generate.Specs) == 0 {
+		// only protobuf stuff after this point
 		return nil
 	}
 
@@ -146,13 +159,7 @@ func (generate *Generate) ToolchainBuild(stage *dockerfile.Stage) error {
 			MountCache(filepath.Join(generate.meta.CachePath, "go-build")).
 			MountCache(filepath.Join(generate.meta.GoPath, "pkg")),
 		).
-		Step(step.Run("mv", filepath.Join(generate.meta.GoPath, "bin", "protoc-gen-grpc-gateway"), generate.meta.BinPath)).
-		Step(step.Arg("GOIMPORTS_VERSION")).
-		Step(step.Script("go install golang.org/x/tools/cmd/goimports@v${GOIMPORTS_VERSION}").
-			MountCache(filepath.Join(generate.meta.CachePath, "go-build")).
-			MountCache(filepath.Join(generate.meta.GoPath, "pkg")),
-		).
-		Step(step.Run("mv", filepath.Join(generate.meta.GoPath, "bin", "goimports"), generate.meta.BinPath))
+		Step(step.Run("mv", filepath.Join(generate.meta.GoPath, "bin", "protoc-gen-grpc-gateway"), generate.meta.BinPath))
 
 	if generate.VTProtobufEnabled {
 		stage.
