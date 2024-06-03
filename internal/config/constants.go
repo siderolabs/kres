@@ -63,7 +63,7 @@ const (
 	GrpcGatewayVersion = "v2.20.0"
 	// GrpcGoVersion is the version of grpc.
 	// renovate: datasource=go depName=google.golang.org/grpc/cmd/protoc-gen-go-grpc
-	GrpcGoVersion = "v1.3.0"
+	GrpcGoVersion = "v1.4.0"
 	// LoginActionVersion is the version of login github action.
 	// renovate: datasource=github-releases extractVersion=^(?<version>v\d+)\.\d+\.\d+$ depName=docker/login-action
 	LoginActionVersion = "v3"
