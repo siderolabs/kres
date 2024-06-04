@@ -45,7 +45,7 @@ func TestLoad(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, "xyz", foo.Contents)
-	assert.Equal(t, 5, foo.Len)
+	assert.Equal(t, 6, foo.Len)
 	assert.Equal(t, "same", foo.Extra)
 
 	bad := Foo{
