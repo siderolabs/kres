@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-05-23T09:16:24Z by kres 1fd6bd5-dirty.
+# Generated on 2024-06-04T14:55:06Z by kres 914213a.
 
 name: default
 concurrency:
@@ -72,7 +72,13 @@ jobs:
           make base
       - name: unit-tests
         run: |
-          make unit-tests
+          make unit-tests-json
+      - name: unit-tests-results
+        if: always()
+        uses: robherley/go-test-action@v0
+        with:
+          fromJSONFile: _out/test-results-unit-tests.json
+          omit: untested
       - name: unit-tests-race
         run: |
           make unit-tests-race

@@ -52,6 +52,23 @@ func NewUnitTests(meta *meta.Options, packagePath string) *UnitTests {
 	}
 }
 
+func (tests *UnitTests) addCopySteps(stage *dockerfile.Stage) {
+	for _, dockerStep := range tests.Docker.Steps {
+		if dockerStep.Copy != nil {
+			copyStep := step.Copy(dockerStep.Copy.Src, dockerStep.Copy.Dst)
+			if dockerStep.Copy.From != "" {
+				copyStep.From(dockerStep.Copy.From)
+			}
+
+			if dockerStep.Copy.Platform != "" {
+				copyStep.Platform(dockerStep.Copy.Platform)
+			}
+
+			stage.Step(copyStep)
+		}
+	}
+}
+
 // CompileDockerfile implements dockerfile.Compiler.
 func (tests *UnitTests) CompileDockerfile(output *dockerfile.Output) error {
 	wrapAsInsecure := func(s *step.RunStep) *step.RunStep {
@@ -68,26 +85,15 @@ func (tests *UnitTests) CompileDockerfile(output *dockerfile.Output) error {
 	}
 
 	workdir := step.WorkDir(filepath.Join("/src", tests.packagePath))
-	testRun := tests.Name() + "-run"
+	testRunName := tests.Name() + "-run"
 
-	testRunStage := output.Stage(testRun).
+	// regular unit tests
+
+	testRunStage := output.Stage(testRunName).
 		Description("runs unit-tests").
 		From("base")
 
-	for _, dockerStep := range tests.Docker.Steps {
-		if dockerStep.Copy != nil {
-			copyStep := step.Copy(dockerStep.Copy.Src, dockerStep.Copy.Dst)
-			if dockerStep.Copy.From != "" {
-				copyStep.From(dockerStep.Copy.From)
-			}
-
-			if dockerStep.Copy.Platform != "" {
-				copyStep.Platform(dockerStep.Copy.Platform)
-			}
-
-			testRunStage.Step(copyStep)
-		}
-	}
+	tests.addCopySteps(testRunStage)
 
 	testRunStage.Step(workdir).
 		Step(step.Arg("TESTPKGS")).
@@ -103,26 +109,40 @@ func (tests *UnitTests) CompileDockerfile(output *dockerfile.Output) error {
 
 	output.Stage(tests.Name()).
 		From("scratch").
-		Step(step.Copy(filepath.Join("/src", tests.packagePath, "coverage.txt"), fmt.Sprintf("/coverage-%s.txt", tests.Name())).From(testRun))
+		Step(step.Copy(filepath.Join("/src", tests.packagePath, "coverage.txt"), fmt.Sprintf("/coverage-%s.txt", tests.Name())).From(testRunName))
+
+	// unit-tests with json output
+
+	testRunJSONStage := output.Stage(testRunName + "-json").
+		Description("runs unit-tests with JSON output").
+		From("base")
+
+	tests.addCopySteps(testRunJSONStage)
+
+	testRunJSONStage.Step(workdir).
+		Step(step.Arg("TESTPKGS")).
+		Step(wrapAsInsecure(
+			step.Script(
+				fmt.Sprintf(
+					`go test -json -covermode=atomic -coverprofile=coverage.txt -coverpkg=${TESTPKGS} -count 1 %s${TESTPKGS} > test-results.json`,
+					extraArgs),
+			).
+				MountCache(filepath.Join(tests.meta.CachePath, "go-build")).
+				MountCache(filepath.Join(tests.meta.GoPath, "pkg")).
+				MountCache("/tmp")))
+
+	output.Stage(tests.Name() + "-json").
+		From("scratch").
+		Step(step.Copy(filepath.Join("/src", tests.packagePath, "coverage.txt"), fmt.Sprintf("/coverage-%s.txt", tests.Name())).From(testRunName + "-json")).
+		Step(step.Copy(filepath.Join("/src", tests.packagePath, "test-results.json"), fmt.Sprintf("/test-results-%s.json", tests.Name())).From(testRunName + "-json"))
+
+	// unit-tests with race
 
 	testRunRaceStage := output.Stage(tests.Name() + "-race").
 		Description("runs unit-tests with race detector").
 		From("base")
 
-	for _, dockerStep := range tests.Docker.Steps {
-		if dockerStep.Copy != nil {
-			copyStep := step.Copy(dockerStep.Copy.Src, dockerStep.Copy.Dst)
-			if dockerStep.Copy.From != "" {
-				copyStep.From(dockerStep.Copy.From)
-			}
-
-			if dockerStep.Copy.Platform != "" {
-				copyStep.Platform(dockerStep.Copy.Platform)
-			}
-
-			testRunRaceStage.Step(copyStep)
-		}
-	}
+	tests.addCopySteps(testRunRaceStage)
 
 	testRunRaceStage.Step(workdir).
 		Step(step.Arg("TESTPKGS")).
@@ -157,6 +177,11 @@ func (tests *UnitTests) CompileMakefile(output *makefile.Output) error {
 		Script("@$(MAKE) local-$@ DEST=$(ARTIFACTS)" + scriptExtraArgs).
 		Phony()
 
+	output.Target(tests.Name() + "-json").
+		Description("Performs unit tests with JSON output").
+		Script("@$(MAKE) local-$@ DEST=$(ARTIFACTS)" + scriptExtraArgs).
+		Phony()
+
 	output.Target(tests.Name() + "-race").
 		Description("Performs unit tests with race detection enabled.").
 		Script("@$(MAKE) target-$@" + scriptExtraArgs).
@@ -182,8 +207,24 @@ func (tests *UnitTests) CompileDrone(output *drone.Output) error {
 func (tests *UnitTests) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	output.AddStep(
 		"default",
-		ghworkflow.Step(tests.Name()).SetMakeStep(tests.Name()),
-		ghworkflow.Step(tests.Name()+"-race").SetMakeStep(tests.Name()+"-race"),
+		ghworkflow.Step(tests.Name()).
+			SetMakeStep(tests.Name()+"-json"),
+	)
+
+	resultsStep := ghworkflow.Step(tests.Name()+"-results").
+		SetUses("robherley/go-test-action@v0").
+		SetWith("fromJSONFile", filepath.Join(tests.meta.ArtifactsPath, "test-results-"+tests.Name()+".json")).
+		SetWith("omit", "untested")
+
+	if err := resultsStep.SetConditions("always"); err != nil {
+		return err
+	}
+
+	output.AddStep(
+		"default",
+		resultsStep,
+		ghworkflow.Step(tests.Name()+"-race").
+			SetMakeStep(tests.Name()+"-race"),
 	)
 
 	return nil

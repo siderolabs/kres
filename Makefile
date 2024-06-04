@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-06-03T10:17:07Z by kres f249b6c-dirty.
+# Generated on 2024-06-04T14:35:36Z by kres f292767-dirty.
 
 # common variables
 
@@ -172,6 +172,10 @@ base:  ## Prepare base toolchain
 
 .PHONY: unit-tests
 unit-tests:  ## Performs unit tests
+	@$(MAKE) local-$@ DEST=$(ARTIFACTS)
+
+.PHONY: unit-tests-json
+unit-tests-json:  ## Performs unit tests with JSON output
 	@$(MAKE) local-$@ DEST=$(ARTIFACTS)
 
 .PHONY: unit-tests-race

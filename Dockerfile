@@ -2,7 +2,7 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-05-27T15:18:38Z by kres b5844f8-dirty.
+# Generated on 2024-06-04T14:35:36Z by kres f292767-dirty.
 
 ARG TOOLCHAIN
 
@@ -94,6 +94,12 @@ WORKDIR /src
 ARG TESTPKGS
 RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg --mount=type=cache,target=/tmp go test -v -covermode=atomic -coverprofile=coverage.txt -coverpkg=${TESTPKGS} -count 1 ${TESTPKGS}
 
+# runs unit-tests with JSON output
+FROM base AS unit-tests-run-json
+WORKDIR /src
+ARG TESTPKGS
+RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg --mount=type=cache,target=/tmp go test -json -covermode=atomic -coverprofile=coverage.txt -coverpkg=${TESTPKGS} -count 1 ${TESTPKGS} > test-results.json
+
 FROM embed-generate AS embed-abbrev-generate
 WORKDIR /src
 ARG ABBREV_TAG
@@ -102,6 +108,10 @@ RUN echo -n 'undefined' > internal/version/data/sha && \
 
 FROM scratch AS unit-tests
 COPY --from=unit-tests-run /src/coverage.txt /coverage-unit-tests.txt
+
+FROM scratch AS unit-tests-json
+COPY --from=unit-tests-run-json /src/coverage.txt /coverage-unit-tests.txt
+COPY --from=unit-tests-run-json /src/test-results.json /test-results-unit-tests.json
 
 # cleaned up specs and compiled versions
 FROM scratch AS generate
