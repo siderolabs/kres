@@ -15,9 +15,9 @@ import (
 func (builder *builder) DetectJS() (bool, error) {
 	jsRoot := filepath.Join(builder.rootPath, "frontend")
 
-	npmPackagePath := filepath.Join(jsRoot, "package.json")
+	packagePath := filepath.Join(jsRoot, "package.json")
 
-	npmPackageConfig, err := os.Open(npmPackagePath)
+	packageConfig, err := os.Open(packagePath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return false, nil
@@ -26,7 +26,7 @@ func (builder *builder) DetectJS() (bool, error) {
 		return false, err
 	}
 
-	defer npmPackageConfig.Close() //nolint:errcheck
+	defer packageConfig.Close() //nolint:errcheck
 
 	for _, srcDir := range []string{"frontend"} {
 		exists, err := directoryExists(builder.rootPath, srcDir)
@@ -34,7 +34,7 @@ func (builder *builder) DetectJS() (bool, error) {
 			return false, err
 		}
 
-		for _, path := range []string{"src", "tests", "public"} {
+		for _, path := range []string{"src", "test"} {
 			d := filepath.Join(srcDir, path)
 
 			if exists {
@@ -54,7 +54,10 @@ func (builder *builder) DetectJS() (bool, error) {
 
 		builder.meta.SourceFiles = append(builder.meta.SourceFiles,
 			filepath.Join(srcDir, "*.json"),
+			filepath.Join(srcDir, "*.toml"),
 			filepath.Join(srcDir, "*.js"),
+			filepath.Join(srcDir, "*.ts"),
+			filepath.Join(srcDir, "*.html"),
 		)
 	}
 
@@ -77,6 +80,8 @@ func (builder *builder) BuildJS() error {
 	esLint := js.NewEsLint(builder.meta)
 	esLint.AddInput(toolchain)
 	builder.targets = append(builder.targets, esLint)
+
+	builder.lintInputs = append(builder.lintInputs, esLint)
 
 	// add protobufs
 	protobuf := js.NewProtobuf(builder.meta, name)

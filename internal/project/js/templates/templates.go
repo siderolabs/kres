@@ -9,25 +9,25 @@ import (
 	_ "embed"
 )
 
-// Babel babel.config.js.
+// Eslint eslint.config.js
 //
-//go:embed babel.js
-var Babel string
-
-// Eslint eslintrc.yaml.
-//
-//go:embed eslint.yaml
+//go:embed eslint.config.js
 var Eslint string
-
-// Jest jest.config.js.
-//
-//go:embed jest.js
-var Jest string
 
 // TSConfig tsconfig.json.
 //
 //go:embed tsconfig.json
 var TSConfig string
+
+// Bunfig bunfig.toml.
+//
+//go:embed bunfig.toml
+var Bunfig string
+
+// TestSetup test/setup.ts.
+//
+//go:embed setup-tests.ts
+var TestSetup string
 
 // GoEmbed is a complimentary file that is generated for each JS distribution.
 // It allows embedding the data into a Go service.

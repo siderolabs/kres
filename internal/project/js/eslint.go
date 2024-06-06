@@ -9,8 +9,6 @@ import (
 	"github.com/siderolabs/kres/internal/output/dockerfile"
 	"github.com/siderolabs/kres/internal/output/dockerfile/step"
 	"github.com/siderolabs/kres/internal/output/makefile"
-	"github.com/siderolabs/kres/internal/output/template"
-	"github.com/siderolabs/kres/internal/project/js/templates"
 	"github.com/siderolabs/kres/internal/project/meta"
 )
 
@@ -23,21 +21,13 @@ type EsLint struct {
 
 // NewEsLint builds eslint node.
 func NewEsLint(meta *meta.Options) *EsLint {
-	meta.SourceFiles = append(meta.SourceFiles, "frontend/.eslintrc.yaml")
+	meta.SourceFiles = append(meta.SourceFiles, "frontend/eslint.config.js")
 
 	return &EsLint{
 		BaseNode: dag.NewBaseNode("lint-eslint"),
 
 		meta: meta,
 	}
-}
-
-// CompileTemplates implements templates.Compiler.
-func (lint *EsLint) CompileTemplates(output *template.Output) error {
-	output.Define("frontend/.eslintrc.yaml", templates.Eslint).
-		PreamblePrefix("# ")
-
-	return nil
 }
 
 // CompileMakefile implements makefile.Compiler.
@@ -53,8 +43,8 @@ func (lint *EsLint) CompileDockerfile(output *dockerfile.Output) error {
 	output.Stage("lint-eslint").
 		Description("runs eslint").
 		From("js").
-		Step(step.Script("npm run lint").
-			MountCache(lint.meta.NpmCachePath))
+		Step(step.Script("bun run lint").
+			MountCache(lint.meta.JSCachePath))
 
 	return nil
 }

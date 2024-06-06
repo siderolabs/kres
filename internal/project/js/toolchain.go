@@ -41,7 +41,7 @@ func NewToolchain(meta *meta.Options, sourceDir string) *Toolchain {
 		meta:      meta,
 		sourceDir: sourceDir,
 
-		Version: config.NodeContainerImageVersion,
+		Version: config.BunContainerImageVersion,
 	}
 
 	meta.BuildArgs = append(meta.BuildArgs, "JS_TOOLCHAIN")
@@ -59,15 +59,7 @@ func (toolchain *Toolchain) CompileGitignore(output *gitignore.Output) error {
 
 // CompileTemplates implements template.Compiler.
 func (toolchain *Toolchain) CompileTemplates(output *template.Output) error {
-	output.Define(filepath.Join(toolchain.sourceDir, "babel.config.js"), templates.Babel).
-		NoPreamble().
-		NoOverwrite()
-
 	output.Define(filepath.Join(toolchain.sourceDir, "tsconfig.json"), templates.TSConfig).
-		NoPreamble().
-		NoOverwrite()
-
-	output.Define(filepath.Join(toolchain.sourceDir, "jest.config.js"), templates.Jest).
 		NoPreamble().
 		NoOverwrite()
 
@@ -79,7 +71,7 @@ func (toolchain *Toolchain) image() string {
 		return toolchain.Image
 	}
 
-	return "docker.io/node:" + toolchain.Version
+	return "docker.io/oven/bun:" + toolchain.Version
 }
 
 // CompileMakefile implements makefile.Compiler.
@@ -115,7 +107,7 @@ func (toolchain *Toolchain) CompileGitHubWorkflow(output *ghworkflow.Output) err
 func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 	output.Arg(step.Arg("JS_TOOLCHAIN"))
 
-	toolchain.meta.NpmCachePath = "/src/node_modules"
+	toolchain.meta.JSCachePath = "/src/node_modules"
 
 	output.Stage("js-toolchain").
 		Description("base toolchain image").
@@ -142,15 +134,13 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 	}
 
 	base.Step(step.Copy(filepath.Join(toolchain.sourceDir, "package.json"), "./")).
-		Step(step.Copy(filepath.Join(toolchain.sourceDir, "package-lock.json"), "./")).
-		Step(step.Script("npm version ${VERSION}").
-			MountCache(toolchain.meta.NpmCachePath)).
-		Step(step.Script("npm ci && npm run verify").
-			MountCache(toolchain.meta.NpmCachePath)).
-		Step(step.Copy("frontend/.eslintrc.yaml", "./")).
-		Step(step.Copy(filepath.Join(toolchain.sourceDir, "babel.config.js"), "./")).
-		Step(step.Copy(filepath.Join(toolchain.sourceDir, "jest.config.js"), "./")).
-		Step(step.Copy(filepath.Join(toolchain.sourceDir, "tsconfig.json"), "./"))
+		Step(step.Script("bun install").
+			MountCache(toolchain.meta.JSCachePath)).
+		Step(step.Copy(filepath.Join(toolchain.sourceDir, "tsconfig*.json"), "./")).
+		Step(step.Copy(filepath.Join(toolchain.sourceDir, "bunfig.toml"), "./")).
+		Step(step.Copy(filepath.Join(toolchain.sourceDir, "*.html"), "./")).
+		Step(step.Copy(filepath.Join(toolchain.sourceDir, "*.ts"), "./")).
+		Step(step.Copy(filepath.Join(toolchain.sourceDir, "*.js"), "./"))
 
 	for _, directory := range toolchain.meta.JSDirectories {
 		dest := strings.TrimLeft(directory, toolchain.sourceDir)

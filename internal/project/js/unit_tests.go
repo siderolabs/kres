@@ -34,8 +34,10 @@ func (tests *UnitTests) CompileDockerfile(output *dockerfile.Output) error {
 	output.Stage(tests.Name()).
 		Description("runs js unit-tests").
 		From("js").
-		Step(step.Script(`npm run test`).
-			MountCache(tests.meta.NpmCachePath).
+		Step(step.Script(`bun add -d @happy-dom/global-registrator`).
+			MountCache(tests.meta.JSCachePath)).
+		Step(step.Script(`bun run test`).
+			MountCache(tests.meta.JSCachePath).
 			Env("CI", "true"))
 
 	return nil

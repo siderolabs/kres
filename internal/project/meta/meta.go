@@ -77,8 +77,8 @@ type Options struct { //nolint:govet
 	// Path to ~/.cache.
 	CachePath string
 
-	// NpmCachePath path to node_modules.
-	NpmCachePath string
+	// JSCachePath path to node_modules.
+	JSCachePath string
 
 	// ArtifactsPath binary output path.
 	ArtifactsPath string

@@ -2,7 +2,7 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-05-27T15:18:38Z by kres b5844f8-dirty.
+# Generated on 2024-06-06T12:19:33Z by kres 14c10c9-dirty.
 
 ARG TOOLCHAIN
 
@@ -11,13 +11,12 @@ FROM ghcr.io/siderolabs/ca-certificates:v1.7.0 AS image-ca-certificates
 FROM ghcr.io/siderolabs/fhs:v1.7.0 AS image-fhs
 
 # runs markdownlint
-FROM docker.io/node:22.2.0-alpine3.19 AS lint-markdown
+FROM docker.io/oven/bun:1.1.12-alpine AS lint-markdown
 WORKDIR /src
-RUN npm i -g markdownlint-cli@0.41.0
-RUN npm i sentences-per-line@0.2.1
+RUN bun i markdownlint-cli@0.41.0 sentences-per-line@0.2.1
 COPY .markdownlint.json .
 COPY ./README.md ./README.md
-RUN markdownlint --ignore "CHANGELOG.md" --ignore "**/node_modules/**" --ignore '**/hack/chglog/**' --rules node_modules/sentences-per-line/index.js .
+RUN bunx markdownlint --ignore "CHANGELOG.md" --ignore "**/node_modules/**" --ignore '**/hack/chglog/**' --rules node_modules/sentences-per-line/index.js .
 
 # base toolchain image
 FROM --platform=${BUILDPLATFORM} ${TOOLCHAIN} AS toolchain

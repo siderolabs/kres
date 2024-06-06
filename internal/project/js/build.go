@@ -30,13 +30,13 @@ type Build struct {
 	artifacts   []string
 }
 
-const nodeBuildArgsVarName = "NODE_BUILD_ARGS"
+const buildArgsVarName = "JS_BUILD_ARGS"
 
 // NewBuild initializes Build.
 func NewBuild(meta *meta.Options, name string) *Build {
 	embedFile := fmt.Sprintf("internal/%s/%s.go", name, name)
 	meta.SourceFiles = append(meta.SourceFiles, embedFile)
-	meta.BuildArgs = append(meta.BuildArgs, nodeBuildArgsVarName)
+	meta.BuildArgs = append(meta.BuildArgs, buildArgsVarName)
 
 	return &Build{
 		BaseNode:  dag.NewBaseNode(name),
@@ -53,7 +53,26 @@ func (build *Build) CompileTemplates(output *template.Output) error {
 		}).
 		PreamblePrefix("// ").
 		WithLicense().
-		WithLicenseText(build.LicenseText)
+		WithLicenseText(build.LicenseText).
+		NoOverwrite()
+
+	output.Define(filepath.Join(build.Name(), "bunfig.toml"), templates.Bunfig).
+		NoPreamble().
+		NoOverwrite()
+
+	output.Define(filepath.Join(build.Name(), "test", "setup.ts"), templates.TestSetup).
+		WithLicense().
+		WithLicenseText(build.LicenseText).
+		PreamblePrefix("// ").
+		NoPreamble().
+		NoOverwrite()
+
+	output.Define(filepath.Join(build.Name(), "eslint.config.js"), templates.Eslint).
+		PreamblePrefix("// ").
+		WithLicense().
+		WithLicenseText(build.LicenseText).
+		NoPreamble().
+		NoOverwrite()
 
 	distDir := filepath.Join(
 		filepath.Dir(build.embedFile),
@@ -73,9 +92,9 @@ func (build *Build) CompileDockerfile(output *dockerfile.Output) error {
 	output.Stage(build.Name()).
 		Description("builds " + build.Name()).
 		From("--platform=${BUILDPLATFORM} js").
-		Step(step.Arg(nodeBuildArgsVarName)).
-		Step(step.Script("npm run build ${" + nodeBuildArgsVarName + "}").
-			MountCache(build.meta.NpmCachePath)).
+		Step(step.Arg(buildArgsVarName)).
+		Step(step.Script("bun run build ${" + buildArgsVarName + "}").
+			MountCache(build.meta.JSCachePath)).
 		Step(step.Script("mkdir -p " + outputDir)).
 		Step(step.Script("cp -rf ./dist/* " + outputDir))
 
@@ -101,7 +120,7 @@ func (build *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 // CompileMakefile implements makefile.Compiler.
 func (build *Build) CompileMakefile(output *makefile.Output) error {
 	output.VariableGroup(makefile.VariableGroupCommon).
-		Variable(makefile.OverridableVariable(nodeBuildArgsVarName, ""))
+		Variable(makefile.OverridableVariable(buildArgsVarName, ""))
 
 	output.Target(fmt.Sprintf("$(ARTIFACTS)/%s-js", build.Name())).
 		Script("@$(MAKE) target-" + build.Name()).
