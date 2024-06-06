@@ -45,7 +45,7 @@ func (lint *Lint) CompileDockerfile(output *dockerfile.Output) error {
 	stage := output.Stage(lint.Name()).Description("runs markdownlint").
 		From("docker.io/oven/bun:" + lint.BaseImage).
 		Step(step.WorkDir("/src")).
-		Step(step.Run("bun", "i", "markdownlint-cli@"+lint.MardownLintCLIVersion, "sentences-per-line@"+lint.SentencesPerLineVersion, "-g")).
+		Step(step.Run("bun", "i", "markdownlint-cli@"+lint.MardownLintCLIVersion, "sentences-per-line@"+lint.SentencesPerLineVersion)).
 		Step(step.Copy(".markdownlint.json", "."))
 
 	for _, directory := range lint.meta.MarkdownDirectories {
