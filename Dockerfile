@@ -2,7 +2,7 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-06-12T12:01:45Z by kres 7360563-dirty.
+# Generated on 2024-06-13T12:21:14Z by kres 90445df-dirty.
 
 ARG TOOLCHAIN
 
@@ -24,14 +24,14 @@ RUN apk --update --no-cache add bash curl build-base protoc protobuf-dev
 
 # build tools
 FROM --platform=${BUILDPLATFORM} toolchain AS tools
-ENV GO111MODULE on
+ENV GO111MODULE=on
 ARG CGO_ENABLED
-ENV CGO_ENABLED ${CGO_ENABLED}
+ENV CGO_ENABLED=${CGO_ENABLED}
 ARG GOTOOLCHAIN
-ENV GOTOOLCHAIN ${GOTOOLCHAIN}
+ENV GOTOOLCHAIN=${GOTOOLCHAIN}
 ARG GOEXPERIMENT
-ENV GOEXPERIMENT ${GOEXPERIMENT}
-ENV GOPATH /go
+ENV GOEXPERIMENT=${GOEXPERIMENT}
+ENV GOPATH=/go
 ARG DEEPCOPY_VERSION
 RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg go install github.com/siderolabs/deep-copy@${DEEPCOPY_VERSION} \
 	&& mv /go/bin/deep-copy /bin/deep-copy
@@ -72,7 +72,7 @@ RUN FILES="$(gofumpt -l .)" && test -z "${FILES}" || (echo -e "Source code is no
 FROM base AS lint-golangci-lint
 WORKDIR /src
 COPY .golangci.yml .
-ENV GOGC 50
+ENV GOGC=50
 RUN golangci-lint config verify --config .golangci.yml
 RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/root/.cache/golangci-lint --mount=type=cache,target=/go/pkg golangci-lint run --config .golangci.yml
 
@@ -179,6 +179,6 @@ ARG TARGETARCH
 COPY --from=kres kres-linux-${TARGETARCH} /kres
 COPY --from=image-fhs / /
 COPY --from=image-ca-certificates / /
-LABEL org.opencontainers.image.source https://github.com/siderolabs/kres
+LABEL org.opencontainers.image.source=https://github.com/siderolabs/kres
 ENTRYPOINT ["/kres","gen"]
 

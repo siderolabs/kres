@@ -28,7 +28,7 @@ func (step *LabelStep) Step() {}
 
 // Generate implements Step interface.
 func (step *LabelStep) Generate(w io.Writer) error {
-	_, err := fmt.Fprintf(w, "LABEL %s %s\n", step.key, step.value)
+	_, err := fmt.Fprintf(w, "LABEL %s=%s\n", step.key, step.value)
 
 	return err
 }

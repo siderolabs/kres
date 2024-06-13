@@ -28,7 +28,7 @@ func (step *EnvStep) Step() {}
 
 // Generate implements Step interface.
 func (step *EnvStep) Generate(w io.Writer) error {
-	_, err := fmt.Fprintf(w, "ENV %s %s\n", step.name, step.value)
+	_, err := fmt.Fprintf(w, "ENV %s=%s\n", step.name, step.value)
 
 	return err
 }

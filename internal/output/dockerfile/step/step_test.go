@@ -29,7 +29,7 @@ func TestGenerate(t *testing.T) {
 		},
 		{
 			step.Env("GO111MODULE", "on"),
-			"ENV GO111MODULE on\n",
+			"ENV GO111MODULE=on\n",
 		},
 		{
 			step.Run("go", "build", "./..."),
@@ -77,7 +77,7 @@ func TestGenerate(t *testing.T) {
 		},
 		{
 			step.Label("foo", "bar"),
-			"LABEL foo bar\n",
+			"LABEL foo=bar\n",
 		},
 	} {
 		var buf bytes.Buffer
