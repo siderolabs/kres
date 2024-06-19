@@ -15,9 +15,9 @@
 kind: common.Image
 name: image-kres
 spec:
-    extraEnvironment:
-      PLATFORM: linux/amd64,linux/arm64
-    entrypointArgs: ['gen']
+  extraEnvironment:
+    PLATFORM: linux/amd64,linux/arm64
+  entrypointArgs: ['gen']
 ---
 kind: golang.Build
 spec:
@@ -37,13 +37,31 @@ spec:
 ---
 kind: service.CodeCov
 spec:
-    targetThreshold: 8
+  targetThreshold: 8
 ---
 kind: common.Build
 spec:
-    ignoredPaths:
-        - "_out/example/"
+  ignoredPaths:
+    - "_out/example/"
 ---
 kind: golang.Generate
 spec:
-    versionPackagePath: internal/version
+  versionPackagePath: internal/version
+---
+kind: golang.GolangciLint
+spec:
+  depguardExtraRules:
+    test_kres_depguard_extra_rule_1:
+      list-mode: lax
+      files:
+        - test_1.go
+      deny:
+        - pkg: io/ioutil
+          desc: Test rule 1
+    test_kres_depguard_extra_rule_2:
+      list-mode: lax
+      files:
+        - test_2.go
+      deny:
+        - pkg: io/ioutil
+          desc: Test rule 2

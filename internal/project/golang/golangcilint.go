@@ -22,6 +22,8 @@ type GolangciLint struct {
 
 	meta *meta.Options
 
+	DepguardExtraRules map[string]any `yaml:"depguardExtraRules"`
+
 	Version     string
 	projectPath string
 }
@@ -43,6 +45,7 @@ func NewGolangciLint(meta *meta.Options, projectPath string) *GolangciLint {
 // CompileGolangci implements golangci.Compiler.
 func (lint *GolangciLint) CompileGolangci(output *golangci.Output) error {
 	output.Enable()
+	output.SetDepguardExtraRules(lint.DepguardExtraRules)
 	output.NewFile(lint.projectPath)
 
 	return nil

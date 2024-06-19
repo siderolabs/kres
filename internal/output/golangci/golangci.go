@@ -9,8 +9,11 @@ import (
 	_ "embed"
 	"io"
 	"path/filepath"
+	"strings"
+	"text/template"
 
 	"github.com/siderolabs/gen/xslices"
+	"gopkg.in/yaml.v3"
 
 	"github.com/siderolabs/kres/internal/output"
 )
@@ -25,6 +28,8 @@ var configTemplate []byte
 // Output implements .golangci.yml generation.
 type Output struct {
 	output.FileAdapter
+
+	depguardExtraRules map[string]any
 
 	files   []file
 	enabled bool
@@ -53,6 +58,11 @@ func (o *Output) Enable() {
 	o.enabled = true
 }
 
+// SetDepguardExtraRules sets extra rules for depguard linter.
+func (o *Output) SetDepguardExtraRules(rules map[string]interface{}) {
+	o.depguardExtraRules = rules
+}
+
 // NewFile sets project path.
 func (o *Output) NewFile(path string) {
 	o.files = append(o.files, file{
@@ -79,11 +89,56 @@ func (o *Output) config(w io.Writer) error {
 		return err
 	}
 
-	if _, err := w.Write(configTemplate); err != nil {
+	tmpl, err := template.New("config").Parse(string(configTemplate))
+	if err != nil {
+		return err
+	}
+
+	templateData, err := o.buildTemplateData()
+	if err != nil {
+		return err
+	}
+
+	if err = tmpl.Execute(w, templateData); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+type golangciLintTemplateData struct {
+	DepguardExtraRules string
+}
+
+func (o *Output) buildTemplateData() (golangciLintTemplateData, error) {
+	depGuardExtraRules := ""
+
+	if len(o.depguardExtraRules) > 0 {
+		var sb strings.Builder
+
+		encoder := yaml.NewEncoder(&sb)
+		encoder.SetIndent(2)
+
+		if err := encoder.Encode(o.depguardExtraRules); err != nil {
+			return golangciLintTemplateData{}, err
+		}
+
+		var indented strings.Builder
+
+		for _, line := range strings.Split(sb.String(), "\n") {
+			if line != "" {
+				indented.WriteString("      ")
+				indented.WriteString(line)
+				indented.WriteString("\n")
+			}
+		}
+
+		depGuardExtraRules = indented.String()
+	}
+
+	return golangciLintTemplateData{
+		DepguardExtraRules: depGuardExtraRules,
+	}, nil
 }
 
 // Compiler is implemented by project blocks which support Dockerfile generate.
