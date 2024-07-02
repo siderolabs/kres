@@ -195,9 +195,15 @@ func (pkgfile *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		return err
 	}
 
+	buildStep := ghworkflow.Step("Build").SetMakeStep("")
+
+	if err := buildStep.SetConditions("on-pull-request"); err != nil {
+		return err
+	}
+
 	output.AddStep(
 		"default",
-		ghworkflow.Step("Build").SetMakeStep(""),
+		buildStep,
 	)
 
 	steps := []*ghworkflow.JobStep{
