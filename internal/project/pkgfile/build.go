@@ -212,9 +212,15 @@ func (pkgfile *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	}
 
 	for name := range pkgfile.AdditionalTargets {
+		buildStep := ghworkflow.Step("Build " + name).SetMakeStep(name)
+
+		if err := buildStep.SetConditions("on-pull-request"); err != nil {
+			return err
+		}
+
 		output.AddStep(
 			"default",
-			ghworkflow.Step("Build "+name).SetMakeStep(name),
+			buildStep,
 		)
 
 		pushStep := ghworkflow.Step("Push "+name).SetMakeStep(name, "PUSH=true")
