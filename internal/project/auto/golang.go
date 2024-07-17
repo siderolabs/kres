@@ -10,6 +10,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 
 	"golang.org/x/mod/modfile"
 
@@ -124,8 +125,8 @@ func (builder *builder) processDirectory(path string) error {
 		}
 	}
 
-	if len(builder.meta.GoDirectories) == 0 {
-		// no standard directories found, assume any directory with `.go` files is a source directory
+	{
+		// assume any directory with `.go` files is a source directory
 		topLevel, err := os.ReadDir(dir)
 		if err != nil {
 			return err
@@ -133,6 +134,10 @@ func (builder *builder) processDirectory(path string) error {
 
 		for _, item := range topLevel {
 			if !item.IsDir() {
+				continue
+			}
+
+			if slices.Index(builder.meta.Directories, filepath.Join(dir, item.Name())) != -1 {
 				continue
 			}
 
