@@ -80,8 +80,9 @@ func (release *Release) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		})
 
 		checkSumCommands := []string{
-			fmt.Sprintf("sha256sum %s > %s", strings.Join(artifacts, " "), filepath.Join(release.meta.ArtifactsPath, "sha256sum.txt")),
-			fmt.Sprintf("sha512sum %s > %s", strings.Join(artifacts, " "), filepath.Join(release.meta.ArtifactsPath, "sha512sum.txt")),
+			fmt.Sprintf("cd %s", release.meta.ArtifactsPath),
+			fmt.Sprintf("sha256sum %s > %s", strings.Join(release.Artifacts, " "), "sha256sum.txt"),
+			fmt.Sprintf("sha512sum %s > %s", strings.Join(release.Artifacts, " "), "sha512sum.txt"),
 		}
 
 		checkSumStep := ghworkflow.Step("Generate Checksums").

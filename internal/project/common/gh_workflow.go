@@ -279,8 +279,9 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 
 				if step.ReleaseStep.GenerateChecksums {
 					checkSumCommands := []string{
-						fmt.Sprintf("sha256sum %s > %s", strings.Join(artifacts, " "), filepath.Join(step.ReleaseStep.BaseDirectory, "sha256sum.txt")),
-						fmt.Sprintf("sha512sum %s > %s", strings.Join(artifacts, " "), filepath.Join(step.ReleaseStep.BaseDirectory, "sha512sum.txt")),
+						fmt.Sprintf("cd %s", step.ReleaseStep.BaseDirectory),
+						fmt.Sprintf("sha256sum %s > %s", strings.Join(step.ReleaseStep.Artifacts, " "), "sha256sum.txt"),
+						fmt.Sprintf("sha512sum %s > %s", strings.Join(step.ReleaseStep.Artifacts, " "), "sha512sum.txt"),
 					}
 
 					checkSumStep := ghworkflow.Step("Generate Checksums").
