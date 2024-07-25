@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-06-19T18:39:17Z by kres 661b038.
+# Generated on 2024-07-25T18:32:16Z by kres f5550e0-dirty.
 
 # options for analysis running
 run:
@@ -103,20 +103,6 @@ linters-settings:
         deny:
           - pkg: io/ioutil
             desc: "replaced by io and os packages since Go 1.16: https://tip.golang.org/doc/go1.16#ioutil"
-      test_kres_depguard_extra_rule_1:
-        deny:
-          - desc: Test rule 1
-            pkg: io/ioutil
-        files:
-          - test_1.go
-        list-mode: lax
-      test_kres_depguard_extra_rule_2:
-        deny:
-          - desc: Test rule 2
-            pkg: io/ioutil
-        files:
-          - test_2.go
-        list-mode: lax
 
 linters:
   enable-all: true

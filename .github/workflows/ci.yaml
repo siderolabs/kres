@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-07-23T12:27:03Z by kres 6d3182c-dirty.
+# Generated on 2024-07-25T18:32:16Z by kres f5550e0-dirty.
 
 name: default
 concurrency:
@@ -105,6 +105,13 @@ jobs:
           PUSH: "true"
         run: |
           make image-kres
+      - name: push-kres-stable
+        if: github.event_name != 'pull_request' && startsWith(github.ref, 'refs/tags/') && !contains(github.ref, 'alpha') && !contains(github.ref, 'beta')
+        env:
+          PLATFORM: linux/amd64,linux/arm64
+          PUSH: "true"
+        run: |
+          make image-kres IMAGE_TAG=stable
       - name: push-kres-latest
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         env:
@@ -115,9 +122,8 @@ jobs:
       - name: Generate Checksums
         if: startsWith(github.ref, 'refs/tags/')
         run: |
-          cd _out
-          sha256sum kres-* > sha256sum.txt
-          sha512sum kres-* > sha512sum.txt
+          sha256sum _out/kres-* > _out/sha256sum.txt
+          sha512sum _out/kres-* > _out/sha512sum.txt
       - name: release-notes
         if: startsWith(github.ref, 'refs/tags/')
         run: |
