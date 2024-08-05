@@ -17,7 +17,7 @@ const (
 
 	// BldrImageVersion is the version of bldr image.
 	// renovate: datasource=github-releases depName=siderolabs/bldr
-	BldrImageVersion = "v0.3.1"
+	BldrImageVersion = "v0.3.2"
 
 	// BuildKitContainerVersion is the version of buildkit container image.
 	// renovate: datasource=docker versioning=docker depName=moby/buildkit
