@@ -21,7 +21,7 @@ const (
 
 	// BuildKitContainerVersion is the version of buildkit container image.
 	// renovate: datasource=docker versioning=docker depName=moby/buildkit
-	BuildKitContainerVersion = "v0.15.0"
+	BuildKitContainerVersion = "v0.15.1"
 	// CheckOutActionVersion is the version of checkout github action.
 	// renovate: datasource=github-releases extractVersion=^(?<version>v\d+)\.\d+\.\d+$ depName=actions/checkout
 	CheckOutActionVersion = "v4"
