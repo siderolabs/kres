@@ -57,7 +57,7 @@ const (
 	GolangContainerImageVersion = "1.22-alpine"
 	// GoVersion is the version of Go.
 	// renovate: datasource=github-tags extractVersion=^go(?<version>.*)$ depName=golang/go
-	GoVersion = "1.22.5"
+	GoVersion = "1.22.6"
 	// GrpcGatewayVersion is the version of grpc-gateway.
 	// renovate: datasource=go depName=github.com/grpc-ecosystem/grpc-gateway
 	GrpcGatewayVersion = "v2.21.0"
@@ -72,7 +72,7 @@ const (
 	MardownLintCLIVersion = "0.41.0"
 	// BunContainerImageVersion is the default bun container image.
 	// renovate: datasource=docker versioning=docker depName=oven/bun
-	BunContainerImageVersion = "1.1.21-alpine"
+	BunContainerImageVersion = "1.1.22-alpine"
 	// PkgsVersion is the version of pkgs.
 	// renovate: datasource=github-tags depName=siderolabs/pkgs
 	PkgsVersion = "v1.7.0"

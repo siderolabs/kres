@@ -2,7 +2,7 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-08-07T08:16:14Z by kres 133368e-dirty.
+# Generated on 2024-08-12T07:50:42Z by kres 362381e.
 
 ARG TOOLCHAIN
 
@@ -11,7 +11,7 @@ FROM ghcr.io/siderolabs/ca-certificates:v1.7.0 AS image-ca-certificates
 FROM ghcr.io/siderolabs/fhs:v1.7.0 AS image-fhs
 
 # runs markdownlint
-FROM docker.io/oven/bun:1.1.21-alpine AS lint-markdown
+FROM docker.io/oven/bun:1.1.22-alpine AS lint-markdown
 WORKDIR /src
 RUN bun i markdownlint-cli@0.41.0 sentences-per-line@0.2.1
 COPY .markdownlint.json .
