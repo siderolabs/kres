@@ -62,8 +62,8 @@ func (build *Build) CompileDockerfile(output *dockerfile.Output) error {
 func (build *Build) CompileMakefile(output *makefile.Output) error {
 	variableGroup := output.VariableGroup(makefile.VariableGroupCommon).
 		Variable(makefile.SimpleVariable("SHA", "$(shell git describe --match=none --always --abbrev=8 --dirty)")).
-		Variable(makefile.SimpleVariable("TAG", "$(shell git describe --tag --always --dirty --match v[0-9]\\*)")).
-		Variable(makefile.SimpleVariable("ABBREV_TAG", "$(shell git describe --tags >/dev/null 2>/dev/null && git describe --tag --always --match v[0-9]\\* --abbrev=0 || echo 'undefined')")).
+		Variable(makefile.SimpleVariable("TAG", "$(shell git describe --tag --always --dirty --match 'v[0-9]*')")).
+		Variable(makefile.SimpleVariable("ABBREV_TAG", "$(shell git describe --tags >/dev/null 2>/dev/null && git describe --tag --always --match 'v[0-9]*' --abbrev=0 || echo 'undefined')")).
 		Variable(makefile.SimpleVariable("BRANCH", "$(shell git rev-parse --abbrev-ref HEAD)")).
 		Variable(makefile.SimpleVariable("ARTIFACTS", build.ArtifactsPath)).
 		Variable(makefile.OverridableVariable("IMAGE_TAG", "$(TAG)")).

@@ -1,12 +1,12 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-08-14T03:23:02Z by kres ac31db2.
+# Generated on 2024-08-14T10:20:34Z by kres 16edda9.
 
 # common variables
 
 SHA := $(shell git describe --match=none --always --abbrev=8 --dirty)
-TAG := $(shell git describe --tag --always --dirty --match v[0-9]\*)
-ABBREV_TAG := $(shell git describe --tags >/dev/null 2>/dev/null && git describe --tag --always --match v[0-9]\* --abbrev=0 || echo 'undefined')
+TAG := $(shell git describe --tag --always --dirty --match 'v[0-9]*')
+ABBREV_TAG := $(shell git describe --tags >/dev/null 2>/dev/null && git describe --tag --always --match 'v[0-9]*' --abbrev=0 || echo 'undefined')
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 ARTIFACTS := _out
 IMAGE_TAG ?= $(TAG)
