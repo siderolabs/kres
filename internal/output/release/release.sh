@@ -91,33 +91,37 @@ function is_on_main_branch {
 }
 
 function update_license_files {
-    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    parent_dir="$(dirname "$script_dir")"
-    current_year=$(date +"%Y")
-    change_date=$(date -v+4y +"%Y-%m-%d" 2>/dev/null || date -d "+4 years" +"%Y-%m-%d" 2>/dev/null || date --date="+4 years" +"%Y-%m-%d")
+  script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  parent_dir="$(dirname "$script_dir")"
+  current_year=$(date +"%Y")
+  change_date=$(date -v+4y +"%Y-%m-%d" 2>/dev/null || date -d "+4 years" +"%Y-%m-%d" 2>/dev/null || date --date="+4 years" +"%Y-%m-%d")
 
-    # Find LICENSE files recursively in the parent directory
-    find "$parent_dir" -type f -name "LICENSE" | while read -r file; do
-        # Check if file starts with "Business Source License"
-        if grep -q "^Business Source License" "$file"; then
-            temp_file="${file}.tmp"
+  # Find LICENSE and .kres.yaml files recursively in the parent directory (project root)
+  find "$parent_dir" \( -name "LICENSE" -o -name ".kres.yaml" \) -type f | while read -r file; do
+    temp_file="${file}.tmp"
 
-            # Update the year and the change date
-            sed -e "s/The Licensed Work is (c) [0-9]\{4\}/The Licensed Work is (c) $current_year/" \
-                -e "s/Change Date:          [0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}/Change Date:          $change_date/" \
-                "$file" > "$temp_file"
+    if [[ $file == *"LICENSE" ]]; then
+      if grep -q "^Business Source License" "$file"; then
+        sed -e "s/The Licensed Work is (c) [0-9]\{4\}/The Licensed Work is (c) $current_year/" \
+          -e "s/Change Date:          [0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}/Change Date:          $change_date/" \
+          "$file" >"$temp_file"
+      else
+        continue # Not a Business Source License file
+      fi
+    elif [[ $file == *".kres.yaml" ]]; then
+      sed -E 's/^([[:space:]]*)ChangeDate:.*$/\1ChangeDate: "'"$change_date"'"/' "$file" >"$temp_file"
+    fi
 
-            # Check if the file has changed
-            if ! cmp -s "$file" "$temp_file"; then
-                mv "$temp_file" "$file"
-                echo "Updated: $file"
-                git add "$file"
-            else
-                echo "No changes: $file"
-                rm "$temp_file"
-            fi
-        fi
-    done
+    # Check if the file has changed
+    if ! cmp -s "$file" "$temp_file"; then
+      mv "$temp_file" "$file"
+      echo "Updated: $file"
+      git add "$file"
+    else
+      echo "No changes: $file"
+      rm "$temp_file"
+    fi
+  done
 }
 
 if declare -f "$1" > /dev/null
