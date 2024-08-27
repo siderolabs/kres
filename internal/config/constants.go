@@ -21,7 +21,7 @@ const (
 
 	// BuildKitContainerVersion is the version of buildkit container image.
 	// renovate: datasource=docker versioning=docker depName=moby/buildkit
-	BuildKitContainerVersion = "v0.15.1"
+	BuildKitContainerVersion = "v0.15.2"
 	// CheckOutActionVersion is the version of checkout github action.
 	// renovate: datasource=github-releases extractVersion=^(?<version>v\d+)\.\d+\.\d+$ depName=actions/checkout
 	CheckOutActionVersion = "v4"
@@ -72,7 +72,7 @@ const (
 	MardownLintCLIVersion = "0.41.0"
 	// BunContainerImageVersion is the default bun container image.
 	// renovate: datasource=docker versioning=docker depName=oven/bun
-	BunContainerImageVersion = "1.1.22-alpine"
+	BunContainerImageVersion = "1.1.26-alpine"
 	// PkgsVersion is the version of pkgs.
 	// renovate: datasource=github-tags depName=siderolabs/pkgs
 	PkgsVersion = "v1.7.0"
