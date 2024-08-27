@@ -6,6 +6,7 @@ require (
 	github.com/drone/drone-yaml v1.2.3
 	github.com/go-git/go-git/v5 v5.12.0
 	github.com/google/go-github/v63 v63.0.0
+	github.com/google/go-github/v64 v64.0.0
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/siderolabs/gen v0.5.0
 	github.com/spf13/cobra v1.8.1
