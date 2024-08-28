@@ -144,6 +144,11 @@ func splitIgnoringPreamble(r io.Reader) ([]string, error) {
 			contents = append(contents, line)
 		}
 
+		// `#!` is a shebang and not preamble
+		if strings.HasPrefix(line, "#!") {
+			contents = append(contents, line)
+		}
+
 		if inPreamble && (stringContainsPreamble(line, comments...) || line == "" || line == "---") {
 			continue
 		}

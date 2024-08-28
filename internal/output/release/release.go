@@ -82,7 +82,7 @@ func (o *Output) Permissions(filename string) os.FileMode {
 }
 
 func (o *Output) releaseScript(w io.Writer) error {
-	if _, err := w.Write([]byte("#!/bin/bash\n\n")); err != nil {
+	if _, err := w.Write([]byte("#!/usr/bin/env bash\n\n")); err != nil {
 		return err
 	}
 
