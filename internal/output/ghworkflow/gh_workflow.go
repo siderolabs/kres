@@ -314,7 +314,7 @@ func SOPSSteps() []*JobStep {
 	return []*JobStep{
 		{
 			Name: "Mask secrets",
-			Run:  "echo -e \"$(sops -d .secrets.yaml | yq -e '.secrets | to_entries[] | \"::add-mask::\" + .value')\"\n",
+			Run:  "echo \"$(sops -d .secrets.yaml | yq -e '.secrets | to_entries[] | \"::add-mask::\" + .value')\"\n",
 		},
 		{
 			Name: "Set secrets for job",
