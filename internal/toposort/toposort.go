@@ -64,7 +64,7 @@ func (index *edgeIndex) removeIndex(edge edge) {
 func Stable[N Node[N]](nodes []N) (output []N, cycle []N) {
 	edges := newEdgeIndex()
 
-	for i := range len(nodes) {
+	for i := range nodes {
 		for j := i + 1; j < len(nodes); j++ {
 			ij := nodes[i].Before(nodes[j])
 			ji := nodes[j].Before(nodes[i])
