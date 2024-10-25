@@ -72,7 +72,7 @@ const (
 	MardownLintCLIVersion = "0.42.0"
 	// BunContainerImageVersion is the default bun container image.
 	// renovate: datasource=docker versioning=docker depName=oven/bun
-	BunContainerImageVersion = "1.1.32-alpine"
+	BunContainerImageVersion = "1.1.33-alpine"
 	// PkgsVersion is the version of pkgs.
 	// renovate: datasource=github-tags depName=siderolabs/pkgs
 	PkgsVersion = "v1.8.0"
