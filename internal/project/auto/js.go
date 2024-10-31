@@ -58,6 +58,7 @@ func (builder *builder) DetectJS() (bool, error) {
 			filepath.Join(srcDir, "*.js"),
 			filepath.Join(srcDir, "*.ts"),
 			filepath.Join(srcDir, "*.html"),
+			filepath.Join(srcDir, "*.ico"),
 		)
 	}
 

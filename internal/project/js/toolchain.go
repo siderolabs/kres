@@ -140,7 +140,8 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 		Step(step.Copy(filepath.Join(toolchain.sourceDir, "bunfig.toml"), "./")).
 		Step(step.Copy(filepath.Join(toolchain.sourceDir, "*.html"), "./")).
 		Step(step.Copy(filepath.Join(toolchain.sourceDir, "*.ts"), "./")).
-		Step(step.Copy(filepath.Join(toolchain.sourceDir, "*.js"), "./"))
+		Step(step.Copy(filepath.Join(toolchain.sourceDir, "*.js"), "./")).
+		Step(step.Copy(filepath.Join(toolchain.sourceDir, "*.ico"), "./"))
 
 	for _, directory := range toolchain.meta.JSDirectories {
 		dest := strings.TrimLeft(directory, toolchain.sourceDir)
