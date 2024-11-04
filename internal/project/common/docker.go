@@ -117,7 +117,8 @@ func (docker *Docker) CompileMakefile(output *makefile.Output) error {
 		Push("--provenance=false").
 		Push("--progress=$(PROGRESS)").
 		Push("--platform=$(PLATFORM)").
-		Push("--push=$(PUSH)")
+		Push("--push=$(PUSH)").
+		Push("--build-arg=BUILDKIT_MULTI_PLATFORM=1")
 
 	for _, arg := range docker.meta.BuildArgs {
 		buildArgs.Push(fmt.Sprintf("--build-arg=%s=\"$(%s)\"", arg, arg))

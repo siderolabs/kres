@@ -83,7 +83,8 @@ func (pkgfile *Build) CompileMakefile(output *makefile.Output) error {
 		Push("--provenance=false").
 		Push("--progress=$(PROGRESS)").
 		Push("--platform=$(PLATFORM)").
-		Push("--build-arg=SOURCE_DATE_EPOCH=$(SOURCE_DATE_EPOCH)")
+		Push("--build-arg=SOURCE_DATE_EPOCH=$(SOURCE_DATE_EPOCH)").
+		Push("--build-arg=BUILDKIT_MULTI_PLATFORM=1")
 
 	for _, arg := range pkgfile.ExtraBuildArgs {
 		buildArgs.Push(fmt.Sprintf("--build-arg=%s=\"$(%s)\"", arg, arg))
