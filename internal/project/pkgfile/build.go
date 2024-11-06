@@ -14,6 +14,7 @@ import (
 	"github.com/siderolabs/kres/internal/output/dockerignore"
 	"github.com/siderolabs/kres/internal/output/ghworkflow"
 	"github.com/siderolabs/kres/internal/output/makefile"
+	"github.com/siderolabs/kres/internal/project/common"
 	"github.com/siderolabs/kres/internal/project/meta"
 )
 
@@ -114,7 +115,7 @@ func (pkgfile *Build) CompileMakefile(output *makefile.Output) error {
 
 	output.Target("local-%").
 		Description("Builds the specified target defined in the Pkgfile using the local output type. The build result will be output to the specified local destination.").
-		Script(`@$(MAKE) target-$* TARGET_ARGS="--output=type=local,dest=$(DEST) $(TARGET_ARGS)"`)
+		Script(`@$(MAKE) target-$* TARGET_ARGS="--output=type=local,dest=$(DEST) $(TARGET_ARGS)"` + common.FixLocalArtifactLocationsScript)
 
 	output.Target("docker-%").
 		Description("Builds the specified target defined in the Pkgfile using the docker output type. The build result will be loaded into Docker.").
