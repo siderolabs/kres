@@ -21,7 +21,7 @@ const (
 
 	// BuildKitContainerVersion is the version of buildkit container image.
 	// renovate: datasource=docker versioning=docker depName=moby/buildkit
-	BuildKitContainerVersion = "v0.17.0"
+	BuildKitContainerVersion = "v0.17.1"
 	// CheckOutActionVersion is the version of checkout github action.
 	// renovate: datasource=github-releases extractVersion=^(?<version>v\d+)\.\d+\.\d+$ depName=actions/checkout
 	CheckOutActionVersion = "v4"
@@ -36,7 +36,7 @@ const (
 	DindContainerImageVersion = "27.3-dind"
 	// DockerfileFrontendImageVersion is the version of the dockerfile frontend image.
 	// renovate: datasource=docker versioning=docker depName=docker/dockerfile-upstream
-	DockerfileFrontendImageVersion = "1.11.0-labs"
+	DockerfileFrontendImageVersion = "1.11.1-labs"
 	// DownloadArtifactActionVersion is the version of download artifact github action.
 	// renovate: datasource=github-releases extractVersion=^(?<version>v\d+)\.\d+\.\d+$ depName=actions/download-artifact
 	DownloadArtifactActionVersion = "v4"
@@ -48,16 +48,16 @@ const (
 	GoFmtVersion = "v0.7.0"
 	// GoImportsVersion is the version of goimports.
 	// renovate: datasource=go depName=golang.org/x/tools
-	GoImportsVersion = "v0.26.0"
+	GoImportsVersion = "v0.27.0"
 	// GolangCIlintVersion is the version of golangci-lint.
 	// renovate: datasource=go depName=github.com/golangci/golangci-lint
-	GolangCIlintVersion = "v1.61.0"
+	GolangCIlintVersion = "v1.62.0"
 	// GolangContainerImageVersion is the default golang container image.
 	// renovate: datasource=docker versioning=docker depName=golang
 	GolangContainerImageVersion = "1.23-alpine"
 	// GoVersion is the version of Go.
 	// renovate: datasource=github-tags extractVersion=^go(?<version>.*)$ depName=golang/go
-	GoVersion = "1.23.2"
+	GoVersion = "1.23.3"
 	// GrpcGatewayVersion is the version of grpc-gateway.
 	// renovate: datasource=go depName=github.com/grpc-ecosystem/grpc-gateway
 	GrpcGatewayVersion = "v2.23.0"

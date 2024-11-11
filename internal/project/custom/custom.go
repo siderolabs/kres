@@ -227,7 +227,7 @@ func (step *Step) CompileDrone(output *drone.Output) error {
 		var baseStepNames []string
 
 		for _, baseInput := range dag.GatherMatchingInputsRecursive(step, dag.Implements[baseDroneStepper]()) {
-			baseInput.(baseDroneStepper).BuildBaseDroneSteps(pipeline) //nolint:forcetypeassert // type is checked in GatherMatchingInputsRecursive
+			baseInput.(baseDroneStepper).BuildBaseDroneSteps(pipeline) //nolint:forcetypeassert,errcheck // type is checked in GatherMatchingInputsRecursive
 
 			baseStepNames = append(baseStepNames, baseInput.Name())
 		}
