@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-11-11T13:26:35Z by kres 1fc767a-dirty.
+# Generated on 2024-11-12T14:20:31Z by kres b6443eb-dirty.
 
 # common variables
 
@@ -146,13 +146,13 @@ target-%:  ## Builds the specified target defined in the Dockerfile. The build r
 
 local-%:  ## Builds the specified target defined in the Dockerfile using the local output type. The build result will be output to the specified local destination.
 	@$(MAKE) target-$* TARGET_ARGS="--output=type=local,dest=$(DEST) $(TARGET_ARGS)"
-	@PLATFORM=$(PLATFORM) ARTIFACTS=$(ARTIFACTS) bash -c '\
+	@PLATFORM=$(PLATFORM) DEST=$(DEST) bash -c '\
 	  for platform in $$(tr "," "\n" <<< "$$PLATFORM"); do \
 	    echo $$platform; \
 	    directory="$${platform//\//_}"; \
-	    if [[ -d "$$ARTIFACTS/$$directory" ]]; then \
-	      mv "$$ARTIFACTS/$$directory/"* $$ARTIFACTS; \
-	      rmdir "$$ARTIFACTS/$$directory/"; \
+	    if [[ -d "$$DEST/$$directory" ]]; then \
+	      mv "$$DEST/$$directory/"* $$DEST; \
+	      rmdir "$$DEST/$$directory/"; \
 	    fi; \
 	  done'
 

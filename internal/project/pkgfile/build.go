@@ -115,7 +115,7 @@ func (pkgfile *Build) CompileMakefile(output *makefile.Output) error {
 
 	output.Target("local-%").
 		Description("Builds the specified target defined in the Pkgfile using the local output type. The build result will be output to the specified local destination.").
-		Script(`@$(MAKE) target-$* TARGET_ARGS="--output=type=local,dest=$(DEST) $(TARGET_ARGS)"` + common.FixLocalArtifactLocationsScript)
+		Script(`@$(MAKE) target-$* TARGET_ARGS="--output=type=local,dest=$(DEST) $(TARGET_ARGS)"` + common.FixLocalDestLocationsScript)
 
 	output.Target("docker-%").
 		Description("Builds the specified target defined in the Pkgfile using the docker output type. The build result will be loaded into Docker.").

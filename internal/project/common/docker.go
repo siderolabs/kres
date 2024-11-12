@@ -17,21 +17,21 @@ import (
 	"github.com/siderolabs/kres/internal/project/meta"
 )
 
-// FixLocalArtifactLocationsScript moves the local build artifacts from the <os>_<arch> subdirectories to the build output root directory.
+// FixLocalDestLocationsScript moves the local build artifacts from the <os>_<arch> subdirectories to the build output root directory.
 //
 // This is to revert the behavior of buildkit on multi-platform builds.
 //
 // As we force buildkit to always do multi-platform builds (via `BUILDKIT_MULTI_PLATFORM=1`), we need this fix to restore old output behavior.
 //
 // This script is appended to the local output build targets.
-const FixLocalArtifactLocationsScript = `
-@PLATFORM=$(PLATFORM) ARTIFACTS=$(ARTIFACTS) bash -c '\
+const FixLocalDestLocationsScript = `
+@PLATFORM=$(PLATFORM) DEST=$(DEST) bash -c '\
   for platform in $$(tr "," "\n" <<< "$$PLATFORM"); do \
     echo $$platform; \
     directory="$${platform//\//_}"; \
-    if [[ -d "$$ARTIFACTS/$$directory" ]]; then \
-      mv "$$ARTIFACTS/$$directory/"* $$ARTIFACTS; \
-      rmdir "$$ARTIFACTS/$$directory/"; \
+    if [[ -d "$$DEST/$$directory" ]]; then \
+      mv "$$DEST/$$directory/"* $$DEST; \
+      rmdir "$$DEST/$$directory/"; \
     fi; \
   done'
 `
@@ -166,7 +166,7 @@ func (docker *Docker) CompileMakefile(output *makefile.Output) error {
 
 	output.Target("local-%").
 		Description("Builds the specified target defined in the Dockerfile using the local output type. The build result will be output to the specified local destination.").
-		Script(`@$(MAKE) target-$* TARGET_ARGS="--output=type=local,dest=$(DEST) $(TARGET_ARGS)"` + FixLocalArtifactLocationsScript)
+		Script(`@$(MAKE) target-$* TARGET_ARGS="--output=type=local,dest=$(DEST) $(TARGET_ARGS)"` + FixLocalDestLocationsScript)
 
 	return nil
 }
