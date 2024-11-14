@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-11-12T14:20:31Z by kres b6443eb-dirty.
+# Generated on 2024-11-15T09:12:52Z by kres c89d4488.
 
 # common variables
 
@@ -157,7 +157,7 @@ local-%:  ## Builds the specified target defined in the Dockerfile using the loc
 	  done'
 
 generate:  ## Generate .proto definitions.
-	@$(MAKE) local-$@ DEST=./
+	@$(MAKE) local-$@ TARGET_ARGS="--build-arg=BUILDKIT_MULTI_PLATFORM=0 $(TARGET_ARGS)" DEST=./
 
 lint-golangci-lint:  ## Runs golangci-lint linter.
 	@$(MAKE) target-$@
