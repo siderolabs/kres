@@ -117,7 +117,7 @@ func (generate *Generate) CompileMakefile(output *makefile.Output) error {
 	}
 
 	output.Target("generate").Description("Generate .proto definitions.").
-		Script(`@$(MAKE) local-$@ TARGET_ARGS="--build-arg=BUILDKIT_MULTI_PLATFORM=0 $(TARGET_ARGS)" DEST=./`)
+		Script(`@$(MAKE) local-$@ DEST=./ BUILDKIT_MULTI_PLATFORM=0`)
 
 	return nil
 }

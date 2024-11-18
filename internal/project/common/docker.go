@@ -137,7 +137,7 @@ func (docker *Docker) CompileMakefile(output *makefile.Output) error {
 		Push("--progress=$(PROGRESS)").
 		Push("--platform=$(PLATFORM)").
 		Push("--push=$(PUSH)").
-		Push("--build-arg=BUILDKIT_MULTI_PLATFORM=1")
+		Push("--build-arg=BUILDKIT_MULTI_PLATFORM=$(BUILDKIT_MULTI_PLATFORM)")
 
 	for _, arg := range docker.meta.BuildArgs {
 		buildArgs.Push(fmt.Sprintf("--build-arg=%s=\"$(%s)\"", arg, arg))
@@ -158,6 +158,7 @@ func (docker *Docker) CompileMakefile(output *makefile.Output) error {
 		Variable(makefile.OverridableVariable("PROGRESS", "auto")).
 		Variable(makefile.OverridableVariable("PUSH", "false")).
 		Variable(makefile.OverridableVariable("CI_ARGS", "")).
+		Variable(makefile.OverridableVariable("BUILDKIT_MULTI_PLATFORM", "1")).
 		Variable(buildArgs)
 
 	output.Target("target-%").

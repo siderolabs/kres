@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-11-15T09:12:52Z by kres c89d4488.
+# Generated on 2024-11-18T15:07:30Z by kres 91b35db-dirty.
 
 # common variables
 
@@ -41,12 +41,13 @@ PLATFORM ?= linux/amd64
 PROGRESS ?= auto
 PUSH ?= false
 CI_ARGS ?=
+BUILDKIT_MULTI_PLATFORM ?= 1
 COMMON_ARGS = --file=Dockerfile
 COMMON_ARGS += --provenance=false
 COMMON_ARGS += --progress=$(PROGRESS)
 COMMON_ARGS += --platform=$(PLATFORM)
 COMMON_ARGS += --push=$(PUSH)
-COMMON_ARGS += --build-arg=BUILDKIT_MULTI_PLATFORM=1
+COMMON_ARGS += --build-arg=BUILDKIT_MULTI_PLATFORM=$(BUILDKIT_MULTI_PLATFORM)
 COMMON_ARGS += --build-arg=ARTIFACTS="$(ARTIFACTS)"
 COMMON_ARGS += --build-arg=SHA="$(SHA)"
 COMMON_ARGS += --build-arg=TAG="$(TAG)"
@@ -157,7 +158,7 @@ local-%:  ## Builds the specified target defined in the Dockerfile using the loc
 	  done'
 
 generate:  ## Generate .proto definitions.
-	@$(MAKE) local-$@ TARGET_ARGS="--build-arg=BUILDKIT_MULTI_PLATFORM=0 $(TARGET_ARGS)" DEST=./
+	@$(MAKE) local-$@ DEST=./ BUILDKIT_MULTI_PLATFORM=0
 
 lint-golangci-lint:  ## Runs golangci-lint linter.
 	@$(MAKE) target-$@
