@@ -69,7 +69,7 @@ const (
 	LoginActionVersion = "v3"
 	// MardownLintCLIVersion is the version of markdownlint.
 	// renovate: datasource=npm depName=markdownlint-cli
-	MardownLintCLIVersion = "0.42.0"
+	MardownLintCLIVersion = "0.43.0"
 	// BunContainerImageVersion is the default bun container image.
 	// renovate: datasource=docker versioning=docker depName=oven/bun
 	BunContainerImageVersion = "1.1.34-alpine"
