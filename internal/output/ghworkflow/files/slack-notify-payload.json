@@ -1,4 +1,5 @@
 {
+    "channel": "proj-talos-maintainers",
     "attachments": [
         {
             "color": "${{ github.event.workflow_run.conclusion == 'success' && '#2EB886' || github.event.workflow_run.conclusion == 'failure' && '#A30002' || '#FFCC00' }}",

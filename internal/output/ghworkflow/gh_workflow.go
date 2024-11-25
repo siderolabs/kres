@@ -134,8 +134,7 @@ func NewOutput(mainBranch string, withDefaultJob bool) *Output {
 							SetCustomCondition("github.event.workflow_run.event == 'pull_request'"),
 						Step("Slack Notify").
 							SetUses("slackapi/slack-github-action@"+config.SlackNotifyActionVersion).
-							SetEnv("SLACK_BOT_TOKEN", "${{ secrets.SLACK_BOT_TOKEN }}").
-							SetWith("channel-id", "proj-talos-maintainers").
+							SetWith("token", "${{ secrets.SLACK_BOT_TOKEN }}").
 							SetWith("payload", slackNotifyPayload),
 					},
 				},
