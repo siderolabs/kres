@@ -135,6 +135,7 @@ func NewOutput(mainBranch string, withDefaultJob bool) *Output {
 						Step("Slack Notify").
 							SetUses("slackapi/slack-github-action@"+config.SlackNotifyActionVersion).
 							SetWith("token", "${{ secrets.SLACK_BOT_TOKEN }}").
+							SetWith("method", "chat.postMessage").
 							SetWith("payload", slackNotifyPayload),
 					},
 				},
