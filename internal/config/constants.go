@@ -96,7 +96,7 @@ const (
 	SetupTerraformActionVersion = "v3"
 	// SlackNotifyActionVersion is the version of slack notify github action.
 	// renovate: datasource=github-releases extractVersion=^(?<version>v\d+)\.\d+\.\d+$ depName=slackapi/slack-github-action
-	SlackNotifyActionVersion = "v1"
+	SlackNotifyActionVersion = "v2"
 	// SystemInfoActionVersion is the version of system info github action.
 	// renovate: datasource=github-releases depName=kenchan0130/actions-system-info
 	SystemInfoActionVersion = "v1.3.0"
