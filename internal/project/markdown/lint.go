@@ -35,7 +35,7 @@ func NewLint(meta *meta.Options) *Lint {
 		meta: meta,
 
 		BaseImage:               config.BunContainerImageVersion,
-		MardownLintCLIVersion:   config.MardownLintCLIVersion,
+		MardownLintCLIVersion:   config.MarkdownLintCLIVersion,
 		SentencesPerLineVersion: config.SentencesPerLineVersion,
 	}
 }
