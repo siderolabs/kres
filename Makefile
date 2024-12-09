@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-12-06T11:22:01Z by kres c401487d.
+# Generated on 2024-12-09T10:37:39Z by kres 2e7a4967.
 
 # common variables
 
@@ -152,7 +152,7 @@ local-%:  ## Builds the specified target defined in the Dockerfile using the loc
 	    echo $$platform; \
 	    directory="$${platform//\//_}"; \
 	    if [[ -d "$$DEST/$$directory" ]]; then \
-	      mv "$$DEST/$$directory/"* $$DEST; \
+	      mv -f "$$DEST/$$directory/"* $$DEST; \
 	      rmdir "$$DEST/$$directory/"; \
 	    fi; \
 	  done'

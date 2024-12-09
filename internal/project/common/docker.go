@@ -30,7 +30,7 @@ const FixLocalDestLocationsScript = `
     echo $$platform; \
     directory="$${platform//\//_}"; \
     if [[ -d "$$DEST/$$directory" ]]; then \
-      mv "$$DEST/$$directory/"* $$DEST; \
+      mv -f "$$DEST/$$directory/"* $$DEST; \
       rmdir "$$DEST/$$directory/"; \
     fi; \
   done'
