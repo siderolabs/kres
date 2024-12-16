@@ -25,8 +25,10 @@ type Renovate struct {
 
 // CustomManager represents a custom manager.
 type CustomManager struct {
-	VersioningTemplate string   `yaml:"versioningTemplate"`
 	CustomType         string   `yaml:"customType"`
+	DataSourceTemplate string   `yaml:"datasourceTemplate,omitempty"`
+	DepNameTemplate    string   `yaml:"depNameTemplate,omitempty"`
+	VersioningTemplate string   `yaml:"versioningTemplate"`
 	FileMatch          []string `yaml:"fileMatch"`
 	MatchStrings       []string `yaml:"matchStrings"`
 }
@@ -58,6 +60,8 @@ func (r *Renovate) CompileRenovate(o *renovate.Output) error {
 	o.CustomManagers(xslices.Map(r.CustomManagers, func(cm CustomManager) renovate.CustomManager {
 		return renovate.CustomManager{
 			CustomType:         cm.CustomType,
+			DataSourceTemplate: cm.DataSourceTemplate,
+			DepNameTemplate:    cm.DepNameTemplate,
 			FileMatch:          cm.FileMatch,
 			MatchStrings:       cm.MatchStrings,
 			VersioningTemplate: cm.VersioningTemplate,

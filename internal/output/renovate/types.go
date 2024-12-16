@@ -18,6 +18,8 @@ type Renovate struct {
 // CustomManager represents a custom manager.
 type CustomManager struct {
 	CustomType         string   `json:"customType"`
+	DataSourceTemplate string   `json:"datasourceTemplate,omitempty"`
+	DepNameTemplate    string   `json:"depNameTemplate,omitempty"`
 	VersioningTemplate string   `json:"versioningTemplate"`
 	FileMatch          []string `json:"fileMatch"`
 	MatchStrings       []string `json:"matchStrings"`
@@ -25,8 +27,11 @@ type CustomManager struct {
 
 // PackageRule represents a package rule.
 type PackageRule struct {
-	GroupName  string `json:"groupName,omitempty"`
-	Versioning string `json:"versioning,omitempty"`
+	DataSourceTemplate string `json:"datasourceTemplate,omitempty"`
+	DepNameTemplate    string `json:"depNameTemplate,omitempty"`
+	GroupName          string `json:"groupName,omitempty"`
+	Versioning         string `json:"versioning,omitempty"`
+	VersioningTemplate string `json:"versioningTemplate,omitempty"`
 
 	MatchPackageNames []string `json:"matchPackageNames,omitempty"`
 	MatchUpdateTypes  []string `json:"matchUpdateTypes,omitempty"`

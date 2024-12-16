@@ -1,6 +1,6 @@
 {
     "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-    "description": "THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.\n\nGenerated on 2024-12-16T13:00:41Z by kres fb2c01d-dirty.\n\n",
+    "description": "THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.\n\nGenerated on 2024-12-16T14:18:24Z by kres 071772c-dirty.\n\n",
     "prHeader": "Update Request | Renovate Bot",
     "extends": [
         ":dependencyDashboard",
@@ -29,6 +29,12 @@
                 "patch",
                 "pin",
                 "digest"
+            ]
+        },
+        {
+            "versioning": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.?(?<patch>\\d+)?$",
+            "matchPackageNames": [
+                "golang/go"
             ]
         },
         {
