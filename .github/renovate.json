@@ -1,85 +1,52 @@
 {
     "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "description": "THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.\n\nGenerated on 2024-12-16T13:00:41Z by kres fb2c01d-dirty.\n\n",
+    "prHeader": "Update Request | Renovate Bot",
     "extends": [
         ":dependencyDashboard",
         ":gitSignOff",
         ":semanticCommitScopeDisabled",
         "schedule:earlyMondays"
     ],
-    "prHeader": "Update Request | Renovate Bot",
-    "regexManagers": [
+    "customManagers": [
         {
+            "customType": "regex",
+            "versioningTemplate": "{{#if versioning}}{{versioning}}{{else}}semver{{/if}}",
             "fileMatch": [
                 "internal/config/constants.go"
             ],
             "matchStrings": [
                 "\\/\\/\\s+renovate: datasource=(?<datasource>.*?)(?:\\s+extractVersion=(?<extractVersion>.+?))?(?:\\s+versioning=(?<versioning>.+?))?\\s+depName=(?<depName>.+?)?\\s.*Version\\s+=\\s+\\\"(?<currentValue>.+?)\\\""
-            ],
-            "versioningTemplate": "{{#if versioning}}{{versioning}}{{else}}semver{{/if}}"
+            ]
         }
     ],
     "packageRules": [
         {
-            "matchPackageNames": [
-                "golang/go"
-            ],
-            "versioning": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.?(?<patch>\\d+)?$"
+            "groupName": "dependencies",
+            "matchUpdateTypes": [
+                "major",
+                "minor",
+                "patch",
+                "pin",
+                "digest"
+            ]
         },
         {
+            "versioning": "regex:^v(?<major>\\d+)",
             "matchPackageNames": [
                 "actions/checkout",
                 "docker/login-action",
                 "crazy-max/ghaction-github-release",
                 "docker/setup-buildx-action",
                 "slackapi/slack-github-action"
-            ],
-            "versioning": "regex:^v(?<major>\\d+)"
+            ]
         },
         {
+            "versioning": "regex:^v(?<major>\\d+)_(?<minor>\\d+)_?(?<patch>\\d+)?$",
             "matchPackageNames": [
                 "potiuk/get-workflow-origin"
-            ],
-            "versioning": "regex:^v(?<major>\\d+)_(?<minor>\\d+)_?(?<patch>\\d+)?$"
-        },
-        {
-            "matchPackagePatterns": [
-                "*"
-            ],
-            "matchDatasources": [
-                "docker"
-            ],
-            "groupName": "container images"
-        },
-        {
-            "matchPackagePatterns": [
-                "*"
-            ],
-            "matchDatasources": [
-                "go",
-                "golang-version"
-            ],
-            "groupName": "go packages"
-        },
-        {
-            "matchPackagePatterns": [
-                "*"
-            ],
-            "matchDatasources": [
-                "npm"
-            ],
-            "groupName": "node packages"
-        },
-        {
-            "matchPackagePatterns": [
-                "*"
-            ],
-            "matchDatasources": [
-                "git-refs",
-                "git-tags",
-                "github-tags",
-                "github-releases"
-            ],
-            "groupName": "releases"
+            ]
         }
-    ]
+    ],
+    "separateMajorMinor": false
 }

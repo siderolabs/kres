@@ -46,6 +46,7 @@ func (builder *builder) BuildCI() error {
 	if builder.meta.CompileGithubWorkflowsOnly {
 		targets = append(targets, common.NewRepository(builder.meta))
 		targets = append(targets, common.NewSOPS(builder.meta))
+		targets = append(targets, common.NewRenovate(builder.meta))
 	}
 
 	builder.proj.AddTarget(targets...)

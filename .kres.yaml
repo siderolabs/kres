@@ -65,3 +65,24 @@ spec:
       deny:
         - pkg: io/ioutil
           desc: Test rule 2
+---
+kind: common.Renovate
+spec:
+  customManagers:
+    - customType: regex
+      fileMatch:
+        - internal/config/constants.go
+      matchStrings:
+        - '\/\/\s+renovate: datasource=(?<datasource>.*?)(?:\s+extractVersion=(?<extractVersion>.+?))?(?:\s+versioning=(?<versioning>.+?))?\s+depName=(?<depName>.+?)?\s.*Version\s+=\s+\"(?<currentValue>.+?)\"'
+      versioningTemplate: "{{#if versioning}}{{versioning}}{{else}}semver{{/if}}"
+  packageRules:
+    - matchPackageNames:
+        - actions/checkout
+        - docker/login-action
+        - crazy-max/ghaction-github-release
+        - docker/setup-buildx-action
+        - slackapi/slack-github-action
+      versioning: "regex:^v(?<major>\\d+)"
+    - matchPackageNames:
+        - potiuk/get-workflow-origin
+      versioning: "regex:^v(?<major>\\d+)_(?<minor>\\d+)_?(?<patch>\\d+)?$"

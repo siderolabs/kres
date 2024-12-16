@@ -130,11 +130,12 @@ func (builder *builder) build() error {
 	makeHelp := common.NewMakeHelp(builder.meta)
 	conformance := common.NewConformance(builder.meta)
 	sops := common.NewSOPS(builder.meta)
+	renovate := common.NewRenovate(builder.meta)
 
 	release.AddInput(builder.targets...)
 
 	builder.proj.AddTarget(builder.targets...)
-	builder.proj.AddTarget(rekres, all, makeHelp, release, conformance, sops)
+	builder.proj.AddTarget(rekres, all, makeHelp, release, conformance, sops, renovate)
 
 	return nil
 }

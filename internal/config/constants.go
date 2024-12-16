@@ -33,7 +33,7 @@ const (
 	DeepCopyVersion = "v0.5.6"
 	// DindContainerImageVersion is the version of the dind container image.
 	// renovate: datasource=docker versioning=docker depName=docker
-	DindContainerImageVersion = "27.3-dind"
+	DindContainerImageVersion = "27.4-dind"
 	// DockerfileFrontendImageVersion is the version of the dockerfile frontend image.
 	// renovate: datasource=docker versioning=docker depName=docker/dockerfile-upstream
 	DockerfileFrontendImageVersion = "1.12.0-labs"
@@ -87,7 +87,7 @@ const (
 	ReleaseActionVersion = "v2"
 	// SentencesPerLineVersion is the version of sentences-per-line.
 	// renovate: datasource=npm depName=sentences-per-line
-	SentencesPerLineVersion = "0.2.1"
+	SentencesPerLineVersion = "0.3.0"
 	// SetupBuildxActionVersion is the version of setup-buildx github action.
 	// renovate: datasource=github-releases extractVersion=^(?<version>v\d+)\.\d+\.\d+$ depName=docker/setup-buildx-action
 	SetupBuildxActionVersion = "v3"
