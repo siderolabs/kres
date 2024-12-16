@@ -35,7 +35,11 @@ type CustomManager struct {
 
 // PackageRule represents a package rule.
 type PackageRule struct {
+	Enabled           *bool    `yaml:"enabled,omitempty"`
 	Versioning        string   `yaml:"versioning,omitempty"`
+	MatchDataSources  []string `yaml:"matchDataSources,omitempty"`
+	MatchFiles        []string `yaml:"matchFiles,omitempty"`
+	MatchPaths        []string `yaml:"matchPaths,omitempty"`
 	MatchPackageNames []string `yaml:"matchPackageNames,omitempty"`
 }
 
@@ -69,6 +73,10 @@ func (r *Renovate) CompileRenovate(o *renovate.Output) error {
 	}))
 	o.PackageRules(xslices.Map(r.PackageRules, func(pr PackageRule) renovate.PackageRule {
 		return renovate.PackageRule{
+			Enabled:           pr.Enabled,
+			MatchDataSources:  pr.MatchDataSources,
+			MatchFiles:        pr.MatchFiles,
+			MatchPaths:        pr.MatchPaths,
 			MatchPackageNames: pr.MatchPackageNames,
 			Versioning:        pr.Versioning,
 		}
