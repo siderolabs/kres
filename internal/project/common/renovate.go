@@ -38,7 +38,7 @@ type PackageRule struct {
 	Enabled           *bool    `yaml:"enabled,omitempty"`
 	Versioning        string   `yaml:"versioning,omitempty"`
 	MatchDataSources  []string `yaml:"matchDataSources,omitempty"`
-	MatchFiles        []string `yaml:"matchFiles,omitempty"`
+	MatchFileNames    []string `yaml:"matchFileNames,omitempty"`
 	MatchPaths        []string `yaml:"matchPaths,omitempty"`
 	MatchPackageNames []string `yaml:"matchPackageNames,omitempty"`
 }
@@ -75,7 +75,7 @@ func (r *Renovate) CompileRenovate(o *renovate.Output) error {
 		return renovate.PackageRule{
 			Enabled:           pr.Enabled,
 			MatchDataSources:  pr.MatchDataSources,
-			MatchFiles:        pr.MatchFiles,
+			MatchFileNames:    pr.MatchFileNames,
 			MatchPaths:        pr.MatchPaths,
 			MatchPackageNames: pr.MatchPackageNames,
 			Versioning:        pr.Versioning,
