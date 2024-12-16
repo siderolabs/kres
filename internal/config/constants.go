@@ -87,7 +87,7 @@ const (
 	ReleaseActionVersion = "v2"
 	// SentencesPerLineVersion is the version of sentences-per-line.
 	// renovate: datasource=npm depName=sentences-per-line
-	SentencesPerLineVersion = "0.2.1"
+	SentencesPerLineVersion = "0.3.0"
 	// SetupBuildxActionVersion is the version of setup-buildx github action.
 	// renovate: datasource=github-releases extractVersion=^(?<version>v\d+)\.\d+\.\d+$ depName=docker/setup-buildx-action
 	SetupBuildxActionVersion = "v3"
