@@ -7,8 +7,9 @@
         "schedule:earlyMondays"
     ],
     "prHeader": "Update Request | Renovate Bot",
-    "regexManagers": [
+    "customManagers": [
         {
+            "customType": "regex",
             "fileMatch": [
                 "internal/config/constants.go"
             ],
@@ -42,44 +43,44 @@
             "versioning": "regex:^v(?<major>\\d+)_(?<minor>\\d+)_?(?<patch>\\d+)?$"
         },
         {
-            "matchPackagePatterns": [
-                "*"
-            ],
             "matchDatasources": [
                 "docker"
             ],
-            "groupName": "container images"
+            "groupName": "container images",
+            "matchPackageNames": [
+                "*"
+            ]
         },
         {
-            "matchPackagePatterns": [
-                "*"
-            ],
             "matchDatasources": [
                 "go",
                 "golang-version"
             ],
-            "groupName": "go packages"
+            "groupName": "go packages",
+            "matchPackageNames": [
+                "*"
+            ]
         },
         {
-            "matchPackagePatterns": [
-                "*"
-            ],
             "matchDatasources": [
                 "npm"
             ],
-            "groupName": "node packages"
+            "groupName": "node packages",
+            "matchPackageNames": [
+                "*"
+            ]
         },
         {
-            "matchPackagePatterns": [
-                "*"
-            ],
             "matchDatasources": [
                 "git-refs",
                 "git-tags",
                 "github-tags",
                 "github-releases"
             ],
-            "groupName": "releases"
+            "groupName": "releases",
+            "matchPackageNames": [
+                "*"
+            ]
         }
     ]
 }
