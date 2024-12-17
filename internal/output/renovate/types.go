@@ -28,6 +28,7 @@ type CustomManager struct {
 // PackageRule represents a package rule.
 type PackageRule struct {
 	Enabled            *bool  `json:"enabled,omitempty"`
+	AllowedVersions    string `json:"allowedVersions,omitempty"`
 	DataSourceTemplate string `json:"datasourceTemplate,omitempty"`
 	DepNameTemplate    string `json:"depNameTemplate,omitempty"`
 	GroupName          string `json:"groupName,omitempty"`

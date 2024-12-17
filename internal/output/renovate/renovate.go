@@ -33,11 +33,9 @@ func NewOutput() *Output {
 
 	o.FileWriter = o
 
-	preamble := output.Preamble("")
-
 	o.result = &Renovate{
 		Schema:      "https://docs.renovatebot.com/renovate-schema.json",
-		Description: preamble,
+		Description: "THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.",
 		Extends: []string{
 			":dependencyDashboard",
 			":gitSignOff",
