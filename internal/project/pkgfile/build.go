@@ -7,6 +7,7 @@ package pkgfile
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/siderolabs/kres/internal/config"
@@ -14,8 +15,13 @@ import (
 	"github.com/siderolabs/kres/internal/output/dockerignore"
 	"github.com/siderolabs/kres/internal/output/ghworkflow"
 	"github.com/siderolabs/kres/internal/output/makefile"
+	"github.com/siderolabs/kres/internal/output/renovate"
 	"github.com/siderolabs/kres/internal/project/common"
 	"github.com/siderolabs/kres/internal/project/meta"
+)
+
+const (
+	renovateMatchStringPkgfile = `# renovate: datasource=(?<datasource>.*?)(?:\s+extractVersion=(?<extractVersion>.+?))?(?:\s+versioning=(?<versioning>.+?))?\s+depName=(?<depName>.+?)?\s(?:.*_(?:version|VERSION):\s+(?<currentValue>.*))?(?:(\s)?.*_(?:ref|REF):\s+(?<currentDigest>.*))?` //nolint:lll
 )
 
 // Build provides common pkgfile build environment settings.
@@ -298,6 +304,47 @@ func (pkgfile *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 			},
 		)
 	}
+
+	return nil
+}
+
+// CompileRenovate implements renovate.Compiler.
+func (pkgfile *Build) CompileRenovate(output *renovate.Output) error {
+	customManagers := []renovate.CustomManager{
+		{
+			CustomType: "regex",
+			FileMatch:  []string{"Pkgfile"},
+			MatchStrings: []string{
+				renovateMatchStringPkgfile,
+			},
+			VersioningTemplate: "{{#if versioning}}{{versioning}}{{else}}semver{{/if}}",
+		},
+		{
+			CustomType: "regex",
+			FileMatch:  []string{"Pkgfile"},
+			MatchStrings: []string{
+				"ghcr.io\\/siderolabs\\/bldr:(?<currentValue>v.*)",
+			},
+			DataSourceTemplate: "github-tags",
+			DepNameTemplate:    "siderolabs/bldr",
+			VersioningTemplate: "semver",
+		},
+	}
+
+	if pkgfile.UseBldrPkgTagResolver {
+		customManagers = slices.Concat(customManagers, []renovate.CustomManager{
+			{
+				CustomType: "regex",
+				FileMatch:  []string{"vars.yaml"},
+				MatchStrings: []string{
+					renovateMatchStringPkgfile,
+				},
+				VersioningTemplate: "{{#if versioning}}{{versioning}}{{else}}semver{{/if}}",
+			},
+		})
+	}
+
+	output.CustomManagers(customManagers)
 
 	return nil
 }

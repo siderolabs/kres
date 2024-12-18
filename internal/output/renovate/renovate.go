@@ -73,7 +73,7 @@ func (o *Output) Enable() {
 
 // CustomManagers sets custom managers.
 func (o *Output) CustomManagers(customManagers []CustomManager) {
-	o.result.CustomManagers = customManagers
+	o.result.CustomManagers = slices.Concat(o.result.CustomManagers, customManagers)
 }
 
 // PackageRules sets package rules.
