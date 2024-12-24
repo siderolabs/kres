@@ -32,6 +32,18 @@
             ]
         },
         {
+            "enabled": false,
+            "matchFileNames": [
+                "Dockerfile"
+            ]
+        },
+        {
+            "enabled": false,
+            "matchFileNames": [
+                ".github/workflows/*.yaml"
+            ]
+        },
+        {
             "versioning": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.?(?<patch>\\d+)?$",
             "matchPackageNames": [
                 "golang/go"
@@ -51,6 +63,12 @@
             "versioning": "regex:^v(?<major>\\d+)_(?<minor>\\d+)_?(?<patch>\\d+)?$",
             "matchPackageNames": [
                 "potiuk/get-workflow-origin"
+            ]
+        },
+        {
+            "enabled": false,
+            "matchFileNames": [
+                "internal/output/dockerfile/dockerfile_test.go"
             ]
         }
     ],

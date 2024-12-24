@@ -12,6 +12,7 @@ import (
 	"github.com/siderolabs/kres/internal/output/gitignore"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/output/release"
+	"github.com/siderolabs/kres/internal/output/renovate"
 	"github.com/siderolabs/kres/internal/project/meta"
 )
 
@@ -101,6 +102,22 @@ func (build *Build) CompileGitignore(output *gitignore.Output) error {
 // CompileRelease implements release.Compiler.
 func (build *Build) CompileRelease(output *release.Output) error {
 	output.SetMeta(build.meta)
+
+	return nil
+}
+
+// CompileRenovate implements renovate.Compiler.
+func (build *Build) CompileRenovate(output *renovate.Output) error {
+	output.PackageRules([]renovate.PackageRule{
+		{
+			Enabled:        &[]bool{false}[0],
+			MatchFileNames: []string{"Dockerfile"},
+		},
+		{
+			Enabled:        &[]bool{false}[0],
+			MatchFileNames: []string{".github/workflows/*.yaml"},
+		},
+	})
 
 	return nil
 }

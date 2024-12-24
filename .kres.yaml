@@ -89,3 +89,6 @@ spec:
     - matchPackageNames:
         - potiuk/get-workflow-origin
       versioning: 'regex:^v(?<major>\d+)_(?<minor>\d+)_?(?<patch>\d+)?$'
+    - enabled: false
+      matchFileNames:
+        - internal/output/dockerfile/dockerfile_test.go

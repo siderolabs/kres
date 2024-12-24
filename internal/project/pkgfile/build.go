@@ -16,7 +16,6 @@ import (
 	"github.com/siderolabs/kres/internal/output/ghworkflow"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/output/renovate"
-	"github.com/siderolabs/kres/internal/project/common"
 	"github.com/siderolabs/kres/internal/project/meta"
 )
 
@@ -90,8 +89,7 @@ func (pkgfile *Build) CompileMakefile(output *makefile.Output) error {
 		Push("--provenance=false").
 		Push("--progress=$(PROGRESS)").
 		Push("--platform=$(PLATFORM)").
-		Push("--build-arg=SOURCE_DATE_EPOCH=$(SOURCE_DATE_EPOCH)").
-		Push("--build-arg=BUILDKIT_MULTI_PLATFORM=$(BUILDKIT_MULTI_PLATFORM)")
+		Push("--build-arg=SOURCE_DATE_EPOCH=$(SOURCE_DATE_EPOCH)")
 
 	for _, arg := range pkgfile.ExtraBuildArgs {
 		buildArgs.Push(fmt.Sprintf("--build-arg=%s=\"$(%s)\"", arg, arg))
@@ -108,7 +106,6 @@ func (pkgfile *Build) CompileMakefile(output *makefile.Output) error {
 		Variable(makefile.OverridableVariable("PROGRESS", "auto")).
 		Variable(makefile.OverridableVariable("PUSH", "false")).
 		Variable(makefile.OverridableVariable("CI_ARGS", "")).
-		Variable(makefile.OverridableVariable("BUILDKIT_MULTI_PLATFORM", "1")).
 		Variable(buildArgs)
 
 	for _, arg := range pkgfile.Makefile.ExtraVariables {
@@ -122,7 +119,7 @@ func (pkgfile *Build) CompileMakefile(output *makefile.Output) error {
 
 	output.Target("local-%").
 		Description("Builds the specified target defined in the Pkgfile using the local output type. The build result will be output to the specified local destination.").
-		Script(`@$(MAKE) target-$* TARGET_ARGS="--output=type=local,dest=$(DEST) $(TARGET_ARGS)"` + common.FixLocalDestLocationsScript)
+		Script(`@$(MAKE) target-$* TARGET_ARGS="--output=type=local,dest=$(DEST) $(TARGET_ARGS)"`)
 
 	output.Target("docker-%").
 		Description("Builds the specified target defined in the Pkgfile using the docker output type. The build result will be loaded into Docker.").

@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"slices"
 
-	"github.com/google/go-github/v67/github"
+	"github.com/google/go-github/v68/github"
 	"github.com/siderolabs/gen/xslices"
 
 	"github.com/siderolabs/kres/internal/config"
@@ -225,9 +225,9 @@ func (r *Repository) enableBranchProtection(client *github.Client) error {
 	})
 
 	req := github.ProtectionRequest{
-		RequireLinearHistory: github.Bool(true),
-		AllowDeletions:       github.Bool(false),
-		AllowForcePushes:     github.Bool(false),
+		RequireLinearHistory: github.Ptr(true),
+		AllowDeletions:       github.Ptr(false),
+		AllowForcePushes:     github.Ptr(false),
 		EnforceAdmins:        true,
 
 		RequiredPullRequestReviews: &github.PullRequestReviewsEnforcementRequest{
@@ -296,11 +296,11 @@ func (r *Repository) enableConform(client *github.Client) error {
 	}
 
 	_, _, err = client.Repositories.CreateHook(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, &github.Hook{
-		Active: github.Bool(true),
+		Active: github.Ptr(true),
 		Config: &github.HookConfig{
 			URL:         &r.ConformWebhookURL,
-			ContentType: github.String("json"),
-			InsecureSSL: github.String("0"),
+			ContentType: github.Ptr("json"),
+			InsecureSSL: github.Ptr("0"),
 		},
 		Events: []string{
 			"push",

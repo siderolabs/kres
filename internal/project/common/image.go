@@ -19,6 +19,25 @@ import (
 	"github.com/siderolabs/kres/internal/project/meta"
 )
 
+// FixLocalDestLocationsScript moves the local build artifacts from the <os>_<arch> subdirectories to the build output root directory.
+//
+// This is to revert the behavior of buildkit on multi-platform builds.
+//
+// As we force buildkit to always do multi-platform builds (via `BUILDKIT_MULTI_PLATFORM=1`), we need this fix to restore old output behavior.
+//
+// This script is appended to the local output build targets.
+const FixLocalDestLocationsScript = `
+@PLATFORM=$(PLATFORM) DEST=$(DEST) bash -c '\
+  for platform in $$(tr "," "\n" <<< "$$PLATFORM"); do \
+    directory="$${platform//\//_}"; \
+    if [[ -d "$$DEST/$$directory" ]]; then \
+	  echo $$platform; \
+      mv -f "$$DEST/$$directory/"* $$DEST; \
+      rmdir "$$DEST/$$directory/"; \
+    fi; \
+  done'
+`
+
 // Image provides common image build target.
 type Image struct {
 	dag.BaseNode
@@ -158,7 +177,7 @@ func (image *Image) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 func (image *Image) CompileMakefile(output *makefile.Output) error {
 	target := output.Target(image.Name()).
 		Description(fmt.Sprintf("Builds image for %s.", image.ImageName)).
-		Script(fmt.Sprintf(`@$(MAKE) target-$@ TARGET_ARGS="--tag=$(REGISTRY)/$(USERNAME)/%s:$(IMAGE_TAG)"`, image.ImageName)).
+		Script(fmt.Sprintf(`@$(MAKE) registry-$@ IMAGE_NAME="%s"`, image.ImageName)).
 		Phony()
 
 	for _, dependsOn := range image.DependsOn {

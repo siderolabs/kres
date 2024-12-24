@@ -60,7 +60,7 @@ const (
 	GoVersion = "1.23.4"
 	// GrpcGatewayVersion is the version of grpc-gateway.
 	// renovate: datasource=go depName=github.com/grpc-ecosystem/grpc-gateway
-	GrpcGatewayVersion = "v2.24.0"
+	GrpcGatewayVersion = "v2.25.1"
 	// GrpcGoVersion is the version of grpc.
 	// renovate: datasource=go depName=google.golang.org/grpc/cmd/protoc-gen-go-grpc
 	GrpcGoVersion = "v1.5.1"
@@ -72,13 +72,13 @@ const (
 	MarkdownLintCLIVersion = "0.43.0"
 	// BunContainerImageVersion is the default bun container image.
 	// renovate: datasource=docker versioning=docker depName=oven/bun
-	BunContainerImageVersion = "1.1.40-alpine"
+	BunContainerImageVersion = "1.1.42-alpine"
 	// PkgsVersion is the version of pkgs.
 	// renovate: datasource=github-tags depName=siderolabs/pkgs
 	PkgsVersion = "v1.9.0"
 	// ProtobufGoVersion is the version of protobuf.
 	// renovate: datasource=go depName=google.golang.org/protobuf/cmd/protoc-gen-go
-	ProtobufGoVersion = "v1.36.0"
+	ProtobufGoVersion = "v1.36.1"
 	// ProtobufTSGatewayVersion is the version of protobuf-ts.
 	// renovate: datasource=go depName=github.com/siderolabs/protoc-gen-grpc-gateway-ts
 	ProtobufTSGatewayVersion = "v1.2.1"

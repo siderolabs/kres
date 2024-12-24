@@ -17,25 +17,6 @@ import (
 	"github.com/siderolabs/kres/internal/project/meta"
 )
 
-// FixLocalDestLocationsScript moves the local build artifacts from the <os>_<arch> subdirectories to the build output root directory.
-//
-// This is to revert the behavior of buildkit on multi-platform builds.
-//
-// As we force buildkit to always do multi-platform builds (via `BUILDKIT_MULTI_PLATFORM=1`), we need this fix to restore old output behavior.
-//
-// This script is appended to the local output build targets.
-const FixLocalDestLocationsScript = `
-@PLATFORM=$(PLATFORM) DEST=$(DEST) bash -c '\
-  for platform in $$(tr "," "\n" <<< "$$PLATFORM"); do \
-    echo $$platform; \
-    directory="$${platform//\//_}"; \
-    if [[ -d "$$DEST/$$directory" ]]; then \
-      mv -f "$$DEST/$$directory/"* $$DEST; \
-      rmdir "$$DEST/$$directory/"; \
-    fi; \
-  done'
-`
-
 // Docker provides build infrastructure via docker buildx.
 type Docker struct { //nolint:govet
 	dag.BaseNode
@@ -136,8 +117,8 @@ func (docker *Docker) CompileMakefile(output *makefile.Output) error {
 		Push("--provenance=false").
 		Push("--progress=$(PROGRESS)").
 		Push("--platform=$(PLATFORM)").
-		Push("--push=$(PUSH)").
-		Push("--build-arg=BUILDKIT_MULTI_PLATFORM=$(BUILDKIT_MULTI_PLATFORM)")
+		Push("--build-arg=BUILDKIT_MULTI_PLATFORM=$(BUILDKIT_MULTI_PLATFORM)").
+		Push("--push=$(PUSH)")
 
 	for _, arg := range docker.meta.BuildArgs {
 		buildArgs.Push(fmt.Sprintf("--build-arg=%s=\"$(%s)\"", arg, arg))
@@ -158,12 +139,16 @@ func (docker *Docker) CompileMakefile(output *makefile.Output) error {
 		Variable(makefile.OverridableVariable("PROGRESS", "auto")).
 		Variable(makefile.OverridableVariable("PUSH", "false")).
 		Variable(makefile.OverridableVariable("CI_ARGS", "")).
-		Variable(makefile.OverridableVariable("BUILDKIT_MULTI_PLATFORM", "1")).
+		Variable(makefile.OverridableVariable("BUILDKIT_MULTI_PLATFORM", "")).
 		Variable(buildArgs)
 
 	output.Target("target-%").
 		Description("Builds the specified target defined in the Dockerfile. The build result will only remain in the build cache.").
 		Script(`@$(BUILD) --target=$* $(COMMON_ARGS) $(TARGET_ARGS) $(CI_ARGS) .`)
+
+	output.Target("registry-%").
+		Description("Builds the specified target defined in the Dockerfile and the output is an image. The image is pushed to the registry if PUSH=true.").
+		Script(`@$(MAKE) target-$* TARGET_ARGS="--tag=$(REGISTRY)/$(USERNAME)/$(IMAGE_NAME):$(IMAGE_TAG)" BUILDKIT_MULTI_PLATFORM=1`)
 
 	output.Target("local-%").
 		Description("Builds the specified target defined in the Dockerfile using the local output type. The build result will be output to the specified local destination.").
