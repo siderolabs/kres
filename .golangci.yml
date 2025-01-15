@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-12-16T12:49:58Z by kres 8183c20-dirty.
+# Generated on 2025-01-15T10:00:52Z by kres d512b12a.
 
 # options for analysis running
 run:
@@ -17,7 +17,6 @@ output:
       path: stdout
   print-issued-lines: true
   print-linter-name: true
-  uniq-by-line: true
   path-prefix: ""
 
 # all available settings of specific linters
@@ -158,6 +157,7 @@ issues:
   max-issues-per-linter: 10
   max-same-issues: 3
   new: false
+  uniq-by-line: true
 
 severity:
   default-severity: error

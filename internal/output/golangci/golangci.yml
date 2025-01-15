@@ -13,7 +13,6 @@ output:
       path: stdout
   print-issued-lines: true
   print-linter-name: true
-  uniq-by-line: true
   path-prefix: ""
 
 # all available settings of specific linters
@@ -140,6 +139,7 @@ issues:
   max-issues-per-linter: 10
   max-same-issues: 3
   new: false
+  uniq-by-line: true
 
 severity:
   default-severity: error
