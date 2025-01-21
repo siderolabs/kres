@@ -103,9 +103,11 @@ type Step struct {
 				Paths           []string `yaml:"paths"`
 				Always          bool     `yaml:"always"`
 				ContinueOnError bool     `yaml:"continueOnError"`
+				RetentionDays   string   `yaml:"retentionDays"`
 			} `yaml:"additional"`
-			Enabled         bool `yaml:"enabled"`
-			ContinueOnError bool `yaml:"continueOnError"`
+			Enabled         bool   `yaml:"enabled"`
+			ContinueOnError bool   `yaml:"continueOnError"`
+			RetentionDays   string `yaml:"retentionDays"`
 		} `yaml:"artifacts"`
 		Enabled bool `yaml:"enabled"`
 		SOPS    bool `yaml:"sops"`
@@ -290,7 +292,7 @@ func (step *Step) DroneEnabled() bool {
 
 // CompileGitHubWorkflow implements ghworkflow.Compiler.
 //
-//nolint:gocognit,gocyclo,cyclop
+//nolint:gocognit,gocyclo,cyclop,maintidx
 func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	if !step.GHAction.Enabled {
 		return nil
@@ -335,6 +337,10 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 			SetWith("path", step.meta.ArtifactsPath+"\n"+strings.Join(step.GHAction.Artifacts.ExtraPaths, "\n")).
 			SetWith("retention-days", "5")
 
+		if retentionDays := step.GHAction.Artifacts.RetentionDays; retentionDays != "" {
+			saveArtifactsStep.SetWith("retention-days", retentionDays)
+		}
+
 		if step.GHAction.Artifacts.ContinueOnError {
 			saveArtifactsStep.SetContinueOnError()
 		}
@@ -352,6 +358,10 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 				SetWith("name", additionalArtifact.Name).
 				SetWith("path", strings.Join(additionalArtifact.Paths, "\n")).
 				SetWith("retention-days", "5")
+
+			if retentionDays := additionalArtifact.RetentionDays; retentionDays != "" {
+				artifactStep.SetWith("retention-days", retentionDays)
+			}
 
 			if additionalArtifact.Always {
 				if err := artifactStep.SetConditions("always"); err != nil {

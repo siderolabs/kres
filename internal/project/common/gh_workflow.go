@@ -60,6 +60,7 @@ type ArtifactStep struct {
 	Type                            string   `yaml:"type"`
 	ArtifactName                    string   `yaml:"artifactName"`
 	ArtifactPath                    string   `yaml:"artifactPath"`
+	RetentionDays                   string   `yaml:"retentionDays,omitempty"`
 	AdditionalArtifacts             []string `yaml:"additionalArtifacts,omitempty"`
 	DisableExecutableListGeneration bool     `yaml:"disableExecutableListGeneration"`
 }
@@ -157,6 +158,10 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 						SetWith("name", step.ArtifactStep.ArtifactName).
 						SetWith("path", step.ArtifactStep.ArtifactPath+"\n"+strings.Join(step.ArtifactStep.AdditionalArtifacts, "\n")).
 						SetWith("retention-days", "5")
+
+					if retentionDays := step.ArtifactStep.RetentionDays; retentionDays != "" {
+						saveArtifactsStep.SetWith("retention-days", retentionDays)
+					}
 
 					if step.ContinueOnError {
 						saveArtifactsStep.SetContinueOnError()
