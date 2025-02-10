@@ -57,7 +57,7 @@ const (
 	GolangContainerImageVersion = "1.23-alpine"
 	// GoVersion is the version of Go.
 	// renovate: datasource=github-tags extractVersion=^go(?<version>.*)$ depName=golang/go
-	GoVersion = "1.23.5"
+	GoVersion = "1.23.6"
 	// GrpcGatewayVersion is the version of grpc-gateway.
 	// renovate: datasource=go depName=github.com/grpc-ecosystem/grpc-gateway
 	GrpcGatewayVersion = "v2.25.1"
@@ -75,7 +75,7 @@ const (
 	BunContainerImageVersion = "1.1.43-alpine"
 	// PkgsVersion is the version of pkgs.
 	// renovate: datasource=github-tags depName=siderolabs/pkgs
-	PkgsVersion = "v1.9.0"
+	PkgsVersion = "v1.10.0-alpha.0-35-g85f8901"
 	// ProtobufGoVersion is the version of protobuf.
 	// renovate: datasource=go depName=google.golang.org/protobuf/cmd/protoc-gen-go
 	ProtobufGoVersion = "v1.36.2"
