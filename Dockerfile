@@ -2,13 +2,13 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2025-01-15T11:22:30Z by kres d83fc27c.
+# Generated on 2025-02-10T12:11:08Z by kres 48878ff.
 
 ARG TOOLCHAIN
 
-FROM ghcr.io/siderolabs/ca-certificates:v1.9.0 AS image-ca-certificates
+FROM ghcr.io/siderolabs/ca-certificates:v1.10.0-alpha.0-35-g85f8901 AS image-ca-certificates
 
-FROM ghcr.io/siderolabs/fhs:v1.9.0 AS image-fhs
+FROM ghcr.io/siderolabs/fhs:v1.10.0-alpha.0-35-g85f8901 AS image-fhs
 
 # runs markdownlint
 FROM docker.io/oven/bun:1.1.43-alpine AS lint-markdown
