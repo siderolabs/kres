@@ -177,11 +177,20 @@ func (builder *builder) processDirectory(path string) error {
 			exists, err := directoryExists(dir, candidate)
 			if err != nil {
 				return err
+			} else if !exists {
+				continue
 			}
 
-			if exists {
-				builder.meta.VersionPackagePath = filepath.Join(canonicalPath, filepath.Join(dir, candidate))
+			list, err := listFilesWithSuffix(filepath.Join(dir, candidate), ".go")
+			if err != nil {
+				return err
 			}
+
+			if len(list) == 0 || !slices.Contains(list, "version.go") {
+				continue
+			}
+
+			builder.meta.VersionPackagePath = filepath.Join(canonicalPath, filepath.Join(dir, candidate))
 		}
 	}
 

@@ -128,8 +128,8 @@ func (o *Output) buildTemplateData() (golangciLintTemplateData, error) {
 		for line := range strings.Lines(sb.String()) {
 			if line != "" {
 				indented.WriteString("      ")
-				indented.WriteString(line)
-				indented.WriteString("\n")
+				indented.WriteString(strings.TrimRight(line, "\n")) // ensure no double newlines
+				indented.WriteByte('\n')
 			}
 		}
 
