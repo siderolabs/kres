@@ -125,7 +125,7 @@ func (o *Output) buildTemplateData() (golangciLintTemplateData, error) {
 
 		var indented strings.Builder
 
-		for _, line := range strings.Split(sb.String(), "\n") {
+		for line := range strings.Lines(sb.String()) {
 			if line != "" {
 				indented.WriteString("      ")
 				indented.WriteString(line)
