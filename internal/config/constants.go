@@ -75,7 +75,7 @@ const (
 	BunContainerImageVersion = "1.1.43-alpine"
 	// PkgsVersion is the version of pkgs.
 	// renovate: datasource=github-tags depName=siderolabs/pkgs
-	PkgsVersion = "v1.10.0-alpha.0-35-g85f8901"
+	PkgsVersion = "v1.10.0-alpha.0-37-g359807b"
 	// ProtobufGoVersion is the version of protobuf.
 	// renovate: datasource=go depName=google.golang.org/protobuf/cmd/protoc-gen-go
 	ProtobufGoVersion = "v1.36.2"
