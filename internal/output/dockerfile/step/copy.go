@@ -58,6 +58,10 @@ func (step *CopyStep) Generate(w io.Writer) error {
 		fromClause = fmt.Sprintf("--from=%s ", step.from)
 	}
 
+	if step.platform != "" {
+		fromClause = fmt.Sprintf("--platform=%s %s", step.platform, fromClause)
+	}
+
 	_, err := fmt.Fprintf(w, "COPY %s%s %s\n", fromClause, step.src, step.dst)
 
 	return err
