@@ -48,6 +48,7 @@ type Image struct {
 	BaseImage        string            `yaml:"baseImage"`
 	AdditionalImages []string          `yaml:"additionalImages"`
 	CopyFrom         []struct {
+		Name        string `yaml:"name"`
 		Stage       string `yaml:"stage"`
 		Source      string `yaml:"source"`
 		Destination string `yaml:"destination"`
@@ -250,7 +251,12 @@ func (image *Image) CompileDockerfile(output *dockerfile.Output) error {
 	}
 
 	for _, copyFrom := range image.CopyFrom {
-		stage.Step(step.Copy(stringOr(copyFrom.Source, "/"), stringOr(copyFrom.Destination, "/")).From(copyFrom.Stage).Platform(copyFrom.Platform))
+		if copyFrom.Name == "" {
+			return errors.New("copyFrom.name is required")
+		}
+
+		output.Stage(copyFrom.Name).From(copyFrom.Stage).Platform(copyFrom.Platform)
+		stage.Step(step.Copy(stringOr(copyFrom.Source, "/"), stringOr(copyFrom.Destination, "/")).From(copyFrom.Name))
 	}
 
 	if image.meta.GitHubOrganization != "" && image.meta.GitHubRepository != "" {
