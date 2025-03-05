@@ -137,7 +137,8 @@ func (toolchain *Toolchain) CompileMakefile(output *makefile.Output) error {
 		Variable(makefile.OverridableVariable("GO_BUILDFLAGS", "")).
 		Variable(makefile.OverridableVariable("GO_LDFLAGS", "")).
 		Variable(makefile.OverridableVariable("CGO_ENABLED", "0")).
-		Variable(makefile.OverridableVariable("GOTOOLCHAIN", "local"))
+		Variable(makefile.OverridableVariable("GOTOOLCHAIN", "local")).
+		Variable(makefile.OverridableVariable("GOEXPERIMENT", "synctest"))
 
 	// add github token only if necessary
 	if toolchain.PrivateRepos != nil {
