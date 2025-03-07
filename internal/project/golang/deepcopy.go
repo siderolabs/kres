@@ -53,8 +53,8 @@ func (deepcopy *DeepCopy) ToolchainBuild(stage *dockerfile.Stage) error {
 		Step(step.Script(fmt.Sprintf(
 			`go install github.com/siderolabs/deep-copy@${DEEPCOPY_VERSION} \
 	&& mv /go/bin/deep-copy %s/deep-copy`, deepcopy.meta.BinPath)).
-			MountCache(filepath.Join(deepcopy.meta.CachePath, "go-build")).
-			MountCache(filepath.Join(deepcopy.meta.GoPath, "pkg")),
+			MountCache(filepath.Join(deepcopy.meta.CachePath, "go-build"), deepcopy.meta.GitHubRepository).
+			MountCache(filepath.Join(deepcopy.meta.GoPath, "pkg"), deepcopy.meta.GitHubRepository),
 		)
 
 	return nil

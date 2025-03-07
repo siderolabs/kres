@@ -54,9 +54,23 @@ func (step *RunStep) Env(name, value string) *RunStep {
 	return step
 }
 
+// CacheOption is a function that modifies cache mount.
+type CacheOption func(*string)
+
+// CacheLocked modifies cache mount to be locked.
+func CacheLocked(mount *string) {
+	*mount += ",sharing=locked"
+}
+
 // MountCache mounts cache at specified target path.
-func (step *RunStep) MountCache(target string) *RunStep {
-	step.mounts = append(step.mounts, "type=cache,target="+target)
+func (step *RunStep) MountCache(target, idPrefix string, opts ...CacheOption) *RunStep {
+	mount := "type=cache,target=" + target + ",id=" + idPrefix + target
+
+	for _, opt := range opts {
+		opt(&mount)
+	}
+
+	step.mounts = append(step.mounts, mount)
 
 	return step
 }

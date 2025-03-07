@@ -99,8 +99,8 @@ func (build *Build) CompileDockerfile(output *dockerfile.Output) error {
 		}
 
 		script := step.Script(fmt.Sprintf(`go build%s -ldflags "%s" -o /%s`, buildFlags, ldflags, name)).
-			MountCache(filepath.Join(build.meta.CachePath, "go-build")).
-			MountCache(filepath.Join(build.meta.GoPath, "pkg"))
+			MountCache(filepath.Join(build.meta.CachePath, "go-build"), build.meta.GitHubRepository).
+			MountCache(filepath.Join(build.meta.GoPath, "pkg"), build.meta.GitHubRepository)
 
 		if opts != nil {
 			opts.set(script)

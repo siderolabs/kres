@@ -131,8 +131,8 @@ func (generate *Generate) ToolchainBuild(stage *dockerfile.Stage) error {
 	stage.
 		Step(step.Arg("GOIMPORTS_VERSION")).
 		Step(step.Script("go install golang.org/x/tools/cmd/goimports@v${GOIMPORTS_VERSION}").
-			MountCache(filepath.Join(generate.meta.CachePath, "go-build")).
-			MountCache(filepath.Join(generate.meta.GoPath, "pkg")),
+			MountCache(filepath.Join(generate.meta.CachePath, "go-build"), generate.meta.GitHubRepository).
+			MountCache(filepath.Join(generate.meta.GoPath, "pkg"), generate.meta.GitHubRepository),
 		).
 		Step(step.Run("mv", filepath.Join(generate.meta.GoPath, "bin", "goimports"), generate.meta.BinPath))
 
@@ -144,20 +144,20 @@ func (generate *Generate) ToolchainBuild(stage *dockerfile.Stage) error {
 	stage.
 		Step(step.Arg("PROTOBUF_GO_VERSION")).
 		Step(step.Script("go install google.golang.org/protobuf/cmd/protoc-gen-go@v${PROTOBUF_GO_VERSION}").
-			MountCache(filepath.Join(generate.meta.CachePath, "go-build")).
-			MountCache(filepath.Join(generate.meta.GoPath, "pkg")),
+			MountCache(filepath.Join(generate.meta.CachePath, "go-build"), generate.meta.GitHubRepository).
+			MountCache(filepath.Join(generate.meta.GoPath, "pkg"), generate.meta.GitHubRepository),
 		).
 		Step(step.Run("mv", filepath.Join(generate.meta.GoPath, "bin", "protoc-gen-go"), generate.meta.BinPath)).
 		Step(step.Arg("GRPC_GO_VERSION")).
 		Step(step.Script("go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v${GRPC_GO_VERSION}").
-			MountCache(filepath.Join(generate.meta.CachePath, "go-build")).
-			MountCache(filepath.Join(generate.meta.GoPath, "pkg")),
+			MountCache(filepath.Join(generate.meta.CachePath, "go-build"), generate.meta.GitHubRepository).
+			MountCache(filepath.Join(generate.meta.GoPath, "pkg"), generate.meta.GitHubRepository),
 		).
 		Step(step.Run("mv", filepath.Join(generate.meta.GoPath, "bin", "protoc-gen-go-grpc"), generate.meta.BinPath)).
 		Step(step.Arg("GRPC_GATEWAY_VERSION")).
 		Step(step.Script("go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v${GRPC_GATEWAY_VERSION}").
-			MountCache(filepath.Join(generate.meta.CachePath, "go-build")).
-			MountCache(filepath.Join(generate.meta.GoPath, "pkg")),
+			MountCache(filepath.Join(generate.meta.CachePath, "go-build"), generate.meta.GitHubRepository).
+			MountCache(filepath.Join(generate.meta.GoPath, "pkg"), generate.meta.GitHubRepository),
 		).
 		Step(step.Run("mv", filepath.Join(generate.meta.GoPath, "bin", "protoc-gen-grpc-gateway"), generate.meta.BinPath))
 
@@ -165,8 +165,8 @@ func (generate *Generate) ToolchainBuild(stage *dockerfile.Stage) error {
 		stage.
 			Step(step.Arg("VTPROTOBUF_VERSION")).
 			Step(step.Script("go install github.com/planetscale/vtprotobuf/cmd/protoc-gen-go-vtproto@v${VTPROTOBUF_VERSION}").
-				MountCache(filepath.Join(generate.meta.CachePath, "go-build")).
-				MountCache(filepath.Join(generate.meta.GoPath, "pkg")),
+				MountCache(filepath.Join(generate.meta.CachePath, "go-build"), generate.meta.GitHubRepository).
+				MountCache(filepath.Join(generate.meta.GoPath, "pkg"), generate.meta.GitHubRepository),
 			).
 			Step(step.Run("mv", filepath.Join(generate.meta.GoPath, "bin", "protoc-gen-go-vtproto"), generate.meta.BinPath))
 	}
@@ -335,8 +335,8 @@ func (generate *Generate) CompileDockerfile(output *dockerfile.Output) error {
 			Step(step.WorkDir("/src")).
 			Step(step.Copy(license.Header, filepath.Join("./hack/", license.Header))).
 			Step(step.Script(fmt.Sprintf("go generate %s/...", spec.Source)).
-				MountCache(filepath.Join(generate.meta.CachePath, "go-build")).
-				MountCache(filepath.Join(generate.meta.GoPath, "pkg")),
+				MountCache(filepath.Join(generate.meta.CachePath, "go-build"), generate.meta.GitHubRepository).
+				MountCache(filepath.Join(generate.meta.GoPath, "pkg"), generate.meta.GitHubRepository),
 			).
 			Step(step.Run(
 				"goimports",

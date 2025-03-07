@@ -61,8 +61,9 @@ func (lint *GoVulnCheck) CompileDockerfile(output *dockerfile.Output) error {
 		Step(step.Script(
 			`govulncheck ./...`,
 		).
-			MountCache(filepath.Join(lint.meta.CachePath, "go-build")).
-			MountCache(filepath.Join(lint.meta.GoPath, "pkg")))
+			MountCache(filepath.Join(lint.meta.CachePath, "go-build"), lint.meta.GitHubRepository).
+			MountCache(filepath.Join(lint.meta.GoPath, "pkg"), lint.meta.GitHubRepository),
+		)
 
 	return nil
 }

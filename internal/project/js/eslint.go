@@ -44,7 +44,7 @@ func (lint *EsLint) CompileDockerfile(output *dockerfile.Output) error {
 		Description("runs eslint").
 		From("js").
 		Step(step.Script("bun run lint").
-			MountCache(lint.meta.JSCachePath))
+			MountCache(lint.meta.JSCachePath, lint.meta.GitHubRepository))
 
 	return nil
 }

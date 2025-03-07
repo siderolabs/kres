@@ -90,8 +90,8 @@ func (proto *Protobuf) ToolchainBuild(stage *dockerfile.Stage) error {
 	stage.
 		Step(step.Arg("PROTOBUF_GRPC_GATEWAY_TS_VERSION")).
 		Step(step.Script("go install github.com/siderolabs/protoc-gen-grpc-gateway-ts@v${PROTOBUF_GRPC_GATEWAY_TS_VERSION}").
-			MountCache(filepath.Join(proto.meta.CachePath, "go-build")).
-			MountCache(filepath.Join(proto.meta.GoPath, "pkg")),
+			MountCache(filepath.Join(proto.meta.CachePath, "go-build"), proto.meta.GitHubRepository).
+			MountCache(filepath.Join(proto.meta.GoPath, "pkg"), proto.meta.GitHubRepository),
 		).
 		Step(step.Run("mv", filepath.Join(proto.meta.GoPath, "bin", "protoc-gen-grpc-gateway-ts"), proto.meta.BinPath))
 

@@ -93,8 +93,8 @@ func (build *Build) CompileDockerfile(output *dockerfile.Output) error {
 		Description("builds " + build.Name()).
 		From("--platform=${BUILDPLATFORM} js").
 		Step(step.Arg(buildArgsVarName)).
-		Step(step.Script("bun run build ${" + buildArgsVarName + "}").
-			MountCache(build.meta.JSCachePath)).
+		Step(step.Script("bun run build ${"+buildArgsVarName+"}").
+			MountCache(build.meta.JSCachePath, build.meta.GitHubRepository)).
 		Step(step.Script("mkdir -p " + outputDir)).
 		Step(step.Script("cp -rf ./dist/* " + outputDir))
 

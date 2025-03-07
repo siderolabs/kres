@@ -48,16 +48,20 @@ func TestGenerate(t *testing.T) {
 			"RUN --security=insecure CGOENABLED=0 BUILD=1 go build ./...\n",
 		},
 		{
-			step.Run("go", "build", "./...").MountCache("/root/go/.cache"),
-			"RUN --mount=type=cache,target=/root/go/.cache go build ./...\n",
+			step.Run("go", "build", "./...").MountCache("/root/go/.cache", "prj"),
+			"RUN --mount=type=cache,target=/root/go/.cache,id=prj/root/go/.cache go build ./...\n",
 		},
 		{
-			step.Run("go", "build", "./...").MountCache("/root/go/.cache"),
-			"RUN --mount=type=cache,target=/root/go/.cache go build ./...\n",
+			step.Run("go", "build", "./...").MountCache("/root/go/.cache", "prj"),
+			"RUN --mount=type=cache,target=/root/go/.cache,id=prj/root/go/.cache go build ./...\n",
 		},
 		{
-			step.Script("curl http://example.com/ | tar xzf -").MountCache("/root/go/.cache"),
-			"RUN --mount=type=cache,target=/root/go/.cache curl http://example.com/ | tar xzf -\n",
+			step.Run("go", "build", "./...").MountCache("/root/go/.cache", "prj", step.CacheLocked),
+			"RUN --mount=type=cache,target=/root/go/.cache,id=prj/root/go/.cache,sharing=locked go build ./...\n",
+		},
+		{
+			step.Script("curl http://example.com/ | tar xzf -").MountCache("/root/go/.cache", "prj"),
+			"RUN --mount=type=cache,target=/root/go/.cache,id=prj/root/go/.cache curl http://example.com/ | tar xzf -\n",
 		},
 		{
 			step.Arg("GOFUMPT_VERSION"),

@@ -154,7 +154,7 @@ func (step *Step) CompileDockerfile(output *dockerfile.Output) error {
 			case stageStep.Script != nil:
 				script := dockerstep.Script(stageStep.Script.Command)
 				for _, cache := range stageStep.Script.Cache {
-					script.MountCache(cache)
+					script.MountCache(cache, step.meta.GitHubRepository)
 				}
 
 				s.Step(script)

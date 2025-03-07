@@ -258,8 +258,8 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 
 	for _, rootDir := range toolchain.meta.GoRootDirectories {
 		base.Step(step.Run("cd", rootDir)).
-			Step(step.Run("go", "mod", "download").MountCache(filepath.Join(toolchain.meta.GoPath, "pkg"))).
-			Step(step.Run("go", "mod", "verify").MountCache(filepath.Join(toolchain.meta.GoPath, "pkg")))
+			Step(step.Run("go", "mod", "download").MountCache(filepath.Join(toolchain.meta.GoPath, "pkg"), toolchain.meta.GitHubRepository)).
+			Step(step.Run("go", "mod", "verify").MountCache(filepath.Join(toolchain.meta.GoPath, "pkg"), toolchain.meta.GitHubRepository))
 	}
 
 	for _, directory := range toolchain.meta.GoDirectories {
@@ -278,7 +278,7 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 		}
 	}
 
-	base.Step(step.Script(`go list -mod=readonly all >/dev/null`).MountCache(filepath.Join(toolchain.meta.GoPath, "pkg")))
+	base.Step(step.Script(`go list -mod=readonly all >/dev/null`).MountCache(filepath.Join(toolchain.meta.GoPath, "pkg"), toolchain.meta.GitHubRepository))
 
 	return nil
 }

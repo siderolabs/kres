@@ -44,14 +44,14 @@ func (linters *Linters) ToolchainBuild(stage *dockerfile.Stage) error {
 				"go install github.com/golangci/golangci-lint/cmd/golangci-lint@${GOLANGCILINT_VERSION} \\\n"+
 					"\t&& mv /go/bin/golangci-lint %s/golangci-lint", linters.meta.BinPath),
 		).
-			MountCache(filepath.Join(linters.meta.CachePath, "go-build")).
-			MountCache(filepath.Join(linters.meta.GoPath, "pkg")),
+			MountCache(filepath.Join(linters.meta.CachePath, "go-build"), linters.meta.GitHubRepository).
+			MountCache(filepath.Join(linters.meta.GoPath, "pkg"), linters.meta.GitHubRepository),
 		).
 		Step(step.Script(fmt.Sprintf(
 			`go install golang.org/x/vuln/cmd/govulncheck@latest \
 	&& mv /go/bin/govulncheck %s/govulncheck`, linters.meta.BinPath)).
-			MountCache(filepath.Join(linters.meta.CachePath, "go-build")).
-			MountCache(filepath.Join(linters.meta.GoPath, "pkg")),
+			MountCache(filepath.Join(linters.meta.CachePath, "go-build"), linters.meta.GitHubRepository).
+			MountCache(filepath.Join(linters.meta.GoPath, "pkg"), linters.meta.GitHubRepository),
 		).
 		Step(step.Arg("GOFUMPT_VERSION")).
 		Step(step.Script(fmt.Sprintf(

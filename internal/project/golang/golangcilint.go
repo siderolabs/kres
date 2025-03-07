@@ -72,9 +72,9 @@ func (lint *GolangciLint) CompileDockerfile(output *dockerfile.Output) error {
 		Step(step.Env("GOGC", "50")).
 		Step(step.Run("golangci-lint", "config", "verify", "--config", ".golangci.yml")).
 		Step(step.Run("golangci-lint", "run", "--config", ".golangci.yml").
-			MountCache(filepath.Join(lint.meta.CachePath, "go-build")).
-			MountCache(filepath.Join(lint.meta.CachePath, "golangci-lint")).
-			MountCache(filepath.Join(lint.meta.GoPath, "pkg")),
+			MountCache(filepath.Join(lint.meta.CachePath, "go-build"), lint.meta.GitHubRepository).
+			MountCache(filepath.Join(lint.meta.CachePath, "golangci-lint"), lint.meta.GitHubRepository, step.CacheLocked).
+			MountCache(filepath.Join(lint.meta.GoPath, "pkg"), lint.meta.GitHubRepository),
 		)
 
 	return nil

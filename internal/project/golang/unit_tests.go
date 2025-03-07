@@ -97,9 +97,9 @@ func (tests *UnitTests) CompileDockerfile(output *dockerfile.Output) error {
 					`go test -v -covermode=atomic -coverprofile=coverage.txt -coverpkg=${TESTPKGS} -count 1 %s${TESTPKGS}`,
 					extraArgs),
 			).
-				MountCache(filepath.Join(tests.meta.CachePath, "go-build")).
-				MountCache(filepath.Join(tests.meta.GoPath, "pkg")).
-				MountCache("/tmp")))
+				MountCache(filepath.Join(tests.meta.CachePath, "go-build"), tests.meta.GitHubRepository).
+				MountCache(filepath.Join(tests.meta.GoPath, "pkg"), tests.meta.GitHubRepository).
+				MountCache("/tmp", tests.meta.GitHubRepository)))
 
 	output.Stage(tests.Name()).
 		From("scratch").
@@ -133,9 +133,9 @@ func (tests *UnitTests) CompileDockerfile(output *dockerfile.Output) error {
 					extraArgs,
 				),
 			).
-				MountCache(filepath.Join(tests.meta.CachePath, "go-build")).
-				MountCache(filepath.Join(tests.meta.GoPath, "pkg")).
-				MountCache("/tmp").
+				MountCache(filepath.Join(tests.meta.CachePath, "go-build"), tests.meta.GitHubRepository).
+				MountCache(filepath.Join(tests.meta.GoPath, "pkg"), tests.meta.GitHubRepository).
+				MountCache("/tmp", tests.meta.GitHubRepository).
 				Env("CGO_ENABLED", "1")))
 
 	return nil
