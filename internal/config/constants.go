@@ -19,9 +19,6 @@ const (
 	// renovate: datasource=github-releases depName=siderolabs/bldr
 	BldrImageVersion = "v0.4.1"
 
-	// BuildKitContainerVersion is the version of buildkit container image.
-	// renovate: datasource=docker versioning=docker depName=moby/buildkit
-	BuildKitContainerVersion = "v0.20.0"
 	// CheckOutActionVersion is the version of checkout github action.
 	// renovate: datasource=github-releases extractVersion=^(?<version>v\d+)\.\d+\.\d+$ depName=actions/checkout
 	CheckOutActionVersion = "v4"

@@ -138,7 +138,6 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 			jobDef.Steps = ghworkflow.DefaultSteps()
 
 			if job.BuildxOptions.CrossBuilder {
-				jobDef.Services = ghworkflow.DefaultServices()
 				jobDef.Steps = ghworkflow.DefaultPkgsSteps()
 			}
 		}

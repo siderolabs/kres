@@ -244,7 +244,6 @@ func (o *Output) SetOptionsForPkgs() {
 	o.SetRunners(HostedRunner, PkgsRunner)
 
 	o.workflows[ciWorkflow].Jobs["default"].Steps = DefaultPkgsSteps()
-	o.workflows[ciWorkflow].Jobs["default"].Services = DefaultServices()
 }
 
 // CommonSteps returns common steps for the workflow.
@@ -302,7 +301,7 @@ func DefaultPkgsSteps() []*JobStep {
 			Uses: "docker/setup-buildx-action@" + config.SetupBuildxActionVersion,
 			With: map[string]string{
 				"driver":   "remote",
-				"endpoint": "tcp://127.0.0.1:1234",
+				"endpoint": "tcp://buildkit-amd64.ci.svc.cluster.local:1234",
 				"append":   strings.TrimPrefix(armbuildkitdEnpointConfig, "\n"),
 			},
 		},
@@ -319,21 +318,6 @@ func SOPSSteps() []*JobStep {
 		{
 			Name: "Set secrets for job",
 			Run:  "sops -d .secrets.yaml | yq -e '.secrets | to_entries[] | .key + \"=\" + .value' >> \"$GITHUB_ENV\"\n",
-		},
-	}
-}
-
-// DefaultServices returns default services for the workflow.
-func DefaultServices() map[string]Service {
-	return map[string]Service{
-		"buildkitd": {
-			Image:   "moby/buildkit:" + config.BuildKitContainerVersion,
-			Options: "--privileged",
-			Ports:   []string{"1234:1234"},
-			Volumes: []string{
-				"/var/lib/buildkit/${{ github.repository }}:/var/lib/buildkit",
-				"/usr/etc/buildkit/buildkitd.toml:/etc/buildkit/buildkitd.toml",
-			},
 		},
 	}
 }

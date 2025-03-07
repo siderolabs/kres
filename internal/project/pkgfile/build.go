@@ -263,11 +263,10 @@ func (pkgfile *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		}
 
 		output.AddJob("reproducibility", &ghworkflow.Job{
-			RunsOn:   runnerLabels,
-			If:       "contains(fromJSON(needs.default.outputs.labels), 'integration/reproducibility')",
-			Needs:    []string{"default"},
-			Services: ghworkflow.DefaultServices(),
-			Steps:    ghworkflow.DefaultPkgsSteps(),
+			RunsOn: runnerLabels,
+			If:     "contains(fromJSON(needs.default.outputs.labels), 'integration/reproducibility')",
+			Needs:  []string{"default"},
+			Steps:  ghworkflow.DefaultPkgsSteps(),
 		})
 		output.AddStep("reproducibility", ghworkflow.Step("reproducibility-test").SetMakeStep("reproducibility-test"))
 
@@ -290,8 +289,7 @@ func (pkgfile *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 				},
 				Jobs: map[string]*ghworkflow.Job{
 					"reproducibility": {
-						RunsOn:   runnerLabels,
-						Services: ghworkflow.DefaultServices(),
+						RunsOn: runnerLabels,
 						Steps: append(
 							ghworkflow.DefaultPkgsSteps(),
 							ghworkflow.Step("reproducibility-test").SetMakeStep("reproducibility-test"),
