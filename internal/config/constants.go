@@ -46,6 +46,9 @@ const (
 	// GoImportsVersion is the version of goimports.
 	// renovate: datasource=go depName=golang.org/x/tools
 	GoImportsVersion = "v0.31.0"
+	// GoMockVersion is the version of gomock.
+	// renovate: datasource=go depName=github.com/uber-go/mock
+	GoMockVersion = "v0.5.0"
 	// GolangCIlintVersion is the version of golangci-lint.
 	// renovate: datasource=go depName=github.com/golangci/golangci-lint
 	GolangCIlintVersion = "v1.64.6"

@@ -36,6 +36,7 @@ type Generate struct {
 	GrpcGatewayVersion string `yaml:"grpcGatewayVersion"`
 	VTProtobufVersion  string `yaml:"vtProtobufVersion"`
 	GoImportsVersion   string `yaml:"goImportsVersion"`
+	GoMockVersion      string `yaml:"goMockVersion"`
 
 	BaseSpecPath string `yaml:"baseSpecPath"`
 
@@ -86,6 +87,7 @@ func NewGenerate(meta *meta.Options) *Generate {
 		"GRPC_GATEWAY_VERSION",
 		"VTPROTOBUF_VERSION",
 		"GOIMPORTS_VERSION",
+		"GOMOCK_VERSION",
 	)
 
 	return &Generate{
@@ -98,6 +100,7 @@ func NewGenerate(meta *meta.Options) *Generate {
 		GrpcGatewayVersion: config.GrpcGatewayVersion,
 		VTProtobufVersion:  config.VTProtobufVersion,
 		GoImportsVersion:   config.GoImportsVersion,
+		GoMockVersion:      config.GoMockVersion,
 
 		BaseSpecPath: "/api",
 	}
@@ -110,7 +113,8 @@ func (generate *Generate) CompileMakefile(output *makefile.Output) error {
 		Variable(makefile.OverridableVariable("GRPC_GO_VERSION", strings.TrimLeft(generate.GrpcGoVersion, "v"))).
 		Variable(makefile.OverridableVariable("GRPC_GATEWAY_VERSION", strings.TrimLeft(generate.GrpcGatewayVersion, "v"))).
 		Variable(makefile.OverridableVariable("VTPROTOBUF_VERSION", strings.TrimLeft(generate.VTProtobufVersion, "v"))).
-		Variable(makefile.OverridableVariable("GOIMPORTS_VERSION", strings.TrimLeft(generate.GoImportsVersion, "v")))
+		Variable(makefile.OverridableVariable("GOIMPORTS_VERSION", strings.TrimLeft(generate.GoImportsVersion, "v"))).
+		Variable(makefile.OverridableVariable("GOMOCK_VERSION", strings.TrimLeft(generate.GoMockVersion, "v")))
 
 	if len(generate.Specs) == 0 && len(generate.GoGenerateSpecs) == 0 && generate.versionPackagePath() == "" {
 		return nil
@@ -135,6 +139,14 @@ func (generate *Generate) ToolchainBuild(stage *dockerfile.Stage) error {
 			MountCache(filepath.Join(generate.meta.GoPath, "pkg"), generate.meta.GitHubRepository),
 		).
 		Step(step.Run("mv", filepath.Join(generate.meta.GoPath, "bin", "goimports"), generate.meta.BinPath))
+
+	stage.
+		Step(step.Arg("GOMOCK_VERSION")).
+		Step(step.Script("go install go.uber.org/mock/mockgen@v${GOMOCK_VERSION}").
+			MountCache(filepath.Join(generate.meta.CachePath, "go-build"), generate.meta.GitHubRepository).
+			MountCache(filepath.Join(generate.meta.GoPath, "pkg"), generate.meta.GitHubRepository),
+		).
+		Step(step.Run("mv", filepath.Join(generate.meta.GoPath, "bin", "mockgen"), generate.meta.BinPath))
 
 	if len(generate.Specs) == 0 {
 		// only protobuf stuff after this point
