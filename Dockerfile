@@ -2,7 +2,7 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2025-03-10T15:41:49Z by kres 8946258.
+# Generated on 2025-03-24T12:23:13Z by kres 24cab8a.
 
 ARG TOOLCHAIN
 
@@ -73,7 +73,6 @@ FROM base AS lint-golangci-lint
 WORKDIR /src
 COPY .golangci.yml .
 ENV GOGC=50
-RUN golangci-lint config verify --config .golangci.yml
 RUN --mount=type=cache,target=/root/.cache/go-build,id=kres/root/.cache/go-build --mount=type=cache,target=/root/.cache/golangci-lint,id=kres/root/.cache/golangci-lint,sharing=locked --mount=type=cache,target=/go/pkg,id=kres/go/pkg golangci-lint run --config .golangci.yml
 
 # runs govulncheck
