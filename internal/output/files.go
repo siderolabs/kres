@@ -41,7 +41,7 @@ func (adapter *FileAdapter) Generate() error {
 	// buffer the output before writing it down
 	buffers := map[string]*bytes.Buffer{}
 
-	for _, filename := range adapter.FileWriter.Filenames() {
+	for _, filename := range adapter.Filenames() {
 		buf := bytes.NewBuffer(nil)
 
 		dir := filepath.Dir(filename)
@@ -52,7 +52,7 @@ func (adapter *FileAdapter) Generate() error {
 			}
 		}
 
-		if err := adapter.FileWriter.GenerateFile(filename, buf); err != nil {
+		if err := adapter.GenerateFile(filename, buf); err != nil {
 			if errors.Is(err, ErrSkip) {
 				continue
 			}
@@ -64,7 +64,7 @@ func (adapter *FileAdapter) Generate() error {
 	}
 
 	// write everything back to the filesystem
-	for _, filename := range adapter.FileWriter.Filenames() {
+	for _, filename := range adapter.Filenames() {
 		if _, ok := buffers[filename]; !ok {
 			continue
 		}

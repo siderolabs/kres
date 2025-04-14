@@ -41,7 +41,7 @@ func (linters *Linters) ToolchainBuild(stage *dockerfile.Stage) error {
 		Step(step.Arg("GOLANGCILINT_VERSION")).
 		Step(step.Script(
 			fmt.Sprintf(
-				"go install github.com/golangci/golangci-lint/cmd/golangci-lint@${GOLANGCILINT_VERSION} \\\n"+
+				"go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@${GOLANGCILINT_VERSION} \\\n"+
 					"\t&& mv /go/bin/golangci-lint %s/golangci-lint", linters.meta.BinPath),
 		).
 			MountCache(filepath.Join(linters.meta.CachePath, "go-build"), linters.meta.GitHubRepository).
