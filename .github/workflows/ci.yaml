@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-11-25T08:20:41Z by kres b3b0da7-dirty.
+# Generated on 2025-04-14T20:30:11Z by kres d903dae-dirty.
 
 name: default
 concurrency:
@@ -17,6 +17,7 @@ concurrency:
     branches:
       - main
       - release-*
+  workflow_dispatch: {}
 jobs:
   default:
     permissions:
