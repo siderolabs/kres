@@ -30,6 +30,90 @@ jobs:
       - generic
     if: (!startsWith(github.head_ref, 'renovate/') && !startsWith(github.head_ref, 'dependabot/'))
     steps:
+
+
+
+      - name: Get PR number
+        id: get-pr-number
+        if: github.event.workflow_run.event == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo pull_request_number=$(gh pr view -R ${{ github.repository }} ${{ github.event.workflow_run.head_repository.owner.login }}:${{ github.event.workflow_run.head_branch }} --json number --jq .number) >> $GITHUB_OUTPUT
+          
+          echo "HELLO"
+      - name: Slack Notify
+        uses: slackapi/slack-github-action@v2
+        with:
+          method: chat.postMessage
+          payload-templated: true
+          payload: |
+            {
+                "channel": "proj-talos-maintainers",
+                "attachments": [
+                    {
+                        "color": "#FFCC00",
+                        "fallback": "test",
+                        "blocks": [
+                            {
+                                "type": "section",
+                                "fields": [
+                                    {
+                                        "type": "mrkdwn",
+                                        "text": "BLABLA"
+                                    },
+                                    {
+                                        "type": "mrkdwn",
+                                        "text": "*Status:*\n`${{ github.event.workflow_run.conclusion }}`"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "section",
+                                "fields": [
+                                    {
+                                        "type": "mrkdwn",
+                                        "text": "*Author:*\n`${{ github.actor }}`"
+                                    },
+                                    {
+                                        "type": "mrkdwn",
+                                        "text": "*Event:*\n`${{ github.event.workflow_run.event }}`"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "divider"
+                            },
+                            {
+                                "type": "actions",
+                                "elements": [
+                                    {
+                                        "type": "button",
+                                        "text": {
+                                            "type": "plain_text",
+                                            "text": "Logs"
+                                        },
+                                        "url": "${{ github.event.workflow_run.html_url }}"
+                                    },
+                                    {
+                                        "type": "button",
+                                        "text": {
+                                            "type": "plain_text",
+                                            "text": "Commit"
+                                        },
+                                        "url": "${{ github.event.repository.html_url }}/commit/${{ github.sha }}"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+
+
+
+
       - name: gather-system-info
         id: system-info
         uses: kenchan0130/actions-system-info@v1.3.0
@@ -60,6 +144,7 @@ jobs:
       - name: Unshallow
         run: |
           git fetch --prune --unshallow
+          exit 1 # YES THAT'S RIGHT
       - name: Set up Docker Buildx
         id: setup-buildx
         uses: docker/setup-buildx-action@v3
