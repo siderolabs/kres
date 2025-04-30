@@ -109,8 +109,9 @@ type Step struct {
 			ContinueOnError bool   `yaml:"continueOnError"`
 			RetentionDays   string `yaml:"retentionDays"`
 		} `yaml:"artifacts"`
-		Enabled bool `yaml:"enabled"`
-		SOPS    bool `yaml:"sops"`
+		Enabled  bool `yaml:"enabled"`
+		CronOnly bool `yaml:"cronOnly"`
+		SOPS     bool `yaml:"sops"`
 	} `yaml:"ghaction"`
 
 	SudoInCI bool `yaml:"sudoInCI"`
@@ -311,7 +312,11 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		return err
 	}
 
-	steps := []*ghworkflow.JobStep{workflowStep}
+	steps := []*ghworkflow.JobStep{}
+
+	if !step.GHAction.CronOnly {
+		steps = append(steps, workflowStep)
+	}
 
 	if len(step.GHAction.Jobs) > 0 {
 		steps = append(
