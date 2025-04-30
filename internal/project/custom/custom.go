@@ -541,3 +541,6 @@ func (step *Step) CompileMakefile(output *makefile.Output) error {
 
 	return nil
 }
+
+// SkipAsMakefileDependency marks step as skipped in Makefile dependency graph.
+func (step *Step) SkipAsMakefileDependency() {}
