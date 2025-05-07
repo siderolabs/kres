@@ -36,6 +36,7 @@ type Branches []string
 type PullRequest struct {
 	Branches `yaml:"branches,omitempty"`
 	Types    []string `yaml:"types,omitempty"`
+	Paths    []string `yaml:"paths,omitempty"`
 }
 
 // Schedule represents GitHub Actions schedule filters.
@@ -54,7 +55,7 @@ type PullRequestTarget struct{}
 
 // Push represents GitHub Actions push filters.
 type Push struct {
-	Branches `yaml:"branches"`
+	Branches `yaml:"branches,omitempty"`
 	Tags     []string `yaml:"tags,omitempty"`
 }
 

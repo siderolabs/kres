@@ -90,6 +90,9 @@ type Options struct { //nolint:govet
 
 	// ContainerImageFrontend is the default frontend container image.
 	ContainerImageFrontend string
+
+	// HelmChartDir is the path to helm chart directory.
+	HelmChartDir string
 }
 
 // Command defines Golang executable build configuration.

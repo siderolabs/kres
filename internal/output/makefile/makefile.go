@@ -71,6 +71,17 @@ func (o *Output) HasTarget(name string) bool {
 	})
 }
 
+// GetTarget returns target by name.
+func (o *Output) GetTarget(name string) *Target {
+	for _, target := range o.targets {
+		if target.name == name {
+			return target
+		}
+	}
+
+	return nil
+}
+
 // IfTrueCondition creates new Makefile condition.
 func (o *Output) IfTrueCondition(variable string) *Condition {
 	condition := &Condition{

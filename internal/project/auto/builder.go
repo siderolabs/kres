@@ -80,6 +80,10 @@ func (builder *builder) build() error {
 			detect: builder.DetectMarkdown,
 			build:  builder.BuildMarkdown,
 		},
+		{
+			detect: builder.DetectHelm,
+			build:  builder.BuildHelm,
+		},
 		{ // custom should be the last in the list, so that step could be hooked up to the build
 			detect: builder.DetectCustom,
 			build:  builder.BuildCustom,

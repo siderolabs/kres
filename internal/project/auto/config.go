@@ -39,3 +39,9 @@ type CI struct {
 	// CompileGHWorkflowsOnly is a flag to generate only GitHub Actions.
 	CompileGHWorkflowsOnly bool `yaml:"compileGHWorkflowsOnly"`
 }
+
+// Helm defines helm settings.
+type Helm struct {
+	ChartDir string `yaml:"chartDir"`
+	Enabled  bool   `yaml:"enabled"`
+}
