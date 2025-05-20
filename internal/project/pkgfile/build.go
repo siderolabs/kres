@@ -308,7 +308,7 @@ func (pkgfile *Build) CompileRenovate(output *renovate.Output) error {
 	customManagers := []renovate.CustomManager{
 		{
 			CustomType:          "regex",
-			ManagerFilePatterns: []string{"Pkgfile"},
+			ManagerFilePatterns: []string{"/Pkgfile/"},
 			MatchStrings: []string{
 				renovateMatchStringPkgfile,
 			},
@@ -316,7 +316,7 @@ func (pkgfile *Build) CompileRenovate(output *renovate.Output) error {
 		},
 		{
 			CustomType:          "regex",
-			ManagerFilePatterns: []string{"Pkgfile"},
+			ManagerFilePatterns: []string{"/Pkgfile/"},
 			MatchStrings: []string{
 				"ghcr.io\\/siderolabs\\/bldr:(?<currentValue>v.*)",
 			},
@@ -330,7 +330,7 @@ func (pkgfile *Build) CompileRenovate(output *renovate.Output) error {
 		customManagers = slices.Concat(customManagers, []renovate.CustomManager{
 			{
 				CustomType:          "regex",
-				ManagerFilePatterns: []string{"vars.yaml"},
+				ManagerFilePatterns: []string{"/vars.yaml/"},
 				MatchStrings: []string{
 					renovateMatchStringPkgfile,
 				},
