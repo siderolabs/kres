@@ -12,8 +12,8 @@
         {
             "customType": "regex",
             "versioningTemplate": "{{#if versioning}}{{versioning}}{{else}}semver{{/if}}",
-            "fileMatch": [
-                "internal/config/constants.go"
+            "managerFilePatterns": [
+                "/internal/config/constants.go/"
             ],
             "matchStrings": [
                 "\\/\\/\\s+renovate: datasource=(?<datasource>.*?)(?:\\s+extractVersion=(?<extractVersion>.+?))?(?:\\s+versioning=(?<versioning>.+?))?\\s+depName=(?<depName>.+?)?\\s.*Version\\s+=\\s+\\\"(?<currentValue>.+?)\\\""
