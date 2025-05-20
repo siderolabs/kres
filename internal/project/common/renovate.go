@@ -25,12 +25,12 @@ type Renovate struct {
 
 // CustomManager represents a custom manager.
 type CustomManager struct {
-	CustomType         string   `yaml:"customType"`
-	DataSourceTemplate string   `yaml:"datasourceTemplate,omitempty"`
-	DepNameTemplate    string   `yaml:"depNameTemplate,omitempty"`
-	VersioningTemplate string   `yaml:"versioningTemplate"`
-	FileMatch          []string `yaml:"fileMatch"`
-	MatchStrings       []string `yaml:"matchStrings"`
+	CustomType          string   `yaml:"customType"`
+	DataSourceTemplate  string   `yaml:"datasourceTemplate,omitempty"`
+	DepNameTemplate     string   `yaml:"depNameTemplate,omitempty"`
+	VersioningTemplate  string   `yaml:"versioningTemplate"`
+	ManagerFilePatterns []string `yaml:"managerFilePatterns"`
+	MatchStrings        []string `yaml:"matchStrings"`
 }
 
 // PackageRule represents a package rule.
@@ -62,16 +62,18 @@ func (r *Renovate) CompileRenovate(o *renovate.Output) error {
 	}
 
 	o.Enable()
+
 	o.CustomManagers(xslices.Map(r.CustomManagers, func(cm CustomManager) renovate.CustomManager {
 		return renovate.CustomManager{
-			CustomType:         cm.CustomType,
-			DataSourceTemplate: cm.DataSourceTemplate,
-			DepNameTemplate:    cm.DepNameTemplate,
-			FileMatch:          cm.FileMatch,
-			MatchStrings:       cm.MatchStrings,
-			VersioningTemplate: cm.VersioningTemplate,
+			CustomType:          cm.CustomType,
+			DataSourceTemplate:  cm.DataSourceTemplate,
+			DepNameTemplate:     cm.DepNameTemplate,
+			ManagerFilePatterns: xslices.Map(cm.ManagerFilePatterns, func(s string) string { return "/" + s + "/" }),
+			MatchStrings:        cm.MatchStrings,
+			VersioningTemplate:  cm.VersioningTemplate,
 		}
 	}))
+
 	o.PackageRules(xslices.Map(r.PackageRules, func(pr PackageRule) renovate.PackageRule {
 		return renovate.PackageRule{
 			Enabled:           pr.Enabled,

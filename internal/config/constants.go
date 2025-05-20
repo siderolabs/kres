@@ -75,10 +75,10 @@ const (
 	LoginActionVersion = "v3"
 	// MarkdownLintCLIVersion is the version of markdownlint.
 	// renovate: datasource=npm depName=markdownlint-cli
-	MarkdownLintCLIVersion = "0.44.0"
+	MarkdownLintCLIVersion = "0.45.0"
 	// BunContainerImageVersion is the default bun container image.
 	// renovate: datasource=docker versioning=docker depName=oven/bun
-	BunContainerImageVersion = "1.2.12-alpine"
+	BunContainerImageVersion = "1.2.13-alpine"
 	// PkgsVersion is the version of pkgs.
 	// renovate: datasource=github-tags depName=siderolabs/pkgs
 	PkgsVersion = "v1.10.0"

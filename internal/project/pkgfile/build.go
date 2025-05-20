@@ -307,16 +307,16 @@ func (pkgfile *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 func (pkgfile *Build) CompileRenovate(output *renovate.Output) error {
 	customManagers := []renovate.CustomManager{
 		{
-			CustomType: "regex",
-			FileMatch:  []string{"Pkgfile"},
+			CustomType:          "regex",
+			ManagerFilePatterns: []string{"Pkgfile"},
 			MatchStrings: []string{
 				renovateMatchStringPkgfile,
 			},
 			VersioningTemplate: "{{#if versioning}}{{versioning}}{{else}}semver{{/if}}",
 		},
 		{
-			CustomType: "regex",
-			FileMatch:  []string{"Pkgfile"},
+			CustomType:          "regex",
+			ManagerFilePatterns: []string{"Pkgfile"},
 			MatchStrings: []string{
 				"ghcr.io\\/siderolabs\\/bldr:(?<currentValue>v.*)",
 			},
@@ -329,8 +329,8 @@ func (pkgfile *Build) CompileRenovate(output *renovate.Output) error {
 	if pkgfile.UseBldrPkgTagResolver {
 		customManagers = slices.Concat(customManagers, []renovate.CustomManager{
 			{
-				CustomType: "regex",
-				FileMatch:  []string{"vars.yaml"},
+				CustomType:          "regex",
+				ManagerFilePatterns: []string{"vars.yaml"},
 				MatchStrings: []string{
 					renovateMatchStringPkgfile,
 				},
