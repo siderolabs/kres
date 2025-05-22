@@ -25,9 +25,9 @@ const (
 	// CodeCovActionVersion is the version of codecov github action.
 	// renovate: datasource=github-releases extractVersion=^(?<version>v\d+)\.\d+\.\d+$ depName=codecov/codecov-action
 	CodeCovActionVersion = "v5"
-	// CosignInstallActionVerson is the version of cosign install github action.
+	// CosignInstallerActionVersion is the version of release cosign-installer.
 	// renovate: datasource=github-releases extractVersion=^(?<version>v\d+)\.\d+\.\d+$ depName=sigstore/cosign-installer
-	CosignInstallActionVerson = "v3"
+	CosignInstallerActionVersion = "v3.8.2"
 	// DeepCopyVersion is the version of deepcopy.
 	// renovate: datasource=go depName=github.com/siderolabs/deep-copy
 	DeepCopyVersion = "v0.5.6"
