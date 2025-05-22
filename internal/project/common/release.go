@@ -27,7 +27,8 @@ type Release struct {
 	// List of file patterns relative to the ArtifactsPath to include in the release.
 	//
 	// If not specified, defaults to the auto-detected commands.
-	Artifacts []string `yaml:"artifacts"`
+	Artifacts          []string `yaml:"artifacts"`
+	GenerateSignatures bool     `yaml:"generateSignatures,omitempty"`
 }
 
 // NewRelease initializes Release.
@@ -88,7 +89,35 @@ func (release *Release) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		checkSumStep := ghworkflow.Step("Generate Checksums").
 			SetCommand(strings.Join(checkSumCommands, "\n"))
 
-		releaseStep.SetWith("files", strings.Join(artifacts, "\n")+"\n"+filepath.Join(release.meta.ArtifactsPath, "sha*.txt"))
+		artifactsToUpload := strings.Join(artifacts, "\n") + "\n" + filepath.Join(release.meta.ArtifactsPath, "sha*.txt")
+
+		if release.GenerateSignatures {
+			output.AddJobPermissions("default", "id-token", "write")
+
+			cosignStep := ghworkflow.Step("Install Cosign").
+				SetUses("sigstore/cosign-installer@" + config.CosignInstallActionVerson)
+
+			if err := cosignStep.SetConditions("only-on-tag"); err != nil {
+				return err
+			}
+
+			signCommands := xslices.Map(artifacts, func(artifact string) string {
+				return fmt.Sprintf("find %s -type f -name %s -exec cosign sign-blob --yes --output {}.sig {} \\;", release.meta.ArtifactsPath, artifact)
+			})
+
+			signStep := ghworkflow.Step("Sign artifacts").
+				SetCommand(strings.Join(signCommands, "\n"))
+
+			if err := signStep.SetConditions("only-on-tag"); err != nil {
+				return err
+			}
+
+			steps = append(steps, cosignStep, signStep)
+
+			artifactsToUpload += "\n" + filepath.Join(release.meta.ArtifactsPath, "*.sig")
+		}
+
+		releaseStep.SetWith("files", artifactsToUpload)
 
 		if err := checkSumStep.SetConditions("only-on-tag"); err != nil {
 			return err

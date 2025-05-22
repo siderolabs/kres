@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2025-06-02T14:41:29Z by kres 9f64b0d-dirty.
+# Generated on 2025-07-02T13:16:29Z by kres 43deb91-dirty.
 
 name: default
 concurrency:
@@ -22,6 +22,7 @@ jobs:
     permissions:
       actions: read
       contents: write
+      id-token: write
       issues: read
       packages: write
       pull-requests: read
@@ -112,6 +113,13 @@ jobs:
           PUSH: "true"
         run: |
           make image-kres IMAGE_TAG=latest
+      - name: Install Cosign
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: sigstore/cosign-installer@v3
+      - name: Sign artifacts
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          find _out -type f -name _out/kres-* -exec cosign sign-blob --yes --output {}.sig {} \;
       - name: Generate Checksums
         if: startsWith(github.ref, 'refs/tags/')
         run: |
@@ -131,3 +139,4 @@ jobs:
           files: |-
             _out/kres-*
             _out/sha*.txt
+            _out/*.sig

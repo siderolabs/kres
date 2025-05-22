@@ -256,6 +256,11 @@ func (o *Output) AddStep(jobName string, steps ...*JobStep) {
 	o.workflows[ciWorkflow].Jobs[jobName].Steps = append(o.workflows[ciWorkflow].Jobs[jobName].Steps, steps...)
 }
 
+// AddJobPermissions adds permissions to the job.
+func (o *Output) AddJobPermissions(jobName, permission, value string) {
+	o.workflows[ciWorkflow].Jobs[jobName].Permissions[permission] = value
+}
+
 // AddStepBefore adds step before another step in the job.
 func (o *Output) AddStepBefore(jobName, beforeStepID string, steps ...*JobStep) {
 	job := o.workflows[ciWorkflow].Jobs[jobName]

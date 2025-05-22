@@ -79,10 +79,11 @@ type CoverageStep struct {
 
 // ReleaseStep defines options for release steps.
 type ReleaseStep struct {
-	BaseDirectory     string   `yaml:"baseDirectory"`
-	ReleaseNotes      string   `yaml:"releaseNotes"`
-	Artifacts         []string `yaml:"artifacts"`
-	GenerateChecksums bool     `yaml:"generateChecksums"`
+	BaseDirectory      string   `yaml:"baseDirectory"`
+	ReleaseNotes       string   `yaml:"releaseNotes"`
+	Artifacts          []string `yaml:"artifacts"`
+	GenerateChecksums  bool     `yaml:"generateChecksums"`
+	GenerateSignatures bool     `yaml:"generateSignatures"`
 }
 
 // RegistryLoginStep defines options for registry login steps.
@@ -281,7 +282,29 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 					SetWith("draft", "true").
 					SetWith("files", strings.Join(artifacts, "\n"))
 
+				if step.ReleaseStep.GenerateSignatures {
+					jobDef.Permissions["id-token"] = "write"
+
+					cosignStep := ghworkflow.Step("Install Cosign").
+						SetUses("sigstore/cosign-installer@" + config.CosignInstallActionVerson)
+
+					jobDef.Steps = append(jobDef.Steps, cosignStep)
+
+					signCommands := xslices.Map(artifacts, func(artifact string) string {
+						return fmt.Sprintf("cosign sign-blob --output %s.sig --yes %s", artifact, artifact)
+					})
+
+					signStep := ghworkflow.Step("Sign artifacts").
+						SetCommand(strings.Join(signCommands, "\n"))
+
+					jobDef.Steps = append(jobDef.Steps, signStep)
+
+					releaseStep.SetWith("files", strings.Join(artifacts, "\n")+"\n"+filepath.Join(step.ReleaseStep.BaseDirectory, "*.sig"))
+				}
+
 				if step.ReleaseStep.GenerateChecksums {
+					jobDef.Permissions["id-token"] = "write"
+
 					checkSumCommands := []string{
 						fmt.Sprintf("cd %s", step.ReleaseStep.BaseDirectory),
 						fmt.Sprintf("sha256sum %s > %s", strings.Join(step.ReleaseStep.Artifacts, " "), "sha256sum.txt"),
@@ -291,10 +314,29 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 					checkSumStep := ghworkflow.Step("Generate Checksums").
 						SetCommand(strings.Join(checkSumCommands, "\n"))
 
+					jobDef.Steps = append(jobDef.Steps, checkSumStep)
+
 					releaseStep.
 						SetWith("files", strings.Join(artifacts, "\n")+"\n"+filepath.Join(step.ReleaseStep.BaseDirectory, "sha*.txt"))
 
-					jobDef.Steps = append(jobDef.Steps, checkSumStep)
+					if step.ReleaseStep.GenerateSignatures {
+						checkSumSignCommands := []string{
+							"cosign sign-blob --output sha256sum.txt.sig --yes sha256sum.txt",
+							"cosign sign-blob --output sha512sum.txt.sig --yes sha512sum.txt",
+						}
+
+						signStep := ghworkflow.Step("Sign checksums").
+							SetCommand(strings.Join(checkSumSignCommands, "\n"))
+
+						jobDef.Steps = append(jobDef.Steps, signStep)
+
+						releaseStep.SetWith("files",
+							strings.Join(artifacts, "\n")+
+								"\n"+
+								filepath.Join(step.ReleaseStep.BaseDirectory, "sha*.txt")+"\n"+
+								filepath.Join(step.ReleaseStep.BaseDirectory, "*.sig"),
+						)
+					}
 				}
 
 				jobDef.Steps = append(jobDef.Steps, releaseStep)
