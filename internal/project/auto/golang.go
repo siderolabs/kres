@@ -274,7 +274,7 @@ func (builder *builder) BuildGolang() error {
 			return err
 		}
 
-		build := golang.NewBuild(builder.meta, cmd.Name, cmd.Path)
+		build := golang.NewBuild(builder.meta, cmd.Name, cmd.Path, "go build")
 		build.AddInput(toolchain)
 		builder.targets = append(builder.targets, build)
 

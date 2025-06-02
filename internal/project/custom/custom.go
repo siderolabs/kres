@@ -47,7 +47,8 @@ type Step struct {
 					Src      string `yaml:"src"`
 					Dst      string `yaml:"dst"`
 				} `yaml:"copy"`
-				Arg string `yaml:"arg"`
+				Arg        string   `yaml:"arg"`
+				Entrypoint []string `yaml:"entrypoint"`
 			} `yaml:"steps"`
 		} `yaml:"stages"`
 
@@ -170,6 +171,14 @@ func (step *Step) CompileDockerfile(output *dockerfile.Output) error {
 				}
 
 				s.Step(copyStep)
+			case stageStep.Entrypoint != nil:
+				var args []string
+
+				if len(stageStep.Entrypoint) > 1 {
+					args = stageStep.Entrypoint[1:]
+				}
+
+				s.Step(dockerstep.Entrypoint(stageStep.Entrypoint[0], args...))
 			}
 		}
 	}

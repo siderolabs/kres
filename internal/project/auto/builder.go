@@ -84,6 +84,10 @@ func (builder *builder) build() error {
 			detect: builder.DetectHelm,
 			build:  builder.BuildHelm,
 		},
+		{
+			detect: builder.DetectIntegrationTests,
+			build:  builder.BuildIntegrationTests,
+		},
 		{ // custom should be the last in the list, so that step could be hooked up to the build
 			detect: builder.DetectCustom,
 			build:  builder.BuildCustom,

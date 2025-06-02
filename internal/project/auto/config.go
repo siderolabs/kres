@@ -45,3 +45,16 @@ type Helm struct {
 	ChartDir string `yaml:"chartDir"`
 	Enabled  bool   `yaml:"enabled"`
 }
+
+// IntegrationTests defines integration tests builder to be generated.
+type IntegrationTests struct {
+	Tests []IntegrationTestConfig
+}
+
+// IntegrationTestConfig defines the integration tests build configuration.
+type IntegrationTestConfig struct {
+	Outputs           map[string]map[string]string `yaml:"outputs"`
+	Name              string                       `yaml:"name"`
+	Path              string                       `yaml:"path"`
+	EnableDockerImage bool                         `yaml:"enableDockerImage"`
+}

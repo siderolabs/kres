@@ -32,6 +32,7 @@ type Build struct {
 	meta       *meta.Options
 	sourcePath string
 	entrypoint string
+	command    string
 	artifacts  []artifact
 	configs    []CompileConfig
 }
@@ -55,11 +56,12 @@ func (c CompileConfig) set(script *step.RunStep) {
 }
 
 // NewBuild initializes Build.
-func NewBuild(meta *meta.Options, name, sourcePath string) *Build {
+func NewBuild(meta *meta.Options, name, sourcePath, buildCommand string) *Build {
 	return &Build{
 		BaseNode:   dag.NewBaseNode(name),
 		meta:       meta,
 		sourcePath: sourcePath,
+		command:    buildCommand,
 	}
 }
 
@@ -98,7 +100,7 @@ func (build *Build) CompileDockerfile(output *dockerfile.Output) error {
 			buildFlags = " " + strings.Join(build.BuildFlags, " ")
 		}
 
-		script := step.Script(fmt.Sprintf(`go build%s -ldflags "%s" -o /%s`, buildFlags, ldflags, name)).
+		script := step.Script(fmt.Sprintf(`%s%s -ldflags "%s" -o /%s`, build.command, buildFlags, ldflags, name)).
 			MountCache(filepath.Join(build.meta.CachePath, "go-build"), build.meta.GitHubRepository).
 			MountCache(filepath.Join(build.meta.GoPath, "pkg"), build.meta.GitHubRepository)
 
