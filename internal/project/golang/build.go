@@ -98,6 +98,9 @@ func (build *Build) CompileDockerfile(output *dockerfile.Output) error {
 			buildFlags = " " + strings.Join(build.BuildFlags, " ")
 		}
 
+		stage.Step(step.Script(`go install github.com/tc-hib/go-winres@latest`))
+		stage.Step(step.Script(`go-winres make --product-version=${TAG} --file-version=${TAG}`))
+
 		script := step.Script(fmt.Sprintf(`go build%s -ldflags "%s" -o /%s`, buildFlags, ldflags, name)).
 			MountCache(filepath.Join(build.meta.CachePath, "go-build"), build.meta.GitHubRepository).
 			MountCache(filepath.Join(build.meta.GoPath, "pkg"), build.meta.GitHubRepository)
