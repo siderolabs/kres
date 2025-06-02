@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-11-25T08:20:41Z by kres b3b0da7-dirty.
+# Generated on 2025-06-02T14:41:29Z by kres 9f64b0d-dirty.
 
 name: default
 concurrency:
@@ -32,7 +32,7 @@ jobs:
     steps:
       - name: gather-system-info
         id: system-info
-        uses: kenchan0130/actions-system-info@v1.3.0
+        uses: kenchan0130/actions-system-info@v1.3.1
         continue-on-error: true
       - name: print-system-info
         run: |

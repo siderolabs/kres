@@ -33,10 +33,10 @@ const (
 	DeepCopyVersion = "v0.5.6"
 	// DindContainerImageVersion is the version of the dind container image.
 	// renovate: datasource=docker versioning=docker depName=docker
-	DindContainerImageVersion = "28.1-dind"
+	DindContainerImageVersion = "28.2-dind"
 	// DockerfileFrontendImageVersion is the version of the dockerfile frontend image.
 	// renovate: datasource=docker versioning=docker depName=docker/dockerfile-upstream
-	DockerfileFrontendImageVersion = "1.15.1-labs"
+	DockerfileFrontendImageVersion = "1.16.0-labs"
 	// DownloadArtifactActionVersion is the version of download artifact github action.
 	// renovate: datasource=github-releases extractVersion=^(?<version>v\d+)\.\d+\.\d+$ depName=actions/download-artifact
 	DownloadArtifactActionVersion = "v4"
@@ -78,7 +78,7 @@ const (
 	MarkdownLintCLIVersion = "0.45.0"
 	// BunContainerImageVersion is the default bun container image.
 	// renovate: datasource=docker versioning=docker depName=oven/bun
-	BunContainerImageVersion = "1.2.13-alpine"
+	BunContainerImageVersion = "1.2.15-alpine"
 	// PkgsVersion is the version of pkgs.
 	// renovate: datasource=github-tags depName=siderolabs/pkgs
 	PkgsVersion = "v1.10.0"
@@ -105,7 +105,7 @@ const (
 	SlackNotifyActionVersion = "v2"
 	// SystemInfoActionVersion is the version of system info github action.
 	// renovate: datasource=github-releases depName=kenchan0130/actions-system-info
-	SystemInfoActionVersion = "v1.3.0"
+	SystemInfoActionVersion = "v1.3.1"
 	// UploadArtifactActionVersion is the version of upload artifact github action.
 	// renovate: datasource=github-releases extractVersion=^(?<version>v\d+)\.\d+\.\d+$ depName=actions/upload-artifact
 	UploadArtifactActionVersion = "v4"
