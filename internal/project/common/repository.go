@@ -47,6 +47,8 @@ type Repository struct { //nolint:govet
 	LicenseChecks []licensepolicy.Spec `yaml:"licenseChecks"`
 
 	BotName string `yaml:"botName"`
+
+	SkipStaleWorkflow bool `yaml:"skipStaleWorkflow"`
 }
 
 // LicenseConfig configures the license.
@@ -100,6 +102,7 @@ func NewRepository(meta *meta.Options) *Repository {
 // AfterLoad maps back main branch override to meta.
 func (r *Repository) AfterLoad() error {
 	r.meta.MainBranch = r.MainBranch
+	r.meta.SkipStaleWorkflow = r.SkipStaleWorkflow
 
 	return nil
 }
