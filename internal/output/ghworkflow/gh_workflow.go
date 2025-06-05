@@ -86,7 +86,7 @@ type Output struct {
 }
 
 // NewOutput creates new .github/workflows/ci.yaml output.
-func NewOutput(mainBranch string, withDefaultJob bool) *Output {
+func NewOutput(mainBranch string, withDefaultJob bool, withStaleJob bool) *Output {
 	workflows := map[string]*Workflow{
 		ciWorkflow: {
 			Name: "default",
@@ -141,6 +141,74 @@ func NewOutput(mainBranch string, withDefaultJob bool) *Output {
 				},
 			},
 		},
+	}
+
+	if withStaleJob {
+		workflows[".github/workflows/lock.yml"] = &Workflow{
+			Name: "Lock old issues",
+			On: On{
+				Schedule: []Schedule{
+					{
+						Cron: "0 2 * * *", // Every day at 2 AM
+					},
+				},
+			},
+			Permissions: map[string]string{
+				"issues": "write",
+			},
+			Jobs: map[string]*Job{
+				"action": {
+					RunsOn: []string{"ubuntu-latest"},
+					Steps: []*JobStep{
+						{
+							Name: "Lock old issues",
+							Uses: "dessant/lock-threads@" + config.LockThreadsActionVersion,
+							With: map[string]string{
+								"issue-inactive-days": "60",
+								"process-only":        "issues",
+								"log-output":          "true",
+							},
+						},
+					},
+				},
+			},
+		}
+
+		workflows[".github/workflows/stale.yml"] = &Workflow{
+			Name: "Close stale issues and PRs",
+			On: On{
+				Schedule: []Schedule{
+					{
+						Cron: "30 1 * * *", // Every day at 1:30 AM
+					},
+				},
+			},
+			Permissions: map[string]string{
+				"issues":        "write",
+				"pull-requests": "write",
+			},
+			Jobs: map[string]*Job{
+				"stale": {
+					RunsOn: []string{"ubuntu-latest"},
+					Steps: []*JobStep{
+						{
+							Name: "Close stale issues and PRs",
+							Uses: "actions/stale@" + config.StaleActionVersion,
+							With: map[string]string{
+								"stale-issue-message":     "This issue is stale because it has been open 180 days with no activity. Remove stale label or comment or this will be closed in 7 days.",
+								"stale-pr-message":        "This PR is stale because it has been open 45 days with no activity.",
+								"close-issue-message":     "This issue was closed because it has been stalled for 7 days with no activity.",
+								"days-before-issue-stale": "180",
+								"days-before-pr-stale":    "45",
+								"days-before-issue-close": "5",
+								"days-before-pr-close":    "-1",   // never close PRs
+								"operations-per-run":      "2000", // the maximum number of operations to perform per run
+							},
+						},
+					},
+				},
+			},
+		}
 	}
 
 	if withDefaultJob {

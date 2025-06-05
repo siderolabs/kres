@@ -93,6 +93,9 @@ type Options struct { //nolint:govet
 
 	// HelmChartDir is the path to helm chart directory.
 	HelmChartDir string
+
+	// SkipStaleWorkflow indicates that stale workflow should not be generated.
+	SkipStaleWorkflow bool
 }
 
 // Command defines Golang executable build configuration.

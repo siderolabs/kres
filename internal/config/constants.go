@@ -112,4 +112,10 @@ const (
 	// VTProtobufVersion is the version of vtprotobuf.
 	// renovate: datasource=go depName=github.com/planetscale/vtprotobuf
 	VTProtobufVersion = "v0.6.0"
+	// StaleActionVersion is the version of stale github action.
+	// renovate: datasource=github-releases depName=actions/stale
+	StaleActionVersion = "v9.1.0"
+	// LockThreadsActionVersion is the version of lock threads github action.
+	// renovate: datasource=github-releases depName=dessant/lock-threads
+	LockThreadsActionVersion = "v5.0.1"
 )

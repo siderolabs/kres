@@ -11,6 +11,7 @@ type Workflow struct {
 	Name        string `yaml:"name"`
 	Concurrency `yaml:"concurrency,omitempty"`
 	On          `yaml:"on"`
+	Permissions map[string]string `yaml:"permissions,omitempty"`
 	Env         map[string]string `yaml:"env,omitempty"`
 	Jobs        map[string]*Job   `yaml:"jobs"`
 }
