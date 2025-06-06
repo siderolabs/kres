@@ -42,8 +42,14 @@ func (builder *builder) BuildIntegrationTests() error {
 		builder.targets = append(builder.targets, build)
 
 		if spec.EnableDockerImage {
+			imageName := spec.Name
+
+			if spec.ImageName != "" {
+				imageName = spec.ImageName
+			}
+
 			image := common.NewImage(
-				builder.meta, spec.Name,
+				builder.meta, imageName,
 			)
 
 			image.AddInput(build)

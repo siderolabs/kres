@@ -48,7 +48,7 @@ type Helm struct {
 
 // IntegrationTests defines integration tests builder to be generated.
 type IntegrationTests struct {
-	Tests []IntegrationTestConfig
+	Tests []IntegrationTestConfig `yaml:"tests"`
 }
 
 // IntegrationTestConfig defines the integration tests build configuration.
@@ -56,5 +56,6 @@ type IntegrationTestConfig struct {
 	Outputs           map[string]map[string]string `yaml:"outputs"`
 	Name              string                       `yaml:"name"`
 	Path              string                       `yaml:"path"`
+	ImageName         string                       `yaml:"imageName"`
 	EnableDockerImage bool                         `yaml:"enableDockerImage"`
 }
