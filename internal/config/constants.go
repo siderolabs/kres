@@ -48,7 +48,7 @@ const (
 	GoFmtVersion = "v0.8.0"
 	// GoImportsVersion is the version of goimports.
 	// renovate: datasource=go depName=golang.org/x/tools
-	GoImportsVersion = "v0.33.0"
+	GoImportsVersion = "v0.34.0"
 	// GoMockVersion is the version of gomock.
 	// renovate: datasource=go depName=github.com/uber-go/mock
 	GoMockVersion = "v0.5.2"
@@ -60,7 +60,7 @@ const (
 	GolangContainerImageVersion = "1.24-alpine"
 	// GoVersion is the version of Go.
 	// renovate: datasource=github-tags extractVersion=^go(?<version>.*)$ depName=golang/go
-	GoVersion = "1.24.3"
+	GoVersion = "1.24.4"
 	// GrpcGatewayVersion is the version of grpc-gateway.
 	// renovate: datasource=go depName=github.com/grpc-ecosystem/grpc-gateway
 	GrpcGatewayVersion = "v2.26.3"
