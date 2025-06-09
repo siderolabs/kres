@@ -5,7 +5,12 @@
 package auto
 
 import (
+	"fmt"
+	"path/filepath"
+	"strings"
+
 	"github.com/siderolabs/gen/maps"
+	"github.com/siderolabs/gen/xslices"
 
 	"github.com/siderolabs/kres/internal/project/common"
 	"github.com/siderolabs/kres/internal/project/golang"
@@ -31,7 +36,17 @@ func (builder *builder) BuildIntegrationTests() error {
 	}
 
 	for _, spec := range integrationTests.Tests {
-		build := golang.NewBuild(builder.meta, spec.Name, spec.Path, "go test -c -covermode=atomic")
+		build := golang.NewBuild(builder.meta, spec.Name, spec.Path,
+			fmt.Sprintf(
+				"go test -c -covermode=atomic -coverpkg=%s",
+				strings.Join(
+					xslices.Map(builder.meta.CanonicalPaths, func(s string) string {
+						return filepath.Join(s, "/...")
+					}),
+					",",
+				),
+			),
+		)
 
 		build.Outputs = maps.Map(spec.Outputs, func(k string, m map[string]string) (string, golang.CompileConfig) {
 			return k, golang.CompileConfig(m)

@@ -28,9 +28,10 @@ type CustomSteps struct {
 
 // CustomStep defines a custom step to be built.
 type CustomStep struct {
-	Name     string   `yaml:"name"`
-	Inputs   []string `yaml:"inputs"`
-	Toplevel bool     `yaml:"toplevel"`
+	Name       string   `yaml:"name"`
+	Inputs     []string `yaml:"inputs"`
+	Dependants []string `yaml:"dependants"`
+	Toplevel   bool     `yaml:"toplevel"`
 }
 
 // CI defines CI settings.

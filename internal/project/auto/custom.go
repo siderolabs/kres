@@ -49,6 +49,16 @@ func (builder *builder) BuildCustom() error {
 			step.AddInput(input)
 		}
 
+		for _, dependantName := range spec.Dependants {
+			dependant := dag.FindByName(dependantName, append(builder.targets, createdSteps...)...)
+
+			if dependant == nil {
+				return fmt.Errorf("failed to find dependant node %q for custom step %q", dependantName, spec.Name)
+			}
+
+			dependant.AddInput(step)
+		}
+
 		createdSteps = append(createdSteps, step)
 	}
 

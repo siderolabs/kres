@@ -262,7 +262,7 @@ func (builder *builder) BuildGolang() error {
 		builder.targets = append(builder.targets, unitTests)
 		allUnitTests = append(allUnitTests, unitTests)
 
-		coverage.InputPaths = append(coverage.InputPaths, fmt.Sprintf("coverage-%s.txt", unitTests.Name()))
+		coverage.AddDiscoveredInputs(fmt.Sprintf("coverage-%s.txt", unitTests.Name()))
 	}
 
 	builder.targets = append(builder.targets, coverage)

@@ -25,6 +25,7 @@ type CodeCov struct {
 
 	meta *meta.Options
 
+	discoveredPaths []string
 	InputPaths      []string `yaml:"inputPaths"`
 	TargetThreshold int      `yaml:"targetThreshold"`
 	Enabled         bool     `yaml:"enabled"`
@@ -40,6 +41,11 @@ func NewCodeCov(meta *meta.Options) *CodeCov {
 		Enabled:         true,
 		TargetThreshold: 50,
 	}
+}
+
+// AddDiscoveredInputs sets automatically discovered codecov.txt files.
+func (coverage *CodeCov) AddDiscoveredInputs(inputs ...string) {
+	coverage.discoveredPaths = append(coverage.discoveredPaths, inputs...)
 }
 
 // CompileDrone implements drone.Compiler.
@@ -62,7 +68,7 @@ func (coverage *CodeCov) CompileGitHubWorkflow(output *ghworkflow.Output) error 
 		return nil
 	}
 
-	paths := xslices.Map(coverage.InputPaths, func(path string) string {
+	paths := xslices.Map(append(coverage.discoveredPaths, coverage.InputPaths...), func(path string) string {
 		return fmt.Sprintf("%s/%s", coverage.meta.ArtifactsPath, path)
 	})
 
