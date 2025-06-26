@@ -282,17 +282,25 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 					SetWith("files", strings.Join(artifacts, "\n"))
 
 				if step.ReleaseStep.GenerateChecksums {
+					jobDef.Permissions["id-token"] = "write"
+
+					cosignStep := ghworkflow.Step("Install Cosign").
+						SetUses("sigstore/cosign-installer@" + config.CosignInstallerActionVersion)
+					jobDef.Steps = append(jobDef.Steps, cosignStep)
+
 					checkSumCommands := []string{
 						fmt.Sprintf("cd %s", step.ReleaseStep.BaseDirectory),
 						fmt.Sprintf("sha256sum %s > %s", strings.Join(step.ReleaseStep.Artifacts, " "), "sha256sum.txt"),
 						fmt.Sprintf("sha512sum %s > %s", strings.Join(step.ReleaseStep.Artifacts, " "), "sha512sum.txt"),
+						fmt.Sprintf("cosign sign-blob --output sha256sum.txt.sig --yes sha256sum.txt"),
+						fmt.Sprintf("cosign sign-blob --output sha512sum.txt.sig --yes sha512sum.txt"),
 					}
 
 					checkSumStep := ghworkflow.Step("Generate Checksums").
 						SetCommand(strings.Join(checkSumCommands, "\n"))
 
 					releaseStep.
-						SetWith("files", strings.Join(artifacts, "\n")+"\n"+filepath.Join(step.ReleaseStep.BaseDirectory, "sha*.txt"))
+						SetWith("files", strings.Join(artifacts, "\n")+"\n"+filepath.Join(step.ReleaseStep.BaseDirectory, "sha*.txt*"))
 
 					jobDef.Steps = append(jobDef.Steps, checkSumStep)
 				}
