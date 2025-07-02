@@ -35,6 +35,7 @@ type UnitTests struct { //nolint:govet
 			Arg string `yaml:"arg"`
 		} `yaml:"steps"`
 	} `yaml:"docker"`
+	RunFIPS bool `yaml:"runFIPS"`
 
 	packagePath string
 
@@ -62,6 +63,23 @@ func (tests *UnitTests) CompileDockerfile(output *dockerfile.Output) error {
 		return s
 	}
 
+	applyDockerCopySteps := func(stage *dockerfile.Stage) {
+		for _, dockerStep := range tests.Docker.Steps {
+			if dockerStep.Copy != nil {
+				copyStep := step.Copy(dockerStep.Copy.Src, dockerStep.Copy.Dst)
+				if dockerStep.Copy.From != "" {
+					copyStep.From(dockerStep.Copy.From)
+				}
+
+				if dockerStep.Copy.Platform != "" {
+					copyStep.Platform(dockerStep.Copy.Platform)
+				}
+
+				stage.Step(copyStep)
+			}
+		}
+	}
+
 	extraArgs := tests.ExtraArgs
 	if extraArgs != "" {
 		extraArgs += " "
@@ -74,20 +92,7 @@ func (tests *UnitTests) CompileDockerfile(output *dockerfile.Output) error {
 		Description("runs unit-tests").
 		From("base")
 
-	for _, dockerStep := range tests.Docker.Steps {
-		if dockerStep.Copy != nil {
-			copyStep := step.Copy(dockerStep.Copy.Src, dockerStep.Copy.Dst)
-			if dockerStep.Copy.From != "" {
-				copyStep.From(dockerStep.Copy.From)
-			}
-
-			if dockerStep.Copy.Platform != "" {
-				copyStep.Platform(dockerStep.Copy.Platform)
-			}
-
-			testRunStage.Step(copyStep)
-		}
-	}
+	applyDockerCopySteps(testRunStage)
 
 	testRunStage.Step(workdir).
 		Step(step.Arg("TESTPKGS")).
@@ -109,20 +114,7 @@ func (tests *UnitTests) CompileDockerfile(output *dockerfile.Output) error {
 		Description("runs unit-tests with race detector").
 		From("base")
 
-	for _, dockerStep := range tests.Docker.Steps {
-		if dockerStep.Copy != nil {
-			copyStep := step.Copy(dockerStep.Copy.Src, dockerStep.Copy.Dst)
-			if dockerStep.Copy.From != "" {
-				copyStep.From(dockerStep.Copy.From)
-			}
-
-			if dockerStep.Copy.Platform != "" {
-				copyStep.Platform(dockerStep.Copy.Platform)
-			}
-
-			testRunRaceStage.Step(copyStep)
-		}
-	}
+	applyDockerCopySteps(testRunRaceStage)
 
 	testRunRaceStage.Step(workdir).
 		Step(step.Arg("TESTPKGS")).
@@ -137,6 +129,29 @@ func (tests *UnitTests) CompileDockerfile(output *dockerfile.Output) error {
 				MountCache(filepath.Join(tests.meta.GoPath, "pkg"), tests.meta.GitHubRepository).
 				MountCache("/tmp", tests.meta.GitHubRepository).
 				Env("CGO_ENABLED", "1")))
+
+	if tests.RunFIPS {
+		testRunFIPSStage := output.Stage(tests.Name() + "-fips").
+			Description("runs unit-tests with strict FIPS-140 mode").
+			From("base")
+
+		applyDockerCopySteps(testRunFIPSStage)
+
+		testRunFIPSStage.Step(workdir).
+			Step(step.Arg("TESTPKGS")).
+			Step(wrapAsInsecure(
+				step.Script(
+					fmt.Sprintf(
+						`go test -v -count 1 %s${TESTPKGS}`,
+						extraArgs,
+					),
+				).
+					MountCache(filepath.Join(tests.meta.CachePath, "go-build"), tests.meta.GitHubRepository).
+					MountCache(filepath.Join(tests.meta.GoPath, "pkg"), tests.meta.GitHubRepository).
+					MountCache("/tmp", tests.meta.GitHubRepository).
+					Env("GOFIPS140", "latest").
+					Env("GODEBUG", "fips140=only")))
+	}
 
 	return nil
 }
@@ -162,6 +177,13 @@ func (tests *UnitTests) CompileMakefile(output *makefile.Output) error {
 		Script("@$(MAKE) target-$@" + scriptExtraArgs).
 		Phony()
 
+	if tests.RunFIPS {
+		output.Target(tests.Name() + "-fips").
+			Description("Performs unit tests with strict FIPS-140 mode.").
+			Script("@$(MAKE) target-$@" + scriptExtraArgs).
+			Phony()
+	}
+
 	return nil
 }
 
@@ -175,6 +197,12 @@ func (tests *UnitTests) CompileDrone(output *drone.Output) error {
 		DependsOn(dag.GatherMatchingInputNames(tests, dag.Implements[drone.Compiler]())...),
 	)
 
+	if tests.RunFIPS {
+		output.Step(drone.MakeStep(fmt.Sprintf(tests.Name(), "-fips")).
+			DependsOn(dag.GatherMatchingInputNames(tests, dag.Implements[drone.Compiler]())...),
+		)
+	}
+
 	return nil
 }
 
@@ -185,6 +213,13 @@ func (tests *UnitTests) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		ghworkflow.Step(tests.Name()).SetMakeStep(tests.Name()),
 		ghworkflow.Step(tests.Name()+"-race").SetMakeStep(tests.Name()+"-race"),
 	)
+
+	if tests.RunFIPS {
+		output.AddStep(
+			"default",
+			ghworkflow.Step(tests.Name()+"-fips").SetMakeStep(tests.Name()+"-fips"),
+		)
+	}
 
 	return nil
 }
