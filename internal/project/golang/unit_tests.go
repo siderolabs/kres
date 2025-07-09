@@ -36,6 +36,8 @@ type UnitTests struct { //nolint:govet
 		} `yaml:"steps"`
 	} `yaml:"docker"`
 	RunFIPS bool `yaml:"runFIPS"`
+	Verbose bool `yaml:"verbose"`
+	Count   int  `yaml:"count"`
 
 	packagePath string
 
@@ -94,14 +96,21 @@ func (tests *UnitTests) CompileDockerfile(output *dockerfile.Output) error {
 
 	applyDockerCopySteps(testRunStage)
 
+	verboseArg := ""
+	if tests.Verbose {
+		verboseArg = "-v "
+	}
+
+	countArg := ""
+	if tests.Count > 0 {
+		countArg = fmt.Sprintf("-count %d ", tests.Count)
+	}
+
 	testRunStage.Step(workdir).
 		Step(step.Arg("TESTPKGS")).
 		Step(wrapAsInsecure(
 			step.Script(
-				fmt.Sprintf(
-					`go test -v -covermode=atomic -coverprofile=coverage.txt -coverpkg=${TESTPKGS} -count 1 %s${TESTPKGS}`,
-					extraArgs),
-			).
+				fmt.Sprintf(`go test %s-covermode=atomic -coverprofile=coverage.txt -coverpkg=${TESTPKGS} %s%s${TESTPKGS}`, verboseArg, countArg, extraArgs)).
 				MountCache(filepath.Join(tests.meta.CachePath, "go-build"), tests.meta.GitHubRepository).
 				MountCache(filepath.Join(tests.meta.GoPath, "pkg"), tests.meta.GitHubRepository).
 				MountCache("/tmp", tests.meta.GitHubRepository)))
@@ -120,10 +129,7 @@ func (tests *UnitTests) CompileDockerfile(output *dockerfile.Output) error {
 		Step(step.Arg("TESTPKGS")).
 		Step(wrapAsInsecure(
 			step.Script(
-				fmt.Sprintf(
-					`go test -v -race -count 1 %s${TESTPKGS}`,
-					extraArgs,
-				),
+				fmt.Sprintf(`go test %s-race %s%s${TESTPKGS}`, verboseArg, countArg, extraArgs),
 			).
 				MountCache(filepath.Join(tests.meta.CachePath, "go-build"), tests.meta.GitHubRepository).
 				MountCache(filepath.Join(tests.meta.GoPath, "pkg"), tests.meta.GitHubRepository).
@@ -141,10 +147,7 @@ func (tests *UnitTests) CompileDockerfile(output *dockerfile.Output) error {
 			Step(step.Arg("TESTPKGS")).
 			Step(wrapAsInsecure(
 				step.Script(
-					fmt.Sprintf(
-						`go test -v -count 1 %s${TESTPKGS}`,
-						extraArgs,
-					),
+					fmt.Sprintf(`go test %s%s%s${TESTPKGS}`, verboseArg, countArg, extraArgs),
 				).
 					MountCache(filepath.Join(tests.meta.CachePath, "go-build"), tests.meta.GitHubRepository).
 					MountCache(filepath.Join(tests.meta.GoPath, "pkg"), tests.meta.GitHubRepository).
