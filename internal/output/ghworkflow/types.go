@@ -8,9 +8,10 @@ package ghworkflow
 //
 //nolint:govet
 type Workflow struct {
-	Name        string `yaml:"name"`
 	Concurrency `yaml:"concurrency,omitempty"`
 	On          `yaml:"on"`
+
+	Name        string            `yaml:"name"`
 	Permissions map[string]string `yaml:"permissions,omitempty"`
 	Env         map[string]string `yaml:"env,omitempty"`
 	Jobs        map[string]*Job   `yaml:"jobs"`
@@ -26,8 +27,9 @@ type Concurrency struct {
 type On struct {
 	Push        `yaml:"push,omitempty"`
 	PullRequest `yaml:"pull_request,omitempty"`
-	Schedule    []Schedule `yaml:"schedule,omitempty"`
 	WorkFlowRun `yaml:"workflow_run,omitempty"`
+
+	Schedule []Schedule `yaml:"schedule,omitempty"`
 }
 
 // Branches represents GitHub Actions branch filters.
@@ -36,8 +38,9 @@ type Branches []string
 // PullRequest represents GitHub Actions pull request filters.
 type PullRequest struct {
 	Branches `yaml:"branches,omitempty"`
-	Types    []string `yaml:"types,omitempty"`
-	Paths    []string `yaml:"paths,omitempty"`
+
+	Types []string `yaml:"types,omitempty"`
+	Paths []string `yaml:"paths,omitempty"`
 }
 
 // Schedule represents GitHub Actions schedule filters.
@@ -57,7 +60,8 @@ type PullRequestTarget struct{}
 // Push represents GitHub Actions push filters.
 type Push struct {
 	Branches `yaml:"branches,omitempty"`
-	Tags     []string `yaml:"tags,omitempty"`
+
+	Tags []string `yaml:"tags,omitempty"`
 }
 
 // Job represents GitHub Actions job.

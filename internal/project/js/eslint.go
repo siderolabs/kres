@@ -15,7 +15,6 @@ import (
 // EsLint provides eslint.
 type EsLint struct {
 	meta *meta.Options
-
 	dag.BaseNode
 }
 

@@ -17,7 +17,6 @@ import (
 // Linters is the common node for all linters.
 type Linters struct {
 	meta *meta.Options
-
 	dag.BaseNode
 }
 

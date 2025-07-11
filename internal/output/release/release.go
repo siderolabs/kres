@@ -99,7 +99,6 @@ func (o *Output) releaseScript(w io.Writer) error {
 
 func (o *Output) releaseTemplate(filename string, w io.Writer) error {
 	_, err := os.Stat(filename)
-
 	if err == nil {
 		return output.ErrSkip
 	}

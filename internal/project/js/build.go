@@ -21,9 +21,9 @@ import (
 
 // Build produces binaries for Go programs.
 type Build struct {
-	meta *meta.Options
-
 	dag.BaseNode
+
+	meta *meta.Options
 
 	embedFile   string
 	LicenseText string `yaml:"licenseText"`

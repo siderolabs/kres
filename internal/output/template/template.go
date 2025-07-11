@@ -75,7 +75,6 @@ func (t *FileTemplate) Params(value any) *FileTemplate {
 func (t *FileTemplate) write(w io.Writer) error {
 	if t.noOverwrite {
 		_, err := os.Stat(t.name)
-
 		if err != nil {
 			if !os.IsNotExist(err) {
 				return err

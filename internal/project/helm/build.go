@@ -20,7 +20,6 @@ import (
 // Build is a helm build node.
 type Build struct {
 	meta *meta.Options
-
 	dag.BaseNode
 }
 

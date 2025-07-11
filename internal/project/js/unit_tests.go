@@ -17,7 +17,6 @@ import (
 // UnitTests runs unit-tests for Go packages.
 type UnitTests struct {
 	meta *meta.Options
-
 	dag.BaseNode
 }
 

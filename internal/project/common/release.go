@@ -21,8 +21,9 @@ import (
 
 // Release provides common release target.
 type Release struct {
-	meta *meta.Options
 	dag.BaseNode
+
+	meta *meta.Options
 
 	// List of file patterns relative to the ArtifactsPath to include in the release.
 	//
