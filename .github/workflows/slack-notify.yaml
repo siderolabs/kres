@@ -3,6 +3,7 @@
 # Generated on 2025-07-11T14:48:24Z by kres 17000452-dirty.
 
 "on":
+  workflow_dispatch: {} # test manually
   workflow_run:
     workflows:
       - default
@@ -23,10 +24,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           echo pull_request_number=$(gh pr view -R ${{ github.repository }} ${{ github.event.workflow_run.head_repository.owner.login }}:${{ github.event.workflow_run.head_branch }} --json number --jq .number) >> $GITHUB_OUTPUT
+          
+          echo "HELLO"
       - name: Slack Notify
         uses: slackapi/slack-github-action@v2
         with:
           method: chat.postMessage
+          payload-templated: true
           payload: |
             {
                 "channel": "proj-talos-maintainers",
