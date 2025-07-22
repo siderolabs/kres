@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2025-07-11T14:48:24Z by kres 17000452-dirty.
+# Generated on 2025-07-22T16:29:55Z by kres b869533-dirty.
 
 concurrency:
   group: ${{ github.head_ref || github.run_id }}
@@ -119,7 +119,7 @@ jobs:
       - name: Sign artifacts
         if: startsWith(github.ref, 'refs/tags/')
         run: |
-          find _out -type f -name _out/kres-* -exec cosign sign-blob --yes --output {}.sig {} \;
+          find _out -type f -name _out/kres-* -exec cosign sign-blob --yes --output-signature {}.sig {} \;
       - name: Generate Checksums
         if: startsWith(github.ref, 'refs/tags/')
         run: |
