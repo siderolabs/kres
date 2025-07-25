@@ -5,6 +5,7 @@
 package js
 
 import (
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -142,6 +143,10 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 		Step(step.Copy(filepath.Join(toolchain.sourceDir, "*.ts"), "./")).
 		Step(step.Copy(filepath.Join(toolchain.sourceDir, "*.js"), "./")).
 		Step(step.Copy(filepath.Join(toolchain.sourceDir, "*.ico"), "./"))
+
+	if _, err := os.Stat(filepath.Join(toolchain.sourceDir, "public")); err == nil {
+		base.Step(step.Copy(filepath.Join(toolchain.sourceDir, "public"), "./"))
+	}
 
 	for _, directory := range toolchain.meta.JSDirectories {
 		dest := strings.TrimLeft(directory, toolchain.sourceDir)
