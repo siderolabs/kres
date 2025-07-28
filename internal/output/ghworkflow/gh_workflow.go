@@ -256,6 +256,17 @@ func (o *Output) AddStep(jobName string, steps ...*JobStep) {
 	o.workflows[ciWorkflow].Jobs[jobName].Steps = append(o.workflows[ciWorkflow].Jobs[jobName].Steps, steps...)
 }
 
+// CheckIfStepExists checks if step with given ID exists in the job.
+func (o *Output) CheckIfStepExists(jobName, stepID string) bool {
+	job := o.workflows[ciWorkflow].Jobs[jobName]
+
+	if job == nil {
+		return false
+	}
+
+	return slices.ContainsFunc(job.Steps, func(s *JobStep) bool { return s.ID == stepID })
+}
+
 // AddJobPermissions adds permissions to the job.
 func (o *Output) AddJobPermissions(jobName, permission, value string) {
 	o.workflows[ciWorkflow].Jobs[jobName].Permissions[permission] = value

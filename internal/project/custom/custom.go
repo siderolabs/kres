@@ -96,26 +96,31 @@ type Step struct {
 			Crons               []string          `yaml:"crons"`
 			RunnerLabels        []string          `yaml:"runnerLabels"`
 			TriggerLabels       []string          `yaml:"triggerLabels"`
+			Artifacts           Artifacts         `yaml:"artifacts"`
 		} `yaml:"jobs"`
-		Artifacts struct {
-			ExtraPaths []string `yaml:"extraPaths"`
-			Additional []struct {
-				Name            string   `yaml:"name"`
-				Paths           []string `yaml:"paths"`
-				Always          bool     `yaml:"always"`
-				ContinueOnError bool     `yaml:"continueOnError"`
-				RetentionDays   string   `yaml:"retentionDays"`
-			} `yaml:"additional"`
-			Enabled         bool   `yaml:"enabled"`
-			ContinueOnError bool   `yaml:"continueOnError"`
-			RetentionDays   string `yaml:"retentionDays"`
-		} `yaml:"artifacts"`
-		Enabled  bool `yaml:"enabled"`
-		CronOnly bool `yaml:"cronOnly"`
-		SOPS     bool `yaml:"sops"`
+		Artifacts Artifacts `yaml:"artifacts"`
+		Enabled   bool      `yaml:"enabled"`
+		CronOnly  bool      `yaml:"cronOnly"`
+		SOPS      bool      `yaml:"sops"`
 	} `yaml:"ghaction"`
 
 	SudoInCI bool `yaml:"sudoInCI"`
+}
+
+type Artifacts struct { //nolint:govet
+	ExtraPaths []string   `yaml:"extraPaths"`
+	Additional []struct { //nolint:govet
+		Name            string   `yaml:"name"`
+		Paths           []string `yaml:"paths"`
+		Always          bool     `yaml:"always"`
+		ContinueOnError bool     `yaml:"continueOnError"`
+		RetentionDays   string   `yaml:"retentionDays"`
+	} `yaml:"additional"`
+	Enabled              bool `yaml:"enabled"`
+	SkipArtifactDownload bool `yaml:"skipArtifactDownload"`
+
+	ContinueOnError bool   `yaml:"continueOnError"`
+	RetentionDays   string `yaml:"retentionDays"`
 }
 
 // NewStep initializes Step.
@@ -328,18 +333,20 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	}
 
 	if len(step.GHAction.Jobs) > 0 {
-		steps = append(
-			steps,
-			ghworkflow.Step("Retrieve PR labels").
-				SetID("retrieve-pr-labels").
-				SetUses("actions/github-script@"+config.GitHubScriptActionVersion).
-				SetWith("retries", "3").
-				SetWith("script", strings.TrimPrefix(ghworkflow.IssueLabelRetrieveScript, "\n")),
-		)
+		if !output.CheckIfStepExists("default", "retrieve-pr-labels") {
+			steps = append(
+				steps,
+				ghworkflow.Step("Retrieve PR labels").
+					SetID("retrieve-pr-labels").
+					SetUses("actions/github-script@"+config.GitHubScriptActionVersion).
+					SetWith("retries", "3").
+					SetWith("script", strings.TrimPrefix(ghworkflow.IssueLabelRetrieveScript, "\n")),
+			)
 
-		output.AddOutputs("default", map[string]string{
-			"labels": "${{ steps.retrieve-pr-labels.outputs.result }}",
-		})
+			output.AddOutputs("default", map[string]string{
+				"labels": "${{ steps.retrieve-pr-labels.outputs.result }}",
+			})
+		}
 	}
 
 	additionalArtifactsSteps := []*ghworkflow.JobStep{}
@@ -427,6 +434,29 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 			}
 		}
 
+		if job.Artifacts.Enabled {
+			for _, additionalArtifact := range job.Artifacts.Additional {
+				artifactStep := ghworkflow.Step(fmt.Sprintf("save-%s-artifacts", additionalArtifact.Name)).
+					SetUses("actions/upload-artifact@"+config.UploadArtifactActionVersion).
+					SetWith("name", additionalArtifact.Name+"-"+job.Name).
+					SetWith("path", strings.Join(additionalArtifact.Paths, "\n")).
+					SetWith("retention-days", "5")
+
+				if additionalArtifact.Always {
+					if err := artifactStep.SetConditions("always"); err != nil {
+						return err
+					}
+				}
+
+				if additionalArtifact.ContinueOnError {
+					artifactStep.SetContinueOnError()
+				}
+
+				artifactSteps = append(artifactSteps, artifactStep)
+				additionalArtifactsSteps = append(additionalArtifactsSteps, artifactStep)
+			}
+		}
+
 		defaultSteps := ghworkflow.DefaultSteps()
 
 		if step.GHAction.SOPS {
@@ -445,7 +475,7 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 
 		var steps []*ghworkflow.JobStep
 
-		if step.GHAction.Artifacts.Enabled {
+		if step.GHAction.Artifacts.Enabled && !job.Artifacts.SkipArtifactDownload {
 			steps = append(
 				steps,
 				ghworkflow.Step("Download artifacts").
