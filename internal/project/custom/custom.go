@@ -420,6 +420,10 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 					SetWith("path", strings.Join(additionalArtifact.Paths, "\n")).
 					SetWith("retention-days", "5")
 
+				if retentionDays := additionalArtifact.RetentionDays; retentionDays != "" {
+					artifactStep.SetWith("retention-days", retentionDays)
+				}
+
 				if additionalArtifact.Always {
 					if err := artifactStep.SetConditions("always"); err != nil {
 						return err
@@ -441,6 +445,10 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 					SetWith("name", additionalArtifact.Name+"-"+job.Name).
 					SetWith("path", strings.Join(additionalArtifact.Paths, "\n")).
 					SetWith("retention-days", "5")
+
+				if retentionDays := additionalArtifact.RetentionDays; retentionDays != "" {
+					artifactStep.SetWith("retention-days", retentionDays)
+				}
 
 				if additionalArtifact.Always {
 					if err := artifactStep.SetConditions("always"); err != nil {
