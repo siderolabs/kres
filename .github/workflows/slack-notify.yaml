@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2025-07-11T14:48:24Z by kres 17000452-dirty.
+# Generated on 2025-07-29T14:35:33Z by kres dd1ed6f-dirty.
 
 "on":
   workflow_run:
@@ -29,7 +29,7 @@ jobs:
           method: chat.postMessage
           payload: |
             {
-                "channel": "proj-talos-maintainers",
+                "channel": "ci-all",
                 "attachments": [
                     {
                         "color": "${{ github.event.workflow_run.conclusion == 'success' && '#2EB886' || github.event.workflow_run.conclusion == 'failure' && '#A30002' || '#FFCC00' }}",
@@ -89,4 +89,4 @@ jobs:
                     }
                 ]
             }
-          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          token: ${{ secrets.SLACK_BOT_TOKEN_V2 }}
