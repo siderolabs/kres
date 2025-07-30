@@ -3,7 +3,9 @@
     "attachments": [
         {
             "color": "${{ github.event.workflow_run.conclusion == 'success' && '#2EB886' || github.event.workflow_run.conclusion == 'failure' && '#A30002' || '#FFCC00' }}",
-            "fallback": "test",
+            "text": "${{ github.event.workflow_run.conclusion }} - ${{ github.repository }}",
+            "icon_emoji": "${{ github.event.workflow_run.conclusion == 'success' && ':white_check_mark:' || github.event.workflow_run.conclusion == 'failure' && ':x:' || ':warning:' }}",
+            "username": "GitHub Actions",
             "blocks": [
                 {
                     "type": "section",
