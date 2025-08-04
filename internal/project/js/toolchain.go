@@ -135,7 +135,8 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 	}
 
 	base.Step(step.Copy(filepath.Join(toolchain.sourceDir, "package.json"), "./")).
-		Step(step.Script("bun install").
+		Step(step.Copy(filepath.Join(toolchain.sourceDir, "bun.lock"), "./")).
+		Step(step.Script("bun install --frozen-lockfile").
 			MountCache(toolchain.meta.JSCachePath, toolchain.meta.GitHubRepository, step.CacheLocked)).
 		Step(step.Copy(filepath.Join(toolchain.sourceDir, "tsconfig*.json"), "./")).
 		Step(step.Copy(filepath.Join(toolchain.sourceDir, "bunfig.toml"), "./")).

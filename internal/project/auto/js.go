@@ -54,6 +54,7 @@ func (builder *builder) DetectJS() (bool, error) {
 
 		builder.meta.SourceFiles = append(builder.meta.SourceFiles,
 			filepath.Join(srcDir, "*.json"),
+			filepath.Join(srcDir, "*.lock"),
 			filepath.Join(srcDir, "*.toml"),
 			filepath.Join(srcDir, "*.js"),
 			filepath.Join(srcDir, "*.ts"),
