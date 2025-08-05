@@ -5,59 +5,59 @@
     "username": "GitHub Actions",
     "attachments": [
         {
-            "color": "${{ github.event.workflow_run.conclusion == 'success' && '#2EB886' || github.event.workflow_run.conclusion == 'failure' && '#A30002' || '#FFCC00' }}",
             "blocks": [
                 {
-                    "type": "section",
                     "fields": [
                         {
-                            "type": "mrkdwn",
-                            "text": "${{ github.event.workflow_run.event == 'pull_request' && format('*Pull Request:* {0} (`{1}`)\n<{2}/pull/{3}|{4}>', github.repository, github.ref_name, github.event.repository.html_url, steps.get-pr-number.outputs.pull_request_number, github.event.workflow_run.display_title) || format('*Build:* {0} (`{1}`)\n<{2}/commit/{3}|{4}>', github.repository, github.ref_name, github.event.repository.html_url, github.sha, github.event.workflow_run.display_title) }}"
+                            "text": "${{ github.event.workflow_run.event == 'pull_request' && format('*Pull Request:* {0} (`{1}`)\n<{2}/pull/{3}|{4}>', github.repository, github.ref_name, github.event.repository.html_url, steps.get-pr-number.outputs.pull_request_number, github.event.workflow_run.display_title) || format('*Build:* {0} (`{1}`)\n<{2}/commit/{3}|{4}>', github.repository, github.ref_name, github.event.repository.html_url, github.sha, github.event.workflow_run.display_title) }}",
+                            "type": "mrkdwn"
                         },
                         {
-                            "type": "mrkdwn",
-                            "text": "*Status:*\n`${{ github.event.workflow_run.conclusion }}`"
+                            "text": "*Status:*\n`${{ github.event.workflow_run.conclusion }}`",
+                            "type": "mrkdwn"
                         }
-                    ]
+                    ],
+                    "type": "section"
                 },
                 {
-                    "type": "section",
                     "fields": [
                         {
-                            "type": "mrkdwn",
-                            "text": "*Author:*\n`${{ github.actor }}`"
+                            "text": "*Author:*\n`${{ github.actor }}`",
+                            "type": "mrkdwn"
                         },
                         {
-                            "type": "mrkdwn",
-                            "text": "*Event:*\n`${{ github.event.workflow_run.event }}`"
+                            "text": "*Event:*\n`${{ github.event.workflow_run.event }}`",
+                            "type": "mrkdwn"
                         }
-                    ]
+                    ],
+                    "type": "section"
                 },
                 {
                     "type": "divider"
                 },
                 {
-                    "type": "actions",
                     "elements": [
                         {
-                            "type": "button",
                             "text": {
-                                "type": "plain_text",
-                                "text": "Logs"
+                                "text": "Logs",
+                                "type": "plain_text"
                             },
+                            "type": "button",
                             "url": "${{ github.event.workflow_run.html_url }}"
                         },
                         {
-                            "type": "button",
                             "text": {
-                                "type": "plain_text",
-                                "text": "Commit"
+                                "text": "Commit",
+                                "type": "plain_text"
                             },
+                            "type": "button",
                             "url": "${{ github.event.repository.html_url }}/commit/${{ github.sha }}"
                         }
-                    ]
+                    ],
+                    "type": "actions"
                 }
-            ]
+            ],
+            "color": "${{ github.event.workflow_run.conclusion == 'success' && '#2EB886' || github.event.workflow_run.conclusion == 'failure' && '#A30002' || '#FFCC00' }}"
         }
     ]
 }

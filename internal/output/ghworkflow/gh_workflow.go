@@ -6,7 +6,9 @@
 package ghworkflow
 
 import (
+	"bytes"
 	_ "embed"
+	"encoding/json"
 	"fmt"
 	"io"
 	"slices"
@@ -63,9 +65,14 @@ for OUTPUT in "${OUTPUTS[@]}";do
 done
 `
 
-	workflowDir   = ".github/workflows"
-	ciWorkflow    = workflowDir + "/" + "ci.yaml"
+	workflowDir = ".github/workflows"
+	// CiWorkflow is the default CI workflow.
+	CiWorkflow    = workflowDir + "/" + "ci.yaml"
 	slackWorkflow = workflowDir + "/" + "slack-notify.yaml"
+	// SlackCIFailureWorkflowName is the name of the workflow to notify Slack on CI failure.
+	SlackCIFailureWorkflowName = "slack-notify-ci-failure"
+	// SlackCIFailureWorkflow is the Slack notify on CI failure workflow.
+	SlackCIFailureWorkflow = workflowDir + "/" + SlackCIFailureWorkflowName + ".yaml"
 )
 
 var (
@@ -86,9 +93,9 @@ type Output struct {
 }
 
 // NewOutput creates new .github/workflows/ci.yaml output.
-func NewOutput(mainBranch string, withDefaultJob bool, withStaleJob bool) *Output {
+func NewOutput(mainBranch string, withDefaultJob bool, withStaleJob bool, slackChannel string) *Output {
 	workflows := map[string]*Workflow{
-		ciWorkflow: {
+		CiWorkflow: {
 			Name: "default",
 			// https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-a-fallback-value
 			Concurrency: Concurrency{
@@ -136,7 +143,33 @@ func NewOutput(mainBranch string, withDefaultJob bool, withStaleJob bool) *Outpu
 							SetUses("slackapi/slack-github-action@"+config.SlackNotifyActionVersion).
 							SetWith("token", "${{ secrets.SLACK_BOT_TOKEN_V2 }}").
 							SetWith("method", "chat.postMessage").
-							SetWith("payload", slackNotifyPayload),
+							SetWith("payload", DefaultSlackNotifyPayload("")),
+					},
+				},
+			},
+		},
+		SlackCIFailureWorkflow: {
+			Name: "slack-notify-failure",
+			On: On{
+				WorkFlowRun: WorkFlowRun{
+					Workflows: []string{"default"},
+					Types:     []string{"completed"},
+					Branches:  []string{mainBranch},
+				},
+			},
+			Jobs: map[string]*Job{
+				"slack-notify": {
+					RunsOn: []string{
+						HostedRunner,
+						GenericRunner,
+					},
+					If: "github.event.workflow_run.conclusion == 'failure' && github.event.workflow_run.event != 'pull_request'",
+					Steps: []*JobStep{
+						Step("Slack Notify").
+							SetUses("slackapi/slack-github-action@"+config.SlackNotifyActionVersion).
+							SetWith("token", "${{ secrets.SLACK_BOT_TOKEN_V2 }}").
+							SetWith("method", "chat.postMessage").
+							SetWith("payload", DefaultSlackNotifyPayload(slackChannel)),
 					},
 				},
 			},
@@ -212,7 +245,7 @@ func NewOutput(mainBranch string, withDefaultJob bool, withStaleJob bool) *Outpu
 	}
 
 	if withDefaultJob {
-		workflows[ciWorkflow].Jobs = map[string]*Job{
+		workflows[CiWorkflow].Jobs = map[string]*Job{
 			"default": {
 				If:          DefaultSkipCondition,
 				Permissions: DefaultJobPermissions(),
@@ -235,7 +268,7 @@ func (o *Output) AddWorkflow(name string, workflow *Workflow) {
 	file := workflowDir + "/" + name + ".yaml"
 
 	switch file {
-	case ciWorkflow, slackWorkflow:
+	case CiWorkflow, slackWorkflow:
 		panic(fmt.Sprintf("workflow %s is reserved", file))
 	}
 
@@ -244,21 +277,21 @@ func (o *Output) AddWorkflow(name string, workflow *Workflow) {
 
 // AddJob adds job to the default workflow.
 func (o *Output) AddJob(name string, job *Job) {
-	if o.workflows[ciWorkflow].Jobs == nil {
-		o.workflows[ciWorkflow].Jobs = map[string]*Job{}
+	if o.workflows[CiWorkflow].Jobs == nil {
+		o.workflows[CiWorkflow].Jobs = map[string]*Job{}
 	}
 
-	o.workflows[ciWorkflow].Jobs[name] = job
+	o.workflows[CiWorkflow].Jobs[name] = job
 }
 
 // AddStep adds step to the job.
 func (o *Output) AddStep(jobName string, steps ...*JobStep) {
-	o.workflows[ciWorkflow].Jobs[jobName].Steps = append(o.workflows[ciWorkflow].Jobs[jobName].Steps, steps...)
+	o.workflows[CiWorkflow].Jobs[jobName].Steps = append(o.workflows[CiWorkflow].Jobs[jobName].Steps, steps...)
 }
 
 // CheckIfStepExists checks if step with given ID exists in the job.
 func (o *Output) CheckIfStepExists(jobName, stepID string) bool {
-	job := o.workflows[ciWorkflow].Jobs[jobName]
+	job := o.workflows[CiWorkflow].Jobs[jobName]
 
 	if job == nil {
 		return false
@@ -269,12 +302,12 @@ func (o *Output) CheckIfStepExists(jobName, stepID string) bool {
 
 // AddJobPermissions adds permissions to the job.
 func (o *Output) AddJobPermissions(jobName, permission, value string) {
-	o.workflows[ciWorkflow].Jobs[jobName].Permissions[permission] = value
+	o.workflows[CiWorkflow].Jobs[jobName].Permissions[permission] = value
 }
 
 // AddStepBefore adds step before another step in the job.
 func (o *Output) AddStepBefore(jobName, beforeStepID string, steps ...*JobStep) {
-	job := o.workflows[ciWorkflow].Jobs[jobName]
+	job := o.workflows[CiWorkflow].Jobs[jobName]
 
 	idx := slices.IndexFunc(job.Steps, func(s *JobStep) bool { return s.ID == beforeStepID })
 	if idx != -1 {
@@ -284,7 +317,7 @@ func (o *Output) AddStepBefore(jobName, beforeStepID string, steps ...*JobStep) 
 
 // AddStepAfter adds step after another step in the job.
 func (o *Output) AddStepAfter(jobName, afterStepID string, steps ...*JobStep) {
-	job := o.workflows[ciWorkflow].Jobs[jobName]
+	job := o.workflows[CiWorkflow].Jobs[jobName]
 
 	if job == nil {
 		return
@@ -299,7 +332,7 @@ func (o *Output) AddStepAfter(jobName, afterStepID string, steps ...*JobStep) {
 
 // AddOutputs adds outputs to the job.
 func (o *Output) AddOutputs(jobName string, outputs map[string]string) {
-	o.workflows[ciWorkflow].Jobs[jobName].Outputs = outputs
+	o.workflows[CiWorkflow].Jobs[jobName].Outputs = outputs
 }
 
 // AddSlackNotify adds the workflow to notify slack dependencies.
@@ -307,11 +340,16 @@ func (o *Output) AddSlackNotify(workflow string) {
 	o.workflows[slackWorkflow].Workflows = append(o.workflows[slackWorkflow].Workflows, workflow)
 }
 
+// AddSlackNotifyForFailure adds the workflow to notify slack dependencies for CI failures.
+func (o *Output) AddSlackNotifyForFailure(workflow string) {
+	o.workflows[SlackCIFailureWorkflow].Workflows = append(o.workflows[SlackCIFailureWorkflow].Workflows, workflow)
+}
+
 // SetRunners allows to set custom runners for the default job.
 // If runners are not provided, the default runners will be used.
 func (o *Output) SetRunners(runners ...string) {
 	if len(runners) == 0 {
-		o.workflows[ciWorkflow].Jobs["default"].RunsOn = []string{
+		o.workflows[CiWorkflow].Jobs["default"].RunsOn = []string{
 			HostedRunner,
 			GenericRunner,
 		}
@@ -319,7 +357,7 @@ func (o *Output) SetRunners(runners ...string) {
 		return
 	}
 
-	o.workflows[ciWorkflow].Jobs["default"].RunsOn = runners
+	o.workflows[CiWorkflow].Jobs["default"].RunsOn = runners
 }
 
 // SetOptionsForPkgs overwrites default job steps and services for pkgs.
@@ -327,7 +365,7 @@ func (o *Output) SetRunners(runners ...string) {
 func (o *Output) SetOptionsForPkgs() {
 	o.SetRunners(HostedRunner, PkgsRunner)
 
-	o.workflows[ciWorkflow].Jobs["default"].Steps = DefaultPkgsSteps()
+	o.workflows[CiWorkflow].Jobs["default"].Steps = DefaultPkgsSteps()
 }
 
 // CommonSteps returns common steps for the workflow.
@@ -404,6 +442,32 @@ func SOPSSteps() []*JobStep {
 			Run:  "sops -d .secrets.yaml | yq -e '.secrets | to_entries[] | .key + \"=\" + .value' >> \"$GITHUB_ENV\"\n",
 		},
 	}
+}
+
+// DefaultSlackNotifyPayload returns the default Slack notify payload with an optional custom channel.
+func DefaultSlackNotifyPayload(customChannel string) string {
+	var payload SlackNotifyPayload
+
+	err := json.Unmarshal([]byte(slackNotifyPayload), &payload)
+	if err != nil {
+		panic(fmt.Sprintf("failed to unmarshal slack notify payload: %v", err))
+	}
+
+	if customChannel != "" {
+		payload.Channel = customChannel
+	}
+
+	var finalPayload bytes.Buffer
+
+	encoder := json.NewEncoder(&finalPayload)
+	encoder.SetIndent("", "    ")
+	encoder.SetEscapeHTML(false)
+
+	if err = encoder.Encode(&payload); err != nil {
+		panic(fmt.Sprintf("failed to marshal slack notify payload: %v", err))
+	}
+
+	return finalPayload.String()
 }
 
 // Step creates a step with name.

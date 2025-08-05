@@ -96,6 +96,9 @@ type Options struct { //nolint:govet
 
 	// SkipStaleWorkflow indicates that stale workflow should not be generated.
 	SkipStaleWorkflow bool
+
+	// CIFailureSlackNotifyChannel is the Slack channel to notify on CI failures.
+	CIFailureSlackNotifyChannel string
 }
 
 // Command defines Golang executable build configuration.

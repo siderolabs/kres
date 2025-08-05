@@ -521,6 +521,7 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 			workflowName := job.Name + "-cron"
 
 			output.AddSlackNotify(workflowName)
+			output.AddSlackNotifyForFailure(workflowName)
 
 			steps := []*ghworkflow.JobStep{workflowStep}
 			steps = append(steps, additionalArtifactsSteps...)

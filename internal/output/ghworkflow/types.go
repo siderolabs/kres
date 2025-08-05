@@ -52,6 +52,7 @@ type Schedule struct {
 type WorkFlowRun struct {
 	Workflows []string `yaml:"workflows"`
 	Types     []string `yaml:"types"`
+	Branches  []string `yaml:"branches,omitempty"`
 }
 
 // PullRequestTarget represents GitHub Actions pull request target filters.
@@ -94,4 +95,12 @@ type JobStep struct {
 	Run             string            `yaml:"run,omitempty"`
 	ContinueOnError bool              `yaml:"continue-on-error,omitempty"`
 	TimeoutMinutes  int               `yaml:"timeout-minutes,omitempty"`
+}
+
+type SlackNotifyPayload struct {
+	Channel     string `json:"channel"`
+	Text        string `json:"text"`
+	IconEmoji   string `json:"icon_emoji"`
+	Username    string `json:"username"`
+	Attachments []any  `json:"attachments"`
 }

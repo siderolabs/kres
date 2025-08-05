@@ -93,12 +93,11 @@ type RegistryLoginStep struct {
 
 // GHWorkflow is a node that represents the GitHub workflow configuration.
 type GHWorkflow struct {
-	dag.BaseNode
-
 	meta *meta.Options
-
-	CustomRunners []string `yaml:"customRunners,omitempty"`
-	Jobs          []Job    `yaml:"jobs"`
+	dag.BaseNode
+	CIFailuresSlackNotifyChannel string   `yaml:"ciFailuresSlackNotifyChannel,omitempty"`
+	CustomRunners                []string `yaml:"customRunners,omitempty"`
+	Jobs                         []Job    `yaml:"jobs"`
 }
 
 // NewGHWorkflow creates a new GHWorkflow node.
@@ -424,6 +423,7 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 			workflowName := job.Name + "-cron"
 
 			o.AddSlackNotify(workflowName)
+			o.AddSlackNotifyForFailure(workflowName)
 
 			o.AddWorkflow(
 				workflowName,
@@ -478,6 +478,19 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 		}
 
 		o.AddJob(job.Name, jobDef)
+	}
+
+	return nil
+}
+
+// DefaultCIFailureSlackNotifyChannel is the default channel for CI failure Slack notifications.
+const DefaultCIFailureSlackNotifyChannel = "ci-failure"
+
+// AfterLoad maps back ci failure slack notify channel override or default value to meta.
+func (gh *GHWorkflow) AfterLoad() error {
+	gh.meta.CIFailureSlackNotifyChannel = gh.CIFailuresSlackNotifyChannel
+	if gh.meta.CIFailureSlackNotifyChannel == "" {
+		gh.meta.CIFailureSlackNotifyChannel = DefaultCIFailureSlackNotifyChannel
 	}
 
 	return nil
