@@ -79,6 +79,9 @@ const (
 	// BunContainerImageVersion is the default bun container image.
 	// renovate: datasource=docker versioning=docker depName=oven/bun
 	BunContainerImageVersion = "1.2.18-alpine"
+	// NodeContainerImageVersion is the default node container image.
+	// renovate: datasource=docker versioning=docker depName=node
+	NodeContainerImageVersion = "22-alpine"
 	// PkgsVersion is the version of pkgs.
 	// renovate: datasource=github-tags depName=siderolabs/pkgs
 	PkgsVersion = "v1.10.0"

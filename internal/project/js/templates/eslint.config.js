@@ -1,4 +1,4 @@
-// run bun install eslint-plugin-vue typescript-eslint -d for each frontend
+// run npm i -D eslint-plugin-vue typescript-eslint for each frontend
 // to make the linter work
 //@ts-check
 import pluginVue from 'eslint-plugin-vue'

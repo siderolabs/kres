@@ -42,7 +42,7 @@ func NewToolchain(meta *meta.Options, sourceDir string) *Toolchain {
 		meta:      meta,
 		sourceDir: sourceDir,
 
-		Version: config.BunContainerImageVersion,
+		Version: config.NodeContainerImageVersion,
 	}
 
 	meta.BuildArgs = append(meta.BuildArgs, "JS_TOOLCHAIN")
@@ -72,7 +72,7 @@ func (toolchain *Toolchain) image() string {
 		return toolchain.Image
 	}
 
-	return "docker.io/oven/bun:" + toolchain.Version
+	return "docker.io/node:" + toolchain.Version
 }
 
 // CompileMakefile implements makefile.Compiler.
@@ -108,7 +108,7 @@ func (toolchain *Toolchain) CompileGitHubWorkflow(output *ghworkflow.Output) err
 func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 	output.Arg(step.Arg("JS_TOOLCHAIN"))
 
-	toolchain.meta.JSCachePath = "/src/node_modules"
+	toolchain.meta.JSCachePath = "/root/.npm"
 
 	output.Stage("js-toolchain").
 		Description("base toolchain image").
@@ -134,12 +134,10 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 		return err
 	}
 
-	base.Step(step.Copy(filepath.Join(toolchain.sourceDir, "package.json"), "./")).
-		Step(step.Copy(filepath.Join(toolchain.sourceDir, "bun.lock"), "./")).
-		Step(step.Script("bun install --frozen-lockfile").
+	base.Step(step.Copy(filepath.Join(toolchain.sourceDir, "package*.json"), "./")).
+		Step(step.Script("npm ci").
 			MountCache(toolchain.meta.JSCachePath, toolchain.meta.GitHubRepository, step.CacheLocked)).
 		Step(step.Copy(filepath.Join(toolchain.sourceDir, "tsconfig*.json"), "./")).
-		Step(step.Copy(filepath.Join(toolchain.sourceDir, "bunfig.toml"), "./")).
 		Step(step.Copy(filepath.Join(toolchain.sourceDir, "*.html"), "./")).
 		Step(step.Copy(filepath.Join(toolchain.sourceDir, "*.ts"), "./")).
 		Step(step.Copy(filepath.Join(toolchain.sourceDir, "*.js"), "./")).

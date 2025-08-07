@@ -56,17 +56,6 @@ func (build *Build) CompileTemplates(output *template.Output) error {
 		WithLicenseText(build.LicenseText).
 		NoOverwrite()
 
-	output.Define(filepath.Join(build.Name(), "bunfig.toml"), templates.Bunfig).
-		NoPreamble().
-		NoOverwrite()
-
-	output.Define(filepath.Join(build.Name(), "test", "setup.ts"), templates.TestSetup).
-		WithLicense().
-		WithLicenseText(build.LicenseText).
-		PreamblePrefix("// ").
-		NoPreamble().
-		NoOverwrite()
-
 	output.Define(filepath.Join(build.Name(), "eslint.config.js"), templates.Eslint).
 		PreamblePrefix("// ").
 		WithLicense().
@@ -93,8 +82,7 @@ func (build *Build) CompileDockerfile(output *dockerfile.Output) error {
 		Description("builds " + build.Name()).
 		From("--platform=${BUILDPLATFORM} js").
 		Step(step.Arg(buildArgsVarName)).
-		Step(step.Script("bun run build ${"+buildArgsVarName+"}").
-			MountCache(build.meta.JSCachePath, build.meta.GitHubRepository)).
+		Step(step.Script("npm run build ${" + buildArgsVarName + "}")).
 		Step(step.Script("mkdir -p " + outputDir)).
 		Step(step.Script("cp -rf ./dist/* " + outputDir))
 

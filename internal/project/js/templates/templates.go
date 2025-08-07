@@ -19,16 +19,6 @@ var Eslint string
 //go:embed tsconfig.json
 var TSConfig string
 
-// Bunfig bunfig.toml.
-//
-//go:embed bunfig.toml
-var Bunfig string
-
-// TestSetup test/setup.ts.
-//
-//go:embed setup-tests.ts
-var TestSetup string
-
 // GoEmbed is a complimentary file that is generated for each JS distribution.
 // It allows embedding the data into a Go service.
 var GoEmbed = `package {{.project}}
