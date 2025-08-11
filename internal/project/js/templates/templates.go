@@ -9,9 +9,9 @@ import (
 	_ "embed"
 )
 
-// Eslint eslint.config.js
+// Eslint eslint.config.ts
 //
-//go:embed eslint.config.js
+//go:embed eslint.config.ts
 var Eslint string
 
 // TSConfig tsconfig.json.

@@ -56,7 +56,7 @@ func (build *Build) CompileTemplates(output *template.Output) error {
 		WithLicenseText(build.LicenseText).
 		NoOverwrite()
 
-	output.Define(filepath.Join(build.Name(), "eslint.config.js"), templates.Eslint).
+	output.Define(filepath.Join(build.Name(), "eslint.config.ts"), templates.Eslint).
 		PreamblePrefix("// ").
 		WithLicense().
 		WithLicenseText(build.LicenseText).

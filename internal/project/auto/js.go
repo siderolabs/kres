@@ -34,7 +34,7 @@ func (builder *builder) DetectJS() (bool, error) {
 			return false, err
 		}
 
-		for _, path := range []string{"src", "test"} {
+		for _, path := range []string{"src", "test", "public"} {
 			d := filepath.Join(srcDir, path)
 
 			if exists {
@@ -43,24 +43,14 @@ func (builder *builder) DetectJS() (bool, error) {
 			}
 		}
 
-		results, err := listFilesWithSuffix(srcDir, ".js")
-		if err != nil {
-			return false, err
-		}
-
-		for _, item := range results {
-			builder.meta.JSDirectories = append(builder.meta.JSDirectories, filepath.Join(srcDir, item))
-		}
-
 		builder.meta.SourceFiles = append(builder.meta.SourceFiles,
 			filepath.Join(srcDir, "*.json"),
-			filepath.Join(srcDir, "*.lock"),
-			filepath.Join(srcDir, "*.toml"),
 			filepath.Join(srcDir, "*.js"),
 			filepath.Join(srcDir, "*.ts"),
 			filepath.Join(srcDir, "*.html"),
-			filepath.Join(srcDir, "*.ico"),
-			filepath.Join(srcDir, "public"),
+			filepath.Join(srcDir, ".npmrc"),
+			filepath.Join(srcDir, ".editorconfig"),
+			filepath.Join(srcDir, ".prettier*"),
 		)
 	}
 

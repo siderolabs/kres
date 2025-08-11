@@ -20,7 +20,7 @@ type EsLint struct {
 
 // NewEsLint builds eslint node.
 func NewEsLint(meta *meta.Options) *EsLint {
-	meta.SourceFiles = append(meta.SourceFiles, "frontend/eslint.config.js")
+	meta.SourceFiles = append(meta.SourceFiles, "frontend/eslint.config.ts")
 
 	return &EsLint{
 		BaseNode: dag.NewBaseNode("lint-eslint"),

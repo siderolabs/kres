@@ -5,7 +5,6 @@
 package js
 
 import (
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -134,18 +133,13 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 		return err
 	}
 
-	base.Step(step.Copy(filepath.Join(toolchain.sourceDir, "package*.json"), "./")).
-		Step(step.Script("npm ci").
-			MountCache(toolchain.meta.JSCachePath, toolchain.meta.GitHubRepository, step.CacheLocked)).
-		Step(step.Copy(filepath.Join(toolchain.sourceDir, "tsconfig*.json"), "./")).
-		Step(step.Copy(filepath.Join(toolchain.sourceDir, "*.html"), "./")).
-		Step(step.Copy(filepath.Join(toolchain.sourceDir, "*.ts"), "./")).
+	base.Step(step.Copy(filepath.Join(toolchain.sourceDir, "*.json"), "./")).
 		Step(step.Copy(filepath.Join(toolchain.sourceDir, "*.js"), "./")).
-		Step(step.Copy(filepath.Join(toolchain.sourceDir, "*.ico"), "./"))
-
-	if _, err := os.Stat(filepath.Join(toolchain.sourceDir, "public")); err == nil {
-		base.Step(step.Copy(filepath.Join(toolchain.sourceDir, "public"), "./"))
-	}
+		Step(step.Copy(filepath.Join(toolchain.sourceDir, "*.ts"), "./")).
+		Step(step.Copy(filepath.Join(toolchain.sourceDir, "*.html"), "./")).
+		Step(step.Copy(filepath.Join(toolchain.sourceDir, ".npmrc"), "./")).
+		Step(step.Copy(filepath.Join(toolchain.sourceDir, ".editorconfig"), "./")).
+		Step(step.Copy(filepath.Join(toolchain.sourceDir, ".prettier*"), "./"))
 
 	for _, directory := range toolchain.meta.JSDirectories {
 		dest := strings.TrimLeft(directory, toolchain.sourceDir)
@@ -153,11 +147,8 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 		base.Step(step.Copy("./"+directory, "./"+strings.Trim(dest, "/")))
 	}
 
-	for _, file := range toolchain.meta.JSSourceFiles {
-		dest := filepath.Base(file)
-
-		base.Step(step.Copy(file, "./"+dest))
-	}
+	base.Step(step.Script("npm ci").
+		MountCache(toolchain.meta.JSCachePath, toolchain.meta.GitHubRepository, step.CacheLocked))
 
 	return nil
 }
