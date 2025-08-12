@@ -2,7 +2,7 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2025-08-05T07:50:25Z by kres 95bf7d7-dirty.
+# Generated on 2025-08-12T16:59:55Z by kres 79636f7-dirty.
 
 ARG TOOLCHAIN
 
@@ -75,6 +75,14 @@ COPY .golangci.yml .
 ENV GOGC=50
 RUN --mount=type=cache,target=/root/.cache/go-build,id=kres/root/.cache/go-build --mount=type=cache,target=/root/.cache/golangci-lint,id=kres/root/.cache/golangci-lint,sharing=locked --mount=type=cache,target=/go/pkg,id=kres/go/pkg golangci-lint run --config .golangci.yml
 
+# runs golangci-lint fmt
+FROM base AS lint-golangci-lint-fmt-run
+WORKDIR /src
+COPY .golangci.yml .
+ENV GOGC=50
+RUN --mount=type=cache,target=/root/.cache/go-build,id=kres/root/.cache/go-build --mount=type=cache,target=/root/.cache/golangci-lint,id=kres/root/.cache/golangci-lint,sharing=locked --mount=type=cache,target=/go/pkg,id=kres/go/pkg golangci-lint fmt --config .golangci.yml
+RUN --mount=type=cache,target=/root/.cache/go-build,id=kres/root/.cache/go-build --mount=type=cache,target=/root/.cache/golangci-lint,id=kres/root/.cache/golangci-lint,sharing=locked --mount=type=cache,target=/go/pkg,id=kres/go/pkg golangci-lint run --fix --issues-exit-code 0 --config .golangci.yml
+
 # runs govulncheck
 FROM base AS lint-govulncheck
 WORKDIR /src
@@ -97,6 +105,10 @@ WORKDIR /src
 ARG ABBREV_TAG
 RUN echo -n 'undefined' > internal/version/data/sha && \
     echo -n ${ABBREV_TAG} > internal/version/data/tag
+
+# clean golangci-lint fmt output
+FROM scratch AS lint-golangci-lint-fmt
+COPY --from=lint-golangci-lint-fmt-run /src .
 
 FROM scratch AS unit-tests
 COPY --from=unit-tests-run /src/coverage.txt /coverage-unit-tests.txt

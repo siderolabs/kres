@@ -56,6 +56,9 @@ func (lint *GolangciLint) CompileMakefile(output *makefile.Output) error {
 	output.Target(lint.Name()).Description("Runs golangci-lint linter.").
 		Script("@$(MAKE) target-$@")
 
+	output.Target(lint.Name() + "-fmt").Description("Runs golangci-lint formatter and tries to fix issues automatically.").
+		Script("@$(MAKE) local-$@ DEST=.")
+
 	output.VariableGroup(makefile.VariableGroupCommon).
 		Variable(makefile.OverridableVariable("GOLANGCILINT_VERSION", lint.Version))
 
@@ -75,6 +78,28 @@ func (lint *GolangciLint) CompileDockerfile(output *dockerfile.Output) error {
 			MountCache(filepath.Join(lint.meta.CachePath, "golangci-lint"), lint.meta.GitHubRepository, step.CacheLocked).
 			MountCache(filepath.Join(lint.meta.GoPath, "pkg"), lint.meta.GitHubRepository),
 		)
+
+	output.Stage(lint.Name() + "-fmt-run").
+		Description("runs golangci-lint fmt").
+		From("base").
+		Step(step.WorkDir(filepath.Join("/src", lint.projectPath))).
+		Step(step.Copy(filepath.Join(lint.projectPath, ".golangci.yml"), ".")).
+		Step(step.Env("GOGC", "50")).
+		Step(step.Run("golangci-lint", "fmt", "--config", ".golangci.yml").
+			MountCache(filepath.Join(lint.meta.CachePath, "go-build"), lint.meta.GitHubRepository).
+			MountCache(filepath.Join(lint.meta.CachePath, "golangci-lint"), lint.meta.GitHubRepository, step.CacheLocked).
+			MountCache(filepath.Join(lint.meta.GoPath, "pkg"), lint.meta.GitHubRepository),
+		).
+		Step(step.Run("golangci-lint", "run", "--fix", "--issues-exit-code", "0", "--config", ".golangci.yml").
+			MountCache(filepath.Join(lint.meta.CachePath, "go-build"), lint.meta.GitHubRepository).
+			MountCache(filepath.Join(lint.meta.CachePath, "golangci-lint"), lint.meta.GitHubRepository, step.CacheLocked).
+			MountCache(filepath.Join(lint.meta.GoPath, "pkg"), lint.meta.GitHubRepository),
+		)
+
+	output.Stage(lint.Name() + "-fmt").
+		Description("clean golangci-lint fmt output").
+		From("scratch").
+		Step(step.Copy(filepath.Join("/src", lint.projectPath), lint.projectPath).From(lint.Name() + "-fmt-run"))
 
 	return nil
 }
