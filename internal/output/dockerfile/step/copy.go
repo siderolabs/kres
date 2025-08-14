@@ -15,6 +15,7 @@ type CopyStep struct {
 	platform string
 	src      string
 	dst      string
+	chmod    string
 }
 
 // Copy creates new CopyStep.
@@ -42,6 +43,13 @@ func (step *CopyStep) Platform(platform string) *CopyStep {
 	return step
 }
 
+// Platform sets --chmod argument.
+func (step *CopyStep) Chmod(perm uint) *CopyStep {
+	step.chmod = fmt.Sprintf("%#o", perm)
+
+	return step
+}
+
 // Depends implements StageDependencies.
 func (step *CopyStep) Depends() []string {
 	if step.from == "" {
@@ -60,6 +68,10 @@ func (step *CopyStep) Generate(w io.Writer) error {
 
 	if step.platform != "" {
 		fromClause = fmt.Sprintf("--platform=%s %s", step.platform, fromClause)
+	}
+
+	if step.chmod != "" {
+		fromClause = fmt.Sprintf("--chmod=%s %s", step.chmod, fromClause)
 	}
 
 	_, err := fmt.Fprintf(w, "COPY %s%s %s\n", fromClause, step.src, step.dst)

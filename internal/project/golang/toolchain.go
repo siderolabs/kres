@@ -202,7 +202,7 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 		From("--platform=${BUILDPLATFORM} ${TOOLCHAIN}")
 
 	if toolchain.Kind == ToolchainOfficial {
-		packages := []string{"add", "bash", "curl", "build-base", "protoc", "protobuf-dev"}
+		packages := []string{"add", "bash", "build-base", "curl", "jq", "protoc", "protobuf-dev"}
 		packages = append(packages, toolchain.ExtraPackages...)
 
 		// automatically add git if we know we're going to have to deal with private repos

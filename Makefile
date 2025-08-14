@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2025-08-12T16:47:33Z by kres 79636f7-dirty.
+# Generated on 2025-08-14T08:53:14Z by kres 9f63e23-dirty.
 
 # common variables
 
@@ -169,7 +169,7 @@ generate:  ## Generate .proto definitions.
 lint-golangci-lint:  ## Runs golangci-lint linter.
 	@$(MAKE) target-$@
 
-lint-golangci-lint-fmt:  ## Runs golangci-lint formatter.
+lint-golangci-lint-fmt:  ## Runs golangci-lint formatter and tries to fix issues automatically.
 	@$(MAKE) local-$@ DEST=.
 
 lint-gofumpt:  ## Runs gofumpt linter.

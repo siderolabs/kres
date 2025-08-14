@@ -400,6 +400,10 @@ func (generate *Generate) CompileTemplates(output *template.Output) error {
 		WithLicenseText(generate.LicenseText).
 		NoOverwrite()
 
+	output.Define(govulncheckPath, templates.GoVulnCheck).
+		NoPreamble().
+		NoOverwrite()
+
 	return nil
 }
 

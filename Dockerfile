@@ -2,7 +2,7 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2025-08-12T16:59:55Z by kres 79636f7-dirty.
+# Generated on 2025-08-14T09:31:18Z by kres df7e867-dirty.
 
 ARG TOOLCHAIN
 
@@ -20,7 +20,7 @@ RUN bunx markdownlint --ignore "CHANGELOG.md" --ignore "**/node_modules/**" --ig
 
 # base toolchain image
 FROM --platform=${BUILDPLATFORM} ${TOOLCHAIN} AS toolchain
-RUN apk --update --no-cache add bash curl build-base protoc protobuf-dev
+RUN apk --update --no-cache add bash build-base curl jq protoc protobuf-dev
 
 # build tools
 FROM --platform=${BUILDPLATFORM} toolchain AS tools
@@ -85,8 +85,9 @@ RUN --mount=type=cache,target=/root/.cache/go-build,id=kres/root/.cache/go-build
 
 # runs govulncheck
 FROM base AS lint-govulncheck
+COPY --chmod=0755 hack/govulncheck.sh ./hack/govulncheck.sh
 WORKDIR /src
-RUN --mount=type=cache,target=/root/.cache/go-build,id=kres/root/.cache/go-build --mount=type=cache,target=/go/pkg,id=kres/go/pkg govulncheck ./...
+RUN --mount=type=cache,target=/root/.cache/go-build,id=kres/root/.cache/go-build --mount=type=cache,target=/go/pkg,id=kres/go/pkg ./hack/govulncheck.sh ./...
 
 # runs unit-tests with race detector
 FROM base AS unit-tests-race
