@@ -34,6 +34,13 @@ func (lint *EsLint) CompileMakefile(output *makefile.Output) error {
 	output.Target("lint-eslint").Description("Runs eslint linter.").
 		Script("@$(MAKE) target-$@")
 
+	output.Target("fmt-frontend").Description("Auto-fix frontend lint & format issues").
+		Phony().
+		Script(
+			`@docker run --rm -v $(PWD)/frontend:/src -w /src node:22-alpine \
+			sh -c "npm ci && npm run lint:fix"`,
+		)
+
 	return nil
 }
 
