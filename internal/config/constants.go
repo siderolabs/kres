@@ -51,7 +51,7 @@ const (
 	GoImportsVersion = "v0.36.0"
 	// GoMockVersion is the version of gomock.
 	// renovate: datasource=go depName=github.com/uber-go/mock
-	GoMockVersion = "v0.5.2"
+	GoMockVersion = "v0.6.0"
 	// GolangCIlintVersion is the version of golangci-lint.
 	// renovate: datasource=go depName=github.com/golangci/golangci-lint
 	GolangCIlintVersion = "v2.4.0"
@@ -81,7 +81,7 @@ const (
 	BunContainerImageVersion = "1.2.20-alpine"
 	// NodeContainerImageVersion is the default node container image.
 	// renovate: datasource=docker versioning=docker depName=node
-	NodeContainerImageVersion = "24-alpine"
+	NodeContainerImageVersion = "22-alpine"
 	// PkgsVersion is the version of pkgs.
 	// renovate: datasource=github-tags depName=siderolabs/pkgs
 	PkgsVersion = "v1.11.0"
