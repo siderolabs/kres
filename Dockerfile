@@ -2,7 +2,7 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2025-08-18T08:50:17Z by kres b6d38e2-dirty.
+# Generated on 2025-08-19T10:20:14Z by kres ff3b493-dirty.
 
 ARG TOOLCHAIN
 
@@ -85,8 +85,8 @@ RUN --mount=type=cache,target=/root/.cache/go-build,id=kres/root/.cache/go-build
 
 # runs govulncheck
 FROM base AS lint-govulncheck
-COPY --chmod=0755 hack/govulncheck.sh ./hack/govulncheck.sh
 WORKDIR /src
+COPY --chmod=0755 hack/govulncheck.sh ./hack/govulncheck.sh
 RUN --mount=type=cache,target=/root/.cache/go-build,id=kres/root/.cache/go-build --mount=type=cache,target=/go/pkg,id=kres/go/pkg ./hack/govulncheck.sh ./...
 
 # runs unit-tests with race detector

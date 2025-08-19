@@ -75,8 +75,8 @@ func (lint *GoVulnCheck) CompileDockerfile(output *dockerfile.Output) error {
 	output.Stage(lint.Name()).
 		Description("runs govulncheck").
 		From("base").
-		Step(step.Copy(govulncheckPath, "./hack/govulncheck.sh").Chmod(0o755)).
 		Step(step.WorkDir(filepath.Join("/src", lint.projectPath))).
+		Step(step.Copy(govulncheckPath, "./hack/govulncheck.sh").Chmod(0o755)).
 		Step(step.Script(
 			script,
 		).
