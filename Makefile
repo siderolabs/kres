@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2025-08-19T08:46:17Z by kres 8d5a3f6-dirty.
+# Generated on 2025-08-20T08:44:16Z by kres 7a0f25c.
 
 # common variables
 
@@ -31,7 +31,7 @@ GO_BUILDFLAGS ?=
 GO_LDFLAGS ?=
 CGO_ENABLED ?= 0
 GOTOOLCHAIN ?= local
-GOEXPERIMENT ?= synctest
+GOEXPERIMENT ?=
 TESTPKGS ?= ./...
 KRES_IMAGE ?= ghcr.io/siderolabs/kres:latest
 CONFORMANCE_IMAGE ?= ghcr.io/siderolabs/conform:latest
