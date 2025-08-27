@@ -153,7 +153,7 @@ func (tests *UnitTests) CompileDockerfile(output *dockerfile.Output) error {
 					MountCache(filepath.Join(tests.meta.GoPath, "pkg"), tests.meta.GitHubRepository).
 					MountCache("/tmp", tests.meta.GitHubRepository).
 					Env("GOFIPS140", "latest").
-					Env("GODEBUG", "fips140=only")))
+					Env("GODEBUG", "fips140=only,tlsmlkem=0")))
 	}
 
 	return nil
