@@ -390,15 +390,13 @@ func (generate *Generate) CompileDockerfile(output *dockerfile.Output) error {
 
 // CompileTemplates implements [template.Compiler].
 func (generate *Generate) CompileTemplates(output *template.Output) error {
-	if generate.versionPackagePath() == "" {
-		return nil
+	if generate.versionPackagePath() != "" {
+		output.Define(generate.versionPackagePath()+"/version.go", templates.VersionGo).
+			PreamblePrefix("// ").
+			WithLicense().
+			WithLicenseText(generate.LicenseText).
+			NoOverwrite()
 	}
-
-	output.Define(generate.versionPackagePath()+"/version.go", templates.VersionGo).
-		PreamblePrefix("// ").
-		WithLicense().
-		WithLicenseText(generate.LicenseText).
-		NoOverwrite()
 
 	output.Define(govulncheckPath, templates.GoVulnCheck).
 		NoPreamble().
