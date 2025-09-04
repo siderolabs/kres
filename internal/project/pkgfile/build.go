@@ -85,15 +85,17 @@ func (pkgfile *Build) CompileMakefile(output *makefile.Output) error {
 		Variable(makefile.SimpleVariable("BLDR_IMAGE", "ghcr.io/siderolabs/bldr:$(BLDR_RELEASE)")).
 		Variable(makefile.SimpleVariable("BLDR", "docker run --rm --user $(shell id -u):$(shell id -g) --volume $(PWD):/src --entrypoint=/bldr $(BLDR_IMAGE) --root=/src"))
 
-	buildArgs := makefile.RecursiveVariable("COMMON_ARGS", "--file=Pkgfile").
-		Push("--provenance=false").
-		Push("--progress=$(PROGRESS)").
-		Push("--platform=$(PLATFORM)").
-		Push("--build-arg=SOURCE_DATE_EPOCH=$(SOURCE_DATE_EPOCH)")
+	buildArgs := makefile.RecursiveVariable("BUILD_ARGS", "--build-arg=SOURCE_DATE_EPOCH=$(SOURCE_DATE_EPOCH)")
 
 	for _, arg := range pkgfile.ExtraBuildArgs {
 		buildArgs.Push(fmt.Sprintf("--build-arg=%s=\"$(%s)\"", arg, arg))
 	}
+
+	commonArgs := makefile.RecursiveVariable("COMMON_ARGS", "--file=Pkgfile").
+		Push("--provenance=false").
+		Push("--progress=$(PROGRESS)").
+		Push("--platform=$(PLATFORM)").
+		Push("$(BUILD_ARGS)")
 
 	output.VariableGroup(makefile.VariableGroupCommon).
 		Variable(makefile.OverridableVariable("REGISTRY", "ghcr.io")).
@@ -106,7 +108,8 @@ func (pkgfile *Build) CompileMakefile(output *makefile.Output) error {
 		Variable(makefile.OverridableVariable("PROGRESS", "auto")).
 		Variable(makefile.OverridableVariable("PUSH", "false")).
 		Variable(makefile.OverridableVariable("CI_ARGS", "")).
-		Variable(buildArgs)
+		Variable(buildArgs).
+		Variable(commonArgs)
 
 	for _, arg := range pkgfile.Makefile.ExtraVariables {
 		output.VariableGroup(makefile.VariableGroupExtra).
@@ -173,9 +176,10 @@ func (pkgfile *Build) CompileMakefile(output *makefile.Output) error {
 			Phony()
 	}
 
-	output.Target("deps.png").
+	output.Target("deps.svg").
 		Description("Generates a dependency graph of the Pkgfile.").
-		Script(`@$(BLDR) graph | dot -Tpng -o deps.png`).
+		Script(`@rm -f deps.png`).
+		Script(`@$(BLDR) graph $(BUILD_ARGS) | dot -Tsvg -o deps.svg`).
 		Phony()
 
 	return nil
