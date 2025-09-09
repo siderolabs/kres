@@ -271,14 +271,6 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 		base.Step(step.Copy("./"+file, "./"+file))
 	}
 
-	// build chain of gen containers.
-	inputs := dag.GatherMatchingInputs(toolchain, dag.Implements[dockerfile.Generator]())
-	for _, input := range inputs {
-		for _, path := range input.(dockerfile.Generator).GetArtifacts() { //nolint:forcetypeassert,errcheck
-			base.Step(step.Copy(path, "./"+strings.Trim(path, "/")).From(input.Name()))
-		}
-	}
-
 	base.Step(step.Script(`go list -mod=readonly all >/dev/null`).MountCache(filepath.Join(toolchain.meta.GoPath, "pkg"), toolchain.meta.GitHubRepository))
 
 	return nil

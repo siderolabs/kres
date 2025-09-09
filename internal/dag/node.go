@@ -14,7 +14,9 @@ import (
 type Node interface {
 	Name() string
 	Inputs() []Node
+	Parents() []Node
 	AddInput(...Node)
+	AddParent(Node)
 }
 
 // NodeCondition checks the node for a specific condition.

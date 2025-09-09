@@ -4,12 +4,15 @@
 
 package dag
 
+import "slices"
+
 // BaseNode implements core functionality of the node.
 //
 // BaseNode is designed to be included into other types.
 type BaseNode struct { //nolint:govet
-	inputs []Node
-	name   string
+	parents []Node
+	inputs  []Node
+	name    string
 }
 
 // NewBaseNode creates new embeddable BaseNode.
@@ -29,8 +32,24 @@ func (node *BaseNode) Inputs() []Node {
 	return node.inputs
 }
 
+// Parents implements Node interface.
+func (node *BaseNode) Parents() []Node {
+	return node.parents
+}
+
+// AddParent implements Node interface.
+func (node *BaseNode) AddParent(parent Node) {
+	if !slices.Contains(node.parents, parent) {
+		node.parents = append(node.parents, parent)
+	}
+}
+
 // AddInput implements Node interface.
 func (node *BaseNode) AddInput(input ...Node) {
+	for _, n := range input {
+		n.AddParent(node)
+	}
+
 	node.inputs = append(node.inputs, input...)
 }
 

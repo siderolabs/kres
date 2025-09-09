@@ -77,6 +77,23 @@ func (build *Build) CompileDockerfile(output *dockerfile.Output) error {
 			stage.Step(step.Copy("/", "/").From("embed-generate"))
 		}
 
+		// build chain of gen containers.
+		var matchingInputs []dag.Node
+
+		for _, parent := range build.Parents() {
+			for _, input := range dag.GatherMatchingInputs(parent, dag.Implements[dockerfile.Generator]()) {
+				if !slices.Contains(matchingInputs, input) {
+					matchingInputs = append(matchingInputs, input)
+				}
+			}
+		}
+
+		for _, input := range matchingInputs {
+			for _, path := range input.(dockerfile.Generator).GetArtifacts() { //nolint:forcetypeassert,errcheck
+				stage.Step(step.Copy(path, "./"+strings.Trim(path, "/")).From(input.Name()))
+			}
+		}
+
 		stage.
 			Step(step.WorkDir(filepath.Join("/src", build.sourcePath))).
 			Step(step.Arg("GO_BUILDFLAGS")).
