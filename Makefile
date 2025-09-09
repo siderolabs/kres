@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2025-08-20T08:44:16Z by kres 7a0f25c.
+# Generated on 2025-09-09T11:58:02Z by kres 78a535d-dirty.
 
 # common variables
 
@@ -235,6 +235,9 @@ lint-markdown:  ## Runs markdownlint.
 
 .PHONY: lint
 lint: lint-golangci-lint lint-gofumpt lint-govulncheck lint-markdown  ## Run all linters for the project.
+
+.PHONY: lint-fmt
+lint-fmt: lint-golangci-lint-fmt  ## Run all linter formatters and fix up the source tree.
 
 .PHONY: image-kres
 image-kres:  ## Builds image for kres.

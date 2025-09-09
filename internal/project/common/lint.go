@@ -5,6 +5,8 @@
 package common
 
 import (
+	"github.com/siderolabs/gen/xslices"
+
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/output/drone"
 	"github.com/siderolabs/kres/internal/output/ghworkflow"
@@ -47,10 +49,25 @@ func (lint *Lint) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	return nil
 }
 
+// LinterHasFmt is implemented by linters that have a formatting step.
+type LinterHasFmt interface {
+	LinterHasFmt()
+}
+
 // CompileMakefile implements makefile.Compiler.
 func (lint *Lint) CompileMakefile(output *makefile.Output) error {
 	output.Target("lint").Description("Run all linters for the project.").
 		Depends(dag.GatherMatchingInputNames(lint, dag.Not(dag.Implements[makefile.SkipAsMakefileDependency]()))...).
+		Phony()
+
+	output.Target("lint-fmt").Description("Run all linter formatters and fix up the source tree.").
+		Depends(
+			xslices.Map(
+				dag.GatherMatchingInputNames(lint, dag.Implements[LinterHasFmt]()),
+				func(name string) string {
+					return name + "-fmt"
+				},
+			)...).
 		Phony()
 
 	return nil

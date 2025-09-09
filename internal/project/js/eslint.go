@@ -64,3 +64,6 @@ func (lint *EsLint) CompileDockerfile(output *dockerfile.Output) error {
 
 	return nil
 }
+
+// LinterHasFmt is implemented by linters that have a formatting step.
+func (lint *EsLint) LinterHasFmt() {}
