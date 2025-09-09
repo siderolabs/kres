@@ -5,6 +5,8 @@
 package js
 
 import (
+	"fmt"
+
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/output/dockerfile"
 	"github.com/siderolabs/kres/internal/output/dockerfile/step"
@@ -31,18 +33,34 @@ func NewEsLint(meta *meta.Options) *EsLint {
 
 // CompileMakefile implements makefile.Compiler.
 func (lint *EsLint) CompileMakefile(output *makefile.Output) error {
-	output.Target("lint-eslint").Description("Runs eslint linter.").
+	output.Target(lint.Name()).Description("Runs eslint linter & prettier style check.").
 		Script("@$(MAKE) target-$@")
+
+	output.Target(lint.Name() + "-fmt").Description("Runs eslint & prettier and tries to fix issues automatically, updating the source tree.").
+		Script("@$(MAKE) local-$@ DEST=.")
 
 	return nil
 }
 
 // CompileDockerfile implements dockerfile.Compiler.
 func (lint *EsLint) CompileDockerfile(output *dockerfile.Output) error {
-	output.Stage("lint-eslint").
-		Description("runs eslint").
+	output.Stage(lint.Name()).
+		Description("runs eslint & prettier").
 		From("js").
 		Step(step.Script("npm run lint"))
+
+	output.Stage(lint.Name() + "-fmt-run").
+		Description("runs eslint & prettier with autofix.").
+		From("js").
+		Step(step.Script("npm run lint:fix"))
+
+	output.Stage(lint.Name() + "-fmt").
+		Description(fmt.Sprintf("trim down %s output to contain only source files", lint.Name()+"-fmt-run")).
+		From("scratch").
+		Step(step.Copy("/src", "/frontend").
+			From(lint.Name() + "-fmt-run").
+			Exclude("node_modules"),
+		)
 
 	return nil
 }

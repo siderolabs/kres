@@ -16,6 +16,7 @@ type CopyStep struct {
 	src      string
 	dst      string
 	chmod    string
+	excludes []string
 }
 
 // Copy creates new CopyStep.
@@ -50,6 +51,13 @@ func (step *CopyStep) Chmod(perm uint) *CopyStep {
 	return step
 }
 
+// Exclude adds --exclude argument.
+func (step *CopyStep) Exclude(patterns ...string) *CopyStep {
+	step.excludes = append(step.excludes, patterns...)
+
+	return step
+}
+
 // Depends implements StageDependencies.
 func (step *CopyStep) Depends() []string {
 	if step.from == "" {
@@ -72,6 +80,10 @@ func (step *CopyStep) Generate(w io.Writer) error {
 
 	if step.chmod != "" {
 		fromClause = fmt.Sprintf("--chmod=%s %s", step.chmod, fromClause)
+	}
+
+	for _, exclude := range step.excludes {
+		fromClause = fmt.Sprintf("--exclude=%s %s", exclude, fromClause)
 	}
 
 	_, err := fmt.Fprintf(w, "COPY %s%s %s\n", fromClause, step.src, step.dst)
