@@ -285,6 +285,28 @@ func (o *Output) AddStep(jobName string, steps ...*JobStep) {
 	o.workflows[CiWorkflow].Jobs[jobName].Steps = append(o.workflows[CiWorkflow].Jobs[jobName].Steps, steps...)
 }
 
+// AddStepInParallelJob adds step to the job that runs in parallel after the default job.
+func (o *Output) AddStepInParallelJob(jobName string, runnerGroup string, steps ...*JobStep) {
+	if o.workflows[CiWorkflow].Jobs == nil {
+		o.workflows[CiWorkflow].Jobs = map[string]*Job{}
+	}
+
+	if o.workflows[CiWorkflow].Jobs[jobName] == nil {
+		o.workflows[CiWorkflow].Jobs[jobName] = &Job{
+			RunsOn: RunsOn{
+				value: RunsOnGroupLabel{
+					Group: runnerGroup,
+				},
+			},
+			If:    "github.event_name == 'pull_request'",
+			Needs: []string{"default"},
+			Steps: DefaultSteps(),
+		}
+	}
+
+	o.workflows[CiWorkflow].Jobs[jobName].Steps = slices.Concat(o.workflows[CiWorkflow].Jobs[jobName].Steps, steps)
+}
+
 // CheckIfStepExists checks if step with given ID exists in the job.
 func (o *Output) CheckIfStepExists(jobName, stepID string) bool {
 	job := o.workflows[CiWorkflow].Jobs[jobName]

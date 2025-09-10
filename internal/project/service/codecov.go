@@ -19,13 +19,18 @@ import (
 	"github.com/siderolabs/kres/internal/project/meta"
 )
 
+type dependentJobs struct {
+	name  string
+	flags string
+}
+
 // CodeCov provides build step which uploads coverage info to codecov.io.
 type CodeCov struct {
 	dag.BaseNode
 
 	meta *meta.Options
 
-	discoveredPaths []string
+	discoveredPaths map[dependentJobs][]string
 	InputPaths      []string `yaml:"inputPaths"`
 	TargetThreshold int      `yaml:"targetThreshold"`
 	Enabled         bool     `yaml:"enabled"`
@@ -36,7 +41,8 @@ func NewCodeCov(meta *meta.Options) *CodeCov {
 	return &CodeCov{
 		BaseNode: dag.NewBaseNode("coverage"),
 
-		meta: meta,
+		meta:            meta,
+		discoveredPaths: make(map[dependentJobs][]string),
 
 		Enabled:         true,
 		TargetThreshold: 50,
@@ -44,8 +50,8 @@ func NewCodeCov(meta *meta.Options) *CodeCov {
 }
 
 // AddDiscoveredInputs sets automatically discovered codecov.txt files.
-func (coverage *CodeCov) AddDiscoveredInputs(inputs ...string) {
-	coverage.discoveredPaths = append(coverage.discoveredPaths, inputs...)
+func (coverage *CodeCov) AddDiscoveredInputs(jobName string, flags string, inputs ...string) {
+	coverage.discoveredPaths[dependentJobs{name: jobName, flags: flags}] = append(coverage.discoveredPaths[dependentJobs{name: jobName, flags: flags}], inputs...)
 }
 
 // CompileDrone implements drone.Compiler.
@@ -68,18 +74,25 @@ func (coverage *CodeCov) CompileGitHubWorkflow(output *ghworkflow.Output) error 
 		return nil
 	}
 
-	paths := xslices.Map(append(coverage.discoveredPaths, coverage.InputPaths...), func(path string) string {
-		return fmt.Sprintf("%s/%s", coverage.meta.ArtifactsPath, path)
-	})
-
-	output.AddStep(
-		"default",
-		ghworkflow.Step("coverage").
-			SetUses(fmt.Sprintf("codecov/codecov-action@%s", config.CodeCovActionVersion)).
-			SetWith("files", strings.Join(paths, ",")).
-			SetWith("token", "${{ secrets.CODECOV_TOKEN }}").
-			SetTimeoutMinutes(3),
-	)
+	for job, paths := range coverage.discoveredPaths {
+		output.AddStepInParallelJob(
+			job.name,
+			ghworkflow.GenericRunner,
+			ghworkflow.Step("coverage").
+				SetUses(fmt.Sprintf("codecov/codecov-action@%s", config.CodeCovActionVersion)).
+				SetWith("files",
+					strings.Join(
+						xslices.Map(paths,
+							func(p string) string {
+								return fmt.Sprintf("%s/%s", coverage.meta.ArtifactsPath, p)
+							},
+						), ","),
+				).
+				SetWith("flags", job.flags).
+				SetWith("token", "${{ secrets.CODECOV_TOKEN }}").
+				SetTimeoutMinutes(3),
+		)
+	}
 
 	return nil
 }

@@ -201,6 +201,8 @@ func (r *Repository) enableBranchProtection(client *github.Client) error {
 		}
 	}
 
+	enforceContexts = append(enforceContexts, r.meta.ExtraEnforcedContexts...)
+
 	if r.EnableConform {
 		enforceContexts = append(enforceContexts,
 			"conform/commit/commit-body",

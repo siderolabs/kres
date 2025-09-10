@@ -5,6 +5,8 @@
 package common
 
 import (
+	"slices"
+
 	"github.com/siderolabs/gen/xslices"
 
 	"github.com/siderolabs/kres/internal/dag"
@@ -23,6 +25,10 @@ type Lint struct { //nolint:govet
 
 // NewLint initializes Lint.
 func NewLint(meta *meta.Options) *Lint {
+	if !slices.Contains(meta.ExtraEnforcedContexts, "lint") {
+		meta.ExtraEnforcedContexts = append(meta.ExtraEnforcedContexts, "lint")
+	}
+
 	return &Lint{
 		BaseNode: dag.NewBaseNode("lint"),
 
@@ -41,8 +47,9 @@ func (lint *Lint) CompileDrone(output *drone.Output) error {
 
 // CompileGitHubWorkflow implements ghworkflow.Compiler.
 func (lint *Lint) CompileGitHubWorkflow(output *ghworkflow.Output) error {
-	output.AddStep(
-		"default",
+	output.AddStepInParallelJob(
+		"lint",
+		ghworkflow.GenericRunner,
 		ghworkflow.Step("lint").SetMakeStep("lint"),
 	)
 

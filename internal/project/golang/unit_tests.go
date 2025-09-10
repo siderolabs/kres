@@ -7,6 +7,7 @@ package golang
 import (
 	"fmt"
 	"path/filepath"
+	"slices"
 
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/output/dockerfile"
@@ -47,6 +48,10 @@ type UnitTests struct { //nolint:govet
 // NewUnitTests initializes UnitTests.
 func NewUnitTests(meta *meta.Options, packagePath string) *UnitTests {
 	meta.BuildArgs.Add("TESTPKGS")
+
+	if !slices.Contains(meta.ExtraEnforcedContexts, "unit-tests") {
+		meta.ExtraEnforcedContexts = append(meta.ExtraEnforcedContexts, "unit-tests")
+	}
 
 	return &UnitTests{
 		BaseNode:    dag.NewBaseNode(genName("unit-tests", packagePath)),
@@ -211,15 +216,17 @@ func (tests *UnitTests) CompileDrone(output *drone.Output) error {
 
 // CompileGitHubWorkflow implements ghworkflow.Compiler.
 func (tests *UnitTests) CompileGitHubWorkflow(output *ghworkflow.Output) error {
-	output.AddStep(
-		"default",
+	output.AddStepInParallelJob(
+		"unit-tests",
+		ghworkflow.GenericRunner,
 		ghworkflow.Step(tests.Name()).SetMakeStep(tests.Name()),
 		ghworkflow.Step(tests.Name()+"-race").SetMakeStep(tests.Name()+"-race"),
 	)
 
 	if tests.RunFIPS {
-		output.AddStep(
-			"default",
+		output.AddStepInParallelJob(
+			"unit-tests",
+			ghworkflow.GenericRunner,
 			ghworkflow.Step(tests.Name()+"-fips").SetMakeStep(tests.Name()+"-fips"),
 		)
 	}

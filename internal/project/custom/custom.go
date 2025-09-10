@@ -7,6 +7,7 @@ package custom
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/siderolabs/gen/xslices"
@@ -19,6 +20,7 @@ import (
 	"github.com/siderolabs/kres/internal/output/ghworkflow"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/project/meta"
+	"github.com/siderolabs/kres/internal/project/service"
 )
 
 // Step is defined in the config manually.
@@ -98,10 +100,17 @@ type Step struct {
 			TriggerLabels       []string          `yaml:"triggerLabels"`
 			Artifacts           Artifacts         `yaml:"artifacts"`
 		} `yaml:"jobs"`
-		Artifacts Artifacts `yaml:"artifacts"`
-		Enabled   bool      `yaml:"enabled"`
-		CronOnly  bool      `yaml:"cronOnly"`
-		SOPS      bool      `yaml:"sops"`
+		Artifacts   Artifacts `yaml:"artifacts"`
+		Enabled     bool      `yaml:"enabled"`
+		CronOnly    bool      `yaml:"cronOnly"`
+		SOPS        bool      `yaml:"sops"`
+		ParallelJob struct {
+			Name        string `yaml:"name"`
+			RunnerGroup string `yaml:"runnerGroup"`
+		} `yaml:"parallelJob"`
+		Coverage struct {
+			InputPaths []string `yaml:"inputPaths"`
+		} `yaml:"coverage"`
 	} `yaml:"ghaction"`
 
 	SudoInCI bool `yaml:"sudoInCI"`
@@ -129,6 +138,29 @@ func NewStep(meta *meta.Options, name string) *Step {
 		BaseNode: dag.NewBaseNode(name),
 		meta:     meta,
 	}
+}
+
+// AfterLoad maps back ci failure slack notify channel override or default value to meta.
+func (step *Step) AfterLoad() error {
+	if step.GHAction.Enabled && step.GHAction.ParallelJob.Name != "" {
+		job := step.GHAction.ParallelJob.Name
+		if !slices.Contains(step.meta.ExtraEnforcedContexts, job) {
+			step.meta.ExtraEnforcedContexts = append(step.meta.ExtraEnforcedContexts, job)
+		}
+
+		if len(step.GHAction.Coverage.InputPaths) != 0 {
+		outer:
+			for _, parent := range step.Parents() {
+				for _, input := range dag.GatherMatchingInputs(parent, dag.Implements[*service.CodeCov]()) {
+					input.(*service.CodeCov).AddDiscoveredInputs(job, job, step.GHAction.Coverage.InputPaths...) //nolint:errcheck,forcetypeassert
+
+					break outer
+				}
+			}
+		}
+	}
+
+	return nil
 }
 
 // CompileDockerfile implements dockerfile.Compiler.
@@ -396,10 +428,25 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 
 	steps = append(steps, additionalArtifactsSteps...)
 
-	output.AddStep(
-		"default",
-		steps...,
-	)
+	if step.GHAction.ParallelJob.Name == "" {
+		output.AddStep(
+			"default",
+			steps...,
+		)
+	} else {
+		if step.GHAction.SOPS {
+			steps = append(
+				ghworkflow.SOPSSteps(),
+				steps...,
+			)
+		}
+
+		output.AddStepInParallelJob(
+			step.GHAction.ParallelJob.Name,
+			step.GHAction.ParallelJob.RunnerGroup,
+			steps...,
+		)
+	}
 
 	for _, job := range step.GHAction.Jobs {
 		conditions := xslices.Map(job.TriggerLabels, func(label string) string {

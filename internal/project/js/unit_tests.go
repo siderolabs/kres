@@ -63,8 +63,9 @@ func (tests *UnitTests) CompileDrone(output *drone.Output) error {
 
 // CompileGitHubWorkflow implements ghworkflow.Compiler.
 func (tests *UnitTests) CompileGitHubWorkflow(output *ghworkflow.Output) error {
-	output.AddStep(
-		"default",
+	output.AddStepInParallelJob(
+		"unit-tests",
+		ghworkflow.GenericRunner,
 		ghworkflow.Step(tests.Name()).SetMakeStep(tests.Name()),
 	)
 

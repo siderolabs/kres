@@ -84,6 +84,7 @@ type Options struct { //nolint:govet
 	CIProvider string
 
 	CompileGithubWorkflowsOnly bool
+	ExtraEnforcedContexts      []string
 
 	// ContainerImageFrontend is the default frontend container image.
 	ContainerImageFrontend string
