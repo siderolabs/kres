@@ -4,6 +4,8 @@
 
 package ghworkflow
 
+import "fmt"
+
 // Workflow represents Github Actions workflow.
 //
 //nolint:govet
@@ -68,12 +70,94 @@ type Push struct {
 // Job represents GitHub Actions job.
 type Job struct {
 	Permissions map[string]string  `yaml:"permissions,omitempty"`
-	RunsOn      []string           `yaml:"runs-on"`
+	RunsOn      RunsOn             `yaml:"runs-on"`
 	If          string             `yaml:"if,omitempty"`
 	Needs       []string           `yaml:"needs,omitempty"`
 	Outputs     map[string]string  `yaml:"outputs,omitempty"`
 	Services    map[string]Service `yaml:"services,omitempty"`
 	Steps       []*JobStep         `yaml:"steps"`
+}
+
+// RunsOn represents GitHub Actions runs-on field which can be a string, slice, or type with Group/Label structure.
+type RunsOn struct {
+	value any
+}
+
+type RunsOnGroupLabel struct {
+	Group string `yaml:"group,omitempty"`
+	Label string `yaml:"label,omitempty"`
+}
+
+// MarshalYAML implements yaml.Marshaler.
+func (r RunsOn) MarshalYAML() (any, error) {
+	// check if r.value is nil or empty
+	if r.value == nil {
+		return nil, fmt.Errorf("runs-on needs to be set")
+	}
+
+	// check for empty values based on type
+	switch v := r.value.(type) {
+	case string:
+		if v == "" {
+			return nil, fmt.Errorf("runs-on cannot be empty string")
+		}
+	case []string:
+		if len(v) == 0 {
+			return nil, fmt.Errorf("runs-on cannot be empty slice")
+		}
+	case RunsOnGroupLabel:
+		if v.Group == "" && v.Label == "" {
+			return nil, fmt.Errorf("runs-on needs to be set with at least group or label")
+		}
+	default:
+		return nil, fmt.Errorf("runs-on must be a string, slice of strings, or type with group/label, got: %T", r.value)
+	}
+
+	return r.value, nil
+}
+
+// UnmarshalYAML implements yaml.Unmarshaler.
+func (r *RunsOn) UnmarshalYAML(unmarshal func(any) error) error {
+	// Try string first
+	var str string
+	if err := unmarshal(&str); err == nil {
+		r.value = str
+
+		return nil
+	}
+
+	// Try slice of strings
+	var slice []string
+	if err := unmarshal(&slice); err == nil {
+		r.value = slice
+
+		return nil
+	}
+
+	// Try group/label map
+	var groupLabel RunsOnGroupLabel
+	if err := unmarshal(&groupLabel); err == nil {
+		r.value = groupLabel
+
+		return nil
+	}
+
+	return fmt.Errorf("runs-on must be a string, slice of strings, or map with group/label, got: %T", r.value)
+}
+
+// NewRunsOnString creates a RunsOn from a string.
+func NewRunsOnString(runner string) RunsOn {
+	return RunsOn{value: runner}
+}
+
+// NewRunsOnSlice creates a RunsOn from a slice of strings.
+func NewRunsOnSlice(runners []string) RunsOn {
+	return RunsOn{value: runners}
+}
+
+// NewRunsOnGroupLabel creates a RunsOn from a group and label.
+func NewRunsOnGroupLabel(group, label string) RunsOn {
+	return RunsOn{value: RunsOnGroupLabel{Group: group, Label: label}}
 }
 
 // Service represents GitHub Actions service.

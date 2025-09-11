@@ -39,6 +39,7 @@ func (suite *GHWorkflowSuite) TestDefaultWorkflows() {
 	)
 
 	output := ghworkflow.NewOutput(defaultBranch, withDefaultJob, withStaleJob, customSlackChannel) //nolint:typecheck
+	output.SetRunnerGroup("generic")
 
 	var buf bytes.Buffer
 
@@ -72,7 +73,8 @@ jobs:
       issues: read
       packages: write
       pull-requests: read
-    runs-on: []
+    runs-on:
+      group: generic
     if: (!startsWith(github.head_ref, 'renovate/') && !startsWith(github.head_ref, 'dependabot/'))
     steps:
       - name: gather-system-info

@@ -22,8 +22,6 @@ import (
 )
 
 const (
-	// HostedRunner is the name of the hosted runner.
-	HostedRunner = "self-hosted"
 	// GenericRunner is the name of the generic runner.
 	GenericRunner = "generic"
 	// PkgsRunner is the name of the default runner for packages.
@@ -128,10 +126,9 @@ func NewOutput(mainBranch string, withDefaultJob bool, withStaleJob bool, slackC
 			},
 			Jobs: map[string]*Job{
 				"slack-notify": {
-					RunsOn: []string{
-						HostedRunner,
-						GenericRunner,
-					},
+					RunsOn: RunsOn{value: RunsOnGroupLabel{
+						Group: GenericRunner,
+					}},
 					If: "github.event.workflow_run.conclusion != 'skipped'",
 					Steps: []*JobStep{
 						Step("Get PR number").
@@ -159,10 +156,9 @@ func NewOutput(mainBranch string, withDefaultJob bool, withStaleJob bool, slackC
 			},
 			Jobs: map[string]*Job{
 				"slack-notify": {
-					RunsOn: []string{
-						HostedRunner,
-						GenericRunner,
-					},
+					RunsOn: RunsOn{value: RunsOnGroupLabel{
+						Group: GenericRunner,
+					}},
 					If: "github.event.workflow_run.conclusion == 'failure' && github.event.workflow_run.event != 'pull_request'",
 					Steps: []*JobStep{
 						Step("Slack Notify").
@@ -191,7 +187,7 @@ func NewOutput(mainBranch string, withDefaultJob bool, withStaleJob bool, slackC
 			},
 			Jobs: map[string]*Job{
 				"action": {
-					RunsOn: []string{"ubuntu-latest"},
+					RunsOn: RunsOn{[]string{"ubuntu-latest"}},
 					Steps: []*JobStep{
 						{
 							Name: "Lock old issues",
@@ -222,7 +218,7 @@ func NewOutput(mainBranch string, withDefaultJob bool, withStaleJob bool, slackC
 			},
 			Jobs: map[string]*Job{
 				"stale": {
-					RunsOn: []string{"ubuntu-latest"},
+					RunsOn: RunsOn{[]string{"ubuntu-latest"}},
 					Steps: []*JobStep{
 						{
 							Name: "Close stale issues and PRs",
@@ -345,25 +341,26 @@ func (o *Output) AddSlackNotifyForFailure(workflow string) {
 	o.workflows[SlackCIFailureWorkflow].Workflows = append(o.workflows[SlackCIFailureWorkflow].Workflows, workflow)
 }
 
-// SetRunners allows to set custom runners for the default job.
-// If runners are not provided, the default runners will be used.
-func (o *Output) SetRunners(runners ...string) {
-	if len(runners) == 0 {
-		o.workflows[CiWorkflow].Jobs["default"].RunsOn = []string{
-			HostedRunner,
-			GenericRunner,
-		}
+// SetRunnerGroup allows to set custom runners for the default job.
+// If runner is empty, it will be set to "generic".
+func (o *Output) SetRunnerGroup(runner string) {
+	if runner == "" {
+		o.workflows[CiWorkflow].Jobs["default"].RunsOn = RunsOn{value: RunsOnGroupLabel{
+			Group: GenericRunner,
+		}}
 
 		return
 	}
 
-	o.workflows[CiWorkflow].Jobs["default"].RunsOn = runners
+	o.workflows[CiWorkflow].Jobs["default"].RunsOn = RunsOn{value: RunsOnGroupLabel{
+		Group: runner,
+	}}
 }
 
 // SetOptionsForPkgs overwrites default job steps and services for pkgs.
 // Note that calling this method will overwrite any existing steps.
 func (o *Output) SetOptionsForPkgs() {
-	o.SetRunners(HostedRunner, PkgsRunner)
+	o.SetRunnerGroup(PkgsRunner)
 
 	o.workflows[CiWorkflow].Jobs["default"].Steps = DefaultPkgsSteps()
 }

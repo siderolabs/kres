@@ -261,13 +261,8 @@ func (pkgfile *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 			"labels": "${{ steps.retrieve-pr-labels.outputs.result }}",
 		})
 
-		runnerLabels := []string{
-			ghworkflow.HostedRunner,
-			ghworkflow.PkgsRunner,
-		}
-
 		output.AddJob("reproducibility", &ghworkflow.Job{
-			RunsOn: runnerLabels,
+			RunsOn: ghworkflow.NewRunsOnGroupLabel(ghworkflow.PkgsRunner, ""),
 			If:     "contains(fromJSON(needs.default.outputs.labels), 'integration/reproducibility')",
 			Needs:  []string{"default"},
 			Steps:  ghworkflow.DefaultPkgsSteps(),
@@ -293,7 +288,7 @@ func (pkgfile *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 				},
 				Jobs: map[string]*ghworkflow.Job{
 					"reproducibility": {
-						RunsOn: runnerLabels,
+						RunsOn: ghworkflow.NewRunsOnGroupLabel(ghworkflow.PkgsRunner, ""),
 						Steps: append(
 							ghworkflow.DefaultPkgsSteps(),
 							ghworkflow.Step("reproducibility-test").SetMakeStep("reproducibility-test"),

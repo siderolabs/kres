@@ -94,7 +94,7 @@ type Step struct {
 			Name                string            `yaml:"name"`
 			EnvironmentOverride map[string]string `yaml:"environmentOverride"`
 			Crons               []string          `yaml:"crons"`
-			RunnerLabels        []string          `yaml:"runnerLabels"`
+			RunnerGroup         string            `yaml:"runnerGroup"`
 			TriggerLabels       []string          `yaml:"triggerLabels"`
 			Artifacts           Artifacts         `yaml:"artifacts"`
 		} `yaml:"jobs"`
@@ -401,10 +401,6 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		steps...,
 	)
 
-	runnerLabels := []string{
-		ghworkflow.HostedRunner,
-	}
-
 	for _, job := range step.GHAction.Jobs {
 		conditions := xslices.Map(job.TriggerLabels, func(label string) string {
 			return fmt.Sprintf("contains(fromJSON(needs.default.outputs.labels), '%s')", label)
@@ -475,7 +471,7 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		}
 
 		output.AddJob(job.Name, &ghworkflow.Job{
-			RunsOn: append(runnerLabels, job.RunnerLabels...),
+			RunsOn: ghworkflow.NewRunsOnGroupLabel(job.RunnerGroup, ""),
 			If:     strings.Join(conditions, " || "),
 			Needs:  []string{"default"},
 			Steps:  defaultSteps,
@@ -553,7 +549,7 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 					},
 					Jobs: map[string]*ghworkflow.Job{
 						"default": {
-							RunsOn: append(runnerLabels, job.RunnerLabels...),
+							RunsOn: ghworkflow.NewRunsOnGroupLabel(job.RunnerGroup, ""),
 							Steps: append(
 								defaultSteps,
 								steps...,

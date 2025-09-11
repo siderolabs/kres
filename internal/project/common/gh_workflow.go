@@ -24,7 +24,7 @@ type Job struct {
 	Conditions    []string       `yaml:"conditions,omitempty"`
 	Crons         []string       `yaml:"crons,omitempty"`
 	Depends       []string       `yaml:"depends,omitempty"`
-	Runners       []string       `yaml:"runners,omitempty"`
+	RunnerGroup   string         `yaml:"runnerGroup,omitempty"`
 	TriggerLabels []string       `yaml:"triggerLabels,omitempty"`
 	Steps         []Step         `yaml:"steps,omitempty"`
 	SOPS          bool           `yaml:"sops"`
@@ -95,9 +95,9 @@ type RegistryLoginStep struct {
 type GHWorkflow struct {
 	meta *meta.Options
 	dag.BaseNode
-	CIFailuresSlackNotifyChannel string   `yaml:"ciFailuresSlackNotifyChannel,omitempty"`
-	CustomRunners                []string `yaml:"customRunners,omitempty"`
-	Jobs                         []Job    `yaml:"jobs"`
+	CIFailuresSlackNotifyChannel string `yaml:"ciFailuresSlackNotifyChannel,omitempty"`
+	CustomRunnerGroup            string `yaml:"customRunnerGroup,omitempty"`
+	Jobs                         []Job  `yaml:"jobs"`
 }
 
 // NewGHWorkflow creates a new GHWorkflow node.
@@ -114,7 +114,7 @@ func NewGHWorkflow(meta *meta.Options) *GHWorkflow {
 //nolint:gocognit,gocyclo,cyclop,maintidx
 func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 	if !gh.meta.CompileGithubWorkflowsOnly {
-		o.SetRunners(gh.CustomRunners...)
+		o.SetRunnerGroup(gh.CustomRunnerGroup)
 
 		return nil
 	}
@@ -124,7 +124,7 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 	for _, job := range gh.Jobs {
 		jobDef := &ghworkflow.Job{
 			If:          ghworkflow.DefaultSkipCondition,
-			RunsOn:      job.Runners,
+			RunsOn:      ghworkflow.NewRunsOnGroupLabel(job.RunnerGroup, ""),
 			Permissions: ghworkflow.DefaultJobPermissions(),
 			Needs:       job.Depends,
 			Steps:       ghworkflow.CommonSteps(),
@@ -443,32 +443,7 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 					},
 					Jobs: map[string]*ghworkflow.Job{
 						"default": {
-							RunsOn: job.Runners,
-							Steps:  jobDef.Steps,
-						},
-					},
-				},
-			)
-
-			o.AddWorkflow(
-				workflowName,
-				&ghworkflow.Workflow{
-					Name: workflowName,
-					// https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-a-fallback-value
-					Concurrency: ghworkflow.Concurrency{
-						Group:            "${{ github.head_ref || github.run_id }}",
-						CancelInProgress: true,
-					},
-					On: ghworkflow.On{
-						Schedule: xslices.Map(job.Crons, func(cron string) ghworkflow.Schedule {
-							return ghworkflow.Schedule{
-								Cron: cron,
-							}
-						}),
-					},
-					Jobs: map[string]*ghworkflow.Job{
-						"default": {
-							RunsOn:   job.Runners,
+							RunsOn:   ghworkflow.NewRunsOnGroupLabel(job.RunnerGroup, ""),
 							Services: jobDef.Services,
 							Steps:    jobDef.Steps,
 						},

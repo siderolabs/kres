@@ -134,10 +134,7 @@ func (helm *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		Jobs: map[string]*ghworkflow.Job{
 			"default": {
 				Permissions: jobPermissions,
-				RunsOn: []string{
-					ghworkflow.HostedRunner,
-					ghworkflow.GenericRunner,
-				},
+				RunsOn:      ghworkflow.NewRunsOnGroupLabel(ghworkflow.GenericRunner, ""),
 				Steps: slices.Concat(
 					ghworkflow.CommonSteps(),
 					[]*ghworkflow.JobStep{
