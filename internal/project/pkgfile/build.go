@@ -138,6 +138,17 @@ func (pkgfile *Build) CompileMakefile(output *makefile.Output) error {
 		Description("Builds the specified target defined in the Pkgfile using the local output type with and without cahce. The build result will be output to the specified local destination").
 		Script(reproducibilityTestScript)
 
+	output.Target("$(ARTIFACTS)/bldr").
+		Description("Downloads bldr binary.").
+		Script(bldrDownloadScript).
+		Depends("$(ARTIFACTS)")
+
+	output.Target("update-checksums").
+		Depends("$(ARTIFACTS)/bldr").
+		Phony().
+		Description("Updates the checksums in the Pkgfile/vars.yaml based on the changed version variables.").
+		Script(`@git diff -U0 | $(ARTIFACTS)/bldr update`)
+
 	output.VariableGroup(makefile.VariableGroupTargets).
 		Variable(makefile.RecursiveVariable("TARGETS", strings.Join(pkgfile.Targets, "\n")))
 
@@ -165,11 +176,6 @@ func (pkgfile *Build) CompileMakefile(output *makefile.Output) error {
 			Script("@$(MAKE) docker-$@ TARGET_ARGS=\"--tag=$(REGISTRY)/$(USERNAME)/$@:$(shell $(ARTIFACTS)/bldr eval --target $@ --build-arg TAG=$(TAG) '{{.VERSION}}' 2>/dev/null) --push=$(PUSH)\"").
 			Phony().
 			Depends("$(ARTIFACTS)/bldr")
-
-		output.Target("$(ARTIFACTS)/bldr").
-			Description("Downloads bldr binary.").
-			Script(bldrDownloadScript).
-			Depends("$(ARTIFACTS)")
 	} else {
 		output.Target(defaultTarget).
 			Script("@$(MAKE) docker-$@ TARGET_ARGS=\"--tag=$(REGISTRY_AND_USERNAME)/$@:$(TAG) --push=$(PUSH)\"").
