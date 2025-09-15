@@ -25,10 +25,6 @@ type Lint struct { //nolint:govet
 
 // NewLint initializes Lint.
 func NewLint(meta *meta.Options) *Lint {
-	if !slices.Contains(meta.ExtraEnforcedContexts, "lint") {
-		meta.ExtraEnforcedContexts = append(meta.ExtraEnforcedContexts, "lint")
-	}
-
 	return &Lint{
 		BaseNode: dag.NewBaseNode("lint"),
 
@@ -43,6 +39,13 @@ func (lint *Lint) CompileDrone(output *drone.Output) error {
 	)
 
 	return nil
+}
+
+// Activate marks the linter as active.
+func (lint *Lint) Activate() {
+	if !slices.Contains(lint.meta.ExtraEnforcedContexts, "lint") {
+		lint.meta.ExtraEnforcedContexts = append(lint.meta.ExtraEnforcedContexts, "lint")
+	}
 }
 
 // CompileGitHubWorkflow implements ghworkflow.Compiler.

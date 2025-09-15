@@ -23,7 +23,7 @@ type builder struct {
 	commonInputs []dag.Node
 
 	lintInputs []dag.Node
-	lintTarget dag.Node
+	lintTarget *common.Lint
 
 	targets []dag.Node
 }
@@ -125,6 +125,7 @@ func (builder *builder) build() error {
 	}
 
 	if len(builder.lintInputs) > 0 {
+		builder.lintTarget.Activate()
 		builder.lintTarget.AddInput(builder.lintInputs...)
 
 		builder.targets = append(builder.targets, builder.lintTarget)
