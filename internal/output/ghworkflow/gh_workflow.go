@@ -387,6 +387,11 @@ func (o *Output) SetOptionsForPkgs() {
 	o.workflows[CiWorkflow].Jobs["default"].Steps = DefaultPkgsSteps()
 }
 
+// SetWorkflowOn sets the workflow on event.
+func (o *Output) SetWorkflowOn(on On) {
+	o.workflows[CiWorkflow].On = on
+}
+
 // CommonSteps returns common steps for the workflow.
 func CommonSteps() []*JobStep {
 	return []*JobStep{

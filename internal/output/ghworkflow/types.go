@@ -27,9 +27,10 @@ type Concurrency struct {
 
 // On represents GitHub Actions event triggers.
 type On struct {
-	Push        `yaml:"push,omitempty"`
-	PullRequest `yaml:"pull_request,omitempty"`
-	WorkFlowRun `yaml:"workflow_run,omitempty"`
+	Push              `yaml:"push,omitempty"`
+	PullRequest       `yaml:"pull_request,omitempty"`
+	WorkFlowRun       `yaml:"workflow_run,omitempty"`
+	*WorkFlowDispatch `yaml:"workflow_dispatch,omitempty"`
 
 	Schedule []Schedule `yaml:"schedule,omitempty"`
 }
@@ -55,6 +56,20 @@ type WorkFlowRun struct {
 	Workflows []string `yaml:"workflows"`
 	Types     []string `yaml:"types"`
 	Branches  []string `yaml:"branches,omitempty"`
+}
+
+// WorkFlowDispatch represents GitHub Actions workflow_dispatch filters.
+type WorkFlowDispatch struct {
+	Inputs map[string]WorkFlowDispatchInput `yaml:"inputs,omitempty"`
+}
+
+// WorkFlowDispatchInput represents a single input for workflow_dispatch.
+type WorkFlowDispatchInput struct {
+	Description string   `yaml:"description"`
+	Default     string   `yaml:"default,omitempty"`
+	Type        string   `yaml:"type"`
+	Options     []string `yaml:"options,omitempty"`
+	Required    bool     `yaml:"required"`
 }
 
 // PullRequestTarget represents GitHub Actions pull request target filters.

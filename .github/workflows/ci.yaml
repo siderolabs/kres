@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2025-09-11T13:06:10Z by kres f3a3ca4-dirty.
+# Generated on 2025-09-16T17:37:44Z by kres 1bcad6e.
 
 concurrency:
   group: ${{ github.head_ref || github.run_id }}
@@ -32,7 +32,7 @@ jobs:
     steps:
       - name: gather-system-info
         id: system-info
-        uses: kenchan0130/actions-system-info@v1.3.1
+        uses: kenchan0130/actions-system-info@v1.4.0
         continue-on-error: true
       - name: print-system-info
         run: |
@@ -133,7 +133,7 @@ jobs:
     steps:
       - name: gather-system-info
         id: system-info
-        uses: kenchan0130/actions-system-info@v1.3.1
+        uses: kenchan0130/actions-system-info@v1.4.0
         continue-on-error: true
       - name: print-system-info
         run: |
@@ -180,7 +180,7 @@ jobs:
     steps:
       - name: gather-system-info
         id: system-info
-        uses: kenchan0130/actions-system-info@v1.3.1
+        uses: kenchan0130/actions-system-info@v1.4.0
         continue-on-error: true
       - name: print-system-info
         run: |

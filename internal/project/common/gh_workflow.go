@@ -95,9 +95,17 @@ type RegistryLoginStep struct {
 type GHWorkflow struct {
 	meta *meta.Options
 	dag.BaseNode
+
+	*WorkflowOptions             `yaml:"workflowOptions,omitempty"`
 	CIFailuresSlackNotifyChannel string `yaml:"ciFailuresSlackNotifyChannel,omitempty"`
 	CustomRunnerGroup            string `yaml:"customRunnerGroup,omitempty"`
-	Jobs                         []Job  `yaml:"jobs"`
+
+	Jobs []Job `yaml:"jobs"`
+}
+
+// WorkflowOptions defines options for the workflow.
+type WorkflowOptions struct {
+	ghworkflow.On `yaml:"on"`
 }
 
 // NewGHWorkflow creates a new GHWorkflow node.
@@ -120,6 +128,10 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 	}
 
 	touchedJobs := make(map[string]struct{})
+
+	if gh.WorkflowOptions != nil {
+		o.SetWorkflowOn(gh.On)
+	}
 
 	for _, job := range gh.Jobs {
 		jobDef := &ghworkflow.Job{

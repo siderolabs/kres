@@ -33,10 +33,10 @@ const (
 	DeepCopyVersion = "v0.5.8"
 	// DindContainerImageVersion is the version of the dind container image.
 	// renovate: datasource=docker versioning=docker depName=docker
-	DindContainerImageVersion = "28.3-dind"
+	DindContainerImageVersion = "28.4-dind"
 	// DockerfileFrontendImageVersion is the version of the dockerfile frontend image.
 	// renovate: datasource=docker versioning=docker depName=docker/dockerfile-upstream
-	DockerfileFrontendImageVersion = "1.17.1-labs"
+	DockerfileFrontendImageVersion = "1.18.0-labs"
 	// DownloadArtifactActionVersion is the version of download artifact github action.
 	// renovate: datasource=github-releases extractVersion=^(?<version>v\d+)\.\d+\.\d+$ depName=actions/download-artifact
 	DownloadArtifactActionVersion = "v4"
@@ -45,10 +45,10 @@ const (
 	GitHubScriptActionVersion = "v7"
 	// GoFmtVersion is the version of gofmt.
 	// renovate: datasource=go depName=github.com/mvdan/gofumpt
-	GoFmtVersion = "v0.8.0"
+	GoFmtVersion = "v0.9.1"
 	// GoImportsVersion is the version of goimports.
 	// renovate: datasource=go depName=golang.org/x/tools
-	GoImportsVersion = "v0.36.0"
+	GoImportsVersion = "v0.37.0"
 	// GoMockVersion is the version of gomock.
 	// renovate: datasource=go depName=github.com/uber-go/mock
 	GoMockVersion = "v0.6.0"
@@ -60,10 +60,10 @@ const (
 	GolangContainerImageVersion = "1.25-alpine"
 	// GoVersion is the version of Go.
 	// renovate: datasource=github-tags extractVersion=^go(?<version>.*)$ depName=golang/go
-	GoVersion = "1.25.0"
+	GoVersion = "1.25.1"
 	// GrpcGatewayVersion is the version of grpc-gateway.
 	// renovate: datasource=go depName=github.com/grpc-ecosystem/grpc-gateway
-	GrpcGatewayVersion = "v2.27.1"
+	GrpcGatewayVersion = "v2.27.2"
 	// GrpcGoVersion is the version of grpc.
 	// renovate: datasource=go depName=google.golang.org/grpc/cmd/protoc-gen-go-grpc
 	GrpcGoVersion = "v1.5.1"
@@ -78,16 +78,16 @@ const (
 	MarkdownLintCLIVersion = "0.45.0"
 	// BunContainerImageVersion is the default bun container image.
 	// renovate: datasource=docker versioning=docker depName=oven/bun
-	BunContainerImageVersion = "1.2.20-alpine"
+	BunContainerImageVersion = "1.2.22-alpine"
 	// NodeContainerImageVersion is the default node container image.
 	// renovate: datasource=docker versioning=docker depName=node
-	NodeContainerImageVersion = "22-alpine"
+	NodeContainerImageVersion = "24-alpine"
 	// PkgsVersion is the version of pkgs.
 	// renovate: datasource=github-tags depName=siderolabs/pkgs
 	PkgsVersion = "v1.11.0"
 	// ProtobufGoVersion is the version of protobuf.
 	// renovate: datasource=go depName=google.golang.org/protobuf/cmd/protoc-gen-go
-	ProtobufGoVersion = "v1.36.7"
+	ProtobufGoVersion = "v1.36.9"
 	// ProtobufTSGatewayVersion is the version of protobuf-ts.
 	// renovate: datasource=go depName=github.com/siderolabs/protoc-gen-grpc-gateway-ts
 	ProtobufTSGatewayVersion = "v1.2.1"
@@ -108,7 +108,7 @@ const (
 	SlackNotifyActionVersion = "v2"
 	// SystemInfoActionVersion is the version of system info github action.
 	// renovate: datasource=github-releases depName=kenchan0130/actions-system-info
-	SystemInfoActionVersion = "v1.3.1"
+	SystemInfoActionVersion = "v1.4.0"
 	// UploadArtifactActionVersion is the version of upload artifact github action.
 	// renovate: datasource=github-releases extractVersion=^(?<version>v\d+)\.\d+\.\d+$ depName=actions/upload-artifact
 	UploadArtifactActionVersion = "v4"
@@ -117,7 +117,7 @@ const (
 	VTProtobufVersion = "v0.6.0"
 	// StaleActionVersion is the version of stale github action.
 	// renovate: datasource=github-releases depName=actions/stale
-	StaleActionVersion = "v9.1.0"
+	StaleActionVersion = "v10.0.0"
 	// LockThreadsActionVersion is the version of lock threads github action.
 	// renovate: datasource=github-releases depName=dessant/lock-threads
 	LockThreadsActionVersion = "v5.0.1"

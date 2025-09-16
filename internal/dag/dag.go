@@ -75,5 +75,5 @@ func FindByName(name string, targets ...Node) (result Node) {
 		return nil
 	}, visited, -1)
 
-	return
+	return result
 }

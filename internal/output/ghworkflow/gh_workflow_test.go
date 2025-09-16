@@ -39,7 +39,7 @@ func (suite *GHWorkflowSuite) TestDefaultWorkflows() {
 	)
 
 	output := ghworkflow.NewOutput(defaultBranch, withDefaultJob, withStaleJob, customSlackChannel) //nolint:typecheck
-	output.SetRunnerGroup("generic")
+	output.SetRunnerGroup(ghworkflow.GenericRunner)
 
 	var buf bytes.Buffer
 
@@ -79,7 +79,7 @@ jobs:
     steps:
       - name: gather-system-info
         id: system-info
-        uses: kenchan0130/actions-system-info@v1.3.1
+        uses: kenchan0130/actions-system-info@v1.4.0
         continue-on-error: true
       - name: print-system-info
         run: |
