@@ -366,8 +366,8 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 
 	if len(step.GHAction.Jobs) > 0 {
 		if !output.CheckIfStepExists("default", "retrieve-pr-labels") {
-			steps = append(
-				steps,
+			output.AddStep(
+				"default",
 				ghworkflow.Step("Retrieve PR labels").
 					SetID("retrieve-pr-labels").
 					SetUses("actions/github-script@"+config.GitHubScriptActionVersion).
