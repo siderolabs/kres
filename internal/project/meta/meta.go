@@ -97,6 +97,9 @@ type Options struct { //nolint:govet
 
 	// CIFailureSlackNotifyChannel is the Slack channel to notify on CI failures.
 	CIFailureSlackNotifyChannel string
+
+	// SOPSEnabled indicates whether SOPS is enabled for the project.
+	SOPSEnabled bool
 }
 
 // Command defines Golang executable build configuration.

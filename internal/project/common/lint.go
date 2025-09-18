@@ -56,6 +56,14 @@ func (lint *Lint) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		ghworkflow.Step("lint").SetMakeStep("lint"),
 	)
 
+	if lint.meta.SOPSEnabled {
+		output.AddStepAfter(
+			"lint",
+			"setup-buildx",
+			ghworkflow.SOPSSteps()...,
+		)
+	}
+
 	return nil
 }
 

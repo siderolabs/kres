@@ -69,5 +69,13 @@ func (tests *UnitTests) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		ghworkflow.Step(tests.Name()).SetMakeStep(tests.Name()),
 	)
 
+	if tests.meta.SOPSEnabled {
+		output.AddStepAfter(
+			"unit-tests",
+			"setup-buildx",
+			ghworkflow.SOPSSteps()...,
+		)
+	}
+
 	return nil
 }

@@ -38,6 +38,8 @@ func (sops *SOPS) CompileSops(o *sops.Output) error {
 		return nil
 	}
 
+	sops.meta.SOPSEnabled = true
+
 	o.Enable()
 	o.Config(sops.Config)
 

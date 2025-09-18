@@ -223,12 +223,28 @@ func (tests *UnitTests) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		ghworkflow.Step(tests.Name()+"-race").SetMakeStep(tests.Name()+"-race"),
 	)
 
+	if tests.meta.SOPSEnabled {
+		output.AddStepAfter(
+			"unit-tests",
+			"setup-buildx",
+			ghworkflow.SOPSSteps()...,
+		)
+	}
+
 	if tests.RunFIPS {
 		output.AddStepInParallelJob(
 			"unit-tests",
 			ghworkflow.GenericRunner,
 			ghworkflow.Step(tests.Name()+"-fips").SetMakeStep(tests.Name()+"-fips"),
 		)
+
+		if tests.meta.SOPSEnabled {
+			output.AddStepAfter(
+				"unit-tests",
+				"setup-buildx",
+				ghworkflow.SOPSSteps()...,
+			)
+		}
 	}
 
 	return nil

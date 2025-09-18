@@ -341,10 +341,20 @@ func (o *Output) AddStepAfter(jobName, afterStepID string, steps ...*JobStep) {
 		return
 	}
 
+	clonedSteps := slices.Clone(steps)
+
+	// check if the passed in steps already exist in the job to avoid duplicates
+	// we need to only skip adding the step if the step ID already exists and continue adding other steps
+	for _, step := range steps {
+		if slices.ContainsFunc(job.Steps, func(s *JobStep) bool { return s.Name == step.Name }) {
+			clonedSteps = slices.DeleteFunc(clonedSteps, func(s *JobStep) bool { return s.Name == step.Name })
+		}
+	}
+
 	idx := slices.IndexFunc(job.Steps, func(s *JobStep) bool { return s.ID == afterStepID })
 
 	if idx != -1 {
-		job.Steps = slices.Insert(job.Steps, idx+1, steps...)
+		job.Steps = slices.Insert(job.Steps, idx+1, clonedSteps...)
 	}
 }
 
@@ -484,6 +494,7 @@ func DefaultSlackNotifyPayload(customChannel string) string {
 	var finalPayload bytes.Buffer
 
 	encoder := json.NewEncoder(&finalPayload)
+
 	encoder.SetIndent("", "    ")
 	encoder.SetEscapeHTML(false)
 
