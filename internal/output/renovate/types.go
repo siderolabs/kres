@@ -35,7 +35,7 @@ type PackageRule struct {
 	Versioning         string `json:"versioning,omitempty"`
 	VersioningTemplate string `json:"versioningTemplate,omitempty"`
 
-	MatchDataSources []string `json:"matchDataSources,omitempty"`
+	MatchDatasources []string `json:"matchDatasources,omitempty"`
 	MatchFileNames   []string `json:"matchFileNames,omitempty"`
 	MatchPaths       []string `json:"matchPaths,omitempty"`
 

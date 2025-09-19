@@ -96,3 +96,8 @@ spec:
     - enabled: false
       matchFileNames:
         - internal/output/dockerfile/dockerfile_test.go
+    - matchPackageNames:
+        - node
+      matchDatasources:
+        - docker
+      allowedVersions: ^22\.\d+\.\d+-alpine$
