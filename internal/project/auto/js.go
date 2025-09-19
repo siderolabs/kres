@@ -34,7 +34,7 @@ func (builder *builder) DetectJS() (bool, error) {
 			return false, err
 		}
 
-		for _, path := range []string{"src", "test", "public"} {
+		for _, path := range []string{"src", "public"} {
 			d := filepath.Join(srcDir, path)
 
 			if exists {
