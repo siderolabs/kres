@@ -70,6 +70,15 @@
             "matchFileNames": [
                 "internal/output/dockerfile/dockerfile_test.go"
             ]
+        },
+        {
+            "allowedVersions": "^22\\.\\d+\\.\\d+-alpine$",
+            "matchDatasources": [
+                "docker"
+            ],
+            "matchPackageNames": [
+                "node"
+            ]
         }
     ],
     "separateMajorMinor": false
