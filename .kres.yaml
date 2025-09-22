@@ -100,4 +100,4 @@ spec:
         - node
       matchDatasources:
         - docker
-      allowedVersions: ^22\.\d+\.\d+-alpine$
+      allowedVersions: /^22\.\d+\.\d+-alpine$/
