@@ -272,7 +272,7 @@ func (pkgfile *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 			If:     "contains(fromJSON(needs.default.outputs.labels), 'integration/reproducibility')",
 			Needs:  []string{"default"},
 			Steps:  ghworkflow.DefaultPkgsSteps(),
-		})
+		}, nil)
 		output.AddStep("reproducibility", ghworkflow.Step("reproducibility-test").SetMakeStep("reproducibility-test"))
 
 		output.AddSlackNotify("weekly")

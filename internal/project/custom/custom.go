@@ -522,7 +522,7 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 			If:     strings.Join(conditions, " || "),
 			Needs:  []string{"default"},
 			Steps:  defaultSteps,
-		})
+		}, nil)
 
 		var steps []*ghworkflow.JobStep
 

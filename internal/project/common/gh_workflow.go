@@ -27,6 +27,7 @@ type Job struct {
 	Depends       []string       `yaml:"depends,omitempty"`
 	TriggerLabels []string       `yaml:"triggerLabels,omitempty"`
 	Steps         []Step         `yaml:"steps,omitempty"`
+	Inputs        []string       `yaml:"inputs,omitempty"`
 	Dispatchable  bool           `yaml:"dispatchable"`
 	SOPS          bool           `yaml:"sops"`
 }
@@ -465,7 +466,7 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 			)
 		}
 
-		o.AddJob(job.Name, job.Dispatchable, jobDef)
+		o.AddJob(job.Name, job.Dispatchable, jobDef, job.Inputs)
 	}
 
 	return nil

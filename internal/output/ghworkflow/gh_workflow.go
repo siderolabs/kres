@@ -274,7 +274,7 @@ func (o *Output) AddWorkflow(name string, workflow *Workflow) {
 }
 
 // AddJob adds job to the default workflow.
-func (o *Output) AddJob(name string, dispatch bool, job *Job) {
+func (o *Output) AddJob(name string, dispatch bool, job *Job, inputs []string) {
 	workflowName := CiWorkflow
 	if dispatch {
 		workflowName = DispatchableWorkflow
@@ -284,14 +284,15 @@ func (o *Output) AddJob(name string, dispatch bool, job *Job) {
 				Name: "dispatch",
 				On: On{
 					WorkFlowDispatch: &WorkFlowDispatch{
-						Inputs: map[string]WorkFlowDispatchInput{
-							"input": {
-								Description: "Input to pass to dispatched workflow",
-								Type:        "string",
-							},
-						},
+						Inputs: map[string]WorkFlowDispatchInput{},
 					},
 				},
+			}
+		}
+
+		for _, input := range inputs {
+			o.workflows[workflowName].Inputs[input] = WorkFlowDispatchInput{
+				Type: "string",
 			}
 		}
 	}
