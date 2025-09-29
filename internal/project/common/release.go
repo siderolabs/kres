@@ -72,7 +72,7 @@ func (release *Release) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	steps := []*ghworkflow.JobStep{}
 
 	releaseStep := ghworkflow.Step("Release").
-		SetUses("crazy-max/ghaction-github-release@"+config.ReleaseActionVersion).
+		SetUses("softprops/action-gh-release@"+config.ReleaseActionVersion).
 		SetWith("body_path", filepath.Join(release.meta.ArtifactsPath, "RELEASE_NOTES.md")).
 		SetWith("draft", "true")
 

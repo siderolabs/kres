@@ -54,7 +54,7 @@
             "matchPackageNames": [
                 "actions/checkout",
                 "docker/login-action",
-                "crazy-max/ghaction-github-release",
+                "softprops/action-gh-release",
                 "docker/setup-buildx-action",
                 "slackapi/slack-github-action"
             ]

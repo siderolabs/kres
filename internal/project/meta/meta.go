@@ -83,8 +83,11 @@ type Options struct { //nolint:govet
 	// CIProvider specifies the CI provider. Currently drone/ghaction is supported.
 	CIProvider string
 
+	// CompileGithubWorkflowsOnly indicates that only GitHub workflows should be compiled.
 	CompileGithubWorkflowsOnly bool
-	ExtraEnforcedContexts      []string
+
+	// EnforcedContexts is the list of required status checks for GitHub branch protection.
+	ExtraEnforcedContexts []string
 
 	// ContainerImageFrontend is the default frontend container image.
 	ContainerImageFrontend string

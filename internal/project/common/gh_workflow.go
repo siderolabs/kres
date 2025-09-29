@@ -19,14 +19,15 @@ import (
 
 // Job defines options for jobs.
 type Job struct {
-	Name          string         `yaml:"name"`
 	BuildxOptions *BuildxOptions `yaml:"buildxOptions,omitempty"`
+	Name          string         `yaml:"name"`
+	RunnerGroup   string         `yaml:"runnerGroup,omitempty"`
 	Conditions    []string       `yaml:"conditions,omitempty"`
 	Crons         []string       `yaml:"crons,omitempty"`
 	Depends       []string       `yaml:"depends,omitempty"`
-	RunnerGroup   string         `yaml:"runnerGroup,omitempty"`
 	TriggerLabels []string       `yaml:"triggerLabels,omitempty"`
 	Steps         []Step         `yaml:"steps,omitempty"`
+	Dispatchable  bool           `yaml:"dispatchable"`
 	SOPS          bool           `yaml:"sops"`
 }
 
@@ -288,7 +289,7 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 				})
 
 				releaseStep := ghworkflow.Step(step.Name).
-					SetUses("crazy-max/ghaction-github-release@"+config.ReleaseActionVersion).
+					SetUses("softprops/action-gh-release@"+config.ReleaseActionVersion).
 					SetWith("body_path", filepath.Join(step.ReleaseStep.BaseDirectory, step.ReleaseStep.ReleaseNotes)).
 					SetWith("draft", "true").
 					SetWith("files", strings.Join(artifacts, "\n"))
@@ -464,7 +465,7 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 			)
 		}
 
-		o.AddJob(job.Name, jobDef)
+		o.AddJob(job.Name, job.Dispatchable, jobDef)
 	}
 
 	return nil

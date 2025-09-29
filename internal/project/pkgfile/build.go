@@ -267,7 +267,7 @@ func (pkgfile *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 			"labels": "${{ steps.retrieve-pr-labels.outputs.result }}",
 		})
 
-		output.AddJob("reproducibility", &ghworkflow.Job{
+		output.AddJob("reproducibility", false, &ghworkflow.Job{
 			RunsOn: ghworkflow.NewRunsOnGroupLabel(ghworkflow.PkgsRunner, ""),
 			If:     "contains(fromJSON(needs.default.outputs.labels), 'integration/reproducibility')",
 			Needs:  []string{"default"},

@@ -71,6 +71,8 @@ done
 	SlackCIFailureWorkflowName = "slack-notify-ci-failure"
 	// SlackCIFailureWorkflow is the Slack notify on CI failure workflow.
 	SlackCIFailureWorkflow = workflowDir + "/" + SlackCIFailureWorkflowName + ".yaml"
+	// DispatchableWorkflow is the workflow for workflow dispatch events.
+	DispatchableWorkflow = workflowDir + "/" + "dispatch.yaml"
 )
 
 var (
@@ -91,7 +93,7 @@ type Output struct {
 }
 
 // NewOutput creates new .github/workflows/ci.yaml output.
-func NewOutput(mainBranch string, withDefaultJob bool, withStaleJob bool, slackChannel string) *Output {
+func NewOutput(mainBranch string, withDefaultJob, withStaleJob bool, slackChannel string) *Output {
 	workflows := map[string]*Workflow{
 		CiWorkflow: {
 			Name: "default",
@@ -272,12 +274,33 @@ func (o *Output) AddWorkflow(name string, workflow *Workflow) {
 }
 
 // AddJob adds job to the default workflow.
-func (o *Output) AddJob(name string, job *Job) {
-	if o.workflows[CiWorkflow].Jobs == nil {
-		o.workflows[CiWorkflow].Jobs = map[string]*Job{}
+func (o *Output) AddJob(name string, dispatch bool, job *Job) {
+	workflowName := CiWorkflow
+	if dispatch {
+		workflowName = DispatchableWorkflow
+
+		if o.workflows[workflowName] == nil {
+			o.workflows[workflowName] = &Workflow{
+				Name: "dispatch",
+				On: On{
+					WorkFlowDispatch: &WorkFlowDispatch{
+						Inputs: map[string]WorkFlowDispatchInput{
+							"input": {
+								Description: "Input to pass to dispatched workflow",
+								Type:        "string",
+							},
+						},
+					},
+				},
+			}
+		}
 	}
 
-	o.workflows[CiWorkflow].Jobs[name] = job
+	if o.workflows[workflowName].Jobs == nil {
+		o.workflows[workflowName].Jobs = map[string]*Job{}
+	}
+
+	o.workflows[workflowName].Jobs[name] = job
 }
 
 // AddStep adds step to the job.

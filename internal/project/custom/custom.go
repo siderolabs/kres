@@ -517,7 +517,7 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 			)
 		}
 
-		output.AddJob(job.Name, &ghworkflow.Job{
+		output.AddJob(job.Name, false, &ghworkflow.Job{
 			RunsOn: ghworkflow.NewRunsOnGroupLabel(job.RunnerGroup, ""),
 			If:     strings.Join(conditions, " || "),
 			Needs:  []string{"default"},
