@@ -139,6 +139,7 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 		Step(step.Copy(filepath.Join(toolchain.sourceDir, "*.html"), "./")).
 		Step(step.Copy(filepath.Join(toolchain.sourceDir, ".npmrc"), "./")).
 		Step(step.Copy(filepath.Join(toolchain.sourceDir, ".editorconfig"), "./")).
+		Step(step.Copy(filepath.Join(toolchain.sourceDir, ".gitignore"), "./")).
 		Step(step.Copy(filepath.Join(toolchain.sourceDir, ".prettier*"), "./"))
 
 	for _, directory := range toolchain.meta.JSDirectories {

@@ -34,7 +34,7 @@ func (builder *builder) DetectJS() (bool, error) {
 			return false, err
 		}
 
-		for _, path := range []string{"src", "public", "msw"} {
+		for _, path := range []string{"src", "public", "msw", ".storybook"} {
 			d := filepath.Join(srcDir, path)
 
 			if exists {
@@ -50,6 +50,7 @@ func (builder *builder) DetectJS() (bool, error) {
 			filepath.Join(srcDir, "*.html"),
 			filepath.Join(srcDir, ".npmrc"),
 			filepath.Join(srcDir, ".editorconfig"),
+			filepath.Join(srcDir, ".gitignore"),
 			filepath.Join(srcDir, ".prettier*"),
 		)
 	}
