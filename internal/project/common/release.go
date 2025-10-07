@@ -103,7 +103,7 @@ func (release *Release) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 			}
 
 			signCommands := xslices.Map(artifacts, func(artifact string) string {
-				return fmt.Sprintf("find %s -type f -name %s -exec cosign sign-blob --yes --output-signature {}.sig {} \\;", release.meta.ArtifactsPath, artifact)
+				return fmt.Sprintf("find %s -type f -name %s -exec cosign sign-blob --yes --bundle {}.bundle {} \\;", release.meta.ArtifactsPath, artifact)
 			})
 
 			signStep := ghworkflow.Step("Sign artifacts").

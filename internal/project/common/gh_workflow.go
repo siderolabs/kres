@@ -304,7 +304,7 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 					jobDef.Steps = append(jobDef.Steps, cosignStep)
 
 					signCommands := xslices.Map(artifacts, func(artifact string) string {
-						return fmt.Sprintf("cosign sign-blob --output-signature %s.sig --yes %s", artifact, artifact)
+						return fmt.Sprintf("cosign sign-blob --bundle %s.bundle --yes %s", artifact, artifact)
 					})
 
 					signStep := ghworkflow.Step("Sign artifacts").
@@ -335,8 +335,8 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 					if step.ReleaseStep.GenerateSignatures {
 						checkSumSignCommands := []string{
 							fmt.Sprintf("cd %s", step.ReleaseStep.BaseDirectory),
-							"cosign sign-blob --output-signature sha256sum.txt.sig --yes sha256sum.txt",
-							"cosign sign-blob --output-signature sha512sum.txt.sig --yes sha512sum.txt",
+							"cosign sign-blob --bundle sha256sum.txt.bundle --yes sha256sum.txt",
+							"cosign sign-blob --bundle sha512sum.txt.bundle --yes sha512sum.txt",
 						}
 
 						signStep := ghworkflow.Step("Sign checksums").

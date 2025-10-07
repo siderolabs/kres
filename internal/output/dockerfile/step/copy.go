@@ -44,7 +44,7 @@ func (step *CopyStep) Platform(platform string) *CopyStep {
 	return step
 }
 
-// Platform sets --chmod argument.
+// Chmod sets --chmod argument.
 func (step *CopyStep) Chmod(perm uint) *CopyStep {
 	step.chmod = fmt.Sprintf("%#o", perm)
 
