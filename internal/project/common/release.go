@@ -115,7 +115,7 @@ func (release *Release) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 
 			steps = append(steps, cosignStep, signStep)
 
-			artifactsToUpload += "\n" + filepath.Join(release.meta.ArtifactsPath, "*.sig")
+			artifactsToUpload += "\n" + filepath.Join(release.meta.ArtifactsPath, "*.bundle")
 		}
 
 		releaseStep.SetWith("files", artifactsToUpload)

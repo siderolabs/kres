@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2025-10-07T10:53:14Z by kres bc281a9-dirty.
+# Generated on 2025-10-07T11:13:28Z by kres e329305-dirty.
 
 concurrency:
   group: ${{ github.head_ref || github.run_id }}
@@ -123,7 +123,7 @@ jobs:
           files: |-
             _out/kres-*
             _out/sha*.txt
-            _out/*.sig
+            _out/*.bundle
   lint:
     runs-on:
       group: generic

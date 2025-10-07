@@ -312,7 +312,7 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 
 					jobDef.Steps = append(jobDef.Steps, signStep)
 
-					releaseStep.SetWith("files", strings.Join(artifacts, "\n")+"\n"+filepath.Join(step.ReleaseStep.BaseDirectory, "*.sig"))
+					releaseStep.SetWith("files", strings.Join(artifacts, "\n")+"\n"+filepath.Join(step.ReleaseStep.BaseDirectory, "*.bundle"))
 				}
 
 				if step.ReleaseStep.GenerateChecksums {
@@ -348,7 +348,7 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 							strings.Join(artifacts, "\n")+
 								"\n"+
 								filepath.Join(step.ReleaseStep.BaseDirectory, "sha*.txt")+"\n"+
-								filepath.Join(step.ReleaseStep.BaseDirectory, "*.sig"),
+								filepath.Join(step.ReleaseStep.BaseDirectory, "*.bundle"),
 						)
 					}
 				}
