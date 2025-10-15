@@ -47,7 +47,7 @@ const (
 	GoFmtVersion = "v0.9.1"
 	// GoImportsVersion is the version of goimports.
 	// renovate: datasource=go depName=golang.org/x/tools
-	GoImportsVersion = "v0.37.0"
+	GoImportsVersion = "v0.38.0"
 	// GoMockVersion is the version of gomock.
 	// renovate: datasource=go depName=github.com/uber-go/mock
 	GoMockVersion = "v0.6.0"
@@ -59,7 +59,7 @@ const (
 	GolangContainerImageVersion = "1.25-alpine"
 	// GoVersion is the version of Go.
 	// renovate: datasource=github-tags extractVersion=^go(?<version>.*)$ depName=golang/go
-	GoVersion = "1.25.2"
+	GoVersion = "1.25.3"
 	// GrpcGatewayVersion is the version of grpc-gateway.
 	// renovate: datasource=go depName=github.com/grpc-ecosystem/grpc-gateway
 	GrpcGatewayVersion = "v2.27.3"
@@ -77,8 +77,12 @@ const (
 	MarkdownLintCLIVersion = "0.45.0"
 	// BunContainerImageVersion is the default bun container image.
 	// renovate: datasource=docker versioning=docker depName=oven/bun
-	BunContainerImageVersion = "1.2.23-alpine"
+	BunContainerImageVersion = "1.3.0-alpine"
 	// NodeContainerImageVersion is the default node container image.
+	//
+	// NOTE: Check renovate.json for the rules on this before bumping, e.g., pinned versions.
+	// As a rule of thumb, we bump only to the versions promoted to be LTS (even [not odd] major versions get promoted after a while, always check).
+	//
 	// renovate: datasource=docker versioning=docker depName=node
 	NodeContainerImageVersion = "22.20.0-alpine"
 	// PkgsVersion is the version of pkgs.
