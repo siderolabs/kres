@@ -653,6 +653,8 @@ func (step *JobStep) SetConditions(conditions ...string) error {
 			step.appendIf("github.event_name == 'schedule'")
 		case "not-on-schedule":
 			step.appendIf("github.event_name != 'schedule'")
+		case "only-on-main-branch":
+			step.appendIf("github.ref == 'refs/heads/main'")
 		case "always":
 			step.appendIf("always()")
 		case "":
@@ -689,10 +691,11 @@ func (job *Job) SetConditions(conditions ...string) error {
 			job.appendIf("github.event_name == 'schedule'")
 		case "not-on-schedule":
 			job.appendIf("github.event_name != 'schedule'")
+		case "only-on-main-branch":
+			job.appendIf("github.ref == 'refs/heads/main'")
 		case "always":
 			job.appendIf("always()")
 		case "":
-			return nil
 		default:
 			return fmt.Errorf("unknown condition: %s", condition)
 		}
