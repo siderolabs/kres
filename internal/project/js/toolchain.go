@@ -98,7 +98,7 @@ func (toolchain *Toolchain) CompileDrone(output *drone.Output) error {
 
 // CompileGitHubWorkflow implements ghworkflow.Compiler.
 func (toolchain *Toolchain) CompileGitHubWorkflow(output *ghworkflow.Output) error {
-	output.AddStep("default", ghworkflow.Step("js").SetMakeStep("js"))
+	output.AddStep(ghworkflow.DefaultJobName, ghworkflow.Step("js").SetMakeStep("js"))
 
 	return nil
 }

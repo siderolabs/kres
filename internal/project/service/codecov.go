@@ -78,6 +78,7 @@ func (coverage *CodeCov) CompileGitHubWorkflow(output *ghworkflow.Output) error 
 		output.AddStepInParallelJob(
 			job.name,
 			ghworkflow.GenericRunner,
+			nil,
 			ghworkflow.Step("coverage").
 				SetUses(fmt.Sprintf("codecov/codecov-action@%s", config.CodeCovActionVersion)).
 				SetWith("files",

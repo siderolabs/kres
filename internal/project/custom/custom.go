@@ -99,14 +99,16 @@ type Step struct {
 			RunnerGroup         string            `yaml:"runnerGroup"`
 			TriggerLabels       []string          `yaml:"triggerLabels"`
 			Artifacts           Artifacts         `yaml:"artifacts"`
+			NeedsOverride       []string          `yaml:"needsOverride"`
 		} `yaml:"jobs"`
 		Artifacts   Artifacts `yaml:"artifacts"`
 		Enabled     bool      `yaml:"enabled"`
 		CronOnly    bool      `yaml:"cronOnly"`
 		SOPS        bool      `yaml:"sops"`
 		ParallelJob struct {
-			Name        string `yaml:"name"`
-			RunnerGroup string `yaml:"runnerGroup"`
+			Name          string   `yaml:"name"`
+			RunnerGroup   string   `yaml:"runnerGroup"`
+			NeedsOverride []string `yaml:"needsOverride"`
 		} `yaml:"parallelJob"`
 		Coverage struct {
 			InputPaths []string `yaml:"inputPaths"`
@@ -365,9 +367,9 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	}
 
 	if len(step.GHAction.Jobs) > 0 {
-		if !output.CheckIfStepExists("default", "retrieve-pr-labels") {
+		if !output.CheckIfStepExists(ghworkflow.DefaultJobName, "retrieve-pr-labels") {
 			output.AddStep(
-				"default",
+				ghworkflow.DefaultJobName,
 				ghworkflow.Step("Retrieve PR labels").
 					SetID("retrieve-pr-labels").
 					SetUses("actions/github-script@"+config.GitHubScriptActionVersion).
@@ -375,7 +377,7 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 					SetWith("script", strings.TrimPrefix(ghworkflow.IssueLabelRetrieveScript, "\n")),
 			)
 
-			output.AddOutputs("default", map[string]string{
+			output.AddOutputs(ghworkflow.DefaultJobName, map[string]string{
 				"labels": "${{ steps.retrieve-pr-labels.outputs.result }}",
 			})
 		}
@@ -430,7 +432,7 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 
 	if step.GHAction.ParallelJob.Name == "" {
 		output.AddStep(
-			"default",
+			ghworkflow.DefaultJobName,
 			steps...,
 		)
 	} else {
@@ -444,6 +446,7 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		output.AddStepInParallelJob(
 			step.GHAction.ParallelJob.Name,
 			step.GHAction.ParallelJob.RunnerGroup,
+			step.GHAction.ParallelJob.NeedsOverride,
 			steps...,
 		)
 	}
@@ -517,10 +520,15 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 			)
 		}
 
+		needs := job.NeedsOverride
+		if len(needs) == 0 {
+			needs = []string{ghworkflow.DefaultJobName}
+		}
+
 		output.AddJob(job.Name, false, &ghworkflow.Job{
 			RunsOn: ghworkflow.NewRunsOnGroupLabel(job.RunnerGroup, ""),
 			If:     strings.Join(conditions, " || "),
-			Needs:  []string{"default"},
+			Needs:  needs,
 			Steps:  defaultSteps,
 		}, nil)
 
@@ -595,7 +603,7 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 						}),
 					},
 					Jobs: map[string]*ghworkflow.Job{
-						"default": {
+						ghworkflow.DefaultJobName: {
 							RunsOn: ghworkflow.NewRunsOnGroupLabel(job.RunnerGroup, ""),
 							Steps: append(
 								defaultSteps,

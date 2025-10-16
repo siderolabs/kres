@@ -170,7 +170,7 @@ func (image *Image) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		)
 	}
 
-	output.AddStep("default", steps...)
+	output.AddStep(ghworkflow.DefaultJobName, steps...)
 
 	return nil
 }

@@ -54,7 +54,7 @@ func (sops *SOPS) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 	}
 
 	o.AddStepAfter(
-		"default",
+		ghworkflow.DefaultJobName,
 		"setup-buildx",
 		ghworkflow.SOPSSteps()...,
 	)

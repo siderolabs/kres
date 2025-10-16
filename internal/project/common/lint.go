@@ -53,6 +53,7 @@ func (lint *Lint) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	output.AddStepInParallelJob(
 		"lint",
 		ghworkflow.GenericRunner,
+		nil,
 		ghworkflow.Step("lint").SetMakeStep("lint"),
 	)
 

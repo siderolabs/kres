@@ -73,6 +73,9 @@ done
 	SlackCIFailureWorkflow = workflowDir + "/" + SlackCIFailureWorkflowName + ".yaml"
 	// DispatchableWorkflow is the workflow for workflow dispatch events.
 	DispatchableWorkflow = workflowDir + "/" + "dispatch.yaml"
+
+	// DefaultJobName is the name of the default job.
+	DefaultJobName = "default"
 )
 
 var (
@@ -96,7 +99,7 @@ type Output struct {
 func NewOutput(mainBranch string, withDefaultJob, withStaleJob bool, slackChannel string) *Output {
 	workflows := map[string]*Workflow{
 		CiWorkflow: {
-			Name: "default",
+			Name: DefaultJobName,
 			// https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-a-fallback-value
 			Concurrency: Concurrency{
 				Group:            "${{ github.head_ref || github.run_id }}",
@@ -122,7 +125,7 @@ func NewOutput(mainBranch string, withDefaultJob, withStaleJob bool, slackChanne
 			Name: "slack-notify",
 			On: On{
 				WorkFlowRun: WorkFlowRun{
-					Workflows: []string{"default"},
+					Workflows: []string{DefaultJobName},
 					Types:     []string{"completed"},
 				},
 			},
@@ -151,7 +154,7 @@ func NewOutput(mainBranch string, withDefaultJob, withStaleJob bool, slackChanne
 			Name: "slack-notify-failure",
 			On: On{
 				WorkFlowRun: WorkFlowRun{
-					Workflows: []string{"default"},
+					Workflows: []string{DefaultJobName},
 					Types:     []string{"completed"},
 					Branches:  []string{mainBranch},
 				},
@@ -244,7 +247,7 @@ func NewOutput(mainBranch string, withDefaultJob, withStaleJob bool, slackChanne
 
 	if withDefaultJob {
 		workflows[CiWorkflow].Jobs = map[string]*Job{
-			"default": {
+			DefaultJobName: {
 				If:          DefaultSkipCondition,
 				Permissions: DefaultJobPermissions(),
 				Steps:       DefaultSteps(),
@@ -309,10 +312,19 @@ func (o *Output) AddStep(jobName string, steps ...*JobStep) {
 	o.workflows[CiWorkflow].Jobs[jobName].Steps = append(o.workflows[CiWorkflow].Jobs[jobName].Steps, steps...)
 }
 
-// AddStepInParallelJob adds step to the job that runs in parallel after the default job.
-func (o *Output) AddStepInParallelJob(jobName string, runnerGroup string, steps ...*JobStep) {
+// AddStepInParallelJob adds steps to a job with customizable dependencies.
+//
+// If needsOverride is empty, the job will depend on the DefaultJobName job and run after it.
+//
+// If needsOverride is provided, the job will depend on the specified jobs, and may not run in parallel after the default job.
+func (o *Output) AddStepInParallelJob(jobName string, runnerGroup string, needsOverride []string, steps ...*JobStep) {
 	if o.workflows[CiWorkflow].Jobs == nil {
 		o.workflows[CiWorkflow].Jobs = map[string]*Job{}
+	}
+
+	needs := needsOverride
+	if len(needs) == 0 {
+		needs = []string{DefaultJobName}
 	}
 
 	if o.workflows[CiWorkflow].Jobs[jobName] == nil {
@@ -323,7 +335,7 @@ func (o *Output) AddStepInParallelJob(jobName string, runnerGroup string, steps 
 				},
 			},
 			If:    "github.event_name == 'pull_request'",
-			Needs: []string{"default"},
+			Needs: needs,
 			Steps: DefaultSteps(),
 		}
 	}
@@ -401,14 +413,14 @@ func (o *Output) AddSlackNotifyForFailure(workflow string) {
 // If runner is empty, it will be set to "generic".
 func (o *Output) SetRunnerGroup(runner string) {
 	if runner == "" {
-		o.workflows[CiWorkflow].Jobs["default"].RunsOn = RunsOn{value: RunsOnGroupLabel{
+		o.workflows[CiWorkflow].Jobs[DefaultJobName].RunsOn = RunsOn{value: RunsOnGroupLabel{
 			Group: GenericRunner,
 		}}
 
 		return
 	}
 
-	o.workflows[CiWorkflow].Jobs["default"].RunsOn = RunsOn{value: RunsOnGroupLabel{
+	o.workflows[CiWorkflow].Jobs[DefaultJobName].RunsOn = RunsOn{value: RunsOnGroupLabel{
 		Group: runner,
 	}}
 }
@@ -418,7 +430,7 @@ func (o *Output) SetRunnerGroup(runner string) {
 func (o *Output) SetOptionsForPkgs() {
 	o.SetRunnerGroup(PkgsRunner)
 
-	o.workflows[CiWorkflow].Jobs["default"].Steps = DefaultPkgsSteps()
+	o.workflows[CiWorkflow].Jobs[DefaultJobName].Steps = DefaultPkgsSteps()
 }
 
 // SetWorkflowOn sets the workflow on event.

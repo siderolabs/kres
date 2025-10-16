@@ -100,7 +100,7 @@ func (build *Build) CompileDrone(output *drone.Output) error {
 
 // CompileGitHubWorkflow implements ghworkflow.Compiler.
 func (build *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
-	output.AddStep("default", ghworkflow.Step(build.Name()).SetMakeStep(build.Name()))
+	output.AddStep(ghworkflow.DefaultJobName, ghworkflow.Step(build.Name()).SetMakeStep(build.Name()))
 
 	return nil
 }

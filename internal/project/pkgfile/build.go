@@ -218,7 +218,7 @@ func (pkgfile *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	}
 
 	output.AddStep(
-		"default",
+		ghworkflow.DefaultJobName,
 		buildStep,
 	)
 
@@ -235,7 +235,7 @@ func (pkgfile *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		}
 
 		output.AddStep(
-			"default",
+			ghworkflow.DefaultJobName,
 			buildStep,
 		)
 
@@ -251,11 +251,11 @@ func (pkgfile *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		)
 	}
 
-	output.AddStep("default", steps...)
+	output.AddStep(ghworkflow.DefaultJobName, steps...)
 
 	if pkgfile.ReproducibleTargetName != "" {
 		output.AddStep(
-			"default",
+			ghworkflow.DefaultJobName,
 			ghworkflow.Step("Retrieve PR labels").
 				SetID("retrieve-pr-labels").
 				SetUses("actions/github-script@"+config.GitHubScriptActionVersion).
@@ -263,14 +263,14 @@ func (pkgfile *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 				SetWith("script", strings.TrimPrefix(ghworkflow.IssueLabelRetrieveScript, "\n")),
 		)
 
-		output.AddOutputs("default", map[string]string{
+		output.AddOutputs(ghworkflow.DefaultJobName, map[string]string{
 			"labels": "${{ steps.retrieve-pr-labels.outputs.result }}",
 		})
 
 		output.AddJob("reproducibility", false, &ghworkflow.Job{
 			RunsOn: ghworkflow.NewRunsOnGroupLabel(ghworkflow.PkgsRunner, ""),
 			If:     "contains(fromJSON(needs.default.outputs.labels), 'integration/reproducibility')",
-			Needs:  []string{"default"},
+			Needs:  []string{ghworkflow.DefaultJobName},
 			Steps:  ghworkflow.DefaultPkgsSteps(),
 		}, nil)
 		output.AddStep("reproducibility", ghworkflow.Step("reproducibility-test").SetMakeStep("reproducibility-test"))

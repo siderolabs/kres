@@ -456,7 +456,7 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 						}),
 					},
 					Jobs: map[string]*ghworkflow.Job{
-						"default": {
+						ghworkflow.DefaultJobName: {
 							RunsOn:   ghworkflow.NewRunsOnGroupLabel(job.RunnerGroup, ""),
 							Services: jobDef.Services,
 							Steps:    jobDef.Steps,

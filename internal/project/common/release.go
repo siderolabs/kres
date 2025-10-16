@@ -93,7 +93,7 @@ func (release *Release) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		artifactsToUpload := strings.Join(artifacts, "\n") + "\n" + filepath.Join(release.meta.ArtifactsPath, "sha*.txt")
 
 		if release.GenerateSignatures {
-			output.AddJobPermissions("default", "id-token", "write")
+			output.AddJobPermissions(ghworkflow.DefaultJobName, "id-token", "write")
 
 			cosignStep := ghworkflow.Step("Install Cosign").
 				SetUses("sigstore/cosign-installer@" + config.CosignInstallActionVerson)
@@ -145,7 +145,7 @@ func (release *Release) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	)
 
 	output.AddStep(
-		"default",
+		ghworkflow.DefaultJobName,
 		steps...,
 	)
 
