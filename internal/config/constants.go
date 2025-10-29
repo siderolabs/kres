@@ -44,7 +44,7 @@ const (
 	GitHubScriptActionVersion = "v7"
 	// GoFmtVersion is the version of gofmt.
 	// renovate: datasource=go depName=github.com/mvdan/gofumpt
-	GoFmtVersion = "v0.9.1"
+	GoFmtVersion = "v0.9.2"
 	// GoImportsVersion is the version of goimports.
 	// renovate: datasource=go depName=golang.org/x/tools
 	GoImportsVersion = "v0.38.0"
@@ -77,7 +77,7 @@ const (
 	MarkdownLintCLIVersion = "0.45.0"
 	// BunContainerImageVersion is the default bun container image.
 	// renovate: datasource=docker versioning=docker depName=oven/bun
-	BunContainerImageVersion = "1.3.0-alpine"
+	BunContainerImageVersion = "1.3.1-alpine"
 	// NodeContainerImageVersion is the default node container image.
 	//
 	// NOTE: Check renovate.json for the rules on this before bumping, e.g., pinned versions.
