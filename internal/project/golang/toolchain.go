@@ -5,6 +5,7 @@
 package golang
 
 import (
+	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -191,10 +192,10 @@ func (toolchain *Toolchain) CompileGitHubWorkflow(output *ghworkflow.Output) err
 
 // CompileDockerfile implements dockerfile.Compiler.
 func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
-	output.Arg(step.Arg("TOOLCHAIN"))
+	output.Arg(step.Arg("TOOLCHAIN=scratch"))
 
 	for _, arg := range toolchain.Docker.ExtraArgs {
-		output.Arg(step.Arg(arg))
+		output.Arg(step.Arg(fmt.Sprintf("%s=scratch", arg)))
 	}
 
 	toolchainStage := output.Stage("toolchain").

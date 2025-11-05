@@ -2,9 +2,9 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2025-10-15T08:19:59Z by kres 063080a9-dirty.
+# Generated on 2025-11-05T13:37:35Z by kres cd5a938-dirty.
 
-ARG TOOLCHAIN
+ARG TOOLCHAIN=scratch
 
 FROM ghcr.io/siderolabs/ca-certificates:v1.11.0 AS image-ca-certificates
 
