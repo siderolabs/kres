@@ -59,7 +59,7 @@ func (o *Output) Enable() {
 }
 
 // SetDepguardExtraRules sets extra rules for depguard linter.
-func (o *Output) SetDepguardExtraRules(rules map[string]interface{}) {
+func (o *Output) SetDepguardExtraRules(rules map[string]any) {
 	o.depguardExtraRules = rules
 }
 

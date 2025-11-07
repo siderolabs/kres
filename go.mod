@@ -5,9 +5,9 @@ go 1.25.3
 require (
 	github.com/drone/drone-yaml v1.2.3
 	github.com/go-git/go-git/v5 v5.16.3
-	github.com/google/go-github/v75 v75.0.0
+	github.com/google/go-github/v77 v77.0.0
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
-	github.com/siderolabs/gen v0.8.5
+	github.com/siderolabs/gen v0.8.6
 	github.com/spf13/cobra v1.10.1
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/mod v0.29.0
