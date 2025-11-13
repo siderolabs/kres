@@ -85,7 +85,7 @@ func NewRepository(meta *meta.Options) *Repository {
 		},
 		ConformLicenseCheck:       true,
 		ConformGPGSignatureCheck:  true,
-		ConformMaximumOfOneCommit: true,
+		ConformMaximumOfOneCommit: false,
 
 		Licenses: []LicenseConfig{
 			{
@@ -212,9 +212,12 @@ func (r *Repository) enableBranchProtection(client *github.Client) error {
 			"conform/commit/header-last-character",
 			"conform/commit/header-length",
 			"conform/commit/imperative-mood",
-			"conform/commit/number-of-commits",
 			"conform/commit/spellcheck",
 		)
+
+		if r.ConformMaximumOfOneCommit {
+			enforceContexts = append(enforceContexts, "conform/commit/number-of-commits")
+		}
 
 		if r.ConformLicenseCheck {
 			enforceContexts = append(enforceContexts,
