@@ -15,7 +15,7 @@ import (
 	"strings"
 
 	"github.com/siderolabs/gen/maps"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 
 	"github.com/siderolabs/kres/internal/config"
 	"github.com/siderolabs/kres/internal/output"
@@ -142,7 +142,10 @@ func NewOutput(mainBranch string, withDefaultJob, withStaleJob bool, slackChanne
 							SetCommand("echo pull_request_number=$(gh pr view -R ${{ github.repository }} ${{ github.event.workflow_run.head_repository.owner.login }}:${{ github.event.workflow_run.head_branch }} --json number --jq .number) >> $GITHUB_OUTPUT"). //nolint:lll
 							SetCustomCondition("github.event.workflow_run.event == 'pull_request'"),
 						Step("Slack Notify").
-							SetUses("slackapi/slack-github-action@"+config.SlackNotifyActionVersion).
+							SetUsesWithComment(
+								"slackapi/slack-github-action@"+config.SlackNotifyActionRef,
+								"version: "+config.SlackNotifyActionVersion,
+							).
 							SetWith("token", "${{ secrets.SLACK_BOT_TOKEN_V2 }}").
 							SetWith("method", "chat.postMessage").
 							SetWith("payload", DefaultSlackNotifyPayload("")),
@@ -167,7 +170,10 @@ func NewOutput(mainBranch string, withDefaultJob, withStaleJob bool, slackChanne
 					If: "github.event.workflow_run.conclusion == 'failure' && github.event.workflow_run.event != 'pull_request'",
 					Steps: []*JobStep{
 						Step("Slack Notify").
-							SetUses("slackapi/slack-github-action@"+config.SlackNotifyActionVersion).
+							SetUsesWithComment(
+								"slackapi/slack-github-action@"+config.SlackNotifyActionRef,
+								"version: "+config.SlackNotifyActionVersion,
+							).
 							SetWith("token", "${{ secrets.SLACK_BOT_TOKEN_V2 }}").
 							SetWith("method", "chat.postMessage").
 							SetWith("payload", DefaultSlackNotifyPayload(slackChannel)),
@@ -196,7 +202,10 @@ func NewOutput(mainBranch string, withDefaultJob, withStaleJob bool, slackChanne
 					Steps: []*JobStep{
 						{
 							Name: "Lock old issues",
-							Uses: "dessant/lock-threads@" + config.LockThreadsActionVersion,
+							Uses: ActionRef{
+								Image:   "dessant/lock-threads@" + config.LockThreadsActionRef,
+								Comment: "version: " + config.LockThreadsActionVersion,
+							},
 							With: map[string]string{
 								"issue-inactive-days": "60",
 								"process-only":        "issues",
@@ -227,7 +236,10 @@ func NewOutput(mainBranch string, withDefaultJob, withStaleJob bool, slackChanne
 					Steps: []*JobStep{
 						{
 							Name: "Close stale issues and PRs",
-							Uses: "actions/stale@" + config.StaleActionVersion,
+							Uses: ActionRef{
+								Image:   "actions/stale@" + config.StaleActionRef,
+								Comment: "version: " + config.StaleActionVersion,
+							},
 							With: map[string]string{
 								"stale-issue-message":     "This issue is stale because it has been open 180 days with no activity. Remove stale label or comment or this will be closed in 7 days.",
 								"stale-pr-message":        "This PR is stale because it has been open 45 days with no activity.",
@@ -442,14 +454,17 @@ func (o *Output) SetWorkflowOn(on On) {
 func CommonSteps() []*JobStep {
 	return []*JobStep{
 		Step("gather-system-info").
-			SetUses("kenchan0130/actions-system-info@" + config.SystemInfoActionVersion).
+			SetUsesWithComment(
+				"kenchan0130/actions-system-info@"+config.SystemInfoActionRef,
+				"version: "+config.SystemInfoActionVersion,
+			).
 			SetID("system-info").
 			SetContinueOnError(),
 		Step("print-system-info").
 			SetCommand(strings.Trim(SystemInfoPrintScript, "\n")).
 			SetContinueOnError(),
 		Step("checkout").
-			SetUses("actions/checkout@" + config.CheckOutActionVersion),
+			SetUsesWithComment("actions/checkout@"+config.CheckOutActionRef, "version: "+config.CheckOutActionVersion),
 		Step("Unshallow").
 			SetCommand("git fetch --prune --unshallow"),
 	}
@@ -473,7 +488,10 @@ func DefaultSteps() []*JobStep {
 		&JobStep{
 			Name: "Set up Docker Buildx",
 			ID:   "setup-buildx",
-			Uses: "docker/setup-buildx-action@" + config.SetupBuildxActionVersion,
+			Uses: ActionRef{
+				Image:   "docker/setup-buildx-action@" + config.SetupBuildxActionRef,
+				Comment: "version: " + config.SetupBuildxActionVersion,
+			},
 			With: map[string]string{
 				"driver":   "remote",
 				"endpoint": "tcp://buildkit-amd64.ci.svc.cluster.local:1234",
@@ -490,7 +508,10 @@ func DefaultPkgsSteps() []*JobStep {
 		&JobStep{
 			Name: "Set up Docker Buildx",
 			ID:   "setup-buildx",
-			Uses: "docker/setup-buildx-action@" + config.SetupBuildxActionVersion,
+			Uses: ActionRef{
+				Image:   "docker/setup-buildx-action@" + config.SetupBuildxActionRef,
+				Comment: "version: " + config.SetupBuildxActionVersion,
+			},
 			With: map[string]string{
 				"driver":   "remote",
 				"endpoint": "tcp://buildkit-amd64.ci.svc.cluster.local:1234",
@@ -548,9 +569,12 @@ func Step(name string) *JobStep {
 	}
 }
 
-// SetUses sets step to use action.
-func (step *JobStep) SetUses(uses string) *JobStep {
-	step.Uses = uses
+// SetUsesWithComment sets step to use action with comment.
+func (step *JobStep) SetUsesWithComment(uses, comment string) *JobStep {
+	step.Uses = ActionRef{
+		Image:   uses,
+		Comment: comment,
+	}
 
 	return step
 }

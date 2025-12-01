@@ -13,7 +13,7 @@ import (
 	"path"
 	"reflect"
 
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 )
 
 // Document is a part of config.

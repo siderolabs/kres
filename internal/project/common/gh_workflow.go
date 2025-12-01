@@ -167,7 +167,10 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 				switch step.ArtifactStep.Type {
 				case "upload":
 					saveArtifactsStep := ghworkflow.Step("save artifacts").
-						SetUses("actions/upload-artifact@"+config.UploadArtifactActionVersion).
+						SetUsesWithComment(
+							"actions/upload-artifact@"+config.UploadArtifactActionRef,
+							"version: "+config.UploadArtifactActionVersion,
+						).
 						SetWith("name", step.ArtifactStep.ArtifactName).
 						SetWith("path", step.ArtifactStep.ArtifactPath+"\n"+strings.Join(step.ArtifactStep.AdditionalArtifacts, "\n")).
 						SetWith("retention-days", "5")
@@ -198,7 +201,10 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 					steps = append(steps, saveArtifactsStep)
 				case "download":
 					downloadArtifactsStep := ghworkflow.Step("Download artifacts").
-						SetUses("actions/download-artifact@"+config.DownloadArtifactActionVersion).
+						SetUsesWithComment(
+							"actions/download-artifact@"+config.DownloadArtifactActionRef,
+							"version: "+config.DownloadArtifactActionVersion,
+						).
 						SetWith("name", step.ArtifactStep.ArtifactName).
 						SetWith("path", step.ArtifactStep.ArtifactPath)
 
@@ -233,7 +239,10 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 
 			if step.CheckoutStep != nil {
 				checkoutStep := ghworkflow.Step(step.Name).
-					SetUses("actions/checkout@"+config.CheckOutActionVersion).
+					SetUsesWithComment(
+						"actions/checkout@"+config.CheckOutActionRef,
+						"version: "+config.CheckOutActionVersion,
+					).
 					SetWith("repository", step.CheckoutStep.Repository).
 					SetWith("ref", step.CheckoutStep.Ref).
 					SetWith("path", step.CheckoutStep.Path)
@@ -245,7 +254,10 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 
 			if step.CoverageStep != nil {
 				coverageStep := ghworkflow.Step(step.Name).
-					SetUses("codecov/codecov-action@"+config.CodeCovActionVersion).
+					SetUsesWithComment(
+						"codecov/codecov-action@"+config.CodeCovActionRef,
+						"version: "+config.CodeCovActionVersion,
+					).
 					SetWith("files", strings.Join(step.CoverageStep.Files, ",")).
 					SetWith("token", "${{ secrets.CODECOV_TOKEN }}").
 					SetTimeoutMinutes(step.TimeoutMinutes)
@@ -257,7 +269,10 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 
 			if step.TerraformStep {
 				terraformStep := ghworkflow.Step(step.Name).
-					SetUses("hashicorp/setup-terraform@"+config.SetupTerraformActionVersion).
+					SetUsesWithComment(
+						"hashicorp/setup-terraform@"+config.SetupTerraformActionRef,
+						"version: "+config.SetupTerraformActionVersion,
+					).
 					SetWith("terraform_wrapper", "false")
 
 				jobDef.Steps = append(jobDef.Steps, terraformStep)
@@ -267,7 +282,10 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 
 			if step.RegistryLoginStep != nil {
 				registryLoginStep := ghworkflow.Step(step.Name).
-					SetUses("docker/login-action@"+config.LoginActionVersion).
+					SetUsesWithComment(
+						"docker/login-action@"+config.LoginActionRef,
+						"version: "+config.LoginActionVersion,
+					).
 					SetWith("registry", step.RegistryLoginStep.Registry)
 
 				if step.RegistryLoginStep.Registry == "ghcr.io" {
@@ -290,7 +308,10 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 				})
 
 				releaseStep := ghworkflow.Step(step.Name).
-					SetUses("softprops/action-gh-release@"+config.ReleaseActionVersion).
+					SetUsesWithComment(
+						"softprops/action-gh-release@"+config.ReleaseActionRef,
+						"version: "+config.ReleaseActionVersion,
+					).
 					SetWith("body_path", filepath.Join(step.ReleaseStep.BaseDirectory, step.ReleaseStep.ReleaseNotes)).
 					SetWith("draft", "true").
 					SetWith("files", strings.Join(artifacts, "\n"))
@@ -299,7 +320,10 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 					jobDef.Permissions["id-token"] = "write"
 
 					cosignStep := ghworkflow.Step("Install Cosign").
-						SetUses("sigstore/cosign-installer@" + config.CosignInstallActionVerson)
+						SetUsesWithComment(
+							"sigstore/cosign-installer@"+config.CosignInstallActionRef,
+							"version: "+config.CosignInstallActionVersion,
+						)
 
 					jobDef.Steps = append(jobDef.Steps, cosignStep)
 
@@ -411,7 +435,10 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 					o.AddStep(dep,
 						ghworkflow.Step("Retrieve PR labels").
 							SetID("retrieve-pr-labels").
-							SetUses("actions/github-script@"+config.GitHubScriptActionVersion).
+							SetUsesWithComment(
+								"actions/github-script@"+config.GitHubScriptActionRef,
+								"version: "+config.GitHubScriptActionVersion,
+							).
 							SetWith("retries", "3").
 							SetWith("script", strings.TrimPrefix(ghworkflow.IssueLabelRetrieveScript, "\n")),
 					)

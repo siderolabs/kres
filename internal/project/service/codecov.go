@@ -80,7 +80,10 @@ func (coverage *CodeCov) CompileGitHubWorkflow(output *ghworkflow.Output) error 
 			ghworkflow.GenericRunner,
 			nil,
 			ghworkflow.Step("coverage").
-				SetUses(fmt.Sprintf("codecov/codecov-action@%s", config.CodeCovActionVersion)).
+				SetUsesWithComment(
+					fmt.Sprintf("codecov/codecov-action@%s", config.CodeCovActionRef),
+					"version: "+config.CodeCovActionVersion,
+				).
 				SetWith("files",
 					strings.Join(
 						xslices.Map(paths,

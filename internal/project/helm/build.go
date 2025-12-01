@@ -64,14 +64,20 @@ func (helm *Build) CompileMakefile(output *makefile.Output) error {
 // CompileGitHubWorkflow implements ghworkflow.Compiler.
 func (helm *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	cosignInstallStep := ghworkflow.Step("Install cosign").
-		SetUses(fmt.Sprintf("sigstore/cosign-installer@%s", config.CosignInstallActionVerson))
+		SetUsesWithComment(
+			fmt.Sprintf("sigstore/cosign-installer@%s", config.CosignInstallActionRef),
+			"version: "+config.CosignInstallActionVersion,
+		)
 
 	if err := cosignInstallStep.SetConditions("except-pull-request"); err != nil {
 		return err
 	}
 
 	loginStep := ghworkflow.Step("Login to registry").
-		SetUses("docker/login-action@"+config.LoginActionVersion).
+		SetUsesWithComment(
+			"docker/login-action@"+config.LoginActionRef,
+			"version: "+config.LoginActionVersion,
+		).
 		SetWith("registry", "ghcr.io").
 		SetWith("username", "${{ github.repository_owner }}").
 		SetWith("password", "${{ secrets.GITHUB_TOKEN }}")
@@ -140,7 +146,10 @@ func (helm *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 					[]*ghworkflow.JobStep{
 						{
 							Name: "Install Helm",
-							Uses: fmt.Sprintf("azure/setup-helm@%s", config.HelmSetupActionVersion),
+							Uses: ghworkflow.ActionRef{
+								Image:   fmt.Sprintf("azure/setup-helm@%s", config.HelmSetupActionRef),
+								Comment: "version: " + config.HelmSetupActionVersion,
+							},
 						},
 						cosignInstallStep,
 						loginStep,

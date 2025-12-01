@@ -122,7 +122,10 @@ func (image *Image) CompileDrone(output *drone.Output) error {
 // CompileGitHubWorkflow implements ghworkflow.Compiler.
 func (image *Image) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	loginStep := ghworkflow.Step("Login to registry").
-		SetUses("docker/login-action@"+config.LoginActionVersion).
+		SetUsesWithComment(
+			"docker/login-action@"+config.LoginActionRef,
+			"version: "+config.LoginActionVersion,
+		).
 		SetWith("registry", "ghcr.io").
 		SetWith("username", "${{ github.repository_owner }}").
 		SetWith("password", "${{ secrets.GITHUB_TOKEN }}")

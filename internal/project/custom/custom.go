@@ -372,7 +372,10 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 				ghworkflow.DefaultJobName,
 				ghworkflow.Step("Retrieve PR labels").
 					SetID("retrieve-pr-labels").
-					SetUses("actions/github-script@"+config.GitHubScriptActionVersion).
+					SetUsesWithComment(
+						"actions/github-script@"+config.GitHubScriptActionRef,
+						"version: "+config.GitHubScriptActionVersion,
+					).
 					SetWith("retries", "3").
 					SetWith("script", strings.TrimPrefix(ghworkflow.IssueLabelRetrieveScript, "\n")),
 			)
@@ -387,7 +390,10 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 
 	if step.GHAction.Artifacts.Enabled {
 		saveArtifactsStep := ghworkflow.Step("save-artifacts").
-			SetUses("actions/upload-artifact@"+config.UploadArtifactActionVersion).
+			SetUsesWithComment(
+				"actions/upload-artifact@"+config.UploadArtifactActionRef,
+				"version: "+config.UploadArtifactActionVersion,
+			).
 			SetWith("name", "artifacts").
 			SetWith("path", step.meta.ArtifactsPath+"\n"+strings.Join(step.GHAction.Artifacts.ExtraPaths, "\n")).
 			SetWith("retention-days", "5")
@@ -409,7 +415,10 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 
 		for _, additionalArtifact := range step.GHAction.Artifacts.Additional {
 			artifactStep := ghworkflow.Step(fmt.Sprintf("save-%s-artifacts", additionalArtifact.Name)).
-				SetUses("actions/upload-artifact@"+config.UploadArtifactActionVersion).
+				SetUsesWithComment(
+					"actions/upload-artifact@"+config.UploadArtifactActionRef,
+					"version: "+config.UploadArtifactActionVersion,
+				).
 				SetWith("name", additionalArtifact.Name).
 				SetWith("path", strings.Join(additionalArtifact.Paths, "\n")).
 				SetWith("retention-days", "5")
@@ -461,7 +470,10 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		if step.GHAction.Artifacts.Enabled {
 			for _, additionalArtifact := range step.GHAction.Artifacts.Additional {
 				artifactStep := ghworkflow.Step(fmt.Sprintf("save-%s-artifacts", additionalArtifact.Name)).
-					SetUses("actions/upload-artifact@"+config.UploadArtifactActionVersion).
+					SetUsesWithComment(
+						"actions/upload-artifact@"+config.UploadArtifactActionRef,
+						"version: "+config.UploadArtifactActionVersion,
+					).
 					SetWith("name", additionalArtifact.Name+"-"+job.Name).
 					SetWith("path", strings.Join(additionalArtifact.Paths, "\n")).
 					SetWith("retention-days", "5")
@@ -487,7 +499,10 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		if job.Artifacts.Enabled {
 			for _, additionalArtifact := range job.Artifacts.Additional {
 				artifactStep := ghworkflow.Step(fmt.Sprintf("save-%s-artifacts", additionalArtifact.Name)).
-					SetUses("actions/upload-artifact@"+config.UploadArtifactActionVersion).
+					SetUsesWithComment(
+						"actions/upload-artifact@"+config.UploadArtifactActionRef,
+						"version: "+config.UploadArtifactActionVersion,
+					).
 					SetWith("name", additionalArtifact.Name+"-"+job.Name).
 					SetWith("path", strings.Join(additionalArtifact.Paths, "\n")).
 					SetWith("retention-days", "5")
@@ -538,7 +553,10 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 			steps = append(
 				steps,
 				ghworkflow.Step("Download artifacts").
-					SetUses("actions/download-artifact@"+config.DownloadArtifactActionVersion).
+					SetUsesWithComment(
+						"actions/download-artifact@"+config.DownloadArtifactActionRef,
+						"version: "+config.DownloadArtifactActionVersion,
+					).
 					SetWith("name", "artifacts").
 					SetWith("path", step.meta.ArtifactsPath),
 				ghworkflow.Step("Fix artifact permissions").

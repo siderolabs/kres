@@ -4,7 +4,11 @@
 
 package ghworkflow
 
-import "fmt"
+import (
+	"fmt"
+
+	"go.yaml.in/yaml/v4"
+)
 
 // Workflow represents Github Actions workflow.
 //
@@ -188,7 +192,7 @@ type JobStep struct {
 	Name            string            `yaml:"name"`
 	ID              string            `yaml:"id,omitempty"`
 	If              string            `yaml:"if,omitempty"`
-	Uses            string            `yaml:"uses,omitempty"`
+	Uses            ActionRef         `yaml:"uses,omitempty"`
 	With            map[string]string `yaml:"with,omitempty"`
 	Env             map[string]string `yaml:"env,omitempty"`
 	Run             string            `yaml:"run,omitempty"`
@@ -202,4 +206,24 @@ type SlackNotifyPayload struct {
 	IconEmoji   string `json:"icon_emoji"`
 	Username    string `json:"username"`
 	Attachments []any  `json:"attachments"`
+}
+
+// ActionRef represents a GitHub Action reference.
+type ActionRef struct {
+	Image   string
+	Comment string
+}
+
+// MarshalYAML implements yaml.Marshaler.
+func (a ActionRef) MarshalYAML() (any, error) {
+	n := yaml.Node{}
+	n.Kind = yaml.ScalarNode
+	n.Tag = "!!str"
+	n.Value = a.Image
+
+	if a.Comment != "" {
+		n.LineComment = a.Comment
+	}
+
+	return &n, nil
 }

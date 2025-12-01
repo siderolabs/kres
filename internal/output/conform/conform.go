@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"io"
 
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 
 	"github.com/siderolabs/kres/internal/output"
 	"github.com/siderolabs/kres/internal/output/conform/commitpolicy"

@@ -72,7 +72,10 @@ func (release *Release) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	steps := []*ghworkflow.JobStep{}
 
 	releaseStep := ghworkflow.Step("Release").
-		SetUses("softprops/action-gh-release@"+config.ReleaseActionVersion).
+		SetUsesWithComment(
+			"softprops/action-gh-release@"+config.ReleaseActionRef,
+			"version: "+config.ReleaseActionVersion,
+		).
 		SetWith("body_path", filepath.Join(release.meta.ArtifactsPath, "RELEASE_NOTES.md")).
 		SetWith("draft", "true")
 
@@ -96,7 +99,10 @@ func (release *Release) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 			output.AddJobPermissions(ghworkflow.DefaultJobName, "id-token", "write")
 
 			cosignStep := ghworkflow.Step("Install Cosign").
-				SetUses("sigstore/cosign-installer@" + config.CosignInstallActionVerson)
+				SetUsesWithComment(
+					"sigstore/cosign-installer@"+config.CosignInstallActionRef,
+					"version: "+config.CosignInstallActionVersion,
+				)
 
 			if err := cosignStep.SetConditions("only-on-tag"); err != nil {
 				return err

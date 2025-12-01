@@ -196,7 +196,10 @@ func (pkgfile *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	output.SetOptionsForPkgs()
 
 	loginStep := ghworkflow.Step("Login to registry").
-		SetUses("docker/login-action@"+config.LoginActionVersion).
+		SetUsesWithComment(
+			"docker/login-action@"+config.LoginActionRef,
+			"version: "+config.LoginActionVersion,
+		).
 		SetWith("registry", "ghcr.io").
 		SetWith("username", "${{ github.repository_owner }}").
 		SetWith("password", "${{ secrets.GITHUB_TOKEN }}")
@@ -258,7 +261,10 @@ func (pkgfile *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 			ghworkflow.DefaultJobName,
 			ghworkflow.Step("Retrieve PR labels").
 				SetID("retrieve-pr-labels").
-				SetUses("actions/github-script@"+config.GitHubScriptActionVersion).
+				SetUsesWithComment(
+					"actions/github-script@"+config.GitHubScriptActionRef,
+					"version: "+config.GitHubScriptActionVersion,
+				).
 				SetWith("retries", "3").
 				SetWith("script", strings.TrimPrefix(ghworkflow.IssueLabelRetrieveScript, "\n")),
 		)
