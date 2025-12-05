@@ -103,7 +103,7 @@ jobs:
           done
         continue-on-error: true
       - name: checkout
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # version: v6.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # version: v6.0.1
       - name: Unshallow
         run: |
           git fetch --prune --unshallow

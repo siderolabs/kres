@@ -16,12 +16,12 @@ const (
 
 	// BldrImageVersion is the version of bldr image.
 	// renovate: datasource=github-releases depName=siderolabs/bldr
-	BldrImageVersion = "v0.5.5"
+	BldrImageVersion = "v0.5.6"
 
 	// CheckOutActionVersion is the version of checkout github action.
 	// renovate: datasource=github-tags depName=actions/checkout
-	CheckOutActionVersion = "v6.0.0"
-	CheckOutActionRef     = "1af3b93b6815bc44a9784bd300feb67ff0d1eeb3"
+	CheckOutActionVersion = "v6.0.1"
+	CheckOutActionRef     = "8e8c483db84b4bee98b60c0593521ed34d9990e8"
 	// CodeCovActionVersion is the version of codecov github action.
 	// renovate: datasource=github-tags depName=codecov/codecov-action
 	CodeCovActionVersion = "v5.5.1"
@@ -35,7 +35,7 @@ const (
 	DeepCopyVersion = "v0.5.8"
 	// DindContainerImageVersion is the version of the dind container image.
 	// renovate: datasource=docker versioning=docker depName=docker
-	DindContainerImageVersion = "29.0-dind"
+	DindContainerImageVersion = "29.1-dind"
 	// DockerfileFrontendImageVersion is the version of the dockerfile frontend image.
 	// renovate: datasource=docker versioning=docker depName=docker/dockerfile-upstream
 	DockerfileFrontendImageVersion = "1.20.0-labs"
@@ -58,13 +58,13 @@ const (
 	GoMockVersion = "v0.6.0"
 	// GolangCIlintVersion is the version of golangci-lint.
 	// renovate: datasource=go depName=github.com/golangci/golangci-lint
-	GolangCIlintVersion = "v2.6.2"
+	GolangCIlintVersion = "v2.7.1"
 	// GolangContainerImageVersion is the default golang container image.
 	// renovate: datasource=docker versioning=docker depName=golang
 	GolangContainerImageVersion = "1.25-alpine"
 	// GoVersion is the version of Go.
 	// renovate: datasource=github-tags extractVersion=^go(?<version>.*)$ depName=golang/go
-	GoVersion = "1.25.4"
+	GoVersion = "1.25.5"
 	// GrpcGatewayVersion is the version of grpc-gateway.
 	// renovate: datasource=go depName=github.com/grpc-ecosystem/grpc-gateway
 	GrpcGatewayVersion = "v2.27.3"
@@ -84,7 +84,7 @@ const (
 	MarkdownLintCLIVersion = "0.46.0"
 	// BunContainerImageVersion is the default bun container image.
 	// renovate: datasource=docker versioning=docker depName=oven/bun
-	BunContainerImageVersion = "1.3.1-alpine"
+	BunContainerImageVersion = "1.3.3-alpine"
 	// NodeContainerImageVersion is the default node container image.
 	//
 	// NOTE: Check renovate.json for the rules on this before bumping, e.g., pinned versions.
@@ -133,8 +133,8 @@ const (
 	VTProtobufVersion = "v0.6.0"
 	// StaleActionVersion is the version of stale github action.
 	// renovate: datasource=github-tags depName=actions/stale
-	StaleActionVersion = "v10.1.0"
-	StaleActionRef     = "5f858e3efba33a5ca4407a664cc011ad407f2008"
+	StaleActionVersion = "v10.1.1"
+	StaleActionRef     = "997185467fa4f803885201cee163a9f38240193d"
 	// LockThreadsActionVersion is the version of lock threads github action.
 	// renovate: datasource=github-tags depName=dessant/lock-threads
 	LockThreadsActionVersion = "v5.0.1"
