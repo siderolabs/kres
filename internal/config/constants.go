@@ -107,7 +107,7 @@ const (
 	ReleaseActionRef     = "a06a81a03ee405af7f2048a818ed3f03bbf83c7b"
 	// SentencesPerLineVersion is the version of sentences-per-line.
 	// renovate: datasource=npm depName=sentences-per-line
-	SentencesPerLineVersion = "0.3.0"
+	SentencesPerLineVersion = "0.4.0"
 	// SetupBuildxActionVersion is the version of setup-buildx github action.
 	// renovate: datasource=github-tags depName=docker/setup-buildx-action
 	SetupBuildxActionVersion = "v3.11.1"
