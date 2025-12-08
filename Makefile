@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2025-12-05T15:27:03Z by kres 571923f-dirty.
+# Generated on 2025-12-08T15:47:06Z by kres 9fb16fe-dirty.
 
 # common variables
 
@@ -28,10 +28,12 @@ GOLANGCILINT_VERSION ?= v2.7.1
 GOFUMPT_VERSION ?= v0.9.2
 GO_VERSION ?= 1.25.5
 GO_BUILDFLAGS ?=
+GO_BUILDTAGS ?= ,
 GO_LDFLAGS ?=
 CGO_ENABLED ?= 0
 GOTOOLCHAIN ?= local
 GOEXPERIMENT ?=
+GO_BUILDFLAGS := $(GO_BUILDFLAGS) -tags $(GO_BUILDTAGS)
 TESTPKGS ?= ./...
 KRES_IMAGE ?= ghcr.io/siderolabs/kres:latest
 CONFORMANCE_IMAGE ?= ghcr.io/siderolabs/conform:latest
@@ -131,7 +133,7 @@ GO_LDFLAGS += -linkmode=external -extldflags '-static'
 endif
 
 ifneq (, $(filter $(WITH_DEBUG), t true TRUE y yes 1))
-GO_BUILDFLAGS += -tags sidero.debug
+GO_BUILDTAGS := $(GO_BUILDTAGS)sidero.debug,
 else
 GO_LDFLAGS += -s
 endif

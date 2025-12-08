@@ -30,7 +30,7 @@ type VariableGroup struct {
 // Variable appends variable to the group.
 func (group *VariableGroup) Variable(variable *Variable) *VariableGroup {
 	if slices.ContainsFunc(group.variables, func(item *Variable) bool {
-		return item.name == variable.name
+		return item.name == variable.name && item.operator == variable.operator
 	}) {
 		return group
 	}

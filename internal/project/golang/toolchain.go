@@ -48,6 +48,10 @@ type Toolchain struct { //nolint:govet
 	Docker struct {
 		ExtraArgs []string `yaml:"extraArgs"`
 	} `yaml:"docker"`
+	// BuildTags are additional build tags to be optionally enabled:
+	// - Makefile variable `WITH_$TAG`
+	// - If variable is set, the build tag is passed to go build via `-tags` flag
+	BuildTags []string `yaml:"buildTags"`
 }
 
 // NewToolchain builds Toolchain with default values.
@@ -136,6 +140,7 @@ func (toolchain *Toolchain) CompileMakefile(output *makefile.Output) error {
 
 	common := output.VariableGroup(makefile.VariableGroupCommon).
 		Variable(makefile.OverridableVariable("GO_BUILDFLAGS", "")).
+		Variable(makefile.OverridableVariable("GO_BUILDTAGS", ",")).
 		Variable(makefile.OverridableVariable("GO_LDFLAGS", "")).
 		Variable(makefile.OverridableVariable("CGO_ENABLED", "0")).
 		Variable(makefile.OverridableVariable("GOTOOLCHAIN", "local")).
@@ -155,11 +160,23 @@ func (toolchain *Toolchain) CompileMakefile(output *makefile.Output) error {
 
 	output.IfTrueCondition("WITH_DEBUG").
 		Then(
-			makefile.AppendVariable("GO_BUILDFLAGS", "-tags sidero.debug"),
+			makefile.SimpleVariable("GO_BUILDTAGS", "$(GO_BUILDTAGS)sidero.debug,"),
 		).
 		Else(
 			makefile.AppendVariable("GO_LDFLAGS", "-s"),
 		)
+
+	for _, tag := range toolchain.BuildTags {
+		conditionVar := "WITH_" + strings.ToUpper(tag)
+		output.IfTrueCondition(conditionVar).
+			Then(
+				makefile.SimpleVariable("GO_BUILDTAGS", "$(GO_BUILDTAGS)"+tag+","),
+			)
+	}
+
+	common.Variable(
+		makefile.AppendVariable("GO_BUILDFLAGS", "-tags $(GO_BUILDTAGS)"),
+	)
 
 	output.Target("base").
 		Depends(dag.GatherMatchingInputNames(toolchain, dag.Implements[dockerfile.Generator]())...).
