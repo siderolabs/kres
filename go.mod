@@ -11,8 +11,8 @@ require (
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1
 	go.yaml.in/yaml/v4 v4.0.0-rc.3
-	golang.org/x/mod v0.30.0
-	golang.org/x/oauth2 v0.33.0
+	golang.org/x/mod v0.31.0
+	golang.org/x/oauth2 v0.34.0
 )
 
 require (
