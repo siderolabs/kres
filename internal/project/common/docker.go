@@ -139,8 +139,14 @@ func (docker *Docker) CompileMakefile(output *makefile.Output) error {
 		Variable(makefile.OverridableVariable("PROGRESS", "auto")).
 		Variable(makefile.OverridableVariable("PUSH", "false")).
 		Variable(makefile.OverridableVariable("CI_ARGS", "")).
+		Variable(makefile.OverridableVariable("WITH_BUILD_DEBUG", "")).
 		Variable(makefile.OverridableVariable("BUILDKIT_MULTI_PLATFORM", "")).
 		Variable(buildArgs)
+
+	output.IfTrueCondition("WITH_BUILD_DEBUG").
+		Then(
+			makefile.SimpleVariable("BUILD", "BUILDX_EXPERIMENTAL=1 docker buildx debug --invoke /bin/sh --on error build"),
+		)
 
 	output.Target("target-%").
 		Description("Builds the specified target defined in the Dockerfile. The build result will only remain in the build cache.").
