@@ -45,6 +45,7 @@ type Image struct {
 	meta *meta.Options
 
 	ExtraEnvironment map[string]string `yaml:"extraEnvironment"`
+	Environment      map[string]string `yaml:"environment"`
 	BaseImage        string            `yaml:"baseImage"`
 	AdditionalImages []string          `yaml:"additionalImages"`
 	CopyFrom         []struct {
@@ -264,6 +265,10 @@ func (image *Image) CompileDockerfile(output *dockerfile.Output) error {
 
 	if image.meta.GitHubOrganization != "" && image.meta.GitHubRepository != "" {
 		stage.Step(step.Label(ImageSourceLabel, fmt.Sprintf("https://github.com/%s/%s", image.meta.GitHubOrganization, image.meta.GitHubRepository)))
+	}
+
+	for k, v := range image.Environment {
+		stage.Step(step.Env(k, v))
 	}
 
 	stage.Step(step.Entrypoint(image.Entrypoint, image.EntrypointArgs...))
