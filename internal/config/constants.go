@@ -67,7 +67,7 @@ const (
 	GoVersion = "1.25.5"
 	// GrpcGatewayVersion is the version of grpc-gateway.
 	// renovate: datasource=go depName=github.com/grpc-ecosystem/grpc-gateway
-	GrpcGatewayVersion = "v2.27.3"
+	GrpcGatewayVersion = "v2.27.4"
 	// GrpcGoVersion is the version of grpc.
 	// renovate: datasource=go depName=google.golang.org/grpc/cmd/protoc-gen-go-grpc
 	GrpcGoVersion = "v1.6.0"
@@ -84,7 +84,7 @@ const (
 	MarkdownLintCLIVersion = "0.47.0"
 	// BunContainerImageVersion is the default bun container image.
 	// renovate: datasource=docker versioning=docker depName=oven/bun
-	BunContainerImageVersion = "1.3.4-alpine"
+	BunContainerImageVersion = "1.3.5-alpine"
 	// NodeContainerImageVersion is the default node container image.
 	//
 	// NOTE: Check renovate.json for the rules on this before bumping, e.g., pinned versions.
@@ -107,11 +107,11 @@ const (
 	ReleaseActionRef     = "a06a81a03ee405af7f2048a818ed3f03bbf83c7b"
 	// SentencesPerLineVersion is the version of sentences-per-line.
 	// renovate: datasource=npm depName=sentences-per-line
-	SentencesPerLineVersion = "0.3.0"
+	SentencesPerLineVersion = "0.5.0"
 	// SetupBuildxActionVersion is the version of setup-buildx github action.
 	// renovate: datasource=github-tags depName=docker/setup-buildx-action
-	SetupBuildxActionVersion = "v3.11.1"
-	SetupBuildxActionRef     = "e468171a9de216ec08956ac3ada2f0791b6bd435"
+	SetupBuildxActionVersion = "v3.12.0"
+	SetupBuildxActionRef     = "8d2750c68a42422c14e847fe6c8ac0403b4cbd6f"
 	// SetupTerraformActionVersion is the version of setup terraform github action.
 	// renovate: datasource=github-tags depName=hashicorp/setup-terraform
 	SetupTerraformActionVersion = "v3.1.2"

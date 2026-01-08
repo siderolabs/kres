@@ -57,7 +57,7 @@ func (lint *Lint) CompileDockerfile(output *dockerfile.Output) error {
 	}
 
 	stage.
-		Step(step.Script(`bunx markdownlint --ignore "CHANGELOG.md" --ignore "**/node_modules/**" --ignore '**/hack/chglog/**' --rules sentences-per-line .`))
+		Step(step.Script(`bunx markdownlint --ignore "CHANGELOG.md" --ignore "**/node_modules/**" --ignore '**/hack/chglog/**' --rules markdownlint-sentences-per-line .`))
 
 	return nil
 }
