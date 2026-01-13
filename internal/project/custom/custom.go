@@ -100,6 +100,7 @@ type Step struct {
 			TriggerLabels       []string          `yaml:"triggerLabels"`
 			Artifacts           Artifacts         `yaml:"artifacts"`
 			NeedsOverride       []string          `yaml:"needsOverride"`
+			Condition           string            `yaml:"condition"`
 		} `yaml:"jobs"`
 		Artifacts   Artifacts `yaml:"artifacts"`
 		Enabled     bool      `yaml:"enabled"`
@@ -464,6 +465,10 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		conditions := xslices.Map(job.TriggerLabels, func(label string) string {
 			return fmt.Sprintf("contains(fromJSON(needs.default.outputs.labels), '%s')", label)
 		})
+
+		if job.Condition != "" {
+			conditions = append(conditions, job.Condition)
+		}
 
 		var artifactSteps []*ghworkflow.JobStep
 
