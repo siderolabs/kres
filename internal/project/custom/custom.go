@@ -117,6 +117,8 @@ type Step struct {
 	} `yaml:"ghaction"`
 
 	SudoInCI bool `yaml:"sudoInCI"`
+
+	MakeTarget string `yaml:"makeTarget"`
 }
 
 type Artifacts struct { //nolint:govet
@@ -130,6 +132,7 @@ type Artifacts struct { //nolint:govet
 	} `yaml:"additional"`
 	Enabled              bool `yaml:"enabled"`
 	SkipArtifactDownload bool `yaml:"skipArtifactDownload"`
+	SkipDefaultArtifacts bool `yaml:"skipDefaultArtifacts"`
 
 	ContinueOnError bool   `yaml:"continueOnError"`
 	RetentionDays   string `yaml:"retentionDays"`
@@ -348,7 +351,13 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		return nil
 	}
 
-	workflowStep := ghworkflow.Step(step.Name()).SetMakeStep(step.Name())
+	workflowStep := ghworkflow.Step(step.Name())
+	if !step.Makefile.Enabled && step.MakeTarget != "" {
+		workflowStep.SetMakeStep(step.MakeTarget)
+	} else {
+		workflowStep.SetMakeStep(step.Name())
+	}
+
 	if step.SudoInCI {
 		workflowStep.SetSudo()
 	}
@@ -390,29 +399,31 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	additionalArtifactsSteps := []*ghworkflow.JobStep{}
 
 	if step.GHAction.Artifacts.Enabled {
-		saveArtifactsStep := ghworkflow.Step("save-artifacts").
-			SetUsesWithComment(
-				"actions/upload-artifact@"+config.UploadArtifactActionRef,
-				"version: "+config.UploadArtifactActionVersion,
-			).
-			SetWith("name", "artifacts").
-			SetWith("path", step.meta.ArtifactsPath+"\n"+strings.Join(step.GHAction.Artifacts.ExtraPaths, "\n")).
-			SetWith("retention-days", "5")
+		if !step.GHAction.Artifacts.SkipDefaultArtifacts {
+			saveArtifactsStep := ghworkflow.Step("save-artifacts").
+				SetUsesWithComment(
+					"actions/upload-artifact@"+config.UploadArtifactActionRef,
+					"version: "+config.UploadArtifactActionVersion,
+				).
+				SetWith("name", "artifacts").
+				SetWith("path", step.meta.ArtifactsPath+"\n"+strings.Join(step.GHAction.Artifacts.ExtraPaths, "\n")).
+				SetWith("retention-days", "5")
 
-		if retentionDays := step.GHAction.Artifacts.RetentionDays; retentionDays != "" {
-			saveArtifactsStep.SetWith("retention-days", retentionDays)
+			if retentionDays := step.GHAction.Artifacts.RetentionDays; retentionDays != "" {
+				saveArtifactsStep.SetWith("retention-days", retentionDays)
+			}
+
+			if step.GHAction.Artifacts.ContinueOnError {
+				saveArtifactsStep.SetContinueOnError()
+			}
+
+			steps = append(
+				steps,
+				ghworkflow.Step("Generate executable list").
+					SetCommand(fmt.Sprintf("find %s -type f -executable > %s/executable-artifacts", step.meta.ArtifactsPath, step.meta.ArtifactsPath)),
+				saveArtifactsStep,
+			)
 		}
-
-		if step.GHAction.Artifacts.ContinueOnError {
-			saveArtifactsStep.SetContinueOnError()
-		}
-
-		steps = append(
-			steps,
-			ghworkflow.Step("Generate executable list").
-				SetCommand(fmt.Sprintf("find %s -type f -executable > %s/executable-artifacts", step.meta.ArtifactsPath, step.meta.ArtifactsPath)),
-			saveArtifactsStep,
-		)
 
 		for _, additionalArtifact := range step.GHAction.Artifacts.Additional {
 			artifactStep := ghworkflow.Step(fmt.Sprintf("save-%s-artifacts", additionalArtifact.Name)).
@@ -569,7 +580,12 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 			)
 		}
 
-		workflowStep := ghworkflow.Step(step.Name()).SetMakeStep(step.Name())
+		workflowStep := ghworkflow.Step(step.Name())
+		if !step.Makefile.Enabled && step.MakeTarget != "" {
+			workflowStep.SetMakeStep(step.MakeTarget)
+		} else {
+			workflowStep.SetMakeStep(step.Name())
+		}
 
 		if step.SudoInCI {
 			workflowStep.SetSudo()
