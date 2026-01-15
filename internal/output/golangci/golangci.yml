@@ -5,6 +5,7 @@ run:
   modules-download-mode: readonly
   issues-exit-code: 1
   tests: true
+  build-tags: {{ .BuildTags }}
 
 # output configuration options
 output:

@@ -26,6 +26,8 @@ type GolangciLint struct {
 
 	Version     string
 	projectPath string
+
+	BuildTags []string `yaml:"buildTags"`
 }
 
 // NewGolangciLint builds golangci-lint node.
@@ -46,6 +48,7 @@ func NewGolangciLint(meta *meta.Options, projectPath string) *GolangciLint {
 func (lint *GolangciLint) CompileGolangci(output *golangci.Output) error {
 	output.Enable()
 	output.SetDepguardExtraRules(lint.DepguardExtraRules)
+	output.SetBuildTags(lint.BuildTags)
 	output.NewFile(lint.projectPath)
 
 	return nil

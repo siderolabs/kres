@@ -7,6 +7,7 @@ package golangci
 
 import (
 	_ "embed"
+	"encoding/json"
 	"io"
 	"path/filepath"
 	"strings"
@@ -30,6 +31,7 @@ type Output struct {
 	output.FileAdapter
 
 	depguardExtraRules map[string]any
+	buildTags          []string
 
 	files   []file
 	enabled bool
@@ -61,6 +63,11 @@ func (o *Output) Enable() {
 // SetDepguardExtraRules sets extra rules for depguard linter.
 func (o *Output) SetDepguardExtraRules(rules map[string]any) {
 	o.depguardExtraRules = rules
+}
+
+// SetBuildTags sets build tags for golangci-lint.
+func (o *Output) SetBuildTags(tags []string) {
+	o.buildTags = tags
 }
 
 // NewFile sets project path.
@@ -108,6 +115,7 @@ func (o *Output) config(w io.Writer) error {
 
 type golangciLintTemplateData struct {
 	DepguardExtraRules string
+	BuildTags          string
 }
 
 func (o *Output) buildTemplateData() (golangciLintTemplateData, error) {
@@ -136,8 +144,18 @@ func (o *Output) buildTemplateData() (golangciLintTemplateData, error) {
 		depGuardExtraRules = indented.String()
 	}
 
+	if o.buildTags == nil {
+		o.buildTags = []string{}
+	}
+
+	buildTags, err := json.Marshal(o.buildTags)
+	if err != nil {
+		return golangciLintTemplateData{}, err
+	}
+
 	return golangciLintTemplateData{
 		DepguardExtraRules: depGuardExtraRules,
+		BuildTags:          string(buildTags),
 	}, nil
 }
 
