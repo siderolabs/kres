@@ -613,6 +613,7 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 			output.AddSlackNotify(workflowName)
 			output.AddSlackNotifyForFailure(workflowName)
 
+			//nolint:prealloc
 			steps := []*ghworkflow.JobStep{workflowStep}
 			steps = append(steps, additionalArtifactsSteps...)
 

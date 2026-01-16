@@ -148,6 +148,7 @@ func (proto *Protobuf) CompileDockerfile(output *dockerfile.Output) error {
 		dir := filepath.Join(rootDir, destRoot)
 		source := filepath.Join(dir, spec.SubDirectory, filepath.Base(spec.Source))
 
+		//nolint:prealloc
 		args := []string{
 			"-I" + dir,
 		}
