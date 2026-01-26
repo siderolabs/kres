@@ -75,6 +75,9 @@ const (
 	// renovate: datasource=github-tags depName=Azure/setup-helm
 	HelmSetupActionVersion = "v4.3.1"
 	HelmSetupActionRef     = "1a275c3b69536ee54be43f2070a358922e12c8d4"
+	// HelmUnitTestVersion is the version of helm unit test plugin.
+	// renovate: datasource=github-tags depName=helm-unittest/helm-unittest
+	HelmUnitTestVersion = "v1.0.3"
 	// LoginActionVersion is the version of login github action.
 	// renovate: datasource=github-tags depName=docker/login-action
 	LoginActionVersion = "v3.6.0"

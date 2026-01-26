@@ -43,8 +43,19 @@ type CI struct {
 
 // Helm defines helm settings.
 type Helm struct {
-	ChartDir string `yaml:"chartDir"`
-	Enabled  bool   `yaml:"enabled"`
+	ChartDir string       `yaml:"chartDir"`
+	E2EDir   string       `yaml:"e2eDir"`
+	Template HelmTemplate `yaml:"template"`
+	Enabled  bool         `yaml:"enabled"`
+}
+
+// HelmTemplate defines helm template settings.
+type HelmTemplate struct {
+	Set        []string `yaml:"set"`
+	SetFile    []string `yaml:"setFile"`
+	SetJSON    []string `yaml:"setJSON"`
+	SetLiteral []string `yaml:"setLiteral"`
+	SetString  []string `yaml:"setString"`
 }
 
 // IntegrationTests defines integration tests builder to be generated.

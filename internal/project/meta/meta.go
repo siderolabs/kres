@@ -95,6 +95,12 @@ type Options struct { //nolint:govet
 	// HelmChartDir is the path to helm chart directory.
 	HelmChartDir string
 
+	// HelmE2EDir is the path to helm e2e tests directory.
+	HelmE2EDir string
+
+	// HelmTemplateFlags are the default flags to pass to `helm template` command.
+	HelmTemplateFlags []string
+
 	// SkipStaleWorkflow indicates that stale workflow should not be generated.
 	SkipStaleWorkflow bool
 

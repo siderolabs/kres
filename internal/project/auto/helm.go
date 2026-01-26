@@ -21,21 +21,51 @@ func (builder *builder) DetectHelm() (bool, error) {
 		return false, err
 	}
 
-	if helm.Enabled {
-		if helm.ChartDir == "" {
-			return false, fmt.Errorf("chart directory is not set")
-		}
-
-		if _, err := os.Stat(filepath.Join(builder.rootPath, helm.ChartDir, "Chart.yaml")); err != nil {
-			return false, fmt.Errorf("chart.yaml not found in %s: %w", helm.ChartDir, err)
-		}
-
-		builder.meta.HelmChartDir = helm.ChartDir
-
-		return true, nil
+	if !helm.Enabled {
+		return false, nil
 	}
 
-	return false, nil
+	if helm.ChartDir == "" {
+		return false, fmt.Errorf("chart directory is not set")
+	}
+
+	if _, err := os.Stat(filepath.Join(builder.rootPath, helm.ChartDir, "Chart.yaml")); err != nil {
+		return false, fmt.Errorf("chart.yaml not found in %s: %w", helm.ChartDir, err)
+	}
+
+	builder.meta.HelmChartDir = helm.ChartDir
+
+	if helm.E2EDir == "" {
+		helm.E2EDir = filepath.Join(filepath.Dir(helm.ChartDir), "e2e")
+	}
+
+	builder.meta.HelmE2EDir = helm.E2EDir
+
+	var flags []string
+
+	for _, flag := range helm.Template.Set {
+		flags = append(flags, "--set", flag)
+	}
+
+	for _, flag := range helm.Template.SetFile {
+		flags = append(flags, "--set-file", flag)
+	}
+
+	for _, flag := range helm.Template.SetJSON {
+		flags = append(flags, "--set-json", flag)
+	}
+
+	for _, flag := range helm.Template.SetLiteral {
+		flags = append(flags, "--set-literal", flag)
+	}
+
+	for _, flag := range helm.Template.SetString {
+		flags = append(flags, "--set-string", flag)
+	}
+
+	builder.meta.HelmTemplateFlags = flags
+
+	return true, nil
 }
 
 func (builder *builder) BuildHelm() error {

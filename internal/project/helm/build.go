@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"slices"
+	"strings"
 
 	"github.com/siderolabs/kres/internal/config"
 	"github.com/siderolabs/kres/internal/dag"
@@ -58,6 +59,31 @@ func (helm *Build) CompileMakefile(output *makefile.Output) error {
 		Depends("helm").
 		Script(helmReleaseScript)
 
+	output.Target("chart-lint").
+		Description("Lint helm chart").
+		Phony().
+		Script(fmt.Sprintf("@helm lint %s", helm.meta.HelmChartDir))
+
+	output.Target("helm-plugin-install").
+		Description("Install helm plugins").
+		Phony().
+		Script(fmt.Sprintf("-helm plugin install https://github.com/helm-unittest/helm-unittest.git --verify=false --version=%s", config.HelmUnitTestVersion))
+
+	output.Target("kuttl-plugin-install").
+		Description("Install kubectl kuttl plugin").
+		Phony().
+		Script("kubectl krew install kuttl")
+
+	output.Target("chart-e2e").
+		Description("Run helm chart e2e tests").
+		Phony().
+		Script(fmt.Sprintf("export KUBECONFIG=$(shell pwd)/$(ARTIFACTS)/kubeconfig && cd %s && kubectl kuttl test", helm.meta.HelmE2EDir))
+
+	output.Target("chart-unittest").
+		Description("Run helm chart unit tests").
+		Phony().
+		Script(fmt.Sprintf("@helm unittest %s --output-type junit --output-file $(ARTIFACTS)/helm-unittest-report.xml", helm.meta.HelmChartDir))
+
 	return nil
 }
 
@@ -94,7 +120,26 @@ func (helm *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	}
 
 	templateStep := ghworkflow.Step("Template chart").
-		SetCommand(fmt.Sprintf("helm template -f %s %s %s", filepath.Join(helm.meta.HelmChartDir, "values.yaml"), filepath.Base(helm.meta.HelmChartDir), helm.meta.HelmChartDir))
+		SetCommand(fmt.Sprintf("helm template -f %s %s %s %s",
+			filepath.Join(helm.meta.HelmChartDir, "values.yaml"),
+			strings.Join(helm.meta.HelmTemplateFlags, " "),
+			filepath.Base(helm.meta.HelmChartDir),
+			helm.meta.HelmChartDir,
+		))
+
+	if err := templateStep.SetConditions("on-pull-request"); err != nil {
+		return err
+	}
+
+	unittestPluginInstallStep := ghworkflow.Step("Install unit test plugin").
+		SetMakeStep("helm-plugin-install")
+
+	if err := unittestPluginInstallStep.SetConditions("on-pull-request"); err != nil {
+		return err
+	}
+
+	unittestStep := ghworkflow.Step("Unit test chart").
+		SetMakeStep("chart-unittest")
 
 	if err := templateStep.SetConditions("on-pull-request"); err != nil {
 		return err
@@ -155,6 +200,8 @@ func (helm *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 						loginStep,
 						lintStep,
 						templateStep,
+						unittestPluginInstallStep,
+						unittestStep,
 						helmLoginStep,
 						helmReleaseStep,
 					},
