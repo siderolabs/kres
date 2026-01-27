@@ -29,6 +29,10 @@ type Build struct {
 
 // NewBuild initializes Build.
 func NewBuild(meta *meta.Options) *Build {
+	meta.BuildArgs.Add(
+		"HELMDOCS_VERSION",
+	)
+
 	return &Build{
 		meta: meta,
 
@@ -38,9 +42,22 @@ func NewBuild(meta *meta.Options) *Build {
 
 // CompileDockerfile implements dockerfile.Compiler.
 func (helm *Build) CompileDockerfile(output *dockerfile.Output) error {
+	output.Stage("helm-toolchain").
+		Description("helm toolchain").
+		From("base").
+		Step(step.Arg("HELMDOCS_VERSION")).
+		Step(step.Script(
+			fmt.Sprintf(
+				"go install github.com/norwoodj/helm-docs/cmd/helm-docs@${HELMDOCS_VERSION} \\\n"+
+					"\t&& mv /go/bin/helm-docs %s/helm-docs", helm.meta.BinPath),
+		).
+			MountCache(filepath.Join(helm.meta.CachePath, "go-build"), helm.meta.GitHubRepository).
+			MountCache(filepath.Join(helm.meta.GoPath, "pkg"), helm.meta.GitHubRepository),
+		)
+
 	output.Stage("helm-docs-run").
 		Description("runs helm-docs").
-		From("base").
+		From("helm-toolchain").
 		Step(step.Copy(helm.meta.HelmChartDir, filepath.Join("/src", helm.meta.HelmChartDir))).
 		Step(step.Run("helm-docs", "--badge-style=flat", "--template-files=README.md.gotpl").
 			MountCache(filepath.Join(helm.meta.CachePath, "go-build"), helm.meta.GitHubRepository).

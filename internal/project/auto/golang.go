@@ -18,7 +18,6 @@ import (
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/project/common"
 	"github.com/siderolabs/kres/internal/project/golang"
-	"github.com/siderolabs/kres/internal/project/helm"
 	"github.com/siderolabs/kres/internal/project/meta"
 	"github.com/siderolabs/kres/internal/project/service"
 	"github.com/siderolabs/kres/internal/project/wrap"
@@ -236,10 +235,7 @@ func (builder *builder) BuildGolang() error {
 	// add common linter tools
 	linters := golang.NewLinters(builder.meta)
 
-	// add helm-docs tool
-	helmDocs := helm.NewHelmDocs(builder.meta)
-
-	toolchain.AddInput(generate, deepcopy, linters, helmDocs)
+	toolchain.AddInput(generate, deepcopy, linters)
 
 	builder.lintInputs = append(builder.lintInputs, toolchain, linters)
 
