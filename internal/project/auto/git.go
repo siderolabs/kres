@@ -106,7 +106,11 @@ func (builder *builder) DetectGit() (bool, error) {
 
 // BuildGit builds steps for Git repository.
 func (builder *builder) BuildGit() error {
-	builder.commonInputs = append(builder.commonInputs, common.NewRepository(builder.meta))
+	builder.commonInputs = append(
+		builder.commonInputs,
+		common.NewRepository(builder.meta),
+		common.NewCheckDirty(builder.meta),
+	)
 
 	return nil
 }

@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2026-01-16T08:46:36Z by kres 6f7b97a-dirty.
+# Generated on 2026-01-27T14:17:50Z by kres f189649-dirty.
 
 # common variables
 
@@ -170,6 +170,9 @@ local-%:  ## Builds the specified target defined in the Dockerfile using the loc
 	      rmdir "$$DEST/$$directory/"; \
 	    fi; \
 	  done'
+
+check-dirty:
+	@if test -n "`git status --porcelain`"; then echo "Source tree is dirty"; git status; git diff; exit 1 ; fi
 
 generate:  ## Generate .proto definitions.
 	@$(MAKE) local-$@ DEST=./

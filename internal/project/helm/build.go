@@ -13,6 +13,9 @@ import (
 
 	"github.com/siderolabs/kres/internal/config"
 	"github.com/siderolabs/kres/internal/dag"
+	"github.com/siderolabs/kres/internal/output/dockerfile"
+	"github.com/siderolabs/kres/internal/output/dockerfile/step"
+	"github.com/siderolabs/kres/internal/output/dockerignore"
 	"github.com/siderolabs/kres/internal/output/ghworkflow"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/project/meta"
@@ -33,6 +36,32 @@ func NewBuild(meta *meta.Options) *Build {
 	}
 }
 
+// CompileDockerfile implements dockerfile.Compiler.
+func (helm *Build) CompileDockerfile(output *dockerfile.Output) error {
+	output.Stage("helm-docs-run").
+		Description("runs helm-docs").
+		From("base").
+		Step(step.Copy(helm.meta.HelmChartDir, filepath.Join("/src", helm.meta.HelmChartDir))).
+		Step(step.Run("helm-docs", "--badge-style=flat", "--template-files=README.md.gotpl").
+			MountCache(filepath.Join(helm.meta.CachePath, "go-build"), helm.meta.GitHubRepository).
+			MountCache(filepath.Join(helm.meta.CachePath, "helm-docs"), helm.meta.GitHubRepository, step.CacheLocked))
+
+	output.Stage("helm-docs").
+		Description("clean helm-docs output").
+		From("scratch").
+		Step(step.Copy(filepath.Join("/src", helm.meta.HelmChartDir), helm.meta.HelmChartDir).From("helm-docs-run"))
+
+	return nil
+}
+
+// CompileDockerignore implements dockerignore.Compiler.
+func (helm *Build) CompileDockerignore(output *dockerignore.Output) error {
+	output.
+		AllowLocalPath(helm.meta.HelmChartDir)
+
+	return nil
+}
+
 // CompileMakefile implements makefile.Compiler.
 func (helm *Build) CompileMakefile(output *makefile.Output) error {
 	helmReleaseScript := fmt.Sprintf(`@helm push $(ARTIFACTS)/%s-*.tgz oci://$(HELMREPO) 2>&1 | tee $(ARTIFACTS)/.digest
@@ -41,7 +70,8 @@ func (helm *Build) CompileMakefile(output *makefile.Output) error {
 
 	output.VariableGroup(makefile.VariableGroupCommon).
 		Variable(makefile.OverridableVariable("HELMREPO", "$(REGISTRY)/$(USERNAME)/charts")).
-		Variable(makefile.OverridableVariable("COSIGN_ARGS", ""))
+		Variable(makefile.OverridableVariable("COSIGN_ARGS", "")).
+		Variable(makefile.OverridableVariable("HELMDOCS_VERSION", config.HelmDocsVersion))
 
 	generateTarget := output.GetTarget("generate")
 	if generateTarget != nil {
@@ -67,7 +97,10 @@ func (helm *Build) CompileMakefile(output *makefile.Output) error {
 	output.Target("helm-plugin-install").
 		Description("Install helm plugins").
 		Phony().
-		Script(fmt.Sprintf("-helm plugin install https://github.com/helm-unittest/helm-unittest.git --verify=false --version=%s", config.HelmUnitTestVersion))
+		Script(
+			fmt.Sprintf("-helm plugin install https://github.com/helm-unittest/helm-unittest.git --verify=false --version=%s", config.HelmUnitTestVersion),
+			fmt.Sprintf("-helm plugin install https://github.com/losisin/helm-values-schema-json.git --verify=false --version=%s", config.HelmValuesSchemaJSONVersion),
+		)
 
 	output.Target("kuttl-plugin-install").
 		Description("Install kubectl kuttl plugin").
@@ -83,6 +116,14 @@ func (helm *Build) CompileMakefile(output *makefile.Output) error {
 		Description("Run helm chart unit tests").
 		Phony().
 		Script(fmt.Sprintf("@helm unittest %s --output-type junit --output-file $(ARTIFACTS)/helm-unittest-report.xml", helm.meta.HelmChartDir))
+
+	output.Target("chart-gen-schema").
+		Description("Generate helm chart schema").
+		Phony().
+		Script(fmt.Sprintf("@helm schema --use-helm-docs --draft=7 --indent=2 --values=%s/values.yaml --output=%s/values.schema.json", helm.meta.HelmChartDir, helm.meta.HelmChartDir))
+
+	output.Target("helm-docs").Description("Runs helm-docs and generates chart documentation").
+		Script("@$(MAKE) local-$@ DEST=.")
 
 	return nil
 }
@@ -145,6 +186,27 @@ func (helm *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		return err
 	}
 
+	schemaStep := ghworkflow.Step("Generate schema").
+		SetMakeStep("chart-gen-schema")
+
+	if err := schemaStep.SetConditions("on-pull-request"); err != nil {
+		return err
+	}
+
+	docsStep := ghworkflow.Step("Generate docs").
+		SetMakeStep("helm-docs")
+
+	if err := docsStep.SetConditions("on-pull-request"); err != nil {
+		return err
+	}
+
+	checkDirtyStep := ghworkflow.Step("Check dirty").
+		SetMakeStep("check-dirty")
+
+	if err := checkDirtyStep.SetConditions("on-pull-request"); err != nil {
+		return err
+	}
+
 	helmLoginStep := ghworkflow.Step("helm login").
 		SetEnv("HELM_CONFIG_HOME", "/var/tmp/.config/helm").
 		SetCommand(fmt.Sprintf("helm registry login -u %s -p ${{ secrets.GITHUB_TOKEN }} ghcr.io", "${{ github.repository_owner }}"))
@@ -202,6 +264,9 @@ func (helm *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 						templateStep,
 						unittestPluginInstallStep,
 						unittestStep,
+						schemaStep,
+						docsStep,
+						checkDirtyStep,
 						helmLoginStep,
 						helmReleaseStep,
 					},

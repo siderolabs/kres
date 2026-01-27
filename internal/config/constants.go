@@ -78,6 +78,12 @@ const (
 	// HelmUnitTestVersion is the version of helm unit test plugin.
 	// renovate: datasource=github-tags depName=helm-unittest/helm-unittest
 	HelmUnitTestVersion = "v1.0.3"
+	// HelmValuesSchemaJSONVersion is the version of helm values-schema-json plugin.
+	// renovate: datasource=github-tags depName=losisin/helm-values-schema-json
+	HelmValuesSchemaJSONVersion = "v2.3.1"
+	// HelmDocsVersion is the version of helm-docs tool.
+	// renovate: datasource=github-tags depName=norwoodj/helm-docs
+	HelmDocsVersion = "v1.14.2"
 	// LoginActionVersion is the version of login github action.
 	// renovate: datasource=github-tags depName=docker/login-action
 	LoginActionVersion = "v3.6.0"
