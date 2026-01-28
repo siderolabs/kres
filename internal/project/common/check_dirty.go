@@ -34,6 +34,7 @@ func (c *CheckDirty) CompileMakefile(output *makefile.Output) error {
 	}
 
 	output.Target("check-dirty").
+		Phony().
 		Script("@if test -n \"`git status --porcelain`\"; then echo \"Source tree is dirty\"; git status; git diff; exit 1 ; fi")
 
 	return nil

@@ -82,7 +82,7 @@ func (helm *Build) CompileDockerignore(output *dockerignore.Output) error {
 // CompileMakefile implements makefile.Compiler.
 func (helm *Build) CompileMakefile(output *makefile.Output) error {
 	helmReleaseScript := fmt.Sprintf(`@helm push $(ARTIFACTS)/%s-*.tgz oci://$(HELMREPO) 2>&1 | tee $(ARTIFACTS)/.digest
-@cosign sign --yes $(COSING_ARGS) $(HELMREPO)/%s@$$(cat $(ARTIFACTS)/.digest | awk -F "[, ]+" '/Digest/{print $$NF}')
+@cosign sign --yes $(COSIGN_ARGS) $(HELMREPO)/%s@$$(cat $(ARTIFACTS)/.digest | awk -F "[, ]+" '/Digest/{print $$NF}')
 `, filepath.Base(helm.meta.HelmChartDir), filepath.Base(helm.meta.HelmChartDir))
 
 	output.VariableGroup(makefile.VariableGroupCommon).
@@ -132,6 +132,7 @@ func (helm *Build) CompileMakefile(output *makefile.Output) error {
 	output.Target("chart-unittest").
 		Description("Run helm chart unit tests").
 		Phony().
+		Depends("$(ARTIFACTS)").
 		Script(fmt.Sprintf("@helm unittest %s --output-type junit --output-file $(ARTIFACTS)/helm-unittest-report.xml", helm.meta.HelmChartDir))
 
 	output.Target("chart-gen-schema").
@@ -140,6 +141,7 @@ func (helm *Build) CompileMakefile(output *makefile.Output) error {
 		Script(fmt.Sprintf("@helm schema --use-helm-docs --draft=7 --indent=2 --values=%s/values.yaml --output=%s/values.schema.json", helm.meta.HelmChartDir, helm.meta.HelmChartDir))
 
 	output.Target("helm-docs").Description("Runs helm-docs and generates chart documentation").
+		Phony().
 		Script("@$(MAKE) local-$@ DEST=.")
 
 	return nil
@@ -199,7 +201,7 @@ func (helm *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	unittestStep := ghworkflow.Step("Unit test chart").
 		SetMakeStep("chart-unittest")
 
-	if err := templateStep.SetConditions("on-pull-request"); err != nil {
+	if err := unittestStep.SetConditions("on-pull-request"); err != nil {
 		return err
 	}
 

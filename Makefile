@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2026-01-27T14:17:50Z by kres f189649-dirty.
+# Generated on 2026-01-28T15:12:29Z by kres edff623.
 
 # common variables
 
@@ -171,6 +171,7 @@ local-%:  ## Builds the specified target defined in the Dockerfile using the loc
 	    fi; \
 	  done'
 
+.PHONY: check-dirty
 check-dirty:
 	@if test -n "`git status --porcelain`"; then echo "Source tree is dirty"; git status; git diff; exit 1 ; fi
 
