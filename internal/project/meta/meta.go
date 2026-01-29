@@ -109,6 +109,9 @@ type Options struct { //nolint:govet
 
 	// SOPSEnabled indicates whether SOPS is enabled for the project.
 	SOPSEnabled bool
+
+	// HelmDocsDisabled indicates whether Helm docs should be disabled.
+	HelmDocsDisabled bool
 }
 
 // Command defines Golang executable build configuration.

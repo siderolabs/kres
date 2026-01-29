@@ -11,6 +11,8 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/siderolabs/gen/xslices"
+
 	"github.com/siderolabs/kres/internal/config"
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/output/dockerfile"
@@ -245,6 +247,35 @@ func (helm *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	jobPermissions := ghworkflow.DefaultJobPermissions()
 	jobPermissions["id-token"] = "write"
 
+	jobSteps := []*ghworkflow.JobStep{
+		{
+			Name: "Install Helm",
+			Uses: ghworkflow.ActionRef{
+				Image:   fmt.Sprintf("azure/setup-helm@%s", config.HelmSetupActionRef),
+				Comment: "version: " + config.HelmSetupActionVersion,
+			},
+		},
+		cosignInstallStep,
+		loginStep,
+		lintStep,
+		templateStep,
+		unittestPluginInstallStep,
+		unittestStep,
+		schemaStep,
+		docsStep,
+		checkDirtyStep,
+		helmLoginStep,
+		helmReleaseStep,
+	}
+
+	jobSteps = xslices.Filter(jobSteps, func(step *ghworkflow.JobStep) bool {
+		if helm.meta.HelmDocsDisabled && step.Name == "Generate docs" {
+			return false
+		}
+
+		return true
+	})
+
 	output.AddWorkflow("helm", &ghworkflow.Workflow{
 		Name: "helm",
 		Concurrency: ghworkflow.Concurrency{
@@ -269,26 +300,7 @@ func (helm *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 				RunsOn:      ghworkflow.NewRunsOnGroupLabel(ghworkflow.GenericRunner, ""),
 				Steps: slices.Concat(
 					ghworkflow.CommonSteps(),
-					[]*ghworkflow.JobStep{
-						{
-							Name: "Install Helm",
-							Uses: ghworkflow.ActionRef{
-								Image:   fmt.Sprintf("azure/setup-helm@%s", config.HelmSetupActionRef),
-								Comment: "version: " + config.HelmSetupActionVersion,
-							},
-						},
-						cosignInstallStep,
-						loginStep,
-						lintStep,
-						templateStep,
-						unittestPluginInstallStep,
-						unittestStep,
-						schemaStep,
-						docsStep,
-						checkDirtyStep,
-						helmLoginStep,
-						helmReleaseStep,
-					},
+					jobSteps,
 				),
 			},
 		},

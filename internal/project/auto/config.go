@@ -43,10 +43,11 @@ type CI struct {
 
 // Helm defines helm settings.
 type Helm struct {
-	ChartDir string       `yaml:"chartDir"`
-	E2EDir   string       `yaml:"e2eDir"`
-	Template HelmTemplate `yaml:"template"`
-	Enabled  bool         `yaml:"enabled"`
+	ChartDir     string       `yaml:"chartDir"`
+	E2EDir       string       `yaml:"e2eDir"`
+	Template     HelmTemplate `yaml:"template"`
+	Enabled      bool         `yaml:"enabled"`
+	DocsDisabled bool         `yaml:"docsDisabled"`
 }
 
 // HelmTemplate defines helm template settings.
