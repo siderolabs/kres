@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2025-08-14T09:17:18Z by kres 9f63e23-dirty.
+# Generated on 2026-01-30T10:07:13Z by kres d81080ef-dirty.
 
 *
 !cmd
@@ -11,3 +11,4 @@
 !README.md
 !.markdownlint.json
 !hack/govulncheck.sh
+!test/test-helm-chart

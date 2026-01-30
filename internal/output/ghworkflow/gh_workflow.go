@@ -481,23 +481,28 @@ func DefaultJobPermissions() map[string]string {
 	}
 }
 
+// SetupBuildxStep returns the buildx setup step.
+func SetupBuildxStep() *JobStep {
+	return &JobStep{
+		Name: "Set up Docker Buildx",
+		ID:   "setup-buildx",
+		Uses: ActionRef{
+			Image:   "docker/setup-buildx-action@" + config.SetupBuildxActionRef,
+			Comment: "version: " + config.SetupBuildxActionVersion,
+		},
+		With: map[string]string{
+			"driver":   "remote",
+			"endpoint": "tcp://buildkit-amd64.ci.svc.cluster.local:1234",
+		},
+		TimeoutMinutes: 10,
+	}
+}
+
 // DefaultSteps returns default steps for the workflow.
 func DefaultSteps() []*JobStep {
 	return append(
 		CommonSteps(),
-		&JobStep{
-			Name: "Set up Docker Buildx",
-			ID:   "setup-buildx",
-			Uses: ActionRef{
-				Image:   "docker/setup-buildx-action@" + config.SetupBuildxActionRef,
-				Comment: "version: " + config.SetupBuildxActionVersion,
-			},
-			With: map[string]string{
-				"driver":   "remote",
-				"endpoint": "tcp://buildkit-amd64.ci.svc.cluster.local:1234",
-			},
-			TimeoutMinutes: 10,
-		},
+		SetupBuildxStep(),
 	)
 }
 

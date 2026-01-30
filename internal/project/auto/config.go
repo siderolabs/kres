@@ -52,11 +52,12 @@ type Helm struct {
 
 // HelmTemplate defines helm template settings.
 type HelmTemplate struct {
-	Set        []string `yaml:"set"`
-	SetFile    []string `yaml:"setFile"`
-	SetJSON    []string `yaml:"setJSON"`
-	SetLiteral []string `yaml:"setLiteral"`
-	SetString  []string `yaml:"setString"`
+	ValuesFiles []string `yaml:"valuesFiles"`
+	Set         []string `yaml:"set"`
+	SetFile     []string `yaml:"setFile"`
+	SetJSON     []string `yaml:"setJSON"`
+	SetLiteral  []string `yaml:"setLiteral"`
+	SetString   []string `yaml:"setString"`
 }
 
 // IntegrationTests defines integration tests builder to be generated.

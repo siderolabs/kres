@@ -91,3 +91,11 @@ spec:
       matchDatasources:
         - docker
       allowedVersions: /^24\.\d+\.\d+-alpine$/
+---
+kind: auto.Helm
+spec:
+  enabled: true
+  chartDir: test/test-helm-chart
+  template:
+    valuesFiles:
+      - test/test-helm-chart/ci-values.yaml

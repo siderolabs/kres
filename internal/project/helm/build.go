@@ -44,7 +44,7 @@ func NewBuild(meta *meta.Options) *Build {
 func (helm *Build) CompileDockerfile(output *dockerfile.Output) error {
 	output.Stage("helm-toolchain").
 		Description("helm toolchain").
-		From("base").
+		From("--platform=${BUILDPLATFORM} ${TOOLCHAIN}").
 		Step(step.Arg("HELMDOCS_VERSION")).
 		Step(step.Script(
 			fmt.Sprintf(
@@ -58,8 +58,9 @@ func (helm *Build) CompileDockerfile(output *dockerfile.Output) error {
 	output.Stage("helm-docs-run").
 		Description("runs helm-docs").
 		From("helm-toolchain").
+		Step(step.WorkDir("/src")).
 		Step(step.Copy(helm.meta.HelmChartDir, filepath.Join("/src", helm.meta.HelmChartDir))).
-		Step(step.Run("helm-docs", "--badge-style=flat", "--template-files=README.md.gotpl").
+		Step(step.Run("helm-docs", "--badge-style=flat").
 			MountCache(filepath.Join(helm.meta.CachePath, "go-build"), helm.meta.GitHubRepository).
 			MountCache(filepath.Join(helm.meta.CachePath, "helm-docs"), helm.meta.GitHubRepository, step.CacheLocked))
 
@@ -98,6 +99,7 @@ func (helm *Build) CompileMakefile(output *makefile.Output) error {
 	output.Target("helm").
 		Description("Package helm chart").
 		Phony().
+		Depends("$(ARTIFACTS)").
 		Script(fmt.Sprintf("@helm package %s -d $(ARTIFACTS)", helm.meta.HelmChartDir))
 
 	output.Target("helm-release").
@@ -180,8 +182,7 @@ func (helm *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	}
 
 	templateStep := ghworkflow.Step("Template chart").
-		SetCommand(fmt.Sprintf("helm template -f %s %s %s %s",
-			filepath.Join(helm.meta.HelmChartDir, "values.yaml"),
+		SetCommand(fmt.Sprintf("helm template %s %s %s",
 			strings.Join(helm.meta.HelmTemplateFlags, " "),
 			filepath.Base(helm.meta.HelmChartDir),
 			helm.meta.HelmChartDir,
@@ -246,6 +247,7 @@ func (helm *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	jobPermissions["id-token"] = "write"
 
 	jobSteps := []*ghworkflow.JobStep{
+		ghworkflow.SetupBuildxStep(),
 		{
 			Name: "Install Helm",
 			Uses: ghworkflow.ActionRef{

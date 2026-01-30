@@ -1,0 +1,2 @@
+# Values for CI - provides required values for helm template to succeed
+apiKey: "test-api-key"

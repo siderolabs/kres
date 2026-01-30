@@ -43,6 +43,10 @@ func (builder *builder) DetectHelm() (bool, error) {
 
 	var flags []string
 
+	for _, valuesFile := range helm.Template.ValuesFiles {
+		flags = append(flags, "-f", valuesFile)
+	}
+
 	for _, flag := range helm.Template.Set {
 		flags = append(flags, "--set", flag)
 	}

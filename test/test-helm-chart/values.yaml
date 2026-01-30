@@ -1,0 +1,7 @@
+# -- Name override
+nameOverride: ""
+# -- Fullname override
+fullnameOverride: ""
+# -- Required API key (must be provided)
+# @default -- (required)
+apiKey: ""

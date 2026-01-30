@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2026-01-28T15:12:29Z by kres edff623.
+# Generated on 2026-01-30T11:12:05Z by kres e27c601c-dirty.
 
 # common variables
 
@@ -36,6 +36,9 @@ GOTOOLCHAIN ?= local
 GOEXPERIMENT ?=
 GO_BUILDFLAGS += -tags $(GO_BUILDTAGS)
 TESTPKGS ?= ./...
+HELMREPO ?= $(REGISTRY)/$(USERNAME)/charts
+COSIGN_ARGS ?=
+HELMDOCS_VERSION ?= v1.14.2
 KRES_IMAGE ?= ghcr.io/siderolabs/kres:latest
 CONFORMANCE_IMAGE ?= ghcr.io/siderolabs/conform:latest
 
@@ -76,6 +79,7 @@ COMMON_ARGS += --build-arg=DEEPCOPY_VERSION="$(DEEPCOPY_VERSION)"
 COMMON_ARGS += --build-arg=GOLANGCILINT_VERSION="$(GOLANGCILINT_VERSION)"
 COMMON_ARGS += --build-arg=GOFUMPT_VERSION="$(GOFUMPT_VERSION)"
 COMMON_ARGS += --build-arg=TESTPKGS="$(TESTPKGS)"
+COMMON_ARGS += --build-arg=HELMDOCS_VERSION="$(HELMDOCS_VERSION)"
 TOOLCHAIN ?= docker.io/golang:1.25-alpine
 
 # help menu
@@ -144,7 +148,7 @@ else
 GO_LDFLAGS += -s
 endif
 
-all: unit-tests kres image-kres lint
+all: unit-tests kres image-kres helm lint
 
 $(ARTIFACTS):  ## Creates artifacts directory.
 	@mkdir -p $(ARTIFACTS)
@@ -177,6 +181,7 @@ check-dirty:
 
 generate:  ## Generate .proto definitions.
 	@$(MAKE) local-$@ DEST=./
+	@sed -i "s/appVersion: .*/appVersion: \"$$(cat internal/version/data/tag)\"/" test/test-helm-chart/Chart.yaml
 
 lint-golangci-lint:  ## Runs golangci-lint linter.
 	@$(MAKE) target-$@
@@ -254,6 +259,44 @@ lint-fmt: lint-golangci-lint-fmt  ## Run all linter formatters and fix up the so
 .PHONY: image-kres
 image-kres:  ## Builds image for kres.
 	@$(MAKE) registry-$@ IMAGE_NAME="kres"
+
+.PHONY: helm
+helm: $(ARTIFACTS)  ## Package helm chart
+	@helm package test/test-helm-chart -d $(ARTIFACTS)
+
+.PHONY: helm-release
+helm-release: helm  ## Release helm chart
+	@helm push $(ARTIFACTS)/test-helm-chart-*.tgz oci://$(HELMREPO) 2>&1 | tee $(ARTIFACTS)/.digest
+	@cosign sign --yes $(COSIGN_ARGS) $(HELMREPO)/test-helm-chart@$$(cat $(ARTIFACTS)/.digest | awk -F "[, ]+" '/Digest/{print $$NF}')
+
+.PHONY: chart-lint
+chart-lint:  ## Lint helm chart
+	@helm lint test/test-helm-chart
+
+.PHONY: helm-plugin-install
+helm-plugin-install:  ## Install helm plugins
+	-helm plugin install https://github.com/helm-unittest/helm-unittest.git --verify=false --version=v1.0.3
+	-helm plugin install https://github.com/losisin/helm-values-schema-json.git --verify=false --version=v2.3.1
+
+.PHONY: kuttl-plugin-install
+kuttl-plugin-install:  ## Install kubectl kuttl plugin
+	kubectl krew install kuttl
+
+.PHONY: chart-e2e
+chart-e2e:  ## Run helm chart e2e tests
+	export KUBECONFIG=$(shell pwd)/$(ARTIFACTS)/kubeconfig && cd test/e2e && kubectl kuttl test
+
+.PHONY: chart-unittest
+chart-unittest: $(ARTIFACTS)  ## Run helm chart unit tests
+	@helm unittest test/test-helm-chart --output-type junit --output-file $(ARTIFACTS)/helm-unittest-report.xml
+
+.PHONY: chart-gen-schema
+chart-gen-schema:  ## Generate helm chart schema
+	@helm schema --use-helm-docs --draft=7 --indent=2 --values=test/test-helm-chart/values.yaml --output=test/test-helm-chart/values.schema.json
+
+.PHONY: helm-docs
+helm-docs:  ## Runs helm-docs and generates chart documentation
+	@$(MAKE) local-$@ DEST=.
 
 .PHONY: rekres
 rekres:

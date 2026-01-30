@@ -2,9 +2,15 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2026-01-16T08:46:36Z by kres 6f7b97a-dirty.
+# Generated on 2026-01-30T10:46:03Z by kres 7e95617c-dirty.
 
 ARG TOOLCHAIN=scratch
+
+# helm toolchain
+FROM --platform=${BUILDPLATFORM} ${TOOLCHAIN} AS helm-toolchain
+ARG HELMDOCS_VERSION
+RUN --mount=type=cache,target=/root/.cache/go-build,id=kres/root/.cache/go-build --mount=type=cache,target=/go/pkg,id=kres/go/pkg go install github.com/norwoodj/helm-docs/cmd/helm-docs@${HELMDOCS_VERSION} \
+	&& mv /go/bin/helm-docs /bin/helm-docs
 
 FROM ghcr.io/siderolabs/ca-certificates:v1.12.0 AS image-ca-certificates
 
@@ -21,6 +27,12 @@ RUN bunx markdownlint --ignore "CHANGELOG.md" --ignore "**/node_modules/**" --ig
 # base toolchain image
 FROM --platform=${BUILDPLATFORM} ${TOOLCHAIN} AS toolchain
 RUN apk --update --no-cache add bash build-base curl jq protoc protobuf-dev
+
+# runs helm-docs
+FROM helm-toolchain AS helm-docs-run
+WORKDIR /src
+COPY test/test-helm-chart /src/test/test-helm-chart
+RUN --mount=type=cache,target=/root/.cache/go-build,id=kres/root/.cache/go-build --mount=type=cache,target=/root/.cache/helm-docs,id=kres/root/.cache/helm-docs,sharing=locked helm-docs --badge-style=flat
 
 # build tools
 FROM --platform=${BUILDPLATFORM} toolchain AS tools
@@ -43,6 +55,10 @@ RUN --mount=type=cache,target=/root/.cache/go-build,id=kres/root/.cache/go-build
 ARG GOFUMPT_VERSION
 RUN go install mvdan.cc/gofumpt@${GOFUMPT_VERSION} \
 	&& mv /go/bin/gofumpt /bin/gofumpt
+
+# clean helm-docs output
+FROM scratch AS helm-docs
+COPY --from=helm-docs-run /src/test/test-helm-chart test/test-helm-chart
 
 # tools and sources
 FROM tools AS base
