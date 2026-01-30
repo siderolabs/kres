@@ -11,8 +11,6 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/siderolabs/gen/xslices"
-
 	"github.com/siderolabs/kres/internal/config"
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/output/dockerfile"
@@ -259,22 +257,18 @@ func (helm *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		loginStep,
 		lintStep,
 		templateStep,
-		unittestPluginInstallStep,
-		unittestStep,
-		schemaStep,
-		docsStep,
-		checkDirtyStep,
-		helmLoginStep,
-		helmReleaseStep,
 	}
 
-	jobSteps = xslices.Filter(jobSteps, func(step *ghworkflow.JobStep) bool {
-		if helm.meta.HelmDocsDisabled && step.Name == "Generate docs" {
-			return false
-		}
+	// Add steps for unit tests
+	jobSteps = append(jobSteps, []*ghworkflow.JobStep{unittestPluginInstallStep, unittestStep}...)
 
-		return true
-	})
+	// Add steps for schema generation and docs generation if enforced
+	if helm.meta.EnforceHelmDocs {
+		jobSteps = append(jobSteps, []*ghworkflow.JobStep{schemaStep, docsStep, checkDirtyStep}...)
+	}
+
+	// Add final steps
+	jobSteps = append(jobSteps, []*ghworkflow.JobStep{helmLoginStep, helmReleaseStep}...)
 
 	output.AddWorkflow("helm", &ghworkflow.Workflow{
 		Name: "helm",
