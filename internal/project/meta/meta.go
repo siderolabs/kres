@@ -112,6 +112,9 @@ type Options struct { //nolint:govet
 
 	// EnforceHelmDocs indicates whether usage of helm docs should be enforced.
 	EnforceHelmDocs bool
+
+	// EnforceHelmSchema indicates whether usage of helm schema should be enforced.
+	EnforceHelmSchema bool
 }
 
 // Command defines Golang executable build configuration.

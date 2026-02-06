@@ -69,6 +69,7 @@ func (builder *builder) DetectHelm() (bool, error) {
 
 	builder.meta.HelmTemplateFlags = flags
 	builder.meta.EnforceHelmDocs = !helm.DocsDisabled
+	builder.meta.EnforceHelmSchema = !helm.SchemaDisabled
 
 	return true, nil
 }

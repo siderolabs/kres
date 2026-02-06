@@ -265,8 +265,19 @@ func (helm *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	jobSteps = append(jobSteps, []*ghworkflow.JobStep{unittestPluginInstallStep, unittestStep}...)
 
 	// Add steps for schema generation and docs generation if enforced
-	if helm.meta.EnforceHelmDocs {
-		jobSteps = append(jobSteps, []*ghworkflow.JobStep{schemaStep, docsStep, checkDirtyStep}...)
+	if helm.meta.EnforceHelmSchema || helm.meta.EnforceHelmDocs {
+		var helmSteps []*ghworkflow.JobStep
+
+		if helm.meta.EnforceHelmSchema {
+			helmSteps = append(helmSteps, schemaStep)
+		}
+
+		if helm.meta.EnforceHelmDocs {
+			helmSteps = append(helmSteps, docsStep)
+		}
+
+		helmSteps = append(helmSteps, checkDirtyStep)
+		jobSteps = append(jobSteps, helmSteps...)
 	}
 
 	// Add final steps
