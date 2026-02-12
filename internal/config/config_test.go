@@ -61,7 +61,7 @@ func TestLoad(t *testing.T) {
 		name: "ReallyBad",
 	}
 	err = provider.Load(&reallyBad)
-	require.EqualError(t, err, "error decoding config block config_test.Foo/ReallyBad into &{ 0 same ReallyBad}: yaml: unmarshal errors:\n  line 32: cannot unmarshal !!str `infinite` into int")
+	require.EqualError(t, err, "error decoding config block config_test.Foo/ReallyBad into &{ 0 same ReallyBad}: yaml: construct errors:\n  line 32: cannot construct !!str `infinite` into int")
 
 	noSpec := Foo{
 		name: "NoSpec",

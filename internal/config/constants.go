@@ -20,8 +20,8 @@ const (
 
 	// CheckOutActionVersion is the version of checkout github action.
 	// renovate: datasource=github-tags depName=actions/checkout
-	CheckOutActionVersion = "v6.0.1"
-	CheckOutActionRef     = "8e8c483db84b4bee98b60c0593521ed34d9990e8"
+	CheckOutActionVersion = "v6.0.2"
+	CheckOutActionRef     = "de0fac2e4500dabe0009e67214ff5f5447ce83dd"
 	// CodeCovActionVersion is the version of codecov github action.
 	// renovate: datasource=github-tags depName=codecov/codecov-action
 	CodeCovActionVersion = "v5.5.2"
@@ -35,10 +35,10 @@ const (
 	DeepCopyVersion = "v0.5.8"
 	// DindContainerImageVersion is the version of the dind container image.
 	// renovate: datasource=docker versioning=docker depName=docker
-	DindContainerImageVersion = "29.1-dind"
+	DindContainerImageVersion = "29.2-dind"
 	// DockerfileFrontendImageVersion is the version of the dockerfile frontend image.
 	// renovate: datasource=docker versioning=docker depName=docker/dockerfile-upstream
-	DockerfileFrontendImageVersion = "1.20.0-labs"
+	DockerfileFrontendImageVersion = "1.21.0-labs"
 	// DownloadArtifactActionVersion is the version of download artifact github action.
 	// renovate: datasource=github-tags depName=actions/download-artifact
 	DownloadArtifactActionVersion = "v7.0.0"
@@ -52,25 +52,25 @@ const (
 	GoFmtVersion = "v0.9.2"
 	// GoImportsVersion is the version of goimports.
 	// renovate: datasource=go depName=golang.org/x/tools
-	GoImportsVersion = "v0.41.0"
+	GoImportsVersion = "v0.42.0"
 	// GoMockVersion is the version of gomock.
 	// renovate: datasource=go depName=github.com/uber-go/mock
 	GoMockVersion = "v0.6.0"
 	// GolangCIlintVersion is the version of golangci-lint.
 	// renovate: datasource=go depName=github.com/golangci/golangci-lint
-	GolangCIlintVersion = "v2.8.0"
+	GolangCIlintVersion = "v2.9.0"
 	// GolangContainerImageVersion is the default golang container image.
 	// renovate: datasource=docker versioning=docker depName=golang
-	GolangContainerImageVersion = "1.25-alpine"
+	GolangContainerImageVersion = "1.26-alpine"
 	// GoVersion is the version of Go.
 	// renovate: datasource=github-tags extractVersion=^go(?<version>.*)$ depName=golang/go
-	GoVersion = "1.25.6"
+	GoVersion = "1.26.0"
 	// GrpcGatewayVersion is the version of grpc-gateway.
 	// renovate: datasource=go depName=github.com/grpc-ecosystem/grpc-gateway
-	GrpcGatewayVersion = "v2.27.4"
+	GrpcGatewayVersion = "v2.27.8"
 	// GrpcGoVersion is the version of grpc.
 	// renovate: datasource=go depName=google.golang.org/grpc/cmd/protoc-gen-go-grpc
-	GrpcGoVersion = "v1.6.0"
+	GrpcGoVersion = "v1.6.1"
 	// HelmSetupActionVersion is the version of helm setup github action.
 	// renovate: datasource=github-tags depName=Azure/setup-helm
 	HelmSetupActionVersion = "v4.3.1"
@@ -86,14 +86,14 @@ const (
 	HelmDocsVersion = "v1.14.2"
 	// LoginActionVersion is the version of login github action.
 	// renovate: datasource=github-tags depName=docker/login-action
-	LoginActionVersion = "v3.6.0"
-	LoginActionRef     = "5e57cd118135c172c3672efd75eb46360885c0ef"
+	LoginActionVersion = "v3.7.0"
+	LoginActionRef     = "c94ce9fb468520275223c153574b00df6fe4bcc9"
 	// MarkdownLintCLIVersion is the version of markdownlint.
 	// renovate: datasource=npm depName=markdownlint-cli
 	MarkdownLintCLIVersion = "0.47.0"
 	// BunContainerImageVersion is the default bun container image.
 	// renovate: datasource=docker versioning=docker depName=oven/bun
-	BunContainerImageVersion = "1.3.6-alpine"
+	BunContainerImageVersion = "1.3.9-alpine"
 	// NodeContainerImageVersion is the default node container image.
 	//
 	// NOTE: Check renovate.json for the rules on this before bumping, e.g., pinned versions.
@@ -116,7 +116,7 @@ const (
 	ReleaseActionRef     = "a06a81a03ee405af7f2048a818ed3f03bbf83c7b"
 	// SentencesPerLineVersion is the version of sentences-per-line.
 	// renovate: datasource=npm depName=sentences-per-line
-	SentencesPerLineVersion = "0.5.0"
+	SentencesPerLineVersion = "0.5.1"
 	// SetupBuildxActionVersion is the version of setup-buildx github action.
 	// renovate: datasource=github-tags depName=docker/setup-buildx-action
 	SetupBuildxActionVersion = "v3.12.0"
