@@ -51,6 +51,10 @@ linters:
     - embeddedstructfieldcheck # fighting in many places with fieldalignment
   # all available settings of specific linters
   settings:
+    staticcheck:
+      checks:
+        - all
+        - '-SA4006' # disable until https://github.com/golangci/golangci-lint/issues/6363 is resolved
     cyclop:
       # the maximal code complexity to report
       max-complexity: 20

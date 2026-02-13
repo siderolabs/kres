@@ -233,9 +233,9 @@ func (r *Repository) enableBranchProtection(client *github.Client) error {
 	})
 
 	req := github.ProtectionRequest{
-		RequireLinearHistory: github.Ptr(true),
-		AllowDeletions:       github.Ptr(false),
-		AllowForcePushes:     github.Ptr(false),
+		RequireLinearHistory: new(true),
+		AllowDeletions:       new(false),
+		AllowForcePushes:     new(false),
 		EnforceAdmins:        true,
 
 		RequiredPullRequestReviews: &github.PullRequestReviewsEnforcementRequest{
@@ -304,11 +304,11 @@ func (r *Repository) enableConform(client *github.Client) error {
 	}
 
 	_, _, err = client.Repositories.CreateHook(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, &github.Hook{
-		Active: github.Ptr(true),
+		Active: new(true),
 		Config: &github.HookConfig{
 			URL:         &r.ConformWebhookURL,
-			ContentType: github.Ptr("json"),
-			InsecureSSL: github.Ptr("0"),
+			ContentType: new("json"),
+			InsecureSSL: new("0"),
 		},
 		Events: []string{
 			"push",
