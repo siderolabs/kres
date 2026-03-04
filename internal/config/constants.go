@@ -41,8 +41,8 @@ const (
 	DockerfileFrontendImageVersion = "1.21.0-labs"
 	// DownloadArtifactActionVersion is the version of download artifact github action.
 	// renovate: datasource=github-tags depName=actions/download-artifact
-	DownloadArtifactActionVersion = "v7.0.0"
-	DownloadArtifactActionRef     = "37930b1c2abaa49bbe596cd826c3c89aef350131"
+	DownloadArtifactActionVersion = "v8.0.0"
+	DownloadArtifactActionRef     = "70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3"
 	// GitHubScriptActionVersion is the version of github script action.
 	// renovate: datasource=github-tags depName=actions/github-script
 	GitHubScriptActionVersion = "v8.0.0"
@@ -58,7 +58,7 @@ const (
 	GoMockVersion = "v0.6.0"
 	// GolangCIlintVersion is the version of golangci-lint.
 	// renovate: datasource=go depName=github.com/golangci/golangci-lint
-	GolangCIlintVersion = "v2.9.0"
+	GolangCIlintVersion = "v2.10.1"
 	// GolangContainerImageVersion is the default golang container image.
 	// renovate: datasource=docker versioning=docker depName=golang
 	GolangContainerImageVersion = "1.26-alpine"
@@ -67,7 +67,7 @@ const (
 	GoVersion = "1.26.0"
 	// GrpcGatewayVersion is the version of grpc-gateway.
 	// renovate: datasource=go depName=github.com/grpc-ecosystem/grpc-gateway
-	GrpcGatewayVersion = "v2.27.8"
+	GrpcGatewayVersion = "v2.28.0"
 	// GrpcGoVersion is the version of grpc.
 	// renovate: datasource=go depName=google.golang.org/grpc/cmd/protoc-gen-go-grpc
 	GrpcGoVersion = "v1.6.1"
@@ -93,14 +93,14 @@ const (
 	MarkdownLintCLIVersion = "0.47.0"
 	// BunContainerImageVersion is the default bun container image.
 	// renovate: datasource=docker versioning=docker depName=oven/bun
-	BunContainerImageVersion = "1.3.9-alpine"
+	BunContainerImageVersion = "1.3.10-alpine"
 	// NodeContainerImageVersion is the default node container image.
 	//
 	// NOTE: Check renovate.json for the rules on this before bumping, e.g., pinned versions.
 	// As a rule of thumb, we bump only to the versions promoted to be LTS (even [not odd] major versions get promoted after a while, always check).
 	//
 	// renovate: datasource=docker versioning=docker depName=node
-	NodeContainerImageVersion = "24.13.0-alpine"
+	NodeContainerImageVersion = "24.14.0-alpine"
 	// PkgsVersion is the version of pkgs.
 	// renovate: datasource=github-tags depName=siderolabs/pkgs
 	PkgsVersion = "v1.12.0"
@@ -116,15 +116,15 @@ const (
 	ReleaseActionRef     = "a06a81a03ee405af7f2048a818ed3f03bbf83c7b"
 	// SentencesPerLineVersion is the version of sentences-per-line.
 	// renovate: datasource=npm depName=sentences-per-line
-	SentencesPerLineVersion = "0.5.1"
+	SentencesPerLineVersion = "0.5.2"
 	// SetupBuildxActionVersion is the version of setup-buildx github action.
 	// renovate: datasource=github-tags depName=docker/setup-buildx-action
 	SetupBuildxActionVersion = "v3.12.0"
 	SetupBuildxActionRef     = "8d2750c68a42422c14e847fe6c8ac0403b4cbd6f"
 	// SetupTerraformActionVersion is the version of setup terraform github action.
 	// renovate: datasource=github-tags depName=hashicorp/setup-terraform
-	SetupTerraformActionVersion = "v3.1.2"
-	SetupTerraformActionRef     = "b9cd54a3c349d3f38e8881555d616ced269862dd"
+	SetupTerraformActionVersion = "v4.0.0"
+	SetupTerraformActionRef     = "5e8dbf3c6d9deaf4193ca7a8fb23f2ac83bb6c85"
 	// SlackNotifyActionVersion is the version of slack notify github action.
 	// renovate: datasource=github-tags depName=slackapi/slack-github-action
 	SlackNotifyActionVersion = "v2.1.1"
@@ -135,15 +135,15 @@ const (
 	SystemInfoActionRef     = "59699597e84e80085a750998045983daa49274c4"
 	// UploadArtifactActionVersion is the version of upload artifact github action.
 	// renovate: datasource=github-tags depName=actions/upload-artifact
-	UploadArtifactActionVersion = "v6.0.0"
-	UploadArtifactActionRef     = "b7c566a772e6b6bfb58ed0dc250532a479d7789f"
+	UploadArtifactActionVersion = "v7.0.0"
+	UploadArtifactActionRef     = "bbbca2ddaa5d8feaa63e36b76fdaad77386f024f"
 	// VTProtobufVersion is the version of vtprotobuf.
 	// renovate: datasource=go depName=github.com/planetscale/vtprotobuf
 	VTProtobufVersion = "v0.6.0"
 	// StaleActionVersion is the version of stale github action.
 	// renovate: datasource=github-tags depName=actions/stale
-	StaleActionVersion = "v10.1.1"
-	StaleActionRef     = "997185467fa4f803885201cee163a9f38240193d"
+	StaleActionVersion = "v10.2.0"
+	StaleActionRef     = "b5d41d4e1d5dceea10e7104786b73624c18a190f"
 	// LockThreadsActionVersion is the version of lock threads github action.
 	// renovate: datasource=github-tags depName=dessant/lock-threads
 	LockThreadsActionVersion = "v6.0.0"
