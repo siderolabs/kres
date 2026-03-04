@@ -35,8 +35,14 @@ type On struct {
 	PullRequest       `yaml:"pull_request,omitempty"`
 	WorkFlowRun       `yaml:"workflow_run,omitempty"`
 	*WorkFlowDispatch `yaml:"workflow_dispatch,omitempty"`
+	*IssueComment     `yaml:"issue_comment,omitempty"`
 
 	Schedule []Schedule `yaml:"schedule,omitempty"`
+}
+
+// IssueComment represents GitHub Actions issue_comment trigger.
+type IssueComment struct {
+	Types []string `yaml:"types,omitempty"`
 }
 
 // Branches represents GitHub Actions branch filters.
@@ -112,6 +118,7 @@ type Job struct {
 	Permissions    Permissions        `yaml:"permissions,omitempty"`
 	RunsOn         RunsOn             `yaml:"runs-on"`
 	If             string             `yaml:"if,omitempty"`
+	Concurrency    *Concurrency       `yaml:"concurrency,omitempty"`
 	Strategy       *Strategy          `yaml:"strategy,omitempty"`
 	Needs          []string           `yaml:"needs,omitempty"`
 	Outputs        map[string]string  `yaml:"outputs,omitempty"`

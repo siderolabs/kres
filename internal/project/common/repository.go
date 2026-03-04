@@ -80,6 +80,20 @@ type Repository struct { //nolint:govet
 
 	SkipStaleWorkflow bool `yaml:"skipStaleWorkflow"`
 
+	// SlashMerge enables the slash-merge workflow: a `/nm` comment on a PR by a user
+	// with write access fast-forwards the base branch to the PR head.
+	//
+	// The push is done by a GitHub App with repository permissions "Contents: write" and
+	// "Workflows: write" (nothing else), installed on the repository. Its credentials are stored
+	// in the `slash-merge` environment, which kres creates and restricts to the main branch.
+	// kres stores the credentials when run with KRES_SLASH_MERGE_APP_CLIENT_ID and
+	// KRES_SLASH_MERGE_APP_PRIVATE_KEY (the PEM) set, after checking them against the app
+	// installation; it does that on every such run, which is also how the private key is rotated.
+	//
+	// The credentials are kept sops-encrypted to the developers' PGP keys in the kres repository,
+	// hack/slash-merge-app.sh decrypts them and provisions a list of repository checkouts.
+	SlashMerge bool `yaml:"slashMerge"`
+
 	EnableLefthook bool `yaml:"enableLefthook"`
 
 	EnableAIPolicy bool `yaml:"enableAIPolicy"`
@@ -224,16 +238,23 @@ grep " conform-linux-${arch}$" conform-sha256sum.txt | sha256sum -c -
 install -m 0755 "conform-linux-${arch}" conform`
 
 // CompileGitHubWorkflow implements ghworkflow.Compiler.
-//
-// It generates the conform workflow which enforces the policies from .conform.yaml
+func (r *Repository) CompileGitHubWorkflow(o *ghworkflow.Output) error {
+	if r.EnableConform {
+		r.addConformWorkflow(o)
+	}
+
+	if r.SlashMerge {
+		o.AddWorkflow(slashMergeWorkflowName, slashMergeWorkflow())
+	}
+
+	return nil
+}
+
+// addConformWorkflow generates the conform workflow which enforces the policies from .conform.yaml
 // on every commit of a pull request. The workflow needs only read access, so it works
 // for pull requests from forks as well. The job fails if any policy check fails, so
 // the job itself is the single status check required by branch protection.
-func (r *Repository) CompileGitHubWorkflow(o *ghworkflow.Output) error {
-	if !r.EnableConform {
-		return nil
-	}
-
+func (r *Repository) addConformWorkflow(o *ghworkflow.Output) {
 	o.AddWorkflow(
 		conformJobName,
 		&ghworkflow.Workflow{
@@ -278,8 +299,6 @@ func (r *Repository) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 			},
 		},
 	)
-
-	return nil
 }
 
 // CompileLicense implements license.Compiler.
@@ -322,6 +341,17 @@ func (r *Repository) CompileGitHub(client *github.Client) error {
 		return nil
 	}
 
+	var slashMergeCreds *slashMergeAppCredentials
+
+	if r.SlashMerge {
+		var err error
+
+		// parse the credentials before doing any changes, so that invalid credentials fail early
+		if slashMergeCreds, err = slashMergeAppCredentialsFromEnv(); err != nil {
+			return err
+		}
+	}
+
 	if err := r.enableBranchProtection(client); err != nil {
 		return err
 	}
@@ -338,6 +368,16 @@ func (r *Repository) CompileGitHub(client *github.Client) error {
 
 	if err := r.removeConformWebhook(client); err != nil {
 		return err
+	}
+
+	if r.SlashMerge {
+		if err := r.enableSlashMergeEnvironment(client); err != nil {
+			return err
+		}
+
+		if err := r.provisionSlashMergeApp(client, slashMergeCreds); err != nil {
+			return err
+		}
 	}
 
 	if r.DryRun {

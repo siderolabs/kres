@@ -39,7 +39,11 @@ func (rekres *ReKres) CompileMakefile(output *makefile.Output) error {
 
 	output.Target(rekres.Name()).
 		Script("@docker pull $(KRES_IMAGE)").
-		Script("@docker run --rm --net=host --user $(shell id -u):$(shell id -g) -v $(PWD):/src " + gitCommonDirMountRef + " -w /src -e GITHUB_TOKEN $(KRES_IMAGE)").
+		Script(
+			"@docker run --rm --net=host --user $(shell id -u):$(shell id -g) -v $(PWD):/src " + gitCommonDirMountRef + " -w /src " +
+				// slash-merge GitHub App credentials are only needed to provision them, see Repository.SlashMerge
+				"-e GITHUB_TOKEN -e " + SlashMergeAppClientIDEnv + " -e " + SlashMergeAppPrivateKeyEnv + " $(KRES_IMAGE)",
+		).
 		Phony()
 
 	return nil
