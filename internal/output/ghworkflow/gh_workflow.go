@@ -28,6 +28,8 @@ const (
 	PkgsRunner = "pkgs"
 	// DefaultSkipCondition is the default condition to skip the workflow.
 	DefaultSkipCondition = "(!startsWith(github.head_ref, 'renovate/') && !startsWith(github.head_ref, 'dependabot/'))"
+	// SlashMergeWorkflow is the slash-merge workflow file path.
+	SlashMergeWorkflow = workflowDir + "/" + "slash-merge.yaml"
 
 	// IssueLabelRetrieveScript is the default script to retrieve issue labels.
 	IssueLabelRetrieveScript = `
@@ -78,6 +80,263 @@ done
 	DefaultJobName = "default"
 )
 
+// Slash-merge step scripts.
+//
+// Scripts that require literal backtick characters use Go string concatenation
+// to embed them since raw string literals cannot contain backticks.
+const (
+	slashMergeAddEyesScript = `await github.rest.reactions.createForIssueComment({
+  owner: context.repo.owner,
+  repo: context.repo.repo,
+  comment_id: context.payload.comment.id,
+  content: 'eyes',
+});`
+
+	slashMergeCheckPermsScript = `const { data: perm } = await github.rest.repos.getCollaboratorPermissionLevel({
+  owner: context.repo.owner,
+  repo: context.repo.repo,
+  username: context.payload.comment.user.login,
+});
+const allowed = ['write', 'maintain', 'admin'];
+const ok = allowed.includes(perm.permission);
+core.setOutput('authorized', ok ? 'true' : 'false');
+if (!ok) {
+  core.warning('User ' + context.payload.comment.user.login + " has permission '" + perm.permission + "' — not authorized.");
+}`
+
+	slashMergeBailUnauthorizedScript = `await github.rest.issues.createComment({
+  owner: context.repo.owner,
+  repo: context.repo.repo,
+  issue_number: context.payload.issue.number,
+  body: '⛔ @' + context.payload.comment.user.login + ' — you need **write access** to trigger a merge.',
+});
+core.setFailed('Unauthorized');`
+
+	slashMergeGetPRScript = `const { data: pr } = await github.rest.pulls.get({
+  owner: context.repo.owner,
+  repo: context.repo.repo,
+  pull_number: context.payload.issue.number,
+});
+core.setOutput('state',      pr.state);
+core.setOutput('mergeable',  String(pr.mergeable));
+core.setOutput('rebaseable', String(pr.rebaseable));
+core.setOutput('behind',     pr.mergeable_state);
+core.setOutput('sha',        pr.head.sha);
+core.setOutput('base',       pr.base.ref);
+core.setOutput('title',      pr.title);
+core.setOutput('draft',      String(pr.draft));`
+
+	slashMergeFailClosedScript = `await github.rest.issues.createComment({
+  owner: context.repo.owner,
+  repo: context.repo.repo,
+  issue_number: context.payload.issue.number,
+  body: '⛔ PR is closed or still a draft — cannot merge.',
+});
+core.setFailed('PR not open');`
+
+	slashMergeWaitScript = `let state = '${{ steps.pr.outputs.behind }}';
+let sha   = '${{ steps.pr.outputs.sha }}';
+let attempts = 0;
+while (state === 'unknown' && attempts < 6) {
+  await new Promise(r => setTimeout(r, 5000));
+  const { data: pr } = await github.rest.pulls.get({
+    owner: context.repo.owner,
+    repo: context.repo.repo,
+    pull_number: context.payload.issue.number,
+  });
+  state = pr.mergeable_state;
+  sha   = pr.head.sha;
+  attempts++;
+}
+core.setOutput('mergeable_state', state);
+core.setOutput('sha', sha);
+core.info('Final mergeable_state: ' + state);`
+
+	slashMergeChecksScript = `const sha = '${{ steps.wait.outputs.sha }}';
+const { data: status } = await github.rest.repos.getCombinedStatusForRef({
+  owner: context.repo.owner,
+  repo: context.repo.repo,
+  ref: sha,
+});
+const { data: runs } = await github.rest.checks.listForRef({
+  owner: context.repo.owner,
+  repo: context.repo.repo,
+  ref: sha,
+  per_page: 100,
+});
+const otherRuns = runs.check_runs.filter(r => r.name !== context.workflow);
+const pending = otherRuns.filter(r => r.status !== 'completed');
+const failed  = otherRuns.filter(r =>
+  r.status === 'completed' &&
+  !['success', 'neutral', 'skipped'].includes(r.conclusion)
+);
+core.info('Combined status: ' + status.state);
+core.info('Pending runs: ' + (pending.map(r => r.name).join(', ') || 'none'));
+core.info('Failed runs:  ' + (failed.map(r => r.name).join(', ')  || 'none'));
+if (status.state === 'failure' || status.state === 'error') {
+  core.setOutput('ok', 'false');
+  core.setOutput('reason', 'Combined commit status is **' + status.state + '**');
+} else if (pending.length > 0) {
+  core.setOutput('ok', 'false');
+  core.setOutput('reason', 'Checks still pending: ' + pending.map(r => r.name).join(', '));
+} else if (failed.length > 0) {
+  core.setOutput('ok', 'false');
+  core.setOutput('reason', 'Checks failed: ' + failed.map(r => r.name).join(', '));
+} else {
+  core.setOutput('ok', 'true');
+}`
+
+	slashMergeFailChecksScript = `await github.rest.issues.createComment({
+  owner: context.repo.owner,
+  repo: context.repo.repo,
+  issue_number: context.payload.issue.number,
+  body: '⛔ Cannot merge — ${{ steps.checks.outputs.reason }}.',
+});
+core.setFailed('Checks not passing');`
+
+	slashMergeFastForwardScript = `# Ensure we have the latest PR head commit
+git fetch origin "$PR_SHA"
+
+# Attempt fast-forward only — exits non-zero if not possible
+if ! git merge --ff-only "$PR_SHA"; then
+  echo "ff_failed=true" >> "$GITHUB_OUTPUT"
+  exit 1
+fi
+
+MERGED_SHA=$(git rev-parse HEAD)
+echo "sha=$MERGED_SHA" >> "$GITHUB_OUTPUT"
+
+git push origin "HEAD:$BASE"`
+
+	slashMergeSuccessScript = `await github.rest.reactions.createForIssueComment({
+  owner: context.repo.owner,
+  repo: context.repo.repo,
+  comment_id: context.payload.comment.id,
+  content: 'rocket',
+});`
+
+	slashMergeFailureScript = `await github.rest.reactions.createForIssueComment({
+  owner: context.repo.owner,
+  repo: context.repo.repo,
+  comment_id: context.payload.comment.id,
+  content: '-1',
+});`
+)
+
+// Slash-merge scripts that contain literal backtick characters.
+var (
+	slashMergeFailBehindScript = `const state = '${{ steps.wait.outputs.mergeable_state }}';
+const msg = state === 'behind'
+  ? '⛔ The PR is **behind** the base branch. Please rebase or merge ` + "`${{ steps.pr.outputs.base }}`" + ` first.'
+  : '⛔ The PR has **merge conflicts**. Please resolve them first.';
+await github.rest.issues.createComment({
+  owner: context.repo.owner,
+  repo: context.repo.repo,
+  issue_number: context.payload.issue.number,
+  body: msg,
+});
+core.setFailed(state);`
+
+	//nolint:lll
+	slashMergeFailFFScript = `await github.rest.issues.createComment({
+  owner: context.repo.owner,
+  repo: context.repo.repo,
+  issue_number: context.payload.issue.number,
+  body: '⛔ Fast-forward merge is not possible — the PR branch has diverged from ` + "`${{ steps.pr.outputs.base }}`" + `. Please rebase your branch on top of the latest ` + "`${{ steps.pr.outputs.base }}`" + ` and try again.',
+});
+core.setFailed('Not fast-forwardable');`
+)
+
+func buildSlashMergeWorkflow() *Workflow {
+	githubScript := func(name string) *JobStep {
+		return Step(name).
+			SetUsesWithComment(
+				"actions/github-script@"+config.GitHubScriptActionRef,
+				"version: "+config.GitHubScriptActionVersion,
+			).
+			SetWith("github-token", "${{ secrets.GITHUB_TOKEN }}")
+	}
+
+	return &Workflow{
+		Name: "Slash Merge",
+		On: On{
+			IssueComment: &IssueComment{
+				Types: []string{"created"},
+			},
+		},
+		Jobs: map[string]*Job{
+			"slash-merge": {
+				If: "github.event.issue.pull_request != null &&\n" +
+					"contains(github.event.comment.body, '/nm')",
+				RunsOn: NewRunsOnString("ubuntu-latest"),
+				Concurrency: &Concurrency{
+					Group:            "slash-merge-${{ github.event.issue.number }}",
+					CancelInProgress: false,
+				},
+				Permissions: map[string]string{
+					"pull-requests": "write",
+					"contents":      "write",
+					"issues":        "write",
+				},
+				Steps: []*JobStep{
+					githubScript("Add eyes reaction").
+						SetWith("script", slashMergeAddEyesScript),
+					githubScript("Check permissions").
+						SetID("authz").
+						SetWith("script", slashMergeCheckPermsScript),
+					githubScript("Bail if not authorized").
+						SetCustomCondition("steps.authz.outputs.authorized != 'true'").
+						SetWith("script", slashMergeBailUnauthorizedScript),
+					githubScript("Get PR data").
+						SetID("pr").
+						SetWith("script", slashMergeGetPRScript),
+					githubScript("Fail if PR is closed or draft").
+						SetCustomCondition("steps.pr.outputs.state != 'open' || steps.pr.outputs.draft == 'true'").
+						SetWith("script", slashMergeFailClosedScript),
+					githubScript("Wait for mergeability to be computed").
+						SetID("wait").
+						SetWith("script", slashMergeWaitScript),
+					githubScript("Fail if PR is behind or has conflicts").
+						SetCustomCondition("steps.wait.outputs.mergeable_state == 'behind' || steps.wait.outputs.mergeable_state == 'dirty'").
+						SetWith("script", slashMergeFailBehindScript),
+					githubScript("Check commit status & check runs").
+						SetID("checks").
+						SetWith("script", slashMergeChecksScript),
+					githubScript("Fail if checks not green").
+						SetCustomCondition("steps.checks.outputs.ok != 'true'").
+						SetWith("script", slashMergeFailChecksScript),
+					githubScript("Fail if fast-forward was not possible").
+						SetCustomCondition("failure() && steps.merge.outputs.ff_failed == 'true'").
+						SetWith("script", slashMergeFailFFScript),
+					Step("Checkout base branch").
+						SetUsesWithComment(
+							"actions/checkout@"+config.CheckOutActionRef,
+							"version: "+config.CheckOutActionVersion,
+						).
+						SetWith("ref", "${{ steps.pr.outputs.base }}").
+						SetWith("fetch-depth", "0").
+						SetWith("token", "${{ secrets.MERGE_TOKEN }}"),
+					Step("Fast-forward merge").
+						SetID("merge").
+						SetEnv("GIT_AUTHOR_NAME", "github-actions[bot]").
+						SetEnv("GIT_AUTHOR_EMAIL", "github-actions[bot]@users.noreply.github.com").
+						SetEnv("GIT_COMMITTER_NAME", "github-actions[bot]").
+						SetEnv("GIT_COMMITTER_EMAIL", "github-actions[bot]@users.noreply.github.com").
+						SetEnv("PR_SHA", "${{ steps.wait.outputs.sha }}").
+						SetEnv("BASE", "${{ steps.pr.outputs.base }}").
+						SetCommand(slashMergeFastForwardScript),
+					githubScript("Post success comment").
+						SetCustomCondition("success()").
+						SetWith("script", slashMergeSuccessScript),
+					githubScript("Post failure comment").
+						SetCustomCondition("failure()").
+						SetWith("script", slashMergeFailureScript),
+				},
+			},
+		},
+	}
+}
+
 var (
 	//go:embed files/slack-notify-payload.json
 	slackNotifyPayload string
@@ -96,7 +355,7 @@ type Output struct {
 }
 
 // NewOutput creates new .github/workflows/ci.yaml output.
-func NewOutput(mainBranch string, withDefaultJob, withStaleJob bool, slackChannel string) *Output {
+func NewOutput(mainBranch string, withDefaultJob, withStaleJob, withSlashMerge bool, slackChannel string) *Output {
 	workflows := map[string]*Workflow{
 		CiWorkflow: {
 			Name: DefaultJobName,
@@ -255,6 +514,10 @@ func NewOutput(mainBranch string, withDefaultJob, withStaleJob bool, slackChanne
 				},
 			},
 		}
+	}
+
+	if withSlashMerge {
+		workflows[SlashMergeWorkflow] = buildSlashMergeWorkflow()
 	}
 
 	if withDefaultJob {

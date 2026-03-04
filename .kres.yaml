@@ -99,3 +99,7 @@ spec:
   template:
     valuesFiles:
       - test/test-helm-chart/ci-values.yaml
+---
+kind: common.Repository
+spec:
+  slashMerge: true

@@ -38,7 +38,7 @@ func (suite *GHWorkflowSuite) TestDefaultWorkflows() {
 		customSlackChannel = "ci-failure-custom"
 	)
 
-	output := ghworkflow.NewOutput(defaultBranch, withDefaultJob, withStaleJob, customSlackChannel) //nolint:typecheck
+	output := ghworkflow.NewOutput(defaultBranch, withDefaultJob, withStaleJob, false, customSlackChannel) //nolint:typecheck
 	output.SetRunnerGroup(ghworkflow.GenericRunner)
 
 	var buf bytes.Buffer
