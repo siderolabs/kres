@@ -107,9 +107,9 @@ const (
 	// ProtobufGoVersion is the version of protobuf.
 	// renovate: datasource=go depName=google.golang.org/protobuf/cmd/protoc-gen-go
 	ProtobufGoVersion = "v1.36.11"
-	// ProtobufTSGatewayVersion is the version of protobuf-ts.
+	// ProtobufTSGatewayVersion is the version of protoc-gen-grpc-gateway-ts.
 	// renovate: datasource=go depName=github.com/siderolabs/protoc-gen-grpc-gateway-ts
-	ProtobufTSGatewayVersion = "v1.3.1"
+	ProtobufTSGatewayVersion = "v1.4.0"
 	// ReleaseActionVersion is the version of release github action.
 	// renovate: datasource=github-tags depName=softprops/action-gh-release
 	ReleaseActionVersion = "v2.5.0"
