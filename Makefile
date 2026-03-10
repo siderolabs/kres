@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2026-03-10T11:28:43Z by kres deaca06f-dirty.
+# Generated on 2026-03-10T13:55:17Z by kres c09f8674-dirty.
 
 # common variables
 
@@ -25,9 +25,9 @@ VTPROTOBUF_VERSION ?= 0.6.0
 GOIMPORTS_VERSION ?= 0.42.0
 GOMOCK_VERSION ?= 0.6.0
 DEEPCOPY_VERSION ?= v0.5.8
-GOLANGCILINT_VERSION ?= v2.10.1
+GOLANGCILINT_VERSION ?= v2.11.3
 GOFUMPT_VERSION ?= v0.9.2
-GO_VERSION ?= 1.26.0
+GO_VERSION ?= 1.26.1
 GO_BUILDFLAGS ?=
 GO_BUILDTAGS ?= ,
 GO_LDFLAGS ?=
@@ -181,7 +181,10 @@ check-dirty:
 
 generate:  ## Generate .proto definitions.
 	@$(MAKE) local-$@ DEST=./
-	@sed -i "s/appVersion: .*/appVersion: \"$$(cat internal/version/data/tag)\"/" test/test-helm-chart/Chart.yaml
+	@TAG=$$(cat internal/version/data/tag); \
+	if echo "$$TAG" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+$$'; then \
+	  sed -i "s/^appVersion: .*/appVersion: \"$$TAG\"/" test/test-helm-chart/Chart.yaml; \
+	fi
 	@$(MAKE) helm-docs
 	@$(MAKE) chart-gen-schema
 

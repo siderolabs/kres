@@ -28,17 +28,17 @@ const (
 	CodeCovActionRef     = "671740ac38dd9b0130fbe1cec585b89eea48d3de"
 	// CosignInstallActionVersion is the version of cosign install github action.
 	// renovate: datasource=github-tags depName=sigstore/cosign-installer
-	CosignInstallActionVersion = "v4.0.0"
-	CosignInstallActionRef     = "faadad0cce49287aee09b3a48701e75088a2c6ad"
+	CosignInstallActionVersion = "v4.1.0"
+	CosignInstallActionRef     = "ba7bc0a3fef59531c69a25acd34668d6d3fe6f22"
 	// DeepCopyVersion is the version of deepcopy.
 	// renovate: datasource=go depName=github.com/siderolabs/deep-copy
 	DeepCopyVersion = "v0.5.8"
 	// DindContainerImageVersion is the version of the dind container image.
 	// renovate: datasource=docker versioning=docker depName=docker
-	DindContainerImageVersion = "29.2-dind"
+	DindContainerImageVersion = "29.3-dind"
 	// DockerfileFrontendImageVersion is the version of the dockerfile frontend image.
 	// renovate: datasource=docker versioning=docker depName=docker/dockerfile-upstream
-	DockerfileFrontendImageVersion = "1.21.0-labs"
+	DockerfileFrontendImageVersion = "1.22.0-labs"
 	// DownloadArtifactActionVersion is the version of download artifact github action.
 	// renovate: datasource=github-tags depName=actions/download-artifact
 	DownloadArtifactActionVersion = "v8.0.0"
@@ -58,13 +58,13 @@ const (
 	GoMockVersion = "v0.6.0"
 	// GolangCIlintVersion is the version of golangci-lint.
 	// renovate: datasource=go depName=github.com/golangci/golangci-lint
-	GolangCIlintVersion = "v2.10.1"
+	GolangCIlintVersion = "v2.11.3"
 	// GolangContainerImageVersion is the default golang container image.
 	// renovate: datasource=docker versioning=docker depName=golang
 	GolangContainerImageVersion = "1.26-alpine"
 	// GoVersion is the version of Go.
 	// renovate: datasource=github-tags extractVersion=^go(?<version>.*)$ depName=golang/go
-	GoVersion = "1.26.0"
+	GoVersion = "1.26.1"
 	// GrpcGatewayVersion is the version of grpc-gateway.
 	// renovate: datasource=go depName=github.com/grpc-ecosystem/grpc-gateway
 	GrpcGatewayVersion = "v2.28.0"
@@ -86,11 +86,11 @@ const (
 	HelmDocsVersion = "v1.14.2"
 	// LoginActionVersion is the version of login github action.
 	// renovate: datasource=github-tags depName=docker/login-action
-	LoginActionVersion = "v3.7.0"
-	LoginActionRef     = "c94ce9fb468520275223c153574b00df6fe4bcc9"
+	LoginActionVersion = "v4.0.0"
+	LoginActionRef     = "b45d80f862d83dbcd57f89517bcf500b2ab88fb2"
 	// MarkdownLintCLIVersion is the version of markdownlint.
 	// renovate: datasource=npm depName=markdownlint-cli
-	MarkdownLintCLIVersion = "0.47.0"
+	MarkdownLintCLIVersion = "0.48.0"
 	// BunContainerImageVersion is the default bun container image.
 	// renovate: datasource=docker versioning=docker depName=oven/bun
 	BunContainerImageVersion = "1.3.10-alpine"
@@ -119,8 +119,8 @@ const (
 	SentencesPerLineVersion = "0.5.2"
 	// SetupBuildxActionVersion is the version of setup-buildx github action.
 	// renovate: datasource=github-tags depName=docker/setup-buildx-action
-	SetupBuildxActionVersion = "v3.12.0"
-	SetupBuildxActionRef     = "8d2750c68a42422c14e847fe6c8ac0403b4cbd6f"
+	SetupBuildxActionVersion = "v4.0.0"
+	SetupBuildxActionRef     = "4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd"
 	// SetupTerraformActionVersion is the version of setup terraform github action.
 	// renovate: datasource=github-tags depName=hashicorp/setup-terraform
 	SetupTerraformActionVersion = "v4.0.0"

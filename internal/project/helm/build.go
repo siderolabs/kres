@@ -93,10 +93,11 @@ func (helm *Build) CompileMakefile(output *makefile.Output) error {
 
 	generateTarget := output.GetTarget("generate")
 	if generateTarget != nil {
+		// Only update Chart.yaml for final releases (vX.Y.Z, no pre-release suffix).
+		// This prevents dirty tags, dev builds, and pre-releases from polluting the chart.
 		if helm.meta.ChartVersionMajor != nil {
-			// When chartVersionMajor is set, only final releases (vX.Y.Z, no pre-release suffix)
-			// update Chart.yaml. The chart version mirrors the app's minor.patch with the configured
-			// major, e.g. app v1.5.9 -> chart 2.5.9. Pre-release tags are ignored entirely.
+			// The chart version mirrors the app's minor.patch with the configured
+			// major, e.g. app v1.5.9 -> chart 2.5.9.
 			generateTarget.Script(fmt.Sprintf(`@TAG=$$(cat internal/version/data/tag); \
 if echo "$$TAG" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+$$'; then \
   sed -i "s/^appVersion: .*/appVersion: \"$$TAG\"/" %[1]s/Chart.yaml; \
@@ -104,7 +105,10 @@ if echo "$$TAG" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+$$'; then \
   sed -i "s/^version: .*/version: %[2]d.$$MINOR_PATCH/" %[1]s/Chart.yaml; \
 fi`, helm.meta.HelmChartDir, *helm.meta.ChartVersionMajor))
 		} else {
-			generateTarget.Script(fmt.Sprintf(`@sed -i "s/appVersion: .*/appVersion: \"$$(cat internal/version/data/tag)\"/" %s/Chart.yaml`, helm.meta.HelmChartDir))
+			generateTarget.Script(fmt.Sprintf(`@TAG=$$(cat internal/version/data/tag); \
+if echo "$$TAG" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+$$'; then \
+  sed -i "s/^appVersion: .*/appVersion: \"$$TAG\"/" %[1]s/Chart.yaml; \
+fi`, helm.meta.HelmChartDir))
 		}
 
 		// Regenerate helm docs and schema as part of generate, so check-dirty passes in CI.
