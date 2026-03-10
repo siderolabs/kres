@@ -93,7 +93,28 @@ func (helm *Build) CompileMakefile(output *makefile.Output) error {
 
 	generateTarget := output.GetTarget("generate")
 	if generateTarget != nil {
-		generateTarget.Script(fmt.Sprintf(`@sed -i "s/appVersion: .*/appVersion: \"$$(cat internal/version/data/tag)\"/" %s/Chart.yaml`, helm.meta.HelmChartDir))
+		if helm.meta.ChartVersionMajor != nil {
+			// When chartVersionMajor is set, only final releases (vX.Y.Z, no pre-release suffix)
+			// update Chart.yaml. The chart version mirrors the app's minor.patch with the configured
+			// major, e.g. app v1.5.9 -> chart 2.5.9. Pre-release tags are ignored entirely.
+			generateTarget.Script(fmt.Sprintf(`@TAG=$$(cat internal/version/data/tag); \
+if echo "$$TAG" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+$$'; then \
+  sed -i "s/^appVersion: .*/appVersion: \"$$TAG\"/" %[1]s/Chart.yaml; \
+  MINOR_PATCH=$$(echo "$$TAG" | sed 's/^v[0-9]*\.//'); \
+  sed -i "s/^version: .*/version: %[2]d.$$MINOR_PATCH/" %[1]s/Chart.yaml; \
+fi`, helm.meta.HelmChartDir, *helm.meta.ChartVersionMajor))
+		} else {
+			generateTarget.Script(fmt.Sprintf(`@sed -i "s/appVersion: .*/appVersion: \"$$(cat internal/version/data/tag)\"/" %s/Chart.yaml`, helm.meta.HelmChartDir))
+		}
+
+		// Regenerate helm docs and schema as part of generate, so check-dirty passes in CI.
+		if helm.meta.EnforceHelmDocs {
+			generateTarget.Script("@$(MAKE) helm-docs")
+		}
+
+		if helm.meta.EnforceHelmSchema {
+			generateTarget.Script("@$(MAKE) chart-gen-schema")
+		}
 	}
 
 	output.Target("helm").
@@ -227,11 +248,17 @@ func (helm *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		return err
 	}
 
+	// When chartVersionMajor is set, only release stable (non-prerelease) charts.
+	releaseCondition := "only-on-tag"
+	if helm.meta.ChartVersionMajor != nil {
+		releaseCondition = "only-on-stable-tag"
+	}
+
 	helmLoginStep := ghworkflow.Step("helm login").
 		SetEnv("HELM_CONFIG_HOME", "/var/tmp/.config/helm").
 		SetCommand(fmt.Sprintf("helm registry login -u %s -p ${{ secrets.GITHUB_TOKEN }} ghcr.io", "${{ github.repository_owner }}"))
 
-	if err := helmLoginStep.SetConditions("only-on-tag"); err != nil {
+	if err := helmLoginStep.SetConditions(releaseCondition); err != nil {
 		return err
 	}
 
@@ -239,7 +266,7 @@ func (helm *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		SetEnv("HELM_CONFIG_HOME", "/var/tmp/.config/helm").
 		SetMakeStep("helm-release")
 
-	if err := helmReleaseStep.SetConditions("only-on-tag"); err != nil {
+	if err := helmReleaseStep.SetConditions(releaseCondition); err != nil {
 		return err
 	}
 

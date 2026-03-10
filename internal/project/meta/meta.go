@@ -115,6 +115,9 @@ type Options struct { //nolint:govet
 
 	// EnforceHelmSchema indicates whether usage of helm schema should be enforced.
 	EnforceHelmSchema bool
+
+	// ChartVersionMajor, when set (non-nil), enables automatic chart version management.
+	ChartVersionMajor *uint
 }
 
 // Command defines Golang executable build configuration.

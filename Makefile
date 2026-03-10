@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2026-03-04T13:41:46Z by kres 6458cfd-dirty.
+# Generated on 2026-03-10T11:28:43Z by kres deaca06f-dirty.
 
 # common variables
 
@@ -182,6 +182,8 @@ check-dirty:
 generate:  ## Generate .proto definitions.
 	@$(MAKE) local-$@ DEST=./
 	@sed -i "s/appVersion: .*/appVersion: \"$$(cat internal/version/data/tag)\"/" test/test-helm-chart/Chart.yaml
+	@$(MAKE) helm-docs
+	@$(MAKE) chart-gen-schema
 
 lint-golangci-lint:  ## Runs golangci-lint linter.
 	@$(MAKE) target-$@

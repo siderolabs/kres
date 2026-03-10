@@ -688,6 +688,9 @@ func (step *JobStep) SetConditions(conditions ...string) error {
 			step.appendIf("github.event_name == 'pull_request'")
 		case "only-on-tag":
 			step.appendIf("startsWith(github.ref, 'refs/tags/')")
+		case "only-on-stable-tag": // tag push, excluding pre-release versions (those containing '-')
+			step.appendIf("startsWith(github.ref, 'refs/tags/')")
+			step.appendIf("!contains(github.ref_name, '-')")
 		case "not-on-tag":
 			step.appendIf("!startsWith(github.ref, 'refs/tags/')")
 		case "only-on-schedule":
@@ -726,6 +729,9 @@ func (job *Job) SetConditions(conditions ...string) error {
 			job.appendIf("github.event_name == 'pull_request'")
 		case "only-on-tag":
 			job.appendIf("startsWith(github.ref, 'refs/tags/')")
+		case "only-on-stable-tag": // tag push, excluding pre-release versions (those containing '-')
+			job.appendIf("startsWith(github.ref, 'refs/tags/')")
+			job.appendIf("!contains(github.ref_name, '-')")
 		case "not-on-tag":
 			job.appendIf("!startsWith(github.ref, 'refs/tags/')")
 		case "only-on-schedule":
