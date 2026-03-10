@@ -5,7 +5,7 @@ Parameters
 Licensor:             {{ .Licensor }}
 Licensed Work:        {{ .LicensedWork }}
                       The Licensed Work is {{ .Copyright }}
-Additional Use Grant: None
+Additional Use Grant: {{ if .AdditionalUseGrant }}{{ .AdditionalUseGrant }}{{ else }}None{{ end }}
 
 Change Date:          {{ .ChangeDate }}
 
