@@ -27,6 +27,6 @@ import "embed"
 
 // Dist is an embedded JS frontend release folder.
 //
-//go:embed dist
+//go:embed all:dist
 var Dist embed.FS
 `
