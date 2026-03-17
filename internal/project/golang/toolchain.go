@@ -48,6 +48,8 @@ type Toolchain struct { //nolint:govet
 	Docker struct {
 		ExtraArgs []string `yaml:"extraArgs"`
 	} `yaml:"docker"`
+	// DefaultBuildTags is a list of build tags to be always enabled.
+	DefaultBuildTags []string `yaml:"defaultBuildTags"`
 	// BuildTags are additional build tags to be optionally enabled:
 	// - Makefile variable `WITH_$TAG`
 	// - If variable is set, the build tag is passed to go build via `-tags` flag
@@ -140,7 +142,7 @@ func (toolchain *Toolchain) CompileMakefile(output *makefile.Output) error {
 
 	common := output.VariableGroup(makefile.VariableGroupCommon).
 		Variable(makefile.OverridableVariable("GO_BUILDFLAGS", "")).
-		Variable(makefile.OverridableVariable("GO_BUILDTAGS", ",")).
+		Variable(makefile.OverridableVariable("GO_BUILDTAGS", strings.Join(toolchain.DefaultBuildTags, ",")+",")).
 		Variable(makefile.OverridableVariable("GO_LDFLAGS", "")).
 		Variable(makefile.OverridableVariable("CGO_ENABLED", "0")).
 		Variable(makefile.OverridableVariable("GOTOOLCHAIN", "local")).
