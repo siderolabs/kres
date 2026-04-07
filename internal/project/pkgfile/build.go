@@ -147,7 +147,7 @@ func (pkgfile *Build) CompileMakefile(output *makefile.Output) error {
 	output.Target("$(ARTIFACTS)/bldr").
 		Description("Downloads bldr binary.").
 		Script(bldrDownloadScript).
-		Depends("$(ARTIFACTS)")
+		Depends("| $(ARTIFACTS)")
 
 	output.Target("update-checksums").
 		Depends("$(ARTIFACTS)/bldr").
@@ -162,12 +162,14 @@ func (pkgfile *Build) CompileMakefile(output *makefile.Output) error {
 		Description("Builds all targets defined.").
 		Depends("$(TARGETS)")
 
-	defaultTarget := "$(TARGETS)"
+	var defaultTarget strings.Builder
+
+	defaultTarget.WriteString("$(TARGETS)")
 
 	for name, targets := range pkgfile.AdditionalTargets {
 		targetName := strings.ToUpper(name) + "_TARGETS"
 		targetNameVariable := fmt.Sprintf("$(%s)", targetName)
-		defaultTarget += " " + targetNameVariable
+		defaultTarget.WriteString(" " + targetNameVariable)
 
 		output.VariableGroup(makefile.VariableGroupTargets).
 			Variable(makefile.RecursiveVariable(targetName, strings.Join(targets, "\n")))
@@ -178,13 +180,13 @@ func (pkgfile *Build) CompileMakefile(output *makefile.Output) error {
 	}
 
 	if pkgfile.UseBldrPkgTagResolver {
-		output.Target(defaultTarget).
+		output.Target(defaultTarget.String()).
 			Script("@$(MAKE) docker-$@ TARGET_ARGS=\"--tag=$(REGISTRY)/$(USERNAME)/$@:$(shell $(ARTIFACTS)/bldr eval --target $@ " +
 				"--build-arg TAG=$(TAG) '{{.VERSION}}' 2>/dev/null) --push=$(PUSH) --metadata-file=$(ARTIFACTS)/$@.metadata.json\"").
 			Phony().
 			Depends("$(ARTIFACTS)/bldr")
 	} else {
-		output.Target(defaultTarget).
+		output.Target(defaultTarget.String()).
 			Script("@$(MAKE) docker-$@ TARGET_ARGS=\"--tag=$(REGISTRY_AND_USERNAME)/$@:$(TAG) --push=$(PUSH)\"").
 			Phony()
 	}
