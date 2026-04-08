@@ -246,7 +246,7 @@ func (builder *builder) BuildGolang() error {
 	for _, projectPath := range builder.meta.GoRootDirectories {
 		golangciLint := golang.NewGolangciLint(builder.meta, projectPath)
 		gofumpt := golang.NewGofumpt(builder.meta, projectPath)
-		govulncheck := golang.NewGoVulnCheck(builder.meta, projectPath)
+		govulncheck := golang.NewGoVulnCheck(builder.meta, builder.rootPath, projectPath)
 
 		// linters are input to the toolchain as they inject into toolchain build
 		toolchain.AddInput(golangciLint, gofumpt, govulncheck)

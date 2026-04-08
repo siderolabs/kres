@@ -11,8 +11,3 @@ import _ "embed"
 //
 //go:embed version_go
 var VersionGo string
-
-// GoVulnCheck govulncheck.sh
-//
-//go:embed govulncheck.sh
-var GoVulnCheck string

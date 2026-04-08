@@ -398,10 +398,6 @@ func (generate *Generate) CompileTemplates(output *template.Output) error {
 			NoOverwrite()
 	}
 
-	output.Define(govulncheckPath, templates.GoVulnCheck).
-		NoPreamble().
-		NoOverwrite()
-
 	return nil
 }
 

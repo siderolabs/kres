@@ -25,6 +25,7 @@ func NewLinters(meta *meta.Options) *Linters {
 	meta.BuildArgs.Add(
 		"GOLANGCILINT_VERSION",
 		"GOFUMPT_VERSION",
+		"DIS_VULNCHECK_VERSION",
 	)
 
 	return &Linters{
@@ -49,6 +50,13 @@ func (linters *Linters) ToolchainBuild(stage *dockerfile.Stage) error {
 		Step(step.Script(fmt.Sprintf(
 			`go install golang.org/x/vuln/cmd/govulncheck@latest \
 	&& mv /go/bin/govulncheck %s/govulncheck`, linters.meta.BinPath)).
+			MountCache(filepath.Join(linters.meta.CachePath, "go-build"), linters.meta.GitHubRepository).
+			MountCache(filepath.Join(linters.meta.GoPath, "pkg"), linters.meta.GitHubRepository),
+		).
+		Step(step.Arg("DIS_VULNCHECK_VERSION")).
+		Step(step.Script(fmt.Sprintf(
+			`go install github.com/shanduur/dis-vulncheck@${DIS_VULNCHECK_VERSION} \
+	&& mv /go/bin/dis-vulncheck %s/dis-vulncheck`, linters.meta.BinPath)).
 			MountCache(filepath.Join(linters.meta.CachePath, "go-build"), linters.meta.GitHubRepository).
 			MountCache(filepath.Join(linters.meta.GoPath, "pkg"), linters.meta.GitHubRepository),
 		).

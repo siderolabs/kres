@@ -59,6 +59,9 @@ const (
 	// GolangCIlintVersion is the version of golangci-lint.
 	// renovate: datasource=go depName=github.com/golangci/golangci-lint
 	GolangCIlintVersion = "v2.11.4"
+	// DisVulnCheckVersion is the version of dis-vulncheck.
+	// renovate: datasource=go versioning=loose depName=github.com/shanduur/dis-vulncheck
+	DisVulnCheckVersion = "v0.0.0-20260408104044-a7a2dc044240"
 	// GolangContainerImageVersion is the default golang container image.
 	// renovate: datasource=docker versioning=docker depName=golang
 	GolangContainerImageVersion = "1.26-alpine"

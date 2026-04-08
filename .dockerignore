@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2026-01-30T10:07:13Z by kres d81080ef-dirty.
+# Generated on 2026-04-08T10:52:40Z by kres 59a747e-dirty.
 
 *
 !cmd
@@ -8,7 +8,9 @@
 !go.mod
 !go.sum
 !.golangci.yml
+!.disvulncheck.yaml
 !README.md
 !.markdownlint.json
 !hack/govulncheck.sh
+!.disvulncheck.yaml
 !test/test-helm-chart

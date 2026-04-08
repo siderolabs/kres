@@ -2,7 +2,7 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2026-04-07T13:07:54Z by kres 3675077-dirty.
+# Generated on 2026-04-08T10:58:18Z by kres 59a747e-dirty.
 
 ARG TOOLCHAIN=scratch
 
@@ -52,6 +52,9 @@ RUN --mount=type=cache,target=/root/.cache/go-build,id=kres/root/.cache/go-build
 	&& mv /go/bin/golangci-lint /bin/golangci-lint
 RUN --mount=type=cache,target=/root/.cache/go-build,id=kres/root/.cache/go-build --mount=type=cache,target=/go/pkg,id=kres/go/pkg go install golang.org/x/vuln/cmd/govulncheck@latest \
 	&& mv /go/bin/govulncheck /bin/govulncheck
+ARG DIS_VULNCHECK_VERSION
+RUN --mount=type=cache,target=/root/.cache/go-build,id=kres/root/.cache/go-build --mount=type=cache,target=/go/pkg,id=kres/go/pkg go install github.com/shanduur/dis-vulncheck@${DIS_VULNCHECK_VERSION} \
+	&& mv /go/bin/dis-vulncheck /bin/dis-vulncheck
 ARG GOFUMPT_VERSION
 RUN go install mvdan.cc/gofumpt@${GOFUMPT_VERSION} \
 	&& mv /go/bin/gofumpt /bin/gofumpt
@@ -102,8 +105,8 @@ RUN --mount=type=cache,target=/root/.cache/go-build,id=kres/root/.cache/go-build
 # runs govulncheck
 FROM base AS lint-govulncheck
 WORKDIR /src
-COPY --chmod=0755 hack/govulncheck.sh ./hack/govulncheck.sh
-RUN --mount=type=cache,target=/root/.cache/go-build,id=kres/root/.cache/go-build --mount=type=cache,target=/go/pkg,id=kres/go/pkg ./hack/govulncheck.sh ./...
+COPY .disvulncheck.yaml .
+RUN --mount=type=cache,target=/root/.cache/go-build,id=kres/root/.cache/go-build --mount=type=cache,target=/go/pkg,id=kres/go/pkg dis-vulncheck -tool=false ./...
 
 # runs unit-tests with race detector
 FROM base AS unit-tests-race
