@@ -64,7 +64,7 @@ const (
 	GolangContainerImageVersion = "1.26-alpine"
 	// GoVersion is the version of Go.
 	// renovate: datasource=github-tags extractVersion=^go(?<version>.*)$ depName=golang/go
-	GoVersion = "1.26.1"
+	GoVersion = "1.26.2"
 	// GrpcGatewayVersion is the version of grpc-gateway.
 	// renovate: datasource=go depName=github.com/grpc-ecosystem/grpc-gateway
 	GrpcGatewayVersion = "v2.28.0"
