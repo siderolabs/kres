@@ -1,0 +1,254 @@
+# THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
+#
+# Generated on 2026-03-09T17:33:00Z by kres f613471-dirty.
+
+"on":
+  issue_comment:
+    types:
+      - created
+name: Slash Merge
+jobs:
+  slash-merge:
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    runs-on: ubuntu-latest
+    if: |-
+      github.event.issue.pull_request != null &&
+      contains(github.event.comment.body, '/nm')
+    concurrency:
+      group: slash-merge-${{ github.event.issue.number }}
+      cancel-in-progress: false
+    steps:
+      - name: Add eyes reaction
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # version: v8.0.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |-
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: 'eyes',
+            });
+      - name: Check permissions
+        id: authz
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # version: v8.0.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |-
+            const { data: perm } = await github.rest.repos.getCollaboratorPermissionLevel({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              username: context.payload.comment.user.login,
+            });
+            const allowed = ['write', 'maintain', 'admin'];
+            const ok = allowed.includes(perm.permission);
+            core.setOutput('authorized', ok ? 'true' : 'false');
+            if (!ok) {
+              core.warning('User ' + context.payload.comment.user.login + " has permission '" + perm.permission + "' — not authorized.");
+            }
+      - name: Bail if not authorized
+        if: steps.authz.outputs.authorized != 'true'
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # version: v8.0.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |-
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body: '⛔ @' + context.payload.comment.user.login + ' — you need **write access** to trigger a merge.',
+            });
+            core.setFailed('Unauthorized');
+      - name: Get PR data
+        id: pr
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # version: v8.0.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |-
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.issue.number,
+            });
+            core.setOutput('state',      pr.state);
+            core.setOutput('mergeable',  String(pr.mergeable));
+            core.setOutput('rebaseable', String(pr.rebaseable));
+            core.setOutput('behind',     pr.mergeable_state);
+            core.setOutput('sha',        pr.head.sha);
+            core.setOutput('base',       pr.base.ref);
+            core.setOutput('title',      pr.title);
+            core.setOutput('draft',      String(pr.draft));
+      - name: Fail if PR is closed or draft
+        if: steps.pr.outputs.state != 'open' || steps.pr.outputs.draft == 'true'
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # version: v8.0.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |-
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body: '⛔ PR is closed or still a draft — cannot merge.',
+            });
+            core.setFailed('PR not open');
+      - name: Wait for mergeability to be computed
+        id: wait
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # version: v8.0.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |-
+            let state = '${{ steps.pr.outputs.behind }}';
+            let sha   = '${{ steps.pr.outputs.sha }}';
+            let attempts = 0;
+            while (state === 'unknown' && attempts < 6) {
+              await new Promise(r => setTimeout(r, 5000));
+              const { data: pr } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.payload.issue.number,
+              });
+              state = pr.mergeable_state;
+              sha   = pr.head.sha;
+              attempts++;
+            }
+            core.setOutput('mergeable_state', state);
+            core.setOutput('sha', sha);
+            core.info('Final mergeable_state: ' + state);
+      - name: Fail if PR is behind or has conflicts
+        if: steps.wait.outputs.mergeable_state == 'behind' || steps.wait.outputs.mergeable_state == 'dirty'
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # version: v8.0.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |-
+            const state = '${{ steps.wait.outputs.mergeable_state }}';
+            const msg = state === 'behind'
+              ? '⛔ The PR is **behind** the base branch. Please rebase or merge `${{ steps.pr.outputs.base }}` first.'
+              : '⛔ The PR has **merge conflicts**. Please resolve them first.';
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body: msg,
+            });
+            core.setFailed(state);
+      - name: Check commit status & check runs
+        id: checks
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # version: v8.0.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |-
+            const sha = '${{ steps.wait.outputs.sha }}';
+            const { data: status } = await github.rest.repos.getCombinedStatusForRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: sha,
+            });
+            const { data: runs } = await github.rest.checks.listForRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: sha,
+              per_page: 100,
+            });
+            const otherRuns = runs.check_runs.filter(r => r.name !== context.workflow);
+            const pending = otherRuns.filter(r => r.status !== 'completed');
+            const failed  = otherRuns.filter(r =>
+              r.status === 'completed' &&
+              !['success', 'neutral', 'skipped'].includes(r.conclusion)
+            );
+            core.info('Combined status: ' + status.state);
+            core.info('Pending runs: ' + (pending.map(r => r.name).join(', ') || 'none'));
+            core.info('Failed runs:  ' + (failed.map(r => r.name).join(', ')  || 'none'));
+            if (status.state === 'failure' || status.state === 'error') {
+              core.setOutput('ok', 'false');
+              core.setOutput('reason', 'Combined commit status is **' + status.state + '**');
+            } else if (pending.length > 0) {
+              core.setOutput('ok', 'false');
+              core.setOutput('reason', 'Checks still pending: ' + pending.map(r => r.name).join(', '));
+            } else if (failed.length > 0) {
+              core.setOutput('ok', 'false');
+              core.setOutput('reason', 'Checks failed: ' + failed.map(r => r.name).join(', '));
+            } else {
+              core.setOutput('ok', 'true');
+            }
+      - name: Fail if checks not green
+        if: steps.checks.outputs.ok != 'true'
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # version: v8.0.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |-
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body: '⛔ Cannot merge — ${{ steps.checks.outputs.reason }}.',
+            });
+            core.setFailed('Checks not passing');
+      - name: Fail if fast-forward was not possible
+        if: failure() && steps.merge.outputs.ff_failed == 'true'
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # version: v8.0.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |-
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body: '⛔ Fast-forward merge is not possible — the PR branch has diverged from `${{ steps.pr.outputs.base }}`. Please rebase your branch on top of the latest `${{ steps.pr.outputs.base }}` and try again.',
+            });
+            core.setFailed('Not fast-forwardable');
+      - name: Checkout base branch
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # version: v6.0.2
+        with:
+          fetch-depth: "0"
+          ref: ${{ steps.pr.outputs.base }}
+          token: ${{ secrets.MERGE_TOKEN }}
+      - name: Fast-forward merge
+        id: merge
+        env:
+          BASE: ${{ steps.pr.outputs.base }}
+          GIT_AUTHOR_EMAIL: github-actions[bot]@users.noreply.github.com
+          GIT_AUTHOR_NAME: github-actions[bot]
+          GIT_COMMITTER_EMAIL: github-actions[bot]@users.noreply.github.com
+          GIT_COMMITTER_NAME: github-actions[bot]
+          PR_SHA: ${{ steps.wait.outputs.sha }}
+        run: |
+          # Ensure we have the latest PR head commit
+          git fetch origin "$PR_SHA"
+
+          # Attempt fast-forward only — exits non-zero if not possible
+          if ! git merge --ff-only "$PR_SHA"; then
+            echo "ff_failed=true" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+          MERGED_SHA=$(git rev-parse HEAD)
+          echo "sha=$MERGED_SHA" >> "$GITHUB_OUTPUT"
+
+          git push origin "HEAD:$BASE"
+      - name: Post success comment
+        if: success()
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # version: v8.0.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |-
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: 'rocket',
+            });
+      - name: Post failure comment
+        if: failure()
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # version: v8.0.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |-
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: '-1',
+            });

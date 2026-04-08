@@ -103,6 +103,7 @@ func runGen() error {
 			options.MainBranch,
 			!options.CompileGithubWorkflowsOnly,
 			!options.SkipStaleWorkflow,
+			options.SlashMerge,
 			options.CIFailureSlackNotifyChannel,
 		)))
 	}

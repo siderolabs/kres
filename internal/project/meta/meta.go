@@ -104,6 +104,9 @@ type Options struct { //nolint:govet
 	// SkipStaleWorkflow indicates that stale workflow should not be generated.
 	SkipStaleWorkflow bool
 
+	// SlashMerge indicates that slash-merge workflow should be generated.
+	SlashMerge bool
+
 	// CIFailureSlackNotifyChannel is the Slack channel to notify on CI failures.
 	CIFailureSlackNotifyChannel string
 

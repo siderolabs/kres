@@ -49,6 +49,7 @@ type Repository struct { //nolint:govet
 	BotName string `yaml:"botName"`
 
 	SkipStaleWorkflow bool `yaml:"skipStaleWorkflow"`
+	SlashMerge        bool `yaml:"slashMerge"`
 }
 
 // LicenseConfig configures the license.
@@ -103,6 +104,7 @@ func NewRepository(meta *meta.Options) *Repository {
 func (r *Repository) AfterLoad() error {
 	r.meta.MainBranch = r.MainBranch
 	r.meta.SkipStaleWorkflow = r.SkipStaleWorkflow
+	r.meta.SlashMerge = r.SlashMerge
 
 	return nil
 }
