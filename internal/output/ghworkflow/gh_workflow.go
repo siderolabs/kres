@@ -11,6 +11,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 
@@ -681,6 +683,12 @@ func (step *JobStep) SetConditionOnlyOnBranch(name string) *JobStep {
 // SetConditions sets step conditions.
 func (step *JobStep) SetConditions(conditions ...string) error {
 	for _, condition := range conditions {
+		if strings.HasPrefix(condition, "matrix.") {
+			step.appendIf(fmt.Sprintf("${{ %s }}", condition))
+
+			continue
+		}
+
 		switch condition {
 		case "except-pull-request":
 			step.appendIf("github.event_name != 'pull_request'")
@@ -722,6 +730,12 @@ func (job *Job) appendIf(condition string) {
 // SetConditions sets job conditions.
 func (job *Job) SetConditions(conditions ...string) error {
 	for _, condition := range conditions {
+		if strings.HasPrefix(condition, "matrix.") {
+			job.appendIf(fmt.Sprintf("${{ %s }}", condition))
+
+			continue
+		}
+
 		switch condition {
 		case "except-pull-request":
 			job.appendIf("github.event_name != 'pull_request'")
@@ -754,6 +768,50 @@ func (job *Job) SetConditions(conditions ...string) error {
 // Compile implements [output.TypedWriter] interface.
 func (o *Output) Compile(compiler Compiler) error {
 	return compiler.CompileGitHubWorkflow(o)
+}
+
+// Generate extends FileAdapter.Generate by removing stale -cron.yaml and
+// -triggered.yaml files in .github/workflows/ that are no longer part of the
+// current configuration.
+func (o *Output) Generate() error {
+	if err := o.FileAdapter.Generate(); err != nil {
+		return err
+	}
+
+	// Build a set of every workflow file this run manages.
+	managed := make(map[string]struct{}, len(o.workflows))
+	for f := range o.workflows {
+		managed[f] = struct{}{}
+	}
+
+	entries, err := os.ReadDir(workflowDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+
+		return err
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+
+		name := entry.Name()
+		if !strings.HasSuffix(name, "-cron.yaml") && !strings.HasSuffix(name, "-triggered.yaml") {
+			continue
+		}
+
+		fullPath := filepath.Join(workflowDir, name)
+		if _, ok := managed[fullPath]; !ok {
+			if err := os.Remove(fullPath); err != nil && !os.IsNotExist(err) {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 // Filenames implements output.FileWriter interface.

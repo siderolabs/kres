@@ -26,16 +26,12 @@ const (
 	// renovate: datasource=github-tags depName=codecov/codecov-action
 	CodeCovActionVersion = "v6.0.0"
 	CodeCovActionRef     = "57e3a136b779b570ffcdbf80b3bdc90e7fab3de2"
-	// CosignInstallActionVersion is the version of cosign install github action.
-	// renovate: datasource=github-tags depName=sigstore/cosign-installer
-	CosignInstallActionVersion = "v4.1.1"
-	CosignInstallActionRef     = "cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003"
 	// DeepCopyVersion is the version of deepcopy.
 	// renovate: datasource=go depName=github.com/siderolabs/deep-copy
 	DeepCopyVersion = "v0.5.8"
 	// DindContainerImageVersion is the version of the dind container image.
 	// renovate: datasource=docker versioning=docker depName=docker
-	DindContainerImageVersion = "29.3-dind"
+	DindContainerImageVersion = "29.4-dind"
 	// DockerfileFrontendImageVersion is the version of the dockerfile frontend image.
 	// renovate: datasource=docker versioning=docker depName=docker/dockerfile-upstream
 	DockerfileFrontendImageVersion = "1.23.0-labs"
@@ -74,10 +70,6 @@ const (
 	// GrpcGoVersion is the version of grpc.
 	// renovate: datasource=go depName=google.golang.org/grpc/cmd/protoc-gen-go-grpc
 	GrpcGoVersion = "v1.6.1"
-	// HelmSetupActionVersion is the version of helm setup github action.
-	// renovate: datasource=github-tags depName=Azure/setup-helm
-	HelmSetupActionVersion = "v5.0.0"
-	HelmSetupActionRef     = "dda3372f752e03dde6b3237bc9431cdc2f7a02a2"
 	// HelmUnitTestVersion is the version of helm unit test plugin.
 	// renovate: datasource=github-tags depName=helm-unittest/helm-unittest
 	HelmUnitTestVersion = "v1.0.3"

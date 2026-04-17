@@ -6,16 +6,39 @@ package ghworkflow_test
 
 import (
 	"bytes"
-	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/siderolabs/kres/internal/output"
 	"github.com/siderolabs/kres/internal/output/ghworkflow"
 )
+
+// set to true to regenerate testdata golden files.
+var update = false //nolint:gochecknoglobals
+
+func assertGolden(t testing.TB, filename string, got []byte) {
+	t.Helper()
+
+	path := filepath.Join("testdata", filepath.FromSlash(t.Name()), filepath.Base(filename))
+
+	if update {
+		require.NoError(t, os.MkdirAll(filepath.Dir(path), 0o755))
+		require.NoError(t, os.WriteFile(path, got, 0o600))
+
+		return
+	}
+
+	want, err := os.ReadFile(path)
+	require.NoError(t, err)
+	assert.Equal(t, string(want), string(got))
+}
 
 type GHWorkflowSuite struct {
 	suite.Suite
@@ -38,89 +61,67 @@ func (suite *GHWorkflowSuite) TestDefaultWorkflows() {
 		customSlackChannel = "ci-failure-custom"
 	)
 
-	output := ghworkflow.NewOutput(defaultBranch, withDefaultJob, withStaleJob, customSlackChannel) //nolint:typecheck
-	output.SetRunnerGroup(ghworkflow.GenericRunner)
+	o := ghworkflow.NewOutput(defaultBranch, withDefaultJob, withStaleJob, customSlackChannel) //nolint:typecheck
+	o.SetRunnerGroup(ghworkflow.GenericRunner)
+
+	var ciBuf bytes.Buffer
+
+	suite.Require().NoError(o.GenerateFile(ghworkflow.CiWorkflow, &ciBuf))
+	assertGolden(suite.T(), ghworkflow.CiWorkflow, ciBuf.Bytes())
+
+	var slackBuf bytes.Buffer
+
+	suite.Require().NoError(o.GenerateFile(ghworkflow.SlackCIFailureWorkflow, &slackBuf))
+	assertGolden(suite.T(), ghworkflow.SlackCIFailureWorkflow, slackBuf.Bytes())
+}
+
+func TestMatrixStrategy(t *testing.T) {
+	output.PreambleTimestamp, _ = time.Parse(time.RFC3339, strings.ReplaceAll(time.RFC3339, "07:00", "")) //nolint:errcheck
+	output.PreambleCreator = "test"
+
+	// Build a step that has a matrix condition and a matrix-interpolated command.
+	buildStep := ghworkflow.Step("build").
+		SetMakeStep("build-${{ matrix.track }}")
+
+	err := buildStep.SetConditions("only-on-schedule", "matrix.buildEnforcing")
+	require.NoError(t, err)
+
+	// Build a triggered workflow job with a 2-entry matrix.
+	job := &ghworkflow.Job{
+		If:     "github.event.workflow_run.conclusion == 'success'",
+		RunsOn: ghworkflow.NewRunsOnGroupLabel("large", ""),
+		Strategy: &ghworkflow.Strategy{
+			MaxParallel: 2,
+			Matrix: &ghworkflow.StrategyMatrix{
+				Include: []map[string]string{
+					{"track": "0"},
+					{"track": "1", "buildEnforcing": "true"},
+				},
+			},
+		},
+		Steps: []*ghworkflow.JobStep{buildStep},
+	}
+
+	o := ghworkflow.NewOutput("main", false, false, "")
+	o.AddWorkflow("integration-provision-triggered", &ghworkflow.Workflow{
+		Name: "integration-provision-triggered",
+		Concurrency: ghworkflow.Concurrency{
+			Group:            "${{ github.head_ref || github.run_id }}",
+			CancelInProgress: true,
+		},
+		On: ghworkflow.On{
+			WorkFlowRun: ghworkflow.WorkFlowRun{
+				Workflows: []string{"artifacts-cron"},
+				Types:     []string{"completed"},
+			},
+		},
+		Jobs: map[string]*ghworkflow.Job{
+			ghworkflow.DefaultJobName: job,
+		},
+	})
 
 	var buf bytes.Buffer
 
-	err := output.GenerateFile(ghworkflow.CiWorkflow, &buf)
-	suite.Require().NoError(err)
-
-	suite.Equal(`# THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
-#
-# Generated on 2006-01-02T15:04:05Z by test.
-
-concurrency:
-  group: ${{ github.head_ref || github.run_id }}
-  cancel-in-progress: true
-"on":
-  push:
-    branches:
-      - main
-      - release-*
-    tags:
-      - v*
-  pull_request:
-    branches:
-      - main
-      - release-*
-name: default
-jobs:
-  default:
-    permissions:
-      actions: read
-      contents: write
-      issues: read
-      packages: write
-      pull-requests: read
-    runs-on:
-      group: generic
-    if: (!startsWith(github.head_ref, 'renovate/') && !startsWith(github.head_ref, 'dependabot/'))
-    steps:
-      - name: gather-system-info
-        id: system-info
-        uses: kenchan0130/actions-system-info@59699597e84e80085a750998045983daa49274c4 # version: v1.4.0
-        continue-on-error: true
-      - name: print-system-info
-        run: |
-          MEMORY_GB=$((${{ steps.system-info.outputs.totalmem }}/1024/1024/1024))
-
-          OUTPUTS=(
-            "CPU Core: ${{ steps.system-info.outputs.cpu-core }}"
-            "CPU Model: ${{ steps.system-info.outputs.cpu-model }}"
-            "Hostname: ${{ steps.system-info.outputs.hostname }}"
-            "NodeName: ${NODE_NAME}"
-            "Kernel release: ${{ steps.system-info.outputs.kernel-release }}"
-            "Kernel version: ${{ steps.system-info.outputs.kernel-version }}"
-            "Name: ${{ steps.system-info.outputs.name }}"
-            "Platform: ${{ steps.system-info.outputs.platform }}"
-            "Release: ${{ steps.system-info.outputs.release }}"
-            "Total memory: ${MEMORY_GB} GB"
-          )
-
-          for OUTPUT in "${OUTPUTS[@]}";do
-            echo "${OUTPUT}"
-          done
-        continue-on-error: true
-      - name: checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # version: v6.0.2
-      - name: Unshallow
-        run: |
-          git fetch --prune --unshallow
-      - name: Set up Docker Buildx
-        id: setup-buildx
-        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # version: v4.0.0
-        with:
-          driver: remote
-          endpoint: tcp://buildkit-amd64.ci.svc.cluster.local:1234
-        timeout-minutes: 10`,
-		strings.TrimSpace(buf.String()))
-
-	var buf2 bytes.Buffer
-
-	err = output.GenerateFile(ghworkflow.SlackCIFailureWorkflow, &buf2)
-
-	fmt.Print(buf2.String())
-	suite.Require().NoError(err)
-	suite.Contains(buf2.String(), customSlackChannel)
+	require.NoError(t, o.GenerateFile(".github/workflows/integration-provision-triggered.yaml", &buf))
+	assertGolden(t, "integration-provision-triggered.yaml", buf.Bytes())
 }

@@ -7,6 +7,7 @@ package common
 import (
 	"github.com/siderolabs/kres/internal/config"
 	"github.com/siderolabs/kres/internal/dag"
+	"github.com/siderolabs/kres/internal/output/ghworkflow"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/project/meta"
 )
@@ -35,7 +36,25 @@ func (c *CheckDirty) CompileMakefile(output *makefile.Output) error {
 
 	output.Target("check-dirty").
 		Phony().
+		Depends("generate").
 		Script("@if test -n \"`git status --porcelain`\"; then echo \"Source tree is dirty\"; git status; git diff; exit 1 ; fi")
+
+	return nil
+}
+
+func (c *CheckDirty) CompileGitHubWorkflow(output *ghworkflow.Output) error {
+	if c.meta.ContainerImageFrontend != config.ContainerImageFrontendDockerfile {
+		return nil
+	}
+
+	checkDirtyStep := ghworkflow.Step("Check dirty").
+		SetMakeStep("check-dirty")
+
+	if err := checkDirtyStep.SetConditions("on-pull-request"); err != nil {
+		return err
+	}
+
+	output.AddStep("default", checkDirtyStep)
 
 	return nil
 }

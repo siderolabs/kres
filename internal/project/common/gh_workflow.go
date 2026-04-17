@@ -6,7 +6,9 @@ package common
 
 import (
 	"fmt"
+	"maps"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/siderolabs/gen/xslices"
@@ -20,16 +22,49 @@ import (
 // Job defines options for jobs.
 type Job struct {
 	BuildxOptions *BuildxOptions `yaml:"buildxOptions,omitempty"`
+	Matrix        *Matrix        `yaml:"matrix,omitempty"`
+	OnWorkflowRun *OnWorkflowRun `yaml:"onWorkflowRun,omitempty"`
 	Name          string         `yaml:"name"`
 	RunnerGroup   string         `yaml:"runnerGroup,omitempty"`
-	Conditions    []string       `yaml:"conditions,omitempty"`
-	Crons         []string       `yaml:"crons,omitempty"`
-	Depends       []string       `yaml:"depends,omitempty"`
 	TriggerLabels []string       `yaml:"triggerLabels,omitempty"`
+	Depends       []string       `yaml:"depends,omitempty"`
 	Steps         []Step         `yaml:"steps,omitempty"`
 	Inputs        []string       `yaml:"inputs,omitempty"`
+	Crons         []string       `yaml:"crons,omitempty"`
+	Conditions    []string       `yaml:"conditions,omitempty"`
 	Dispatchable  bool           `yaml:"dispatchable"`
 	SOPS          bool           `yaml:"sops"`
+	CronOnly      bool           `yaml:"cronOnly"`
+}
+
+// MatrixEntry is one row of key-value pairs for a matrix include entry.
+// Values are interpolated into step commands, env vars, and artifact names
+// using ${{ matrix.<key> }} syntax.
+type MatrixEntry map[string]string
+
+// MatrixInclude is a matrix include entry combining key-value pairs with
+// optional per-entry trigger labels.
+type MatrixInclude struct {
+	// Values holds the key-value pairs for this matrix entry (all YAML keys
+	// that are not explicitly declared as struct fields).
+	Values MatrixEntry `yaml:",inline"`
+	// TriggerLabels lists labels that trigger only this specific flat job in
+	// ci.yaml (in addition to the job-level TriggerLabels which fire all entries).
+	TriggerLabels []string `yaml:"triggerLabels,omitempty"`
+}
+
+// Matrix configures a GitHub Actions matrix strategy on a triggered workflow,
+// and controls how ci.yaml expands the matrix into individual jobs.
+type Matrix struct {
+	Include     []MatrixInclude `yaml:"include"`
+	LabelKeys   []string        `yaml:"labelKeys,omitempty"`
+	MaxParallel int             `yaml:"maxParallel"`
+}
+
+// OnWorkflowRun defines options for workflow_run triggers.
+type OnWorkflowRun struct {
+	Workflows []string `yaml:"workflows"`
+	Types     []string `yaml:"types,omitempty"`
 }
 
 // BuildxOptions defines options for buildx.
@@ -62,6 +97,7 @@ type ArtifactStep struct {
 	Type                            string   `yaml:"type"`
 	ArtifactName                    string   `yaml:"artifactName"`
 	ArtifactPath                    string   `yaml:"artifactPath"`
+	RunID                           string   `yaml:"runID,omitempty"`
 	RetentionDays                   string   `yaml:"retentionDays,omitempty"`
 	AdditionalArtifacts             []string `yaml:"additionalArtifacts,omitempty"`
 	DisableExecutableListGeneration bool     `yaml:"disableExecutableListGeneration"`
@@ -160,6 +196,10 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 			jobDef.Steps = append(jobDef.Steps, ghworkflow.SOPSSteps()...)
 		}
 
+		// Capture base steps (checkout/buildx/sops) before user steps are appended.
+		// compileFlatJobSteps uses these as its starting point.
+		baseSteps := jobDef.Steps
+
 		for _, step := range job.Steps {
 			if step.ArtifactStep != nil {
 				var steps []*ghworkflow.JobStep
@@ -207,6 +247,10 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 						).
 						SetWith("name", step.ArtifactStep.ArtifactName).
 						SetWith("path", step.ArtifactStep.ArtifactPath)
+
+					if step.ArtifactStep.RunID != "" {
+						downloadArtifactsStep.SetWith("run-id", step.ArtifactStep.RunID)
+					}
 
 					if step.ContinueOnError {
 						downloadArtifactsStep.SetContinueOnError()
@@ -319,14 +363,6 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 				if step.ReleaseStep.GenerateSignatures {
 					jobDef.Permissions["id-token"] = "write"
 
-					cosignStep := ghworkflow.Step("Install Cosign").
-						SetUsesWithComment(
-							"sigstore/cosign-installer@"+config.CosignInstallActionRef,
-							"version: "+config.CosignInstallActionVersion,
-						)
-
-					jobDef.Steps = append(jobDef.Steps, cosignStep)
-
 					signCommands := xslices.Map(artifacts, func(artifact string) string {
 						return fmt.Sprintf("cosign sign-blob --bundle %s.bundle --yes %s", artifact, artifact)
 					})
@@ -397,7 +433,9 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 			}
 
 			for k, v := range step.Environment {
-				stepDef.SetEnv(k, v)
+				if v != "" {
+					stepDef.SetEnv(k, v)
+				}
 			}
 
 			if step.NonMakeStep {
@@ -425,6 +463,8 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 			jobDef.Steps = append(jobDef.Steps, stepDef)
 		}
 
+		flatJobsAdded := false
+
 		if len(job.TriggerLabels) > 0 {
 			if len(job.Depends) < 1 {
 				return fmt.Errorf("job %s has triggerLabels but no depends", job.Name)
@@ -451,13 +491,108 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 				}
 			}
 
-			conditions := xslices.Map(job.TriggerLabels, func(label string) string {
-				return fmt.Sprintf("contains(fromJSON(needs.default.outputs.labels), '%s')", label)
-			})
+			if job.Matrix != nil && len(job.Matrix.LabelKeys) > 0 {
+				// Flat job expansion: emit one individual ci.yaml job per matrix entry.
+				// Job-level triggerLabels fire all flat jobs; per-entry TriggerLabels
+				// fire only that specific entry's flat job.
+				coarseConditions := xslices.Map(job.TriggerLabels, func(label string) string {
+					return fmt.Sprintf("contains(fromJSON(needs.default.outputs.labels), '%s')", label)
+				})
 
-			for range job.TriggerLabels {
+				for _, entry := range job.Matrix.Include {
+					suffixParts := make([]string, 0, len(job.Matrix.LabelKeys))
+
+					for _, k := range job.Matrix.LabelKeys {
+						if v := entry.Values[k]; v != "" {
+							suffixParts = append(suffixParts, v)
+						}
+					}
+
+					suffix := strings.Join(suffixParts, "-")
+					flatJobName := job.Name + "-" + suffix
+					entryLabel := "integration/" + strings.TrimPrefix(flatJobName, "integration-")
+					entryCondition := fmt.Sprintf("contains(fromJSON(needs.default.outputs.labels), '%s')", entryLabel)
+
+					allConditions := append([]string{entryCondition}, coarseConditions...)
+
+					for _, label := range entry.TriggerLabels {
+						allConditions = append(allConditions, fmt.Sprintf("contains(fromJSON(needs.default.outputs.labels), '%s')", label))
+					}
+
+					flatSteps, err := compileFlatJobSteps(job, entry.Values, baseSteps)
+					if err != nil {
+						return err
+					}
+
+					flatJob := &ghworkflow.Job{
+						If:          strings.Join(allConditions, " || "),
+						RunsOn:      ghworkflow.NewRunsOnGroupLabel(job.RunnerGroup, ""),
+						Permissions: ghworkflow.DefaultJobPermissions(),
+						Needs:       job.Depends,
+						Steps:       flatSteps,
+					}
+
+					o.AddJob(flatJobName, job.Dispatchable, flatJob, job.Inputs)
+				}
+
+				flatJobsAdded = true
+			} else {
+				conditions := xslices.Map(job.TriggerLabels, func(label string) string {
+					return fmt.Sprintf("contains(fromJSON(needs.default.outputs.labels), '%s')", label)
+				})
+
 				jobDef.If = strings.Join(conditions, " || ")
 			}
+		}
+
+		if job.OnWorkflowRun != nil {
+			if len(job.OnWorkflowRun.Workflows) == 0 {
+				return fmt.Errorf("job %s has onWorkflowRun set but no workflows specified", job.Name)
+			}
+
+			workflowName := job.Name + "-triggered"
+
+			o.AddSlackNotify(workflowName)
+			o.AddSlackNotifyForFailure(workflowName)
+
+			triggeredJob := &ghworkflow.Job{
+				If:       "github.event.workflow_run.conclusion == 'success'",
+				RunsOn:   ghworkflow.NewRunsOnGroupLabel(job.RunnerGroup, ""),
+				Services: jobDef.Services,
+				Steps:    injectTriggeredRunID(jobDef.Steps),
+			}
+
+			if job.Matrix != nil {
+				triggeredJob.Strategy = &ghworkflow.Strategy{
+					MaxParallel: job.Matrix.MaxParallel,
+					Matrix: &ghworkflow.StrategyMatrix{
+						Include: xslices.Map(job.Matrix.Include, func(e MatrixInclude) map[string]string {
+							return map[string]string(e.Values)
+						}),
+					},
+				}
+			}
+
+			o.AddWorkflow(
+				workflowName,
+				&ghworkflow.Workflow{
+					Name: workflowName,
+					// https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-a-fallback-value
+					Concurrency: ghworkflow.Concurrency{
+						Group:            "${{ github.head_ref || github.run_id }}",
+						CancelInProgress: true,
+					},
+					On: ghworkflow.On{
+						WorkFlowRun: ghworkflow.WorkFlowRun{
+							Workflows: job.OnWorkflowRun.Workflows,
+							Types:     job.OnWorkflowRun.Types,
+						},
+					},
+					Jobs: map[string]*ghworkflow.Job{
+						ghworkflow.DefaultJobName: triggeredJob,
+					},
+				},
+			)
 		}
 
 		if len(job.Crons) > 0 {
@@ -493,10 +628,274 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 			)
 		}
 
-		o.AddJob(job.Name, job.Dispatchable, jobDef, job.Inputs)
+		if !job.CronOnly && !flatJobsAdded {
+			o.AddJob(job.Name, job.Dispatchable, jobDef, job.Inputs)
+		}
 	}
 
 	return nil
+}
+
+// matrixSubst replaces every ${{ matrix.<key> }} placeholder in s with the
+// corresponding value from entry.  Placeholders for keys not present in entry
+// are left unchanged.
+func matrixSubst(s string, entry MatrixEntry) string {
+	for k, v := range entry {
+		s = strings.ReplaceAll(s, "${{ matrix."+k+" }}", v)
+	}
+
+	return s
+}
+
+// matrixPlaceholder matches any remaining ${{ matrix.<key> }} expression.
+var matrixPlaceholder = regexp.MustCompile(`\$\{\{\s*matrix\.\w+\s*\}\}`)
+
+// matrixSubstFull is like matrixSubst but additionally replaces any
+// ${{ matrix.<key> }} placeholders that were not resolved (i.e. absent from
+// the entry) with an empty string. Use this for flat ci.yaml job generation
+// where all matrix expressions must be resolved at compile time.
+func matrixSubstFull(s string, entry MatrixEntry) string {
+	return matrixPlaceholder.ReplaceAllString(matrixSubst(s, entry), "")
+}
+
+// resolveConditionsForEntry pre-processes step conditions for a specific matrix
+// entry (flat ci.yaml job compilation).
+//
+// For a condition of the form "matrix.<key>":
+//   - entry[key] is non-empty  → condition satisfied; no if-guard is emitted
+//   - entry[key] is empty/missing → the step must be dropped; returns (nil, false)
+//
+// All other conditions are passed through unchanged in the returned slice.
+func resolveConditionsForEntry(conditions []string, entry MatrixEntry) ([]string, bool) {
+	var resolved []string
+
+	for _, cond := range conditions {
+		if key, ok := strings.CutPrefix(cond, "matrix."); ok {
+			if entry[key] == "" {
+				return nil, false
+			}
+			// condition satisfied; no guard needed — don't append
+		} else {
+			resolved = append(resolved, cond)
+		}
+	}
+
+	return resolved, true
+}
+
+// compileFlatJobSteps compiles job.Steps for a specific matrix entry, producing
+// a concrete step list for a flat ci.yaml job.
+//
+//   - Matrix conditions are resolved at compile time (steps are dropped when the
+//     entry does not satisfy a matrix.<key> condition).
+//   - ${{ matrix.<key> }} expressions in commands, environment values, artifact
+//     names, and runID are substituted with entry[key].
+//
+// baseSteps (CommonSteps / DefaultSteps) are prepended unchanged.
+//
+//nolint:cyclop,gocognit,cyclop,gocyclo,maintidx
+func compileFlatJobSteps(job Job, entry MatrixEntry, baseSteps []*ghworkflow.JobStep) ([]*ghworkflow.JobStep, error) {
+	result := baseSteps
+
+	for _, step := range job.Steps {
+		resolvedConditions, include := resolveConditionsForEntry(step.Conditions, entry)
+		if !include {
+			continue
+		}
+
+		if step.ArtifactStep != nil {
+			var steps []*ghworkflow.JobStep
+
+			switch step.ArtifactStep.Type {
+			case "upload":
+				artifactName := matrixSubstFull(step.ArtifactStep.ArtifactName, entry)
+				artifactPath := step.ArtifactStep.ArtifactPath
+
+				saveStep := ghworkflow.Step("save artifacts").
+					SetUsesWithComment(
+						"actions/upload-artifact@"+config.UploadArtifactActionRef,
+						"version: "+config.UploadArtifactActionVersion,
+					).
+					SetWith("name", artifactName).
+					SetWith("path", artifactPath+"\n"+strings.Join(step.ArtifactStep.AdditionalArtifacts, "\n")).
+					SetWith("retention-days", "5")
+
+				if step.ArtifactStep.RetentionDays != "" {
+					saveStep.SetWith("retention-days", step.ArtifactStep.RetentionDays)
+				}
+
+				if step.ContinueOnError {
+					saveStep.SetContinueOnError()
+				}
+
+				if err := saveStep.SetConditions(resolvedConditions...); err != nil {
+					return nil, err
+				}
+
+				if !step.ArtifactStep.DisableExecutableListGeneration {
+					genStep := ghworkflow.Step("Generate executable list").
+						SetCommand(fmt.Sprintf("find %s -type f -executable > %s/executable-artifacts", artifactPath, artifactPath))
+
+					if err := genStep.SetConditions(resolvedConditions...); err != nil {
+						return nil, err
+					}
+
+					steps = append(steps, genStep)
+				}
+
+				steps = append(steps, saveStep)
+
+			case "download":
+				artifactName := matrixSubstFull(step.ArtifactStep.ArtifactName, entry)
+
+				dlStep := ghworkflow.Step("Download artifacts").
+					SetUsesWithComment(
+						"actions/download-artifact@"+config.DownloadArtifactActionRef,
+						"version: "+config.DownloadArtifactActionVersion,
+					).
+					SetWith("name", artifactName).
+					SetWith("path", step.ArtifactStep.ArtifactPath)
+
+				if step.ArtifactStep.RunID != "" {
+					dlStep.SetWith("run-id", matrixSubstFull(step.ArtifactStep.RunID, entry))
+				}
+
+				if step.ContinueOnError {
+					dlStep.SetContinueOnError()
+				}
+
+				if err := dlStep.SetConditions(resolvedConditions...); err != nil {
+					return nil, err
+				}
+
+				steps = append(steps, dlStep)
+
+				if !step.ArtifactStep.DisableExecutableListGeneration {
+					fixStep := ghworkflow.Step("Fix artifact permissions").
+						SetCommand(fmt.Sprintf("xargs -a %s/executable-artifacts -I {} chmod +x {}", step.ArtifactStep.ArtifactPath))
+
+					if err := fixStep.SetConditions(resolvedConditions...); err != nil {
+						return nil, err
+					}
+
+					steps = append(steps, fixStep)
+				}
+
+			default:
+				return nil, fmt.Errorf("unknown artifact step type: %s", step.ArtifactStep.Type)
+			}
+
+			result = append(result, steps...)
+
+			continue
+		}
+
+		if step.CheckoutStep != nil {
+			result = append(result, ghworkflow.Step(step.Name).
+				SetUsesWithComment(
+					"actions/checkout@"+config.CheckOutActionRef,
+					"version: "+config.CheckOutActionVersion,
+				).
+				SetWith("repository", step.CheckoutStep.Repository).
+				SetWith("ref", step.CheckoutStep.Ref).
+				SetWith("path", step.CheckoutStep.Path),
+			)
+
+			continue
+		}
+
+		if step.CoverageStep != nil {
+			result = append(result, ghworkflow.Step(step.Name).
+				SetUsesWithComment(
+					"codecov/codecov-action@"+config.CodeCovActionRef,
+					"version: "+config.CodeCovActionVersion,
+				).
+				SetWith("files", strings.Join(step.CoverageStep.Files, ",")).
+				SetWith("token", "${{ secrets.CODECOV_TOKEN }}").
+				SetTimeoutMinutes(step.TimeoutMinutes),
+			)
+
+			continue
+		}
+
+		if step.TerraformStep {
+			result = append(result, ghworkflow.Step(step.Name).
+				SetUsesWithComment(
+					"hashicorp/setup-terraform@"+config.SetupTerraformActionRef,
+					"version: "+config.SetupTerraformActionVersion,
+				).
+				SetWith("terraform_wrapper", "false"),
+			)
+
+			continue
+		}
+
+		if step.RegistryLoginStep != nil {
+			loginStep := ghworkflow.Step(step.Name).
+				SetUsesWithComment(
+					"docker/login-action@"+config.LoginActionRef,
+					"version: "+config.LoginActionVersion,
+				).
+				SetWith("registry", step.RegistryLoginStep.Registry)
+
+			if step.RegistryLoginStep.Registry == "ghcr.io" {
+				loginStep.SetWith("username", "${{ github.repository_owner }}")
+				loginStep.SetWith("password", "${{ secrets.GITHUB_TOKEN }}")
+			}
+
+			if err := loginStep.SetConditions(resolvedConditions...); err != nil {
+				return nil, err
+			}
+
+			result = append(result, loginStep)
+
+			continue
+		}
+
+		// Plain command step
+		command := matrixSubstFull(step.Command, entry)
+		if command == "" {
+			command = step.Name
+		}
+
+		stepDef := ghworkflow.Step(step.Name)
+		stepDef.SetTimeoutMinutes(step.TimeoutMinutes)
+
+		if step.ContinueOnError {
+			stepDef.SetContinueOnError()
+		}
+
+		if err := stepDef.SetConditions(resolvedConditions...); err != nil {
+			return nil, err
+		}
+
+		for k, v := range step.Environment {
+			if val := matrixSubstFull(v, entry); val != "" {
+				stepDef.SetEnv(k, val)
+			}
+		}
+
+		if step.NonMakeStep {
+			if len(step.Arguments) > 0 {
+				command += " " + strings.Join(step.Arguments, "")
+			}
+
+			stepDef.SetCommand(command)
+			result = append(result, stepDef)
+
+			continue
+		}
+
+		stepDef.SetMakeStep(command, step.Arguments...)
+
+		if step.WithSudo {
+			stepDef.SetSudo()
+		}
+
+		result = append(result, stepDef)
+	}
+
+	return result, nil
 }
 
 // DefaultCIFailureSlackNotifyChannel is the default channel for CI failure Slack notifications.
@@ -510,4 +909,32 @@ func (gh *GHWorkflow) AfterLoad() error {
 	}
 
 	return nil
+}
+
+// injectTriggeredRunID returns a copy of steps where any actions/download-artifact
+// step that doesn't already have run-id set gets it injected with the workflow_run
+// event's run ID. This avoids mutating the shared jobDef.Steps slice.
+func injectTriggeredRunID(steps []*ghworkflow.JobStep) []*ghworkflow.JobStep {
+	downloadRef := "actions/download-artifact@" + config.DownloadArtifactActionRef
+	result := make([]*ghworkflow.JobStep, len(steps))
+
+	for i, step := range steps {
+		if step.Uses.Image == downloadRef {
+			if _, ok := step.With["run-id"]; !ok {
+				clone := *step
+				clone.With = make(map[string]string, len(step.With)+1)
+
+				maps.Copy(clone.With, step.With)
+
+				clone.With["run-id"] = "${{ github.event.workflow_run.id }}"
+				result[i] = &clone
+
+				continue
+			}
+		}
+
+		result[i] = step
+	}
+
+	return result
 }

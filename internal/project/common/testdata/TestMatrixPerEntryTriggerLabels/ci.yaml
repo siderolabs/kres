@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2026-04-17T08:42:15Z by kres b6d29bf-dirty.
+# Generated on 2006-01-02T15:04:05Z by test.
 
 concurrency:
   group: ${{ github.head_ref || github.run_id }}
@@ -22,13 +22,14 @@ jobs:
     permissions:
       actions: read
       contents: write
-      id-token: write
       issues: read
       packages: write
       pull-requests: read
     runs-on:
       group: generic
     if: (!startsWith(github.head_ref, 'renovate/') && !startsWith(github.head_ref, 'dependabot/'))
+    outputs:
+      labels: ${{ steps.retrieve-pr-labels.outputs.result }}
     steps:
       - name: gather-system-info
         id: system-info
@@ -67,68 +68,31 @@ jobs:
           driver: remote
           endpoint: tcp://buildkit-amd64.ci.svc.cluster.local:1234
         timeout-minutes: 10
-      - name: Check dirty
-        if: github.event_name == 'pull_request'
-        run: |
-          make check-dirty
-      - name: base
-        run: |
-          make base
-      - name: kres
-        run: |
-          make kres
-      - name: Login to registry
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # version: v4.1.0
+      - name: Retrieve PR labels
+        id: retrieve-pr-labels
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # version: v8.0.0
         with:
-          password: ${{ secrets.GITHUB_TOKEN }}
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-      - name: image-kres
-        run: |
-          make image-kres
-      - name: push-kres
-        if: github.event_name != 'pull_request'
-        env:
-          PLATFORM: linux/amd64,linux/arm64
-          PUSH: "true"
-        run: |
-          make image-kres
-      - name: push-kres-latest
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-        env:
-          PLATFORM: linux/amd64,linux/arm64
-          PUSH: "true"
-        run: |
-          make image-kres IMAGE_TAG=latest
-      - name: Sign artifacts
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          find _out -type f -name _out/kres-* -exec cosign sign-blob --yes --bundle {}.bundle {} \;
-      - name: Generate Checksums
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          cd _out
-          sha256sum kres-* > sha256sum.txt
-          sha512sum kres-* > sha512sum.txt
-      - name: release-notes
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          make release-notes
-      - name: Release
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # version: v2.6.1
-        with:
-          body_path: _out/RELEASE_NOTES.md
-          draft: "true"
-          files: |-
-            _out/kres-*
-            _out/sha*.txt
-            _out/*.bundle
-  lint:
+          retries: "3"
+          script: |
+            if (context.eventName != "pull_request") { return "[]" }
+
+            const resp = await github.rest.issues.get({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+            })
+
+            return resp.data.labels.map(label => label.name)
+  integration-aws-nvidia-nonfree-lts:
+    permissions:
+      actions: read
+      contents: write
+      issues: read
+      packages: write
+      pull-requests: read
     runs-on:
-      group: generic
-    if: github.event_name == 'pull_request'
+      group: large
+    if: contains(fromJSON(needs.default.outputs.labels), 'integration/aws-nvidia-nonfree-lts') || contains(fromJSON(needs.default.outputs.labels), 'integration/aws-nvidia') || contains(fromJSON(needs.default.outputs.labels), 'integration/aws-nvidia-nonfree')
     needs:
       - default
     steps:
@@ -162,20 +126,19 @@ jobs:
       - name: Unshallow
         run: |
           git fetch --prune --unshallow
-      - name: Set up Docker Buildx
-        id: setup-buildx
-        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # version: v4.0.0
-        with:
-          driver: remote
-          endpoint: tcp://buildkit-amd64.ci.svc.cluster.local:1234
-        timeout-minutes: 10
-      - name: lint
+      - name: run-tests
         run: |
-          make lint
-  unit-tests:
+          make e2e-nonfree-lts
+  integration-aws-nvidia-oss-lts:
+    permissions:
+      actions: read
+      contents: write
+      issues: read
+      packages: write
+      pull-requests: read
     runs-on:
-      group: generic
-    if: github.event_name == 'pull_request'
+      group: large
+    if: contains(fromJSON(needs.default.outputs.labels), 'integration/aws-nvidia-oss-lts') || contains(fromJSON(needs.default.outputs.labels), 'integration/aws-nvidia') || contains(fromJSON(needs.default.outputs.labels), 'integration/aws-nvidia-oss')
     needs:
       - default
     steps:
@@ -209,23 +172,6 @@ jobs:
       - name: Unshallow
         run: |
           git fetch --prune --unshallow
-      - name: Set up Docker Buildx
-        id: setup-buildx
-        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # version: v4.0.0
-        with:
-          driver: remote
-          endpoint: tcp://buildkit-amd64.ci.svc.cluster.local:1234
-        timeout-minutes: 10
-      - name: unit-tests
+      - name: run-tests
         run: |
-          make unit-tests
-      - name: unit-tests-race
-        run: |
-          make unit-tests-race
-      - name: coverage
-        uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # version: v6.0.0
-        with:
-          files: _out/coverage-unit-tests.txt
-          flags: unit-tests
-          token: ${{ secrets.CODECOV_TOKEN }}
-        timeout-minutes: 3
+          make e2e-oss-lts

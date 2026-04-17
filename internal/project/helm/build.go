@@ -93,6 +93,8 @@ func (helm *Build) CompileMakefile(output *makefile.Output) error {
 
 	generateTarget := output.GetTarget("generate")
 	if generateTarget != nil {
+		generateTarget.Depends("helm-plugin-install")
+
 		// Only update Chart.yaml for final releases (vX.Y.Z, no pre-release suffix).
 		// This prevents dirty tags, dev builds, and pre-releases from polluting the chart.
 		if helm.meta.ChartVersionMajor != nil {
@@ -176,16 +178,6 @@ fi`, helm.meta.HelmChartDir))
 
 // CompileGitHubWorkflow implements ghworkflow.Compiler.
 func (helm *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
-	cosignInstallStep := ghworkflow.Step("Install cosign").
-		SetUsesWithComment(
-			fmt.Sprintf("sigstore/cosign-installer@%s", config.CosignInstallActionRef),
-			"version: "+config.CosignInstallActionVersion,
-		)
-
-	if err := cosignInstallStep.SetConditions("except-pull-request"); err != nil {
-		return err
-	}
-
 	loginStep := ghworkflow.Step("Login to registry").
 		SetUsesWithComment(
 			"docker/login-action@"+config.LoginActionRef,
@@ -245,13 +237,6 @@ func (helm *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		return err
 	}
 
-	checkDirtyStep := ghworkflow.Step("Check dirty").
-		SetMakeStep("check-dirty")
-
-	if err := checkDirtyStep.SetConditions("on-pull-request"); err != nil {
-		return err
-	}
-
 	// When chartVersionMajor is set, only release stable (non-prerelease) charts.
 	releaseCondition := "only-on-tag"
 	if helm.meta.ChartVersionMajor != nil {
@@ -279,14 +264,6 @@ func (helm *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 
 	jobSteps := []*ghworkflow.JobStep{
 		ghworkflow.SetupBuildxStep(),
-		{
-			Name: "Install Helm",
-			Uses: ghworkflow.ActionRef{
-				Image:   fmt.Sprintf("azure/setup-helm@%s", config.HelmSetupActionRef),
-				Comment: "version: " + config.HelmSetupActionVersion,
-			},
-		},
-		cosignInstallStep,
 		loginStep,
 		lintStep,
 		templateStep,
@@ -307,7 +284,6 @@ func (helm *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 			helmSteps = append(helmSteps, docsStep)
 		}
 
-		helmSteps = append(helmSteps, checkDirtyStep)
 		jobSteps = append(jobSteps, helmSteps...)
 	}
 

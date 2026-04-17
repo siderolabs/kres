@@ -98,16 +98,6 @@ func (release *Release) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		if release.GenerateSignatures {
 			output.AddJobPermissions(ghworkflow.DefaultJobName, "id-token", "write")
 
-			cosignStep := ghworkflow.Step("Install Cosign").
-				SetUsesWithComment(
-					"sigstore/cosign-installer@"+config.CosignInstallActionRef,
-					"version: "+config.CosignInstallActionVersion,
-				)
-
-			if err := cosignStep.SetConditions("only-on-tag"); err != nil {
-				return err
-			}
-
 			signCommands := xslices.Map(artifacts, func(artifact string) string {
 				return fmt.Sprintf("find %s -type f -name %s -exec cosign sign-blob --yes --bundle {}.bundle {} \\;", release.meta.ArtifactsPath, artifact)
 			})
@@ -119,7 +109,7 @@ func (release *Release) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 				return err
 			}
 
-			steps = append(steps, cosignStep, signStep)
+			steps = append(steps, signStep)
 
 			artifactsToUpload += "\n" + filepath.Join(release.meta.ArtifactsPath, "*.bundle")
 		}
