@@ -28,8 +28,8 @@ type Repository struct { //nolint:govet
 
 	meta *meta.Options
 
-	MainBranch      string   `yaml:"mainBranch"`
-	EnforceContexts []string `yaml:"enforceContexts"`
+	MainBranch        string                  `yaml:"mainBranch"`
+	ProtectedBranches []ProtectedBranchConfig `yaml:"protectedBranches"`
 
 	EnableConform             bool     `yaml:"enableConform"`
 	ConformWebhookURL         string   `yaml:"conformWebhookURL"`
@@ -49,6 +49,12 @@ type Repository struct { //nolint:govet
 	BotName string `yaml:"botName"`
 
 	SkipStaleWorkflow bool `yaml:"skipStaleWorkflow"`
+}
+
+// ProtectedBranchConfig configures branch protection for a specific branch.
+type ProtectedBranchConfig struct {
+	Name            string   `yaml:"name"`
+	EnforceContexts []string `yaml:"enforceContexts"`
 }
 
 // LicenseConfig configures the license.
@@ -181,16 +187,25 @@ func (r *Repository) CompileGitHub(client *github.Client) error {
 	return r.inviteBot(client)
 }
 
-//nolint:gocyclo,cyclop
 func (r *Repository) enableBranchProtection(client *github.Client) error {
-	branchProtection, resp, err := client.Repositories.GetBranchProtection(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, r.MainBranch)
-	if err != nil {
-		if resp == nil || resp.StatusCode != http.StatusNotFound {
+	branches := r.ProtectedBranches
+	if len(branches) == 0 {
+		branches = []ProtectedBranchConfig{{Name: r.MainBranch}}
+	}
+
+	for _, branch := range branches {
+		enforceContexts := r.buildEnforceContexts(branch.EnforceContexts)
+
+		if err := r.applyBranchProtection(client, branch.Name, enforceContexts); err != nil {
 			return err
 		}
 	}
 
-	enforceContexts := r.EnforceContexts
+	return nil
+}
+
+func (r *Repository) buildEnforceContexts(base []string) []string {
+	enforceContexts := base
 
 	switch r.meta.CIProvider {
 	case config.CIProviderDrone:
@@ -226,6 +241,18 @@ func (r *Repository) enableBranchProtection(client *github.Client) error {
 		}
 	}
 
+	return slices.Compact(slices.Sorted(slices.Values(enforceContexts)))
+}
+
+//nolint:gocyclo,cyclop
+func (r *Repository) applyBranchProtection(client *github.Client, branch string, enforceContexts []string) error {
+	branchProtection, resp, err := client.Repositories.GetBranchProtection(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, branch)
+	if err != nil {
+		if resp == nil || resp.StatusCode != http.StatusNotFound {
+			return err
+		}
+	}
+
 	statusChecks := xslices.Map(enforceContexts, func(c string) *github.RequiredStatusCheck {
 		return &github.RequiredStatusCheck{
 			Context: c,
@@ -249,10 +276,8 @@ func (r *Repository) enableBranchProtection(client *github.Client) error {
 	}
 
 	if branchProtection != nil {
-		var sigProtected *github.SignaturesProtectedBranch
-
-		sigProtected, _, err = client.Repositories.GetSignaturesProtectedBranch(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, r.MainBranch)
-		if err != nil {
+		sigProtected, _, sigErr := client.Repositories.GetSignaturesProtectedBranch(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, branch)
+		if sigErr != nil {
 			return nil //nolint:nilerr
 		}
 
@@ -276,17 +301,22 @@ func (r *Repository) enableBranchProtection(client *github.Client) error {
 		}
 	}
 
-	_, _, err = client.Repositories.UpdateBranchProtection(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, r.MainBranch, &req)
+	_, updateResp, err := client.Repositories.UpdateBranchProtection(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, branch, &req)
 	if err != nil {
+		if updateResp != nil && updateResp.StatusCode == http.StatusNotFound {
+			fmt.Printf("branch %s not found, skipping protection\n", branch)
+
+			return nil
+		}
+
 		return err
 	}
 
-	_, _, err = client.Repositories.RequireSignaturesOnProtectedBranch(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, r.MainBranch)
-	if err != nil {
+	if _, _, err = client.Repositories.RequireSignaturesOnProtectedBranch(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, branch); err != nil {
 		return err
 	}
 
-	fmt.Println("branch protection settings updated")
+	fmt.Printf("branch protection settings updated for %s\n", branch)
 
 	return nil
 }
