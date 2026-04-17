@@ -47,6 +47,15 @@ func (c *CheckDirty) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		return nil
 	}
 
+	ciTempReleaseTagStep := ghworkflow.Step("CI temp release tag").
+		SetMakeStep("ci-temp-release-tag")
+
+	if err := ciTempReleaseTagStep.SetConditions("on-pull-request"); err != nil {
+		return err
+	}
+
+	output.AddStep("default", ciTempReleaseTagStep)
+
 	checkDirtyStep := ghworkflow.Step("Check dirty").
 		SetMakeStep("check-dirty")
 
