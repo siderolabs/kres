@@ -41,14 +41,14 @@ const (
 	DownloadArtifactActionRef     = "3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c"
 	// GitHubScriptActionVersion is the version of github script action.
 	// renovate: datasource=github-tags depName=actions/github-script
-	GitHubScriptActionVersion = "v8.0.0"
-	GitHubScriptActionRef     = "ed597411d8f924073f98dfc5c65a23a2325f34cd"
+	GitHubScriptActionVersion = "v9.0.0"
+	GitHubScriptActionRef     = "3a2844b7e9c422d3c10d287c895573f7108da1b3"
 	// GoFmtVersion is the version of gofmt.
 	// renovate: datasource=go depName=github.com/mvdan/gofumpt
 	GoFmtVersion = "v0.9.2"
 	// GoImportsVersion is the version of goimports.
 	// renovate: datasource=go depName=golang.org/x/tools
-	GoImportsVersion = "v0.43.0"
+	GoImportsVersion = "v0.44.0"
 	// GoMockVersion is the version of gomock.
 	// renovate: datasource=go depName=github.com/uber-go/mock
 	GoMockVersion = "v0.6.0"
@@ -57,7 +57,7 @@ const (
 	GolangCIlintVersion = "v2.11.4"
 	// DisVulnCheckVersion is the version of dis-vulncheck.
 	// renovate: datasource=go versioning=loose depName=github.com/shanduur/dis-vulncheck
-	DisVulnCheckVersion = "v0.0.0-20260408104044-a7a2dc044240"
+	DisVulnCheckVersion = "v0.0.0-20260409114749-05440f84fe69"
 	// GolangContainerImageVersion is the default golang container image.
 	// renovate: datasource=docker versioning=docker depName=golang
 	GolangContainerImageVersion = "1.26-alpine"
@@ -66,7 +66,7 @@ const (
 	GoVersion = "1.26.2"
 	// GrpcGatewayVersion is the version of grpc-gateway.
 	// renovate: datasource=go depName=github.com/grpc-ecosystem/grpc-gateway
-	GrpcGatewayVersion = "v2.28.0"
+	GrpcGatewayVersion = "v2.29.0"
 	// GrpcGoVersion is the version of grpc.
 	// renovate: datasource=go depName=google.golang.org/grpc/cmd/protoc-gen-go-grpc
 	GrpcGoVersion = "v1.6.1"
@@ -88,14 +88,14 @@ const (
 	MarkdownLintCLIVersion = "0.48.0"
 	// BunContainerImageVersion is the default bun container image.
 	// renovate: datasource=docker versioning=docker depName=oven/bun
-	BunContainerImageVersion = "1.3.11-alpine"
+	BunContainerImageVersion = "1.3.12-alpine"
 	// NodeContainerImageVersion is the default node container image.
 	//
 	// NOTE: Check renovate.json for the rules on this before bumping, e.g., pinned versions.
 	// As a rule of thumb, we bump only to the versions promoted to be LTS (even [not odd] major versions get promoted after a while, always check).
 	//
 	// renovate: datasource=docker versioning=docker depName=node
-	NodeContainerImageVersion = "24.14.1-alpine"
+	NodeContainerImageVersion = "24.15.0-alpine"
 	// PkgsVersion is the version of pkgs.
 	// renovate: datasource=github-tags depName=siderolabs/pkgs
 	PkgsVersion = "v1.12.0"
@@ -107,8 +107,8 @@ const (
 	ProtobufTSGatewayVersion = "v1.4.1"
 	// ReleaseActionVersion is the version of release github action.
 	// renovate: datasource=github-tags depName=softprops/action-gh-release
-	ReleaseActionVersion = "v2.6.1"
-	ReleaseActionRef     = "153bb8e04406b158c6c84fc1615b65b24149a1fe"
+	ReleaseActionVersion = "v3.0.0"
+	ReleaseActionRef     = "b4309332981a82ec1c5618f44dd2e27cc8bfbfda"
 	// SentencesPerLineVersion is the version of sentences-per-line.
 	// renovate: datasource=npm depName=sentences-per-line
 	SentencesPerLineVersion = "0.5.2"
@@ -130,8 +130,8 @@ const (
 	SystemInfoActionRef     = "59699597e84e80085a750998045983daa49274c4"
 	// UploadArtifactActionVersion is the version of upload artifact github action.
 	// renovate: datasource=github-tags depName=actions/upload-artifact
-	UploadArtifactActionVersion = "v7.0.0"
-	UploadArtifactActionRef     = "bbbca2ddaa5d8feaa63e36b76fdaad77386f024f"
+	UploadArtifactActionVersion = "v7.0.1"
+	UploadArtifactActionRef     = "043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"
 	// VTProtobufVersion is the version of vtprotobuf.
 	// renovate: datasource=go depName=github.com/planetscale/vtprotobuf
 	VTProtobufVersion = "v0.6.0"
