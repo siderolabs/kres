@@ -556,10 +556,11 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 			o.AddSlackNotifyForFailure(workflowName)
 
 			triggeredJob := &ghworkflow.Job{
-				If:       "github.event.workflow_run.conclusion == 'success'",
-				RunsOn:   ghworkflow.NewRunsOnGroupLabel(job.RunnerGroup, ""),
-				Services: jobDef.Services,
-				Steps:    injectTriggeredRunID(jobDef.Steps),
+				If:          "github.event.workflow_run.conclusion == 'success'",
+				RunsOn:      ghworkflow.NewRunsOnGroupLabel(job.RunnerGroup, ""),
+				Permissions: ghworkflow.DefaultJobPermissions(),
+				Services:    jobDef.Services,
+				Steps:       injectTriggeredRunID(jobDef.Steps),
 			}
 
 			if job.Matrix != nil {
