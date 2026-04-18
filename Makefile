@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2026-04-17T13:38:11Z by kres ae3e740-dirty.
+# Generated on 2026-04-18T14:09:09Z by kres 4c2445f-dirty.
 
 # common variables
 
@@ -332,4 +332,16 @@ release-notes: $(ARTIFACTS)
 conformance:
 	@docker pull $(CONFORMANCE_IMAGE)
 	@docker run --rm -it -v $(PWD):/src -w /src $(CONFORMANCE_IMAGE) enforce
+
+.PHONY: renovate-local
+renovate-local:  ## runs renovate locally to check syntax and test configuration
+	@docker run --rm \
+		--user $(shell id -u):$(shell id -g) \
+		-v $(PWD):/src \
+		-w /src \
+		-e GITHUB_TOKEN \
+		-e LOG_LEVEL=debug \
+		-e RENOVATE_PLATFORM=local \
+		-e RENOVATE_DRY_RUN=full \
+	renovate/renovate
 

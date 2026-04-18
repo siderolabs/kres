@@ -8,9 +8,20 @@ import (
 	"github.com/siderolabs/gen/xslices"
 
 	"github.com/siderolabs/kres/internal/dag"
+	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/output/renovate"
 	"github.com/siderolabs/kres/internal/project/meta"
 )
+
+const renovateLocalCommand = `@docker run --rm \
+	--user $(shell id -u):$(shell id -g) \
+	-v $(PWD):/src \
+	-w /src \
+	-e GITHUB_TOKEN \
+	-e LOG_LEVEL=debug \
+	-e RENOVATE_PLATFORM=local \
+	-e RENOVATE_DRY_RUN=full \
+renovate/renovate`
 
 // Renovate is a node that represents the renovate configuration.
 type Renovate struct {
@@ -27,6 +38,7 @@ type Renovate struct {
 // CustomDatasource represents a custom datasource.
 type CustomDatasource struct {
 	DefaultRegistryURLTemplate string   `yaml:"defaultRegistryUrlTemplate,omitempty"`
+	Format                     string   `yaml:"format,omitempty"`
 	TransformTemplates         []string `yaml:"transformTemplates,omitempty"`
 }
 
@@ -76,6 +88,7 @@ func (r *Renovate) CompileRenovate(o *renovate.Output) error {
 		for k, v := range r.CustomDatasources {
 			datasources[k] = renovate.CustomDatasource{
 				DefaultRegistryURLTemplate: v.DefaultRegistryURLTemplate,
+				Format:                     v.Format,
 				TransformTemplates:         v.TransformTemplates,
 			}
 		}
@@ -105,6 +118,20 @@ func (r *Renovate) CompileRenovate(o *renovate.Output) error {
 			Versioning:        pr.Versioning,
 		}
 	}))
+
+	return nil
+}
+
+// CompileMakefile implements makefile.Compiler.
+func (r *Renovate) CompileMakefile(output *makefile.Output) error {
+	if !r.Enabled {
+		return nil
+	}
+
+	output.Target("renovate-local").
+		Phony().
+		Description("runs renovate locally to check syntax and test configuration").
+		Script(renovateLocalCommand)
 
 	return nil
 }

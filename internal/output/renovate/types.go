@@ -19,6 +19,7 @@ type Renovate struct {
 // CustomDatasource represents a custom datasource.
 type CustomDatasource struct {
 	DefaultRegistryURLTemplate string   `json:"defaultRegistryUrlTemplate,omitempty"`
+	Format                     string   `json:"format,omitempty"`
 	TransformTemplates         []string `json:"transformTemplates,omitempty"`
 }
 
