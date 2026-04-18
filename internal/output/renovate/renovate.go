@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"maps"
 	"slices"
 
 	"github.com/siderolabs/kres/internal/output"
@@ -74,6 +75,15 @@ func (o *Output) Enable() {
 // CustomManagers sets custom managers.
 func (o *Output) CustomManagers(customManagers []CustomManager) {
 	o.result.CustomManagers = slices.Concat(o.result.CustomManagers, customManagers)
+}
+
+// CustomDatasources sets custom datasources.
+func (o *Output) CustomDatasources(customDatasources map[string]CustomDatasource) {
+	if o.result.CustomDatasources == nil {
+		o.result.CustomDatasources = make(map[string]CustomDatasource)
+	}
+
+	maps.Copy(o.result.CustomDatasources, customDatasources)
 }
 
 // PackageRules sets package rules.

@@ -18,9 +18,16 @@ type Renovate struct {
 
 	meta *meta.Options
 
-	CustomManagers []CustomManager `yaml:"customManagers,omitempty"`
-	PackageRules   []PackageRule   `yaml:"packageRules,omitempty"`
-	Enabled        bool            `yaml:"enabled"`
+	CustomDatasources map[string]CustomDatasource `yaml:"customDatasources,omitempty"`
+	CustomManagers    []CustomManager             `yaml:"customManagers,omitempty"`
+	PackageRules      []PackageRule               `yaml:"packageRules,omitempty"`
+	Enabled           bool                        `yaml:"enabled"`
+}
+
+// CustomDatasource represents a custom datasource.
+type CustomDatasource struct {
+	DefaultRegistryURLTemplate string   `yaml:"defaultRegistryUrlTemplate,omitempty"`
+	TransformTemplates         []string `yaml:"transformTemplates,omitempty"`
 }
 
 // CustomManager represents a custom manager.
@@ -62,6 +69,19 @@ func (r *Renovate) CompileRenovate(o *renovate.Output) error {
 	}
 
 	o.Enable()
+
+	if len(r.CustomDatasources) > 0 {
+		datasources := make(map[string]renovate.CustomDatasource, len(r.CustomDatasources))
+
+		for k, v := range r.CustomDatasources {
+			datasources[k] = renovate.CustomDatasource{
+				DefaultRegistryURLTemplate: v.DefaultRegistryURLTemplate,
+				TransformTemplates:         v.TransformTemplates,
+			}
+		}
+
+		o.CustomDatasources(datasources)
+	}
 
 	o.CustomManagers(xslices.Map(r.CustomManagers, func(cm CustomManager) renovate.CustomManager {
 		return renovate.CustomManager{

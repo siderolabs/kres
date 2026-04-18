@@ -6,13 +6,20 @@ package renovate
 
 // Renovate represents the renovate configuration.
 type Renovate struct {
-	Schema             string          `json:"$schema"`
-	Description        string          `json:"description"`
-	PRHeader           string          `json:"prHeader"`
-	Extends            []string        `json:"extends"`
-	CustomManagers     []CustomManager `json:"customManagers,omitempty"`
-	PackageRules       []PackageRule   `json:"packageRules,omitempty"`
-	SeparateMajorMinor bool            `json:"separateMajorMinor"`
+	Schema             string                      `json:"$schema"`
+	Description        string                      `json:"description"`
+	PRHeader           string                      `json:"prHeader"`
+	Extends            []string                    `json:"extends"`
+	CustomDatasources  map[string]CustomDatasource `json:"customDatasources,omitempty"`
+	CustomManagers     []CustomManager             `json:"customManagers,omitempty"`
+	PackageRules       []PackageRule               `json:"packageRules,omitempty"`
+	SeparateMajorMinor bool                        `json:"separateMajorMinor"`
+}
+
+// CustomDatasource represents a custom datasource.
+type CustomDatasource struct {
+	DefaultRegistryURLTemplate string   `json:"defaultRegistryUrlTemplate,omitempty"`
+	TransformTemplates         []string `json:"transformTemplates,omitempty"`
 }
 
 // CustomManager represents a custom manager.
