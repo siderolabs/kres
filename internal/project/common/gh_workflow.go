@@ -249,7 +249,8 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 						SetWith("path", step.ArtifactStep.ArtifactPath)
 
 					if step.ArtifactStep.RunID != "" {
-						downloadArtifactsStep.SetWith("run-id", step.ArtifactStep.RunID)
+						downloadArtifactsStep.SetWith("run-id", step.ArtifactStep.RunID).
+							SetWith("github-token", "${{ secrets.GITHUB_TOKEN }}")
 					}
 
 					if step.ContinueOnError {
@@ -556,11 +557,13 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 			o.AddSlackNotifyForFailure(workflowName)
 
 			triggeredJob := &ghworkflow.Job{
-				If:          "github.event.workflow_run.conclusion == 'success'",
-				RunsOn:      ghworkflow.NewRunsOnGroupLabel(job.RunnerGroup, ""),
-				Permissions: ghworkflow.DefaultJobPermissions(),
-				Services:    jobDef.Services,
-				Steps:       injectTriggeredRunID(jobDef.Steps),
+				If:     "github.event.workflow_run.conclusion == 'success'",
+				RunsOn: ghworkflow.NewRunsOnGroupLabel(job.RunnerGroup, ""),
+				Permissions: map[string]string{
+					"actions": "read",
+				},
+				Services: jobDef.Services,
+				Steps:    injectTriggeredRunID(jobDef.Steps),
 			}
 
 			if job.Matrix != nil {
@@ -758,7 +761,8 @@ func compileFlatJobSteps(job Job, entry MatrixEntry, baseSteps []*ghworkflow.Job
 					SetWith("path", step.ArtifactStep.ArtifactPath)
 
 				if step.ArtifactStep.RunID != "" {
-					dlStep.SetWith("run-id", matrixSubstFull(step.ArtifactStep.RunID, entry))
+					dlStep.SetWith("run-id", matrixSubstFull(step.ArtifactStep.RunID, entry)).
+						SetWith("github-token", "${{ secrets.GITHUB_TOKEN }}")
 				}
 
 				if step.ContinueOnError {
@@ -928,6 +932,7 @@ func injectTriggeredRunID(steps []*ghworkflow.JobStep) []*ghworkflow.JobStep {
 				maps.Copy(clone.With, step.With)
 
 				clone.With["run-id"] = "${{ github.event.workflow_run.id }}"
+				clone.With["github-token"] = "${{ secrets.GITHUB_TOKEN }}"
 				result[i] = &clone
 
 				continue
