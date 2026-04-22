@@ -238,6 +238,89 @@ func TestArtifactStepRunID(t *testing.T) {
 	assertGolden(t, "integration-provision-triggered.yaml", buf.Bytes())
 }
 
+// TestTriggeredWorkflowMatrixFailFast verifies that a triggered workflow with a
+// matrix strategy has fail-fast: false so that one entry failing does not cancel
+// the remaining entries.
+func TestTriggeredWorkflowMatrixFailFast(t *testing.T) {
+	jobs := []common.Job{
+		{
+			Name:        "integration-misc-3",
+			RunnerGroup: "large",
+			Depends:     []string{"default"},
+			TriggerLabels: []string{
+				"integration/misc-3",
+			},
+			OnWorkflowRun: &common.OnWorkflowRun{
+				Workflows: []string{"artifacts-cron"},
+				Types:     []string{"completed"},
+			},
+			Matrix: &common.Matrix{
+				MaxParallel: 1,
+				LabelKeys:   []string{"variant"},
+				Include: []common.MatrixInclude{
+					{Values: common.MatrixEntry{"variant": "default"}},
+					{Values: common.MatrixEntry{"variant": "enforcing", "buildEnforcing": "true"}},
+				},
+			},
+			Steps: []common.Step{
+				{Name: "run-tests", Command: "e2e-${{ matrix.variant }}"},
+			},
+		},
+	}
+
+	o := compileWorkflow(t, jobs)
+
+	var buf bytes.Buffer
+
+	require.NoError(t, o.GenerateFile(".github/workflows/integration-misc-3-triggered.yaml", &buf))
+	assertGolden(t, "integration-misc-3-triggered.yaml", buf.Bytes())
+}
+
+// TestFlatJobMatrix verifies that a job with flatJobMatrix: true emits a matrix
+// strategy in ci.yaml (with max-parallel and fail-fast: false) instead of flat
+// job expansion, and that the name field is set from labelKeys.
+func TestFlatJobMatrix(t *testing.T) {
+	jobs := []common.Job{
+		{
+			Name:        "integration-misc-0",
+			RunnerGroup: "large",
+			Depends:     []string{"default"},
+			TriggerLabels: []string{
+				"integration/misc-0",
+			},
+			Matrix: &common.Matrix{
+				MaxParallel:   2,
+				FlatJobMatrix: true,
+				LabelKeys:     []string{"test"},
+				Include: []common.MatrixInclude{
+					{Values: common.MatrixEntry{"test": "e2e-firewall", "shortIntegrationTest": "yes"}},
+					{Values: common.MatrixEntry{"test": "e2e-canal-reset", "integrationTestRun": "TestIntegration/api.ResetSuite/TestResetWithSpec"}},
+					{Values: common.MatrixEntry{"test": "e2e-controlplane-port", "shortIntegrationTest": "yes", "withControlPlanePort": "443"}},
+				},
+			},
+			Steps: []common.Step{
+				{
+					Name:     "e2e-qemu",
+					Command:  "e2e-qemu",
+					WithSudo: true,
+					Environment: map[string]string{
+						"SHORT_INTEGRATION_TEST":  "${{ matrix.shortIntegrationTest }}",
+						"INTEGRATION_TEST_RUN":    "${{ matrix.integrationTestRun }}",
+						"WITH_CONTROL_PLANE_PORT": "${{ matrix.withControlPlanePort }}",
+					},
+				},
+			},
+		},
+	}
+
+	o := compileWorkflow(t, jobs)
+
+	var buf bytes.Buffer
+
+	require.NoError(t, o.GenerateFile(ghworkflow.CiWorkflow, &buf))
+	assertGolden(t, "ci.yaml", buf.Bytes())
+}
+
 // TestMatrixPerEntryTriggerLabels verifies that per-entry TriggerLabels fire only
 // the matching flat job, while job-level TriggerLabels fire all flat jobs.
 // This tests the combined oss/nonfree scenario where integration/aws-nvidia-oss must

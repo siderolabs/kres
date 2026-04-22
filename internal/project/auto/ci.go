@@ -41,10 +41,14 @@ func (builder *builder) DetectCI() (bool, error) {
 func (builder *builder) BuildCI() error {
 	var targets []dag.Node
 
-	targets = append(targets, common.NewGHWorkflow(builder.meta))
+	ghw := common.NewGHWorkflow(builder.meta)
+	targets = append(targets, ghw)
 
 	if builder.meta.CompileGithubWorkflowsOnly {
-		targets = append(targets, common.NewRepository(builder.meta))
+		repo := common.NewRepository(builder.meta)
+		repo.SetAutoContextsFunc(ghw.CollectEnforceContexts)
+		repo.SetAutoLabelsFunc(ghw.CollectTriggerLabels)
+		targets = append(targets, repo)
 		targets = append(targets, common.NewSOPS(builder.meta))
 		targets = append(targets, common.NewRenovate(builder.meta))
 	}

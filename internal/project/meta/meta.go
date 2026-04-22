@@ -23,6 +23,10 @@ type Options struct { //nolint:govet
 	// Git settings.
 	MainBranch string
 
+	// CurrentBranch is the currently checked-out git branch (short name).
+	// Empty when running outside a git checkout or on a detached HEAD.
+	CurrentBranch string
+
 	// CanonicalPaths, import path for Go projects.
 	CanonicalPaths []string
 

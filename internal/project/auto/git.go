@@ -57,6 +57,10 @@ func (builder *builder) DetectGit() (bool, error) {
 		builder.meta.MainBranch = main
 	}
 
+	if head, headErr := repo.Head(); headErr == nil && head.Name().IsBranch() {
+		builder.meta.CurrentBranch = head.Name().Short()
+	}
+
 	remotes, err := repo.Remotes()
 	if err != nil {
 		return true, err

@@ -7,8 +7,10 @@ package common
 import (
 	"context"
 	"fmt"
+	"maps"
 	"net/http"
 	"slices"
+	"strings"
 
 	"github.com/google/go-github/v84/github"
 	"github.com/siderolabs/gen/xslices"
@@ -28,8 +30,21 @@ type Repository struct { //nolint:govet
 
 	meta *meta.Options
 
-	MainBranch        string                  `yaml:"mainBranch"`
-	ProtectedBranches []ProtectedBranchConfig `yaml:"protectedBranches"`
+	// autoContextsFunc returns additional status check contexts to enforce,
+	// computed at compile time (e.g. from GHWorkflow jobs).
+	autoContextsFunc func() []string
+
+	// autoLabelsFunc returns PR trigger labels that should exist on the
+	// repository, mapped to their description (empty string if unset). Computed
+	// at compile time (e.g. from GHWorkflow jobs).
+	autoLabelsFunc func() map[string]string
+
+	MainBranch string `yaml:"mainBranch"`
+
+	// DryRun, when true, logs the intended branch protection / conform changes
+	// instead of calling the GitHub API. Dry-run is also implicit when
+	// GITHUB_TOKEN is unset.
+	DryRun bool `yaml:"dryRun,omitempty"`
 
 	EnableConform             bool     `yaml:"enableConform"`
 	ConformWebhookURL         string   `yaml:"conformWebhookURL"`
@@ -49,12 +64,6 @@ type Repository struct { //nolint:govet
 	BotName string `yaml:"botName"`
 
 	SkipStaleWorkflow bool `yaml:"skipStaleWorkflow"`
-}
-
-// ProtectedBranchConfig configures branch protection for a specific branch.
-type ProtectedBranchConfig struct {
-	Name            string   `yaml:"name"`
-	EnforceContexts []string `yaml:"enforceContexts"`
 }
 
 // LicenseConfig configures the license.
@@ -172,10 +181,24 @@ func (r *Repository) CompileLicense(o *license.Output) error {
 	return nil
 }
 
-// CompileGitHub implements github.Compiler.
+// CompileGitHub implements github.Compiler. When Repository.DryRun is true,
+// changes are logged instead of applied. When GITHUB_TOKEN is unset and
+// DryRun is false, the step is skipped entirely.
 func (r *Repository) CompileGitHub(client *github.Client) error {
+	if client == nil && !r.DryRun {
+		return nil
+	}
+
 	if err := r.enableBranchProtection(client); err != nil {
 		return err
+	}
+
+	if err := r.enableLabels(client); err != nil {
+		return err
+	}
+
+	if r.DryRun {
+		return nil
 	}
 
 	if r.EnableConform {
@@ -188,16 +211,98 @@ func (r *Repository) CompileGitHub(client *github.Client) error {
 }
 
 func (r *Repository) enableBranchProtection(client *github.Client) error {
-	branches := r.ProtectedBranches
-	if len(branches) == 0 {
-		branches = []ProtectedBranchConfig{{Name: r.MainBranch}}
+	// When kres runs from a release-* branch, protect that branch; otherwise
+	// protect main.
+	targetBranch := r.MainBranch
+	if strings.HasPrefix(r.meta.CurrentBranch, "release-") {
+		targetBranch = r.meta.CurrentBranch
 	}
 
-	for _, branch := range branches {
-		enforceContexts := r.buildEnforceContexts(branch.EnforceContexts)
+	enforceContexts := r.buildEnforceContexts(nil)
 
-		if err := r.applyBranchProtection(client, branch.Name, enforceContexts); err != nil {
-			return err
+	if r.DryRun {
+		fmt.Printf("dry-run: branch protection for %s would require %d contexts:\n", targetBranch, len(enforceContexts))
+
+		for _, c := range enforceContexts {
+			fmt.Printf("  - %s\n", c)
+		}
+
+		return nil
+	}
+
+	return r.applyBranchProtection(client, targetBranch, enforceContexts)
+}
+
+// SetAutoContextsFunc registers a callback that supplies auto-computed status
+// check contexts (e.g. from GHWorkflow jobs). The callback is invoked at compile
+// time, after the DAG has been loaded from .kres.yaml.
+func (r *Repository) SetAutoContextsFunc(fn func() []string) {
+	r.autoContextsFunc = fn
+}
+
+// SetAutoLabelsFunc registers a callback that supplies auto-computed PR labels
+// (e.g. trigger labels from GHWorkflow jobs) mapped to their description. The
+// callback is invoked at compile time, after the DAG has been loaded from
+// .kres.yaml.
+func (r *Repository) SetAutoLabelsFunc(fn func() map[string]string) {
+	r.autoLabelsFunc = fn
+}
+
+// autoLabelColor is the default color for labels created automatically by kres.
+const autoLabelColor = "ededed"
+
+func (r *Repository) enableLabels(client *github.Client) error {
+	if r.autoLabelsFunc == nil {
+		return nil
+	}
+
+	labels := r.autoLabelsFunc()
+	if len(labels) == 0 {
+		return nil
+	}
+
+	names := slices.Sorted(maps.Keys(labels))
+
+	if r.DryRun {
+		fmt.Printf("dry-run: repository would ensure %d PR labels exist:\n", len(names))
+
+		for _, name := range names {
+			if desc := labels[name]; desc != "" {
+				fmt.Printf("  - %s — %s\n", name, desc)
+			} else {
+				fmt.Printf("  - %s\n", name)
+			}
+		}
+
+		return nil
+	}
+
+	for _, name := range names {
+		desc := labels[name]
+
+		existing, resp, err := client.Issues.GetLabel(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, name)
+		if err != nil {
+			if resp == nil || resp.StatusCode != http.StatusNotFound {
+				return fmt.Errorf("failed to check label %q: %w", name, err)
+			}
+
+			if _, _, err := client.Issues.CreateLabel(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, &github.Label{
+				Name:        new(name),
+				Color:       new(autoLabelColor),
+				Description: new(desc),
+			}); err != nil {
+				return fmt.Errorf("failed to create label %q: %w", name, err)
+			}
+
+			continue
+		}
+
+		if desc != "" && existing.GetDescription() != desc {
+			if _, _, err := client.Issues.EditLabel(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, name, &github.Label{
+				Description: new(desc),
+			}); err != nil {
+				return fmt.Errorf("failed to update description for label %q: %w", name, err)
+			}
 		}
 	}
 
@@ -206,6 +311,10 @@ func (r *Repository) enableBranchProtection(client *github.Client) error {
 
 func (r *Repository) buildEnforceContexts(base []string) []string {
 	enforceContexts := base
+
+	if r.autoContextsFunc != nil {
+		enforceContexts = append(enforceContexts, r.autoContextsFunc()...)
+	}
 
 	switch r.meta.CIProvider {
 	case config.CIProviderDrone:

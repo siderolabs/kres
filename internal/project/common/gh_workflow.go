@@ -9,6 +9,7 @@ import (
 	"maps"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/siderolabs/gen/xslices"
@@ -56,9 +57,10 @@ type MatrixInclude struct {
 // Matrix configures a GitHub Actions matrix strategy on a triggered workflow,
 // and controls how ci.yaml expands the matrix into individual jobs.
 type Matrix struct {
-	Include     []MatrixInclude `yaml:"include"`
-	LabelKeys   []string        `yaml:"labelKeys,omitempty"`
-	MaxParallel int             `yaml:"maxParallel"`
+	Include       []MatrixInclude `yaml:"include"`
+	LabelKeys     []string        `yaml:"labelKeys,omitempty"`
+	MaxParallel   int             `yaml:"maxParallel"`
+	FlatJobMatrix bool            `yaml:"flatJobMatrix,omitempty"`
 }
 
 // OnWorkflowRun defines options for workflow_run triggers.
@@ -138,6 +140,11 @@ type GHWorkflow struct {
 	CIFailuresSlackNotifyChannel string `yaml:"ciFailuresSlackNotifyChannel,omitempty"`
 	CustomRunnerGroup            string `yaml:"customRunnerGroup,omitempty"`
 
+	// LabelDescriptions maps PR trigger label names to human-readable
+	// descriptions. Used by repository.enableLabels to set descriptions when
+	// creating/updating labels.
+	LabelDescriptions map[string]string `yaml:"labelDescriptions,omitempty"`
+
 	Jobs []Job `yaml:"jobs"`
 }
 
@@ -153,6 +160,84 @@ func NewGHWorkflow(meta *meta.Options) *GHWorkflow {
 
 		meta: meta,
 	}
+}
+
+// CollectEnforceContexts returns the list of GitHub Actions check names for
+// all jobs defined in this workflow, including per-entry names for flat-expanded
+// and flatJobMatrix matrix jobs. Jobs that don't run on pull requests (cronOnly
+// or gated by conditions that exclude PRs) are skipped. The result is suitable
+// for use as required status checks in branch protection.
+func (gh *GHWorkflow) CollectEnforceContexts() []string {
+	var contexts []string
+
+	for _, job := range gh.Jobs {
+		// Skip jobs that can never produce a PR status check:
+		//   - cronOnly: scheduled-only, not in ci.yaml
+		//   - Dispatchable: workflow_dispatch only (dispatch.yaml, not ci.yaml)
+		//   - Conditions that explicitly exclude PRs (only-on-*, except-pull-request)
+		if job.CronOnly || job.Dispatchable {
+			continue
+		}
+
+		// Conditions default to running on PRs when unset; explicit conditions
+		// must include "on-pull-request" to qualify as a PR status check.
+		if len(job.Conditions) > 0 && !slices.Contains(job.Conditions, "on-pull-request") {
+			continue
+		}
+
+		if job.Matrix == nil || len(job.Matrix.LabelKeys) == 0 {
+			contexts = append(contexts, job.Name)
+
+			continue
+		}
+
+		for _, entry := range job.Matrix.Include {
+			parts := make([]string, 0, len(job.Matrix.LabelKeys))
+
+			for _, k := range job.Matrix.LabelKeys {
+				if v := entry.Values[k]; v != "" {
+					parts = append(parts, v)
+				}
+			}
+
+			suffix := strings.Join(parts, "-")
+
+			if job.Matrix.FlatJobMatrix {
+				contexts = append(contexts, suffix)
+			} else {
+				contexts = append(contexts, job.Name+"-"+suffix)
+			}
+		}
+	}
+
+	return contexts
+}
+
+// CollectTriggerLabels returns the deduplicated set of PR labels referenced as
+// job-level TriggerLabels or per-entry matrix TriggerLabels, mapped to their
+// description (taken from GHWorkflow.LabelDescriptions; empty string if none).
+// The result is suitable for provisioning the corresponding labels on the
+// GitHub repository.
+func (gh *GHWorkflow) CollectTriggerLabels() map[string]string {
+	labels := map[string]string{}
+
+	for _, job := range gh.Jobs {
+		for _, l := range job.TriggerLabels {
+			labels[l] = gh.LabelDescriptions[l]
+		}
+
+		if job.Matrix == nil {
+			continue
+		}
+
+		for _, entry := range job.Matrix.Include {
+			for _, l := range entry.TriggerLabels {
+				labels[l] = gh.LabelDescriptions[l]
+			}
+		}
+	}
+
+	return labels
 }
 
 // CompileGitHubWorkflow implements ghworkflow.Compiler.
@@ -471,9 +556,13 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 				return fmt.Errorf("job %s has triggerLabels but no depends", job.Name)
 			}
 
-			for _, dep := range job.Depends {
-				if _, ok := touchedJobs[dep]; !ok {
-					o.AddStep(dep,
+			// The if: condition reads from needs.default.outputs.labels, so only
+			// the "default" job (if it's a dep) needs the retrieve-pr-labels step.
+			const labelProvider = ghworkflow.DefaultJobName
+
+			if slices.Contains(job.Depends, labelProvider) {
+				if _, ok := touchedJobs[labelProvider]; !ok {
+					o.AddStep(labelProvider,
 						ghworkflow.Step("Retrieve PR labels").
 							SetID("retrieve-pr-labels").
 							SetUsesWithComment(
@@ -484,15 +573,15 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 							SetWith("script", strings.TrimPrefix(ghworkflow.IssueLabelRetrieveScript, "\n")),
 					)
 
-					o.AddOutputs(dep, map[string]string{
+					o.AddOutputs(labelProvider, map[string]string{
 						"labels": "${{ steps.retrieve-pr-labels.outputs.result }}",
 					})
 
-					touchedJobs[dep] = struct{}{}
+					touchedJobs[labelProvider] = struct{}{}
 				}
 			}
 
-			if job.Matrix != nil && len(job.Matrix.LabelKeys) > 0 {
+			if job.Matrix != nil && len(job.Matrix.LabelKeys) > 0 && !job.Matrix.FlatJobMatrix {
 				// Flat job expansion: emit one individual ci.yaml job per matrix entry.
 				// Job-level triggerLabels fire all flat jobs; per-entry TriggerLabels
 				// fire only that specific entry's flat job.
@@ -543,6 +632,36 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 				})
 
 				jobDef.If = strings.Join(conditions, " || ")
+
+				if job.Matrix != nil && job.Matrix.FlatJobMatrix {
+					failFast := false
+
+					jobDef.Strategy = &ghworkflow.Strategy{
+						MaxParallel: job.Matrix.MaxParallel,
+						FailFast:    &failFast,
+						Matrix: &ghworkflow.StrategyMatrix{
+							Include: xslices.Map(job.Matrix.Include, func(e MatrixInclude) map[string]string {
+								result := make(map[string]string, len(e.Values))
+								for k, v := range e.Values {
+									if v != "" {
+										result[k] = v
+									}
+								}
+
+								return result
+							}),
+						},
+					}
+
+					if len(job.Matrix.LabelKeys) > 0 {
+						parts := make([]string, 0, len(job.Matrix.LabelKeys))
+						for _, k := range job.Matrix.LabelKeys {
+							parts = append(parts, "${{ matrix."+k+" }}")
+						}
+
+						jobDef.Name = strings.Join(parts, "-")
+					}
+				}
 			}
 		}
 
@@ -567,13 +686,38 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 			}
 
 			if job.Matrix != nil {
+				failFast := false
+
 				triggeredJob.Strategy = &ghworkflow.Strategy{
 					MaxParallel: job.Matrix.MaxParallel,
+					FailFast:    &failFast,
 					Matrix: &ghworkflow.StrategyMatrix{
 						Include: xslices.Map(job.Matrix.Include, func(e MatrixInclude) map[string]string {
-							return map[string]string(e.Values)
+							result := make(map[string]string, len(e.Values))
+							for k, v := range e.Values {
+								if v != "" {
+									result[k] = v
+								}
+							}
+
+							return result
 						}),
 					},
+				}
+
+				if len(job.Matrix.LabelKeys) > 0 {
+					parts := make([]string, 0, len(job.Matrix.LabelKeys))
+					for _, k := range job.Matrix.LabelKeys {
+						parts = append(parts, "${{ matrix."+k+" }}")
+					}
+
+					triggeredJob.Name = strings.Join(parts, "-")
+				} else if len(job.Matrix.Include) > 0 {
+					for k := range job.Matrix.Include[0].Values {
+						triggeredJob.Name = "${{ matrix." + k + " }}"
+
+						break
+					}
 				}
 			}
 

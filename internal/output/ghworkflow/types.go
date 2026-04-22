@@ -89,8 +89,8 @@ type Push struct {
 // Strategy represents GitHub Actions job strategy.
 type Strategy struct {
 	Matrix      *StrategyMatrix `yaml:"matrix,omitempty"`
+	FailFast    *bool           `yaml:"fail-fast,omitempty"`
 	MaxParallel int             `yaml:"max-parallel,omitempty"`
-	FailFast    bool            `yaml:"fail-fast,omitempty"`
 }
 
 // StrategyMatrix represents GitHub Actions strategy matrix.
@@ -100,6 +100,7 @@ type StrategyMatrix struct {
 
 // Job represents GitHub Actions job.
 type Job struct {
+	Name        string             `yaml:"name,omitempty"`
 	Permissions map[string]string  `yaml:"permissions,omitempty"`
 	RunsOn      RunsOn             `yaml:"runs-on"`
 	If          string             `yaml:"if,omitempty"`
