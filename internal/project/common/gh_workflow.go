@@ -200,6 +200,10 @@ func (gh *GHWorkflow) CollectEnforceContexts() []string {
 				}
 			}
 
+			if len(parts) == 0 {
+				continue
+			}
+
 			suffix := strings.Join(parts, "-")
 
 			if job.Matrix.FlatJobMatrix {
@@ -551,6 +555,13 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 
 		flatJobsAdded := false
 
+		// flatMatrixGateCondition, when non-empty, signals that this job is a
+		// flatJobMatrix whose label check should be applied as a gate step
+		// (inserted after the triggered workflow is generated) instead of as a
+		// job-level if, so the matrix always expands and per-entry check names
+		// resolve correctly.
+		var flatMatrixGateCondition string
+
 		if len(job.TriggerLabels) > 0 {
 			if len(job.Depends) < 1 {
 				return fmt.Errorf("job %s has triggerLabels but no depends", job.Name)
@@ -631,7 +642,17 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 					return fmt.Sprintf("contains(fromJSON(needs.default.outputs.labels), '%s')", label)
 				})
 
-				jobDef.If = strings.Join(conditions, " || ")
+				ifCondition := strings.Join(conditions, " || ")
+
+				if job.Matrix != nil && job.Matrix.FlatJobMatrix {
+					// For flatJobMatrix, don't set jobDef.If — matrix must always
+					// expand so per-entry check names resolve. The label check is
+					// instead applied as a gate step (see below, after triggered
+					// workflow generation).
+					flatMatrixGateCondition = ifCondition
+				} else {
+					jobDef.If = ifCondition
+				}
 
 				if job.Matrix != nil && job.Matrix.FlatJobMatrix {
 					failFast := false
@@ -713,10 +734,9 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 
 					triggeredJob.Name = strings.Join(parts, "-")
 				} else if len(job.Matrix.Include) > 0 {
-					for k := range job.Matrix.Include[0].Values {
-						triggeredJob.Name = "${{ matrix." + k + " }}"
-
-						break
+					keys := slices.Sorted(maps.Keys(job.Matrix.Include[0].Values))
+					if len(keys) > 0 {
+						triggeredJob.Name = "${{ matrix." + keys[0] + " }}"
 					}
 				}
 			}
@@ -774,6 +794,27 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 					},
 				},
 			)
+		}
+
+		if flatMatrixGateCondition != "" {
+			const gateRef = "steps.check-pr-labels.conclusion == 'success'"
+
+			for _, step := range jobDef.Steps {
+				if step.If == "" {
+					step.If = gateRef
+				} else {
+					step.If = step.If + " && " + gateRef
+				}
+			}
+
+			gateStep := &ghworkflow.JobStep{
+				Name: "check-pr-labels",
+				ID:   "check-pr-labels",
+				If:   flatMatrixGateCondition,
+				Run:  "true",
+			}
+
+			jobDef.Steps = append([]*ghworkflow.JobStep{gateStep}, jobDef.Steps...)
 		}
 
 		if !job.CronOnly && !flatJobsAdded {

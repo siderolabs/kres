@@ -91,8 +91,18 @@ func (helm *Build) CompileMakefile(output *makefile.Output) error {
 		Variable(makefile.OverridableVariable("COSIGN_ARGS", "")).
 		Variable(makefile.OverridableVariable("HELMDOCS_VERSION", config.HelmDocsVersion))
 
-	generateTarget := output.GetTarget("generate")
-	if generateTarget != nil {
+	var hasGenerate bool
+
+	for _, parent := range helm.Parents() {
+		if dag.FindByName("protobuf", parent.Inputs()...) != nil {
+			hasGenerate = true
+
+			break
+		}
+	}
+
+	if hasGenerate {
+		generateTarget := output.Target("generate")
 		generateTarget.Depends("helm-plugin-install")
 
 		// Only update Chart.yaml for final releases (vX.Y.Z, no pre-release suffix).

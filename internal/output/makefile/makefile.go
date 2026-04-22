@@ -55,8 +55,14 @@ func (o *Output) VariableGroup(description string) *VariableGroup {
 	return o.variableGroups[description]
 }
 
-// Target creates new Makefile target.
+// Target returns an existing Makefile target by name, or creates a new one.
 func (o *Output) Target(name string) *Target {
+	for _, target := range o.targets {
+		if target.name == name {
+			return target
+		}
+	}
+
 	target := &Target{name: name}
 
 	o.targets = append(o.targets, target)
@@ -69,17 +75,6 @@ func (o *Output) HasTarget(name string) bool {
 	return slices.ContainsFunc(o.targets, func(t *Target) bool {
 		return t.name == name
 	})
-}
-
-// GetTarget returns target by name.
-func (o *Output) GetTarget(name string) *Target {
-	for _, target := range o.targets {
-		if target.name == name {
-			return target
-		}
-	}
-
-	return nil
 }
 
 // IfTrueCondition creates new Makefile condition.

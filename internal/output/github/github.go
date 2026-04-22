@@ -47,8 +47,9 @@ func (o *Output) Generate() error {
 }
 
 // Compile implements [output.TypedWriter] interface. The client may be nil
-// when GITHUB_TOKEN is not set; compilers are expected to treat a nil client
-// as dry-run (print intended state, skip API calls).
+// when GITHUB_TOKEN is not set, which disables GitHub API integration. The
+// nil client is forwarded to the compiler as-is; dry-run behavior must be
+// opted into explicitly by the compiler.
 func (o *Output) Compile(compiler Compiler) error {
 	return compiler.CompileGitHub(o.client)
 }

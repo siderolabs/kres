@@ -42,8 +42,8 @@ type Repository struct { //nolint:govet
 	MainBranch string `yaml:"mainBranch"`
 
 	// DryRun, when true, logs the intended branch protection / conform changes
-	// instead of calling the GitHub API. Dry-run is also implicit when
-	// GITHUB_TOKEN is unset.
+	// instead of calling the GitHub API. Must be set explicitly; when
+	// GITHUB_TOKEN is unset, GitHub API integration is skipped entirely.
 	DryRun bool `yaml:"dryRun,omitempty"`
 
 	EnableConform             bool     `yaml:"enableConform"`
@@ -182,8 +182,9 @@ func (r *Repository) CompileLicense(o *license.Output) error {
 }
 
 // CompileGitHub implements github.Compiler. When Repository.DryRun is true,
-// changes are logged instead of applied. When GITHUB_TOKEN is unset and
-// DryRun is false, the step is skipped entirely.
+// intended changes are logged instead of applied. When the client is nil
+// (GITHUB_TOKEN unset) and DryRun is false, GitHub API integration is
+// skipped entirely.
 func (r *Repository) CompileGitHub(client *github.Client) error {
 	if client == nil && !r.DryRun {
 		return nil
@@ -297,11 +298,19 @@ func (r *Repository) enableLabels(client *github.Client) error {
 			continue
 		}
 
+		patch := &github.Label{}
+
 		if desc != "" && existing.GetDescription() != desc {
-			if _, _, err := client.Issues.EditLabel(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, name, &github.Label{
-				Description: new(desc),
-			}); err != nil {
-				return fmt.Errorf("failed to update description for label %q: %w", name, err)
+			patch.Description = new(desc)
+		}
+
+		if existing.GetColor() != autoLabelColor {
+			patch.Color = new(autoLabelColor)
+		}
+
+		if patch.Description != nil || patch.Color != nil {
+			if _, _, err := client.Issues.EditLabel(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, name, patch); err != nil {
+				return fmt.Errorf("failed to update label %q: %w", name, err)
 			}
 		}
 	}

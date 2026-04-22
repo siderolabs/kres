@@ -93,7 +93,7 @@ jobs:
       pull-requests: read
     runs-on:
       group: large
-    if: contains(fromJSON(needs.default.outputs.labels), 'integration/misc-0')
+    if: (!startsWith(github.head_ref, 'renovate/') && !startsWith(github.head_ref, 'dependabot/'))
     strategy:
       matrix:
         include:
@@ -109,11 +109,17 @@ jobs:
     needs:
       - default
     steps:
+      - name: check-pr-labels
+        id: check-pr-labels
+        if: contains(fromJSON(needs.default.outputs.labels), 'integration/misc-0')
+        run: "true"
       - name: gather-system-info
         id: system-info
+        if: steps.check-pr-labels.conclusion == 'success'
         uses: kenchan0130/actions-system-info@59699597e84e80085a750998045983daa49274c4 # version: v1.4.0
         continue-on-error: true
       - name: print-system-info
+        if: steps.check-pr-labels.conclusion == 'success'
         run: |
           MEMORY_GB=$((${{ steps.system-info.outputs.totalmem }}/1024/1024/1024))
 
@@ -135,11 +141,14 @@ jobs:
           done
         continue-on-error: true
       - name: checkout
+        if: steps.check-pr-labels.conclusion == 'success'
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # version: v6.0.2
       - name: Unshallow
+        if: steps.check-pr-labels.conclusion == 'success'
         run: |
           git fetch --prune --unshallow
       - name: e2e-qemu
+        if: steps.check-pr-labels.conclusion == 'success'
         env:
           INTEGRATION_TEST_RUN: ${{ matrix.integrationTestRun }}
           SHORT_INTEGRATION_TEST: ${{ matrix.shortIntegrationTest }}
