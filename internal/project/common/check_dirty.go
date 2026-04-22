@@ -34,17 +34,9 @@ func (c *CheckDirty) CompileMakefile(output *makefile.Output) error {
 		return nil
 	}
 
-	checkDirtyTarget := output.Target("check-dirty").
+	output.Target("check-dirty").
 		Phony().
 		Script("@if test -n \"`git status --porcelain`\"; then echo \"Source tree is dirty\"; git status; git diff; exit 1 ; fi")
-
-	for _, parent := range c.Parents() {
-		if dag.FindByName("protobuf", parent.Inputs()...) != nil {
-			checkDirtyTarget.Depends("generate")
-
-			break
-		}
-	}
 
 	return nil
 }

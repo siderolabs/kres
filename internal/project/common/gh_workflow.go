@@ -696,6 +696,22 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 			o.AddSlackNotify(workflowName)
 			o.AddSlackNotifyForFailure(workflowName)
 
+			triggeredJobSteps := make([]*ghworkflow.JobStep, 0, len(jobDef.Steps))
+
+			for _, step := range jobDef.Steps {
+				triggeredJobSteps = append(triggeredJobSteps, &ghworkflow.JobStep{
+					Name:            step.Name,
+					ID:              step.ID,
+					If:              step.If,
+					Uses:            step.Uses,
+					With:            step.With,
+					Env:             step.Env,
+					Run:             step.Run,
+					ContinueOnError: step.ContinueOnError,
+					TimeoutMinutes:  step.TimeoutMinutes,
+				})
+			}
+
 			triggeredJob := &ghworkflow.Job{
 				If:     "github.event.workflow_run.conclusion == 'success'",
 				RunsOn: ghworkflow.NewRunsOnGroupLabel(job.RunnerGroup, ""),
@@ -703,7 +719,7 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 					"actions": "read",
 				},
 				Services: jobDef.Services,
-				Steps:    injectTriggeredRunID(jobDef.Steps),
+				Steps:    injectTriggeredRunID(triggeredJobSteps),
 			}
 
 			if job.Matrix != nil {

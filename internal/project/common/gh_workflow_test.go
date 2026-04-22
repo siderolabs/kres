@@ -321,6 +321,57 @@ func TestFlatJobMatrix(t *testing.T) {
 	assertGolden(t, "ci.yaml", buf.Bytes())
 }
 
+// TestFlatJobMatrixTriggeredNotGated is a regression test for the step-mutation
+// bug where the ci.yaml job and the triggered workflow shared the same step
+// slice: the label gate (check-pr-labels + `steps.check-pr-labels.conclusion`
+// conditions) applied to ci.yaml steps leaked into the triggered workflow,
+// which has no such gate step. The triggered steps must not reference
+// `check-pr-labels` nor inherit the gate `if:` condition.
+func TestFlatJobMatrixTriggeredNotGated(t *testing.T) {
+	jobs := []common.Job{
+		{
+			Name:        "integration-misc-0",
+			RunnerGroup: "large",
+			Depends:     []string{"default"},
+			TriggerLabels: []string{
+				"integration/misc-0",
+			},
+			OnWorkflowRun: &common.OnWorkflowRun{
+				Workflows: []string{"artifacts-cron"},
+				Types:     []string{"completed"},
+			},
+			Matrix: &common.Matrix{
+				MaxParallel:   2,
+				FlatJobMatrix: true,
+				LabelKeys:     []string{"test"},
+				Include: []common.MatrixInclude{
+					{Values: common.MatrixEntry{"test": "e2e-firewall"}},
+					{Values: common.MatrixEntry{"test": "e2e-canal-reset"}},
+				},
+			},
+			Steps: []common.Step{
+				{Name: "run-tests", Command: "e2e-qemu"},
+			},
+		},
+	}
+
+	o := compileWorkflow(t, jobs)
+
+	var ciBuf bytes.Buffer
+
+	require.NoError(t, o.GenerateFile(ghworkflow.CiWorkflow, &ciBuf))
+	assertGolden(t, "ci.yaml", ciBuf.Bytes())
+
+	var triggeredBuf bytes.Buffer
+
+	require.NoError(t, o.GenerateFile(".github/workflows/integration-misc-0-triggered.yaml", &triggeredBuf))
+	assertGolden(t, "integration-misc-0-triggered.yaml", triggeredBuf.Bytes())
+
+	// Sanity: the gate must be present in ci.yaml but absent from the triggered workflow.
+	assert.Contains(t, ciBuf.String(), "check-pr-labels", "ci.yaml should contain the label gate")
+	assert.NotContains(t, triggeredBuf.String(), "check-pr-labels", "triggered workflow must not inherit the label gate")
+}
+
 // TestMatrixPerEntryTriggerLabels verifies that per-entry TriggerLabels fire only
 // the matching flat job, while job-level TriggerLabels fire all flat jobs.
 // This tests the combined oss/nonfree scenario where integration/aws-nvidia-oss must

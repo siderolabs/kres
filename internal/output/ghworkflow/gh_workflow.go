@@ -756,6 +756,8 @@ func (job *Job) SetConditions(conditions ...string) error {
 			job.appendIf("github.ref == 'refs/heads/main'")
 		case "always":
 			job.appendIf("always()")
+		case "not-cancelled": //nolint:misspell
+			job.appendIf("!cancelled()") //nolint:misspell
 		case "":
 		default:
 			return fmt.Errorf("unknown condition: %s", condition)

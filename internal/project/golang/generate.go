@@ -123,6 +123,10 @@ func (generate *Generate) CompileMakefile(output *makefile.Output) error {
 	output.Target("generate").Description("Generate .proto definitions.").
 		Script(`@$(MAKE) local-$@ DEST=./`)
 
+	if output.HasTarget("check-dirty") {
+		output.Target("check-dirty").Depends("generate")
+	}
+
 	return nil
 }
 

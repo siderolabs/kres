@@ -91,17 +91,7 @@ func (helm *Build) CompileMakefile(output *makefile.Output) error {
 		Variable(makefile.OverridableVariable("COSIGN_ARGS", "")).
 		Variable(makefile.OverridableVariable("HELMDOCS_VERSION", config.HelmDocsVersion))
 
-	var hasGenerate bool
-
-	for _, parent := range helm.Parents() {
-		if dag.FindByName("protobuf", parent.Inputs()...) != nil {
-			hasGenerate = true
-
-			break
-		}
-	}
-
-	if hasGenerate {
+	if output.HasTarget("generate") {
 		generateTarget := output.Target("generate")
 		generateTarget.Depends("helm-plugin-install")
 

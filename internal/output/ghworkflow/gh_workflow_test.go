@@ -75,6 +75,34 @@ func (suite *GHWorkflowSuite) TestDefaultWorkflows() {
 	assertGolden(suite.T(), ghworkflow.SlackCIFailureWorkflow, slackBuf.Bytes())
 }
 
+func TestSetConditionsNotCancelled(t *testing.T) {
+	for _, tc := range []struct {
+		name       string
+		wantIf     string
+		conditions []string
+	}{
+		// nolint:misspell
+		{
+			name:       "not-cancelled alone",
+			conditions: []string{"not-cancelled"},
+			wantIf:     "!cancelled()",
+		},
+		// nolint:misspell
+		{
+			name:       "always and not-cancelled",
+			conditions: []string{"always", "not-cancelled"},
+			wantIf:     "always() && !cancelled()",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			job := &ghworkflow.Job{}
+
+			require.NoError(t, job.SetConditions(tc.conditions...))
+			assert.Equal(t, tc.wantIf, job.If)
+		})
+	}
+}
+
 func TestMatrixStrategy(t *testing.T) {
 	output.PreambleTimestamp, _ = time.Parse(time.RFC3339, strings.ReplaceAll(time.RFC3339, "07:00", "")) //nolint:errcheck
 	output.PreambleCreator = "test"
