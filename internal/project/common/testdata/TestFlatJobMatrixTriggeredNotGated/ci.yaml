@@ -70,7 +70,7 @@ jobs:
         timeout-minutes: 10
       - name: Retrieve PR labels
         id: retrieve-pr-labels
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # version: v8.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # version: v9.0.0
         with:
           retries: "3"
           script: |
@@ -106,7 +106,7 @@ jobs:
     steps:
       - name: check-pr-labels
         id: check-pr-labels
-        if: contains(fromJSON(needs.default.outputs.labels), 'integration/misc-0')
+        if: contains(fromJSON(needs.default.outputs.labels || '[]'), 'integration/misc-0')
         run: "true"
       - name: gather-system-info
         id: system-info

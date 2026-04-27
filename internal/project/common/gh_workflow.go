@@ -597,7 +597,7 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 				// Job-level triggerLabels fire all flat jobs; per-entry TriggerLabels
 				// fire only that specific entry's flat job.
 				coarseConditions := xslices.Map(job.TriggerLabels, func(label string) string {
-					return fmt.Sprintf("contains(fromJSON(needs.default.outputs.labels), '%s')", label)
+					return fmt.Sprintf("contains(fromJSON(needs.default.outputs.labels || '[]'), '%s')", label)
 				})
 
 				for _, entry := range job.Matrix.Include {
@@ -612,12 +612,12 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 					suffix := strings.Join(suffixParts, "-")
 					flatJobName := job.Name + "-" + suffix
 					entryLabel := "integration/" + strings.TrimPrefix(flatJobName, "integration-")
-					entryCondition := fmt.Sprintf("contains(fromJSON(needs.default.outputs.labels), '%s')", entryLabel)
+					entryCondition := fmt.Sprintf("contains(fromJSON(needs.default.outputs.labels || '[]'), '%s')", entryLabel)
 
 					allConditions := append([]string{entryCondition}, coarseConditions...)
 
 					for _, label := range entry.TriggerLabels {
-						allConditions = append(allConditions, fmt.Sprintf("contains(fromJSON(needs.default.outputs.labels), '%s')", label))
+						allConditions = append(allConditions, fmt.Sprintf("contains(fromJSON(needs.default.outputs.labels || '[]'), '%s')", label))
 					}
 
 					flatSteps, err := compileFlatJobSteps(job, entry.Values, baseSteps)
@@ -639,7 +639,7 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 				flatJobsAdded = true
 			} else {
 				conditions := xslices.Map(job.TriggerLabels, func(label string) string {
-					return fmt.Sprintf("contains(fromJSON(needs.default.outputs.labels), '%s')", label)
+					return fmt.Sprintf("contains(fromJSON(needs.default.outputs.labels || '[]'), '%s')", label)
 				})
 
 				ifCondition := strings.Join(conditions, " || ")
