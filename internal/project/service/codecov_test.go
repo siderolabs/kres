@@ -9,7 +9,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/siderolabs/kres/internal/output/drone"
 	"github.com/siderolabs/kres/internal/output/ghworkflow"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/project/service"
@@ -17,6 +16,5 @@ import (
 
 func TestCodeCovInterfaces(t *testing.T) {
 	assert.Implements(t, (*makefile.Compiler)(nil), new(service.CodeCov))
-	assert.Implements(t, (*drone.Compiler)(nil), new(service.CodeCov))
 	assert.Implements(t, (*ghworkflow.Compiler)(nil), new(service.CodeCov))
 }

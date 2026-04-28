@@ -12,7 +12,6 @@ import (
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/output/dockerfile"
 	"github.com/siderolabs/kres/internal/output/dockerfile/step"
-	"github.com/siderolabs/kres/internal/output/drone"
 	"github.com/siderolabs/kres/internal/output/ghworkflow"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/project/common"
@@ -185,19 +184,6 @@ func (toolchain *Toolchain) CompileMakefile(output *makefile.Output) error {
 		Description("Prepare base toolchain").
 		Script("@$(MAKE) target-$@").
 		Phony()
-
-	return nil
-}
-
-// CompileDrone implements drone.Compiler.
-func (toolchain *Toolchain) CompileDrone(output *drone.Output) error {
-	baseStep := drone.MakeStep("base").DependsOn(dag.GatherMatchingInputNames(toolchain, dag.Implements[drone.Compiler]())...)
-
-	if toolchain.PrivateRepos != nil {
-		baseStep = baseStep.EnvironmentFromSecret("GITHUB_TOKEN", "github_token")
-	}
-
-	output.Step(baseStep)
 
 	return nil
 }

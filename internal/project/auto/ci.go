@@ -5,9 +5,6 @@
 package auto
 
 import (
-	"fmt"
-
-	"github.com/siderolabs/kres/internal/config"
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/project/common"
 )
@@ -20,18 +17,6 @@ func (builder *builder) DetectCI() (bool, error) {
 		return false, err
 	}
 
-	if ci.Provider == "" {
-		ci.Provider = config.CIProviderGitHubActions
-	}
-
-	switch ci.Provider {
-	case config.CIProviderDrone:
-	case config.CIProviderGitHubActions:
-	default:
-		return false, fmt.Errorf("unknown ci provider: %s", ci.Provider)
-	}
-
-	builder.meta.CIProvider = ci.Provider
 	builder.meta.CompileGithubWorkflowsOnly = ci.CompileGHWorkflowsOnly
 
 	return true, nil

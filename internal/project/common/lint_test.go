@@ -9,7 +9,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/siderolabs/kres/internal/output/drone"
 	"github.com/siderolabs/kres/internal/output/ghworkflow"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/project/common"
@@ -17,6 +16,5 @@ import (
 
 func TestLintInterfaces(t *testing.T) {
 	assert.Implements(t, (*makefile.Compiler)(nil), new(common.Lint))
-	assert.Implements(t, (*drone.Compiler)(nil), new(common.Lint))
 	assert.Implements(t, (*ghworkflow.Compiler)(nil), new(common.Lint))
 }

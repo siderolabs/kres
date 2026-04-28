@@ -9,7 +9,6 @@ Following output files are generated automatically:
 
 * `Makefile`
 * `Dockerfile`
-* `.drone.yaml`
 * `.dockerignore`
 * `.gitignore`
 * `.golangci.yml`

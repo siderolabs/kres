@@ -10,7 +10,6 @@ import (
 	"github.com/siderolabs/gen/xslices"
 
 	"github.com/siderolabs/kres/internal/dag"
-	"github.com/siderolabs/kres/internal/output/drone"
 	"github.com/siderolabs/kres/internal/output/ghworkflow"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/project/meta"
@@ -30,15 +29,6 @@ func NewLint(meta *meta.Options) *Lint {
 
 		meta: meta,
 	}
-}
-
-// CompileDrone implements drone.Compiler.
-func (lint *Lint) CompileDrone(output *drone.Output) error {
-	output.Step(drone.MakeStep("lint").
-		DependsOn(dag.GatherMatchingInputNames(lint, dag.Implements[drone.Compiler]())...),
-	)
-
-	return nil
 }
 
 // Activate marks the linter as active.

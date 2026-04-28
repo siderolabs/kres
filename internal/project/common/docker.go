@@ -6,13 +6,9 @@ package common
 
 import (
 	"fmt"
-	"strings"
-
-	"github.com/drone/drone-yaml/yaml"
 
 	"github.com/siderolabs/kres/internal/config"
 	"github.com/siderolabs/kres/internal/dag"
-	"github.com/siderolabs/kres/internal/output/drone"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/project/meta"
 )
@@ -26,8 +22,6 @@ type Docker struct { //nolint:govet
 	DockerImage    string   `yaml:"dockerImage"`
 	AllowInsecure  bool     `yaml:"allowInsecure"`
 	ExtraBuildArgs []string `yaml:"extraBuildArgs"`
-
-	DockerResourceRequests *yaml.ResourceObject `yaml:"dockerResourceRequests"`
 }
 
 // NewDocker initializes Docker.
@@ -41,69 +35,6 @@ func NewDocker(meta *meta.Options) *Docker {
 
 		DockerImage: "docker:" + config.DindContainerImageVersion,
 	}
-}
-
-// CompileDrone implements drone.Compiler.
-func (docker *Docker) CompileDrone(output *drone.Output) error {
-	output.
-		VolumeHostPath("outer-docker-socket", "/var/ci-docker", "/var/outer-run").
-		VolumeTemporary("docker-socket", "/var/run").
-		VolumeTemporary("buildx", "/root/.docker/buildx").
-		VolumeTemporary("ssh", "/root/.ssh").
-		VolumeHostPathStandalone("dev", "/dev")
-
-	docker.BuildBaseDroneSteps(output)
-
-	return nil
-}
-
-// BuildBaseDroneSteps builds the base steps which start the pipeline.
-func (docker *Docker) BuildBaseDroneSteps(output drone.StepService) {
-	resources := (*yaml.Resources)(nil)
-	if docker.DockerResourceRequests != nil {
-		resources = &yaml.Resources{
-			Requests: docker.DockerResourceRequests,
-		}
-	}
-
-	output.Service(&yaml.Container{
-		Name:       "docker",
-		Image:      docker.DockerImage,
-		Entrypoint: []string{"dockerd"},
-		Privileged: true,
-		Commands: []string{
-			"--dns=8.8.8.8",
-			"--dns=8.8.4.4",
-			"--mtu=1500",
-			"--log-level=error",
-		},
-		Resources: resources,
-		Volumes: []*yaml.VolumeMount{
-			{
-				Name:      "dev",
-				MountPath: "/dev",
-			},
-		},
-	})
-
-	builderName := "local"
-	extraArgs := []string{""}
-
-	if docker.AllowInsecure {
-		builderName += "-insecure"
-
-		extraArgs = append(extraArgs, "--buildkitd-flags", "'--allow-insecure-entitlement security.insecure'")
-	}
-
-	output.Step(
-		drone.CustomStep(docker.Name(),
-			"sleep 5",
-			"git fetch --tags",
-			"install-ci-key",
-			fmt.Sprintf("docker buildx create --driver docker-container --platform linux/amd64 --name %s%s --use unix:///var/outer-run/docker.sock", builderName, strings.Join(extraArgs, " ")),
-			"docker buildx inspect --bootstrap",
-		).EnvironmentFromSecret("SSH_KEY", "ssh_key"),
-	)
 }
 
 // CompileMakefile implements makefile.Compiler.

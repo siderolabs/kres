@@ -5,10 +5,6 @@
 package config
 
 const (
-	// CIProviderDrone is the drone ci provider.
-	CIProviderDrone = "drone"
-	// CIProviderGitHubActions is the github actions ci provider.
-	CIProviderGitHubActions = "ghaction"
 	// ContainerImageFrontendDockerfile is the dockerfile frontend.
 	ContainerImageFrontendDockerfile = "Dockerfile"
 	// ContainerImageFrontendPkgfile is the pkgfile frontend.

@@ -325,13 +325,8 @@ func (r *Repository) buildEnforceContexts(base []string) []string {
 		enforceContexts = append(enforceContexts, r.autoContextsFunc()...)
 	}
 
-	switch r.meta.CIProvider {
-	case config.CIProviderDrone:
-		enforceContexts = append(enforceContexts, "continuous-integration/drone/pr")
-	case config.CIProviderGitHubActions:
-		if !r.meta.CompileGithubWorkflowsOnly {
-			enforceContexts = append(enforceContexts, "default")
-		}
+	if !r.meta.CompileGithubWorkflowsOnly {
+		enforceContexts = append(enforceContexts, "default")
 	}
 
 	enforceContexts = append(enforceContexts, r.meta.ExtraEnforcedContexts...)

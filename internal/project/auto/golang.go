@@ -20,7 +20,6 @@ import (
 	"github.com/siderolabs/kres/internal/project/golang"
 	"github.com/siderolabs/kres/internal/project/meta"
 	"github.com/siderolabs/kres/internal/project/service"
-	"github.com/siderolabs/kres/internal/project/wrap"
 )
 
 // DetectGolang checks if project at rootPath is Go-based project.
@@ -281,8 +280,8 @@ func (builder *builder) BuildGolang() error {
 		if !cfg.DisableImage {
 			image := common.NewImage(builder.meta, cmd.Name)
 
-			for _, unitTests := range allUnitTests {
-				image.AddInput(build, builder.lintTarget, wrap.Drone(unitTests))
+			for range allUnitTests {
+				image.AddInput(build, builder.lintTarget)
 			}
 
 			builder.targets = append(builder.targets, image)

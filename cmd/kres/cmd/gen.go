@@ -15,7 +15,6 @@ import (
 	"github.com/siderolabs/kres/internal/output/conform"
 	"github.com/siderolabs/kres/internal/output/dockerfile"
 	"github.com/siderolabs/kres/internal/output/dockerignore"
-	"github.com/siderolabs/kres/internal/output/drone"
 	"github.com/siderolabs/kres/internal/output/ghworkflow"
 	"github.com/siderolabs/kres/internal/output/github"
 	"github.com/siderolabs/kres/internal/output/gitignore"
@@ -73,39 +72,34 @@ func runGen() error {
 	}
 
 	outputs := []output.Writer{
-		output.Wrap[github.Compiler](github.NewOutput()),
-		output.Wrap[sops.Compiler](sops.NewOutput()),
-		output.Wrap[renovate.Compiler](renovate.NewOutput()),
-		output.Wrap[conform.Compiler](conform.NewOutput()),
+		output.Wrap(github.NewOutput()),
+		output.Wrap(sops.NewOutput()),
+		output.Wrap(renovate.NewOutput()),
+		output.Wrap(conform.NewOutput()),
 	}
 
 	if !options.CompileGithubWorkflowsOnly {
 		outputs = append(
 			outputs,
-			output.Wrap[dockerfile.Compiler](dockerfile.NewOutput()),
-			output.Wrap[dockerignore.Compiler](dockerignore.NewOutput()),
-			output.Wrap[makefile.Compiler](makefile.NewOutput()),
-			output.Wrap[golangci.Compiler](golangci.NewOutput()),
-			output.Wrap[license.Compiler](license.NewOutput()),
-			output.Wrap[gitignore.Compiler](gitignore.NewOutput()),
-			output.Wrap[codecov.Compiler](codecov.NewOutput()),
-			output.Wrap[release.Compiler](release.NewOutput()),
-			output.Wrap[markdownlint.Compiler](markdownlint.NewOutput()),
-			output.Wrap[template.Compiler](template.NewOutput()),
+			output.Wrap(dockerfile.NewOutput()),
+			output.Wrap(dockerignore.NewOutput()),
+			output.Wrap(makefile.NewOutput()),
+			output.Wrap(golangci.NewOutput()),
+			output.Wrap(license.NewOutput()),
+			output.Wrap(gitignore.NewOutput()),
+			output.Wrap(codecov.NewOutput()),
+			output.Wrap(release.NewOutput()),
+			output.Wrap(markdownlint.NewOutput()),
+			output.Wrap(template.NewOutput()),
 		)
 	}
 
-	switch options.CIProvider {
-	case "drone":
-		outputs = append(outputs, output.Wrap[drone.Compiler](drone.NewOutput()))
-	case "ghaction":
-		outputs = append(outputs, output.Wrap[ghworkflow.Compiler](ghworkflow.NewOutput(
-			options.MainBranch,
-			!options.CompileGithubWorkflowsOnly,
-			!options.SkipStaleWorkflow,
-			options.CIFailureSlackNotifyChannel,
-		)))
-	}
+	outputs = append(outputs, output.Wrap(ghworkflow.NewOutput(
+		options.MainBranch,
+		!options.CompileGithubWorkflowsOnly,
+		!options.SkipStaleWorkflow,
+		options.CIFailureSlackNotifyChannel,
+	)))
 
 	if err := proj.Compile(outputs); err != nil {
 		return err

@@ -13,7 +13,6 @@ import (
 
 	"github.com/siderolabs/kres/internal/config"
 	"github.com/siderolabs/kres/internal/dag"
-	"github.com/siderolabs/kres/internal/output/drone"
 	"github.com/siderolabs/kres/internal/output/ghworkflow"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/project/meta"
@@ -43,28 +42,6 @@ func NewRelease(m *meta.Options) *Release {
 			return cmd.Name + "-*"
 		}),
 	}
-}
-
-// CompileDrone implements drone.Compiler.
-func (release *Release) CompileDrone(output *drone.Output) error {
-	output.Step(drone.MakeStep("release-notes").
-		OnlyOnTag().
-		DependsOn(dag.GatherMatchingInputNames(release, drone.HasDroneOutput())...),
-	)
-
-	output.Step(drone.CustomStep(release.Name()).
-		Image("plugins/github-release").
-		PublishArtifacts(
-			filepath.Join(release.meta.ArtifactsPath, "RELEASE_NOTES.md"),
-			xslices.Map(release.Artifacts, func(artifact string) string {
-				return filepath.Join(release.meta.ArtifactsPath, artifact)
-			})...,
-		).
-		OnlyOnTag().
-		DependsOn("release-notes"),
-	)
-
-	return nil
 }
 
 // CompileGitHubWorkflow implements ghworkflow.Compiler.

@@ -16,7 +16,6 @@ import (
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/output/dockerfile"
 	"github.com/siderolabs/kres/internal/output/dockerfile/step"
-	"github.com/siderolabs/kres/internal/output/drone"
 	"github.com/siderolabs/kres/internal/output/ghworkflow"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/project/meta"
@@ -147,13 +146,6 @@ func (build *Build) CompileDockerfile(output *dockerfile.Output) error {
 	build.entrypoint = build.Name() + "-linux-${TARGETARCH}"
 	output.Stage(build.Name()).
 		From(build.entrypoint)
-
-	return nil
-}
-
-// CompileDrone implements drone.Compiler.
-func (build *Build) CompileDrone(output *drone.Output) error {
-	output.Step(drone.MakeStep(build.Name()).DependsOn(dag.GatherMatchingInputNames(build, dag.Implements[drone.Compiler]())...))
 
 	return nil
 }

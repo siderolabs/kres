@@ -12,7 +12,6 @@ import (
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/output/dockerfile"
 	"github.com/siderolabs/kres/internal/output/dockerfile/step"
-	"github.com/siderolabs/kres/internal/output/drone"
 	"github.com/siderolabs/kres/internal/output/ghworkflow"
 	"github.com/siderolabs/kres/internal/output/gitignore"
 	"github.com/siderolabs/kres/internal/output/makefile"
@@ -83,15 +82,6 @@ func (toolchain *Toolchain) CompileMakefile(output *makefile.Output) error {
 		Description("Prepare js base toolchain.").
 		Script("@$(MAKE) target-$@").
 		Phony()
-
-	return nil
-}
-
-// CompileDrone implements drone.Compiler.
-func (toolchain *Toolchain) CompileDrone(output *drone.Output) error {
-	output.Step(drone.MakeStep("js").
-		DependsOn(dag.GatherMatchingInputNames(toolchain, dag.Implements[drone.Compiler]())...),
-	)
 
 	return nil
 }

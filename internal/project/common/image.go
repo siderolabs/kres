@@ -13,7 +13,6 @@ import (
 	"github.com/siderolabs/kres/internal/output/dockerfile"
 	"github.com/siderolabs/kres/internal/output/dockerfile/step"
 	"github.com/siderolabs/kres/internal/output/dockerignore"
-	"github.com/siderolabs/kres/internal/output/drone"
 	"github.com/siderolabs/kres/internal/output/ghworkflow"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/project/meta"
@@ -80,44 +79,6 @@ func NewImage(meta *meta.Options, name string) *Image {
 		Entrypoint:       "/" + name,
 		PushLatest:       true,
 	}
-}
-
-// CompileDrone implements drone.Compiler.
-func (image *Image) CompileDrone(output *drone.Output) error {
-	output.Step(drone.MakeStep(image.Name()).
-		DependsOn(dag.GatherMatchingInputNames(image, dag.Implements[drone.Compiler]())...),
-	)
-
-	step := drone.MakeStep(image.Name()).
-		Name("push-"+image.ImageName).
-		Environment("PUSH", "true").
-		ExceptPullRequest().
-		DockerLogin().
-		DependsOn(image.Name())
-
-	for k, v := range image.ExtraEnvironment {
-		step.Environment(k, v)
-	}
-
-	output.Step(step)
-
-	if image.PushLatest {
-		step := drone.MakeStep(image.Name(), "IMAGE_TAG=latest").
-			Name(fmt.Sprintf("push-%s-latest", image.ImageName)).
-			Environment("PUSH", "true").
-			OnlyOnBranch(image.meta.MainBranch).
-			ExceptPullRequest().
-			DockerLogin().
-			DependsOn("push-" + image.ImageName)
-
-		for k, v := range image.ExtraEnvironment {
-			step.Environment(k, v)
-		}
-
-		output.Step(step)
-	}
-
-	return nil
 }
 
 // CompileGitHubWorkflow implements ghworkflow.Compiler.

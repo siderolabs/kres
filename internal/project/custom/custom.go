@@ -16,7 +16,6 @@ import (
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/output/dockerfile"
 	dockerstep "github.com/siderolabs/kres/internal/output/dockerfile/step"
-	"github.com/siderolabs/kres/internal/output/drone"
 	"github.com/siderolabs/kres/internal/output/ghworkflow"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/project/meta"
@@ -68,26 +67,6 @@ type Step struct {
 			DefaultValue string `yaml:"defaultValue"`
 		} `yaml:"variables"`
 	} `yaml:"makefile"`
-
-	Drone struct {
-		Enabled     bool              `yaml:"enabled"`
-		Privileged  bool              `yaml:"privileged"`
-		Environment map[string]string `yaml:"environment"`
-		Requests    *struct {
-			CPUCores  int `yaml:"cpuCores"`
-			MemoryGiB int `yaml:"memoryGiB"`
-		} `yaml:"requests"`
-		Volumes []struct {
-			Name      string `yaml:"name"`
-			MountPath string `yaml:"mountPath"`
-		} `yaml:"volumes"`
-		Pipelines []struct {
-			Name                string            `yaml:"name"`
-			Triggers            []string          `yaml:"triggers"`
-			Crons               []string          `yaml:"crons"`
-			EnvironmentOverride map[string]string `yaml:"environmentOverride"`
-		}
-	} `yaml:"drone"`
 
 	GHAction struct {
 		Environment map[string]string `yaml:"environment"`
@@ -227,120 +206,6 @@ func (step *Step) CompileDockerfile(output *dockerfile.Output) error {
 	}
 
 	return nil
-}
-
-// CompileDrone implements drone.Compiler.
-func (step *Step) CompileDrone(output *drone.Output) error {
-	if !step.Drone.Enabled {
-		return nil
-	}
-
-	droneMatches := func(node dag.Node) bool {
-		if !dag.Implements[drone.Compiler]()(node) {
-			return false
-		}
-
-		if nodeStep, ok := node.(*Step); ok {
-			return nodeStep.Drone.Enabled
-		}
-
-		return true
-	}
-
-	baseDroneStep := func() *drone.Step {
-		droneStep := drone.MakeStep(step.Name())
-
-		if step.Drone.Privileged {
-			droneStep.Privileged()
-		}
-
-		if step.Drone.Requests != nil {
-			droneStep.ResourceRequests(step.Drone.Requests.CPUCores, step.Drone.Requests.MemoryGiB)
-		}
-
-		for k, v := range step.Drone.Environment {
-			droneStep.Environment(k, v)
-		}
-
-		for _, volume := range step.Drone.Volumes {
-			droneStep.EmptyDirVolume(volume.Name, volume.MountPath)
-		}
-
-		return droneStep
-	}
-
-	output.Step(baseDroneStep().
-		DependsOn(dag.GatherMatchingInputNames(step, droneMatches)...))
-
-	for _, customPipeline := range step.Drone.Pipelines {
-		pipeline := output.Pipeline(customPipeline.Name, customPipeline.Triggers, customPipeline.Crons)
-
-		type baseDroneStepper interface {
-			BuildBaseDroneSteps(output drone.StepService)
-		}
-
-		var baseStepNames []string
-
-		for _, baseInput := range dag.GatherMatchingInputsRecursive(step, dag.Implements[baseDroneStepper]()) {
-			baseInput.(baseDroneStepper).BuildBaseDroneSteps(pipeline) //nolint:forcetypeassert,errcheck // type is checked in GatherMatchingInputsRecursive
-
-			baseStepNames = append(baseStepNames, baseInput.Name())
-		}
-
-		pipeline.Step(
-			drone.CustomStep("load-artifacts",
-				`az login --service-principal -u "$${AZURE_STORAGE_USER}" -p "$${AZURE_STORAGE_PASS}" --tenant "$${AZURE_TENANT}"`,
-				`mkdir -p `+step.meta.ArtifactsPath,
-				fmt.Sprintf(
-					`az storage blob download-batch --overwrite true -d %s -s ${CI_COMMIT_SHA}${DRONE_TAG//./-}`,
-					step.meta.ArtifactsPath,
-				),
-				fmt.Sprintf(
-					`find %s -type f -exec chmod +x {} \;`,
-					step.meta.ArtifactsPath,
-				),
-			).
-				DependsOn(baseStepNames...).
-				EnvironmentFromSecret("AZURE_STORAGE_ACCOUNT", "az_storage_account").
-				EnvironmentFromSecret("AZURE_STORAGE_USER", "az_storage_user").
-				EnvironmentFromSecret("AZURE_STORAGE_PASS", "az_storage_pass").
-				EnvironmentFromSecret("AZURE_TENANT", "az_tenant"),
-		)
-
-		droneStep := baseDroneStep()
-
-		for k, v := range customPipeline.EnvironmentOverride {
-			droneStep.Environment(k, v)
-		}
-
-		pipeline.Step(droneStep.DependsOn("load-artifacts"))
-	}
-
-	if len(step.Drone.Pipelines) > 0 {
-		// add a "save artifacts" step to the default pipeline
-		output.Step(
-			drone.CustomStep("save-artifacts",
-				`az login --service-principal -u "$${AZURE_STORAGE_USER}" -p "$${AZURE_STORAGE_PASS}" --tenant "$${AZURE_TENANT}"`,
-				`az storage container create --metadata ci=true -n ${CI_COMMIT_SHA}${DRONE_TAG//./-}`,
-				fmt.Sprintf(
-					`az storage blob upload-batch --overwrite -s %s -d ${CI_COMMIT_SHA}${DRONE_TAG//./-}`,
-					step.meta.ArtifactsPath,
-				),
-			).
-				DependsOn(step.Name()).
-				EnvironmentFromSecret("AZURE_STORAGE_ACCOUNT", "az_storage_account").
-				EnvironmentFromSecret("AZURE_STORAGE_USER", "az_storage_user").
-				EnvironmentFromSecret("AZURE_STORAGE_PASS", "az_storage_pass").
-				EnvironmentFromSecret("AZURE_TENANT", "az_tenant"),
-		)
-	}
-
-	return nil
-}
-
-// DroneEnabled implements drone.CustomCompiler.
-func (step *Step) DroneEnabled() bool {
-	return step.Drone.Enabled
 }
 
 // CompileGitHubWorkflow implements ghworkflow.Compiler.

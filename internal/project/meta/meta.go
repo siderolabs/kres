@@ -84,9 +84,6 @@ type Options struct { //nolint:govet
 	// ArtifactsPath binary output path.
 	ArtifactsPath string
 
-	// CIProvider specifies the CI provider. Currently drone/ghaction is supported.
-	CIProvider string
-
 	// CompileGithubWorkflowsOnly indicates that only GitHub workflows should be compiled.
 	CompileGithubWorkflowsOnly bool
 

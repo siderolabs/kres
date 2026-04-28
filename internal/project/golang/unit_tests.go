@@ -12,7 +12,6 @@ import (
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/output/dockerfile"
 	"github.com/siderolabs/kres/internal/output/dockerfile/step"
-	"github.com/siderolabs/kres/internal/output/drone"
 	"github.com/siderolabs/kres/internal/output/ghworkflow"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/project/meta"
@@ -190,25 +189,6 @@ func (tests *UnitTests) CompileMakefile(output *makefile.Output) error {
 			Description("Performs unit tests with strict FIPS-140 mode.").
 			Script("@$(MAKE) target-$@" + scriptExtraArgs).
 			Phony()
-	}
-
-	return nil
-}
-
-// CompileDrone implements drone.Compiler.
-func (tests *UnitTests) CompileDrone(output *drone.Output) error {
-	output.Step(drone.MakeStep(tests.Name()).
-		DependsOn(dag.GatherMatchingInputNames(tests, dag.Implements[drone.Compiler]())...),
-	)
-
-	output.Step(drone.MakeStep(fmt.Sprintf(tests.Name(), "-race")).
-		DependsOn(dag.GatherMatchingInputNames(tests, dag.Implements[drone.Compiler]())...),
-	)
-
-	if tests.RunFIPS {
-		output.Step(drone.MakeStep(fmt.Sprintf(tests.Name(), "-fips")).
-			DependsOn(dag.GatherMatchingInputNames(tests, dag.Implements[drone.Compiler]())...),
-		)
 	}
 
 	return nil

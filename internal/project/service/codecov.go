@@ -13,7 +13,6 @@ import (
 	"github.com/siderolabs/kres/internal/config"
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/output/codecov"
-	"github.com/siderolabs/kres/internal/output/drone"
 	"github.com/siderolabs/kres/internal/output/ghworkflow"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/project/meta"
@@ -52,20 +51,6 @@ func NewCodeCov(meta *meta.Options) *CodeCov {
 // AddDiscoveredInputs sets automatically discovered codecov.txt files.
 func (coverage *CodeCov) AddDiscoveredInputs(jobName string, flags string, inputs ...string) {
 	coverage.discoveredPaths[dependentJobs{name: jobName, flags: flags}] = append(coverage.discoveredPaths[dependentJobs{name: jobName, flags: flags}], inputs...)
-}
-
-// CompileDrone implements drone.Compiler.
-func (coverage *CodeCov) CompileDrone(output *drone.Output) error {
-	if !coverage.Enabled {
-		return nil
-	}
-
-	output.Step(drone.MakeStep("coverage").
-		DependsOn(dag.GatherMatchingInputNames(coverage, dag.Implements[drone.Compiler]())...).
-		EnvironmentFromSecret("CODECOV_TOKEN", "CODECOV_TOKEN"),
-	)
-
-	return nil
 }
 
 // CompileGitHubWorkflow implements ghworkflow.Compiler.
