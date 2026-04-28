@@ -98,7 +98,7 @@ type Output struct {
 }
 
 // NewOutput creates new .github/workflows/ci.yaml output.
-func NewOutput(mainBranch string, withDefaultJob, withStaleJob bool, slackChannel string) *Output {
+func NewOutput(mainBranch string, withDefaultJob, withStaleJob, withBuildKitGithubActionsCache bool, slackChannel string) *Output {
 	workflows := map[string]*Workflow{
 		CiWorkflow: {
 			Name: DefaultJobName,
@@ -264,7 +264,7 @@ func NewOutput(mainBranch string, withDefaultJob, withStaleJob bool, slackChanne
 			DefaultJobName: {
 				If:          DefaultSkipCondition,
 				Permissions: DefaultJobPermissions(),
-				Steps:       DefaultSteps(),
+				Steps:       DefaultSteps(withBuildKitGithubActionsCache),
 			},
 		}
 	}
@@ -331,7 +331,7 @@ func (o *Output) AddStep(jobName string, steps ...*JobStep) {
 // If needsOverride is empty, the job will depend on the DefaultJobName job and run after it.
 //
 // If needsOverride is provided, the job will depend on the specified jobs, and may not run in parallel after the default job.
-func (o *Output) AddStepInParallelJob(jobName string, runnerGroup string, needsOverride []string, steps ...*JobStep) {
+func (o *Output) AddStepInParallelJob(jobName string, runnerGroup string, buildkitGitHubActionsCache bool, needsOverride []string, steps ...*JobStep) {
 	if o.workflows[CiWorkflow].Jobs == nil {
 		o.workflows[CiWorkflow].Jobs = map[string]*Job{}
 	}
@@ -350,7 +350,7 @@ func (o *Output) AddStepInParallelJob(jobName string, runnerGroup string, needsO
 			},
 			If:    "github.event_name == 'pull_request'",
 			Needs: needs,
-			Steps: DefaultSteps(),
+			Steps: DefaultSteps(buildkitGitHubActionsCache),
 		}
 	}
 
@@ -501,11 +501,29 @@ func SetupBuildxStep() *JobStep {
 }
 
 // DefaultSteps returns default steps for the workflow.
-func DefaultSteps() []*JobStep {
-	return append(
+func DefaultSteps(buildkitGitHubActionsCache bool) []*JobStep {
+	steps := slices.Concat(
 		CommonSteps(),
-		SetupBuildxStep(),
+		[]*JobStep{SetupBuildxStep()},
 	)
+
+	if buildkitGitHubActionsCache {
+		return slices.Concat(
+			steps,
+			[]*JobStep{
+				{
+					Name: "Set up GitHub Action Runtime",
+					ID:   "setup-ghaction-runtime",
+					Uses: ActionRef{
+						Image:   "crazy-max/ghaction-github-runtime@" + config.GitHubActionGitHubRuntimeRef,
+						Comment: "version: " + config.GitHubActionGitHubRuntimeVersion,
+					},
+				},
+			},
+		)
+	}
+
+	return steps
 }
 
 // DefaultPkgsSteps returns default pkgs steps for the workflow.

@@ -98,6 +98,7 @@ func runGen() error {
 		options.MainBranch,
 		!options.CompileGithubWorkflowsOnly,
 		!options.SkipStaleWorkflow,
+		options.BuildkitGithubActionsCache,
 		options.CIFailureSlackNotifyChannel,
 	)))
 

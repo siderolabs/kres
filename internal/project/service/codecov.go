@@ -63,6 +63,7 @@ func (coverage *CodeCov) CompileGitHubWorkflow(output *ghworkflow.Output) error 
 		output.AddStepInParallelJob(
 			job.name,
 			ghworkflow.GenericRunner,
+			coverage.meta.BuildkitGithubActionsCache,
 			nil,
 			ghworkflow.Step("coverage").
 				SetUsesWithComment(

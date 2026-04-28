@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2026-04-27T17:13:19Z by kres f51cb9c-dirty.
+# Generated on 2026-04-29T13:35:02Z by kres e8cb99d-dirty.
 
 concurrency:
   group: ${{ github.head_ref || github.run_id }}
@@ -67,6 +67,9 @@ jobs:
           driver: remote
           endpoint: tcp://buildkit-amd64.ci.svc.cluster.local:1234
         timeout-minutes: 10
+      - name: Set up GitHub Action Runtime
+        id: setup-ghaction-runtime
+        uses: crazy-max/ghaction-github-runtime@04d248b84655b509d8c44dc1d6f990c879747487 # version: v4.0.0
       - name: CI temp release tag
         if: github.event_name == 'pull_request'
         run: |
@@ -173,6 +176,9 @@ jobs:
           driver: remote
           endpoint: tcp://buildkit-amd64.ci.svc.cluster.local:1234
         timeout-minutes: 10
+      - name: Set up GitHub Action Runtime
+        id: setup-ghaction-runtime
+        uses: crazy-max/ghaction-github-runtime@04d248b84655b509d8c44dc1d6f990c879747487 # version: v4.0.0
       - name: lint
         run: |
           make lint
@@ -220,6 +226,9 @@ jobs:
           driver: remote
           endpoint: tcp://buildkit-amd64.ci.svc.cluster.local:1234
         timeout-minutes: 10
+      - name: Set up GitHub Action Runtime
+        id: setup-ghaction-runtime
+        uses: crazy-max/ghaction-github-runtime@04d248b84655b509d8c44dc1d6f990c879747487 # version: v4.0.0
       - name: unit-tests
         run: |
           make unit-tests

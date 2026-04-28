@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2026-04-27T17:45:57Z by kres b96cd16-dirty.
+# Generated on 2026-04-29T13:26:11Z by kres e8cb99d-dirty.
 
 # common variables
 
@@ -50,7 +50,7 @@ BUILD := docker buildx build
 PLATFORM ?= linux/amd64
 PROGRESS ?= auto
 PUSH ?= false
-CI_ARGS ?=
+CI_ARGS ?= $(shell [[ -n $${GITHUB_ENV} ]] && echo '--export-cache=type=gha,mode=max --import-cache=type=gha')
 WITH_BUILD_DEBUG ?=
 BUILDKIT_MULTI_PLATFORM ?=
 COMMON_ARGS = --file=Dockerfile

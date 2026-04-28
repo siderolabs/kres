@@ -64,12 +64,18 @@ func (docker *Docker) CompileMakefile(output *makefile.Output) error {
 		Variable(makefile.OverridableVariable("USERNAME", docker.meta.GitHubOrganization)).
 		Variable(makefile.OverridableVariable("REGISTRY_AND_USERNAME", "$(REGISTRY)/$(USERNAME)"))
 
+	ciArgs := ""
+
+	if docker.meta.BuildkitGithubActionsCache {
+		ciArgs = "$(shell [[ -n $${GITHUB_ENV} ]] && echo '--export-cache=type=gha,mode=max --import-cache=type=gha')"
+	}
+
 	output.VariableGroup(makefile.VariableGroupDocker).
 		Variable(makefile.SimpleVariable("BUILD", "docker buildx build")).
 		Variable(makefile.OverridableVariable("PLATFORM", "linux/amd64")).
 		Variable(makefile.OverridableVariable("PROGRESS", "auto")).
 		Variable(makefile.OverridableVariable("PUSH", "false")).
-		Variable(makefile.OverridableVariable("CI_ARGS", "")).
+		Variable(makefile.OverridableVariable("CI_ARGS", ciArgs)).
 		Variable(makefile.OverridableVariable("WITH_BUILD_DEBUG", "")).
 		Variable(makefile.OverridableVariable("BUILDKIT_MULTI_PLATFORM", "")).
 		Variable(buildArgs)

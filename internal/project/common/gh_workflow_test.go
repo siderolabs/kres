@@ -42,7 +42,7 @@ func assertGolden(t *testing.T, filename string, got []byte) {
 }
 
 func newTestOutput() *ghworkflow.Output {
-	o := ghworkflow.NewOutput("main", true, false, "")
+	o := ghworkflow.NewOutput("main", true, false, false, "")
 	o.SetRunnerGroup(ghworkflow.GenericRunner)
 
 	return o

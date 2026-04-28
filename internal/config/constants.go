@@ -112,6 +112,10 @@ const (
 	// renovate: datasource=github-tags depName=docker/setup-buildx-action
 	SetupBuildxActionVersion = "v4.0.0"
 	SetupBuildxActionRef     = "4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd"
+	// GitHubActionGitHubRuntimeVersion is the version of the ghaction-github-runtime action.
+	// renovate: datasource=github-tags depName=crazy-max/ghaction-github-runtime
+	GitHubActionGitHubRuntimeVersion = "v4.0.0"
+	GitHubActionGitHubRuntimeRef     = "04d248b84655b509d8c44dc1d6f990c879747487"
 	// SetupTerraformActionVersion is the version of setup terraform github action.
 	// renovate: datasource=github-tags depName=hashicorp/setup-terraform
 	SetupTerraformActionVersion = "v4.0.0"

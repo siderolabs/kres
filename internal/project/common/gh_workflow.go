@@ -274,7 +274,7 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 		}
 
 		if job.BuildxOptions != nil && job.BuildxOptions.Enabled {
-			jobDef.Steps = ghworkflow.DefaultSteps()
+			jobDef.Steps = ghworkflow.DefaultSteps(gh.meta.BuildkitGithubActionsCache)
 
 			if job.BuildxOptions.CrossBuilder {
 				jobDef.Steps = ghworkflow.DefaultPkgsSteps()

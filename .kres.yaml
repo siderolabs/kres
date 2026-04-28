@@ -12,6 +12,10 @@
 #
 # Any node in the tree might have its configuration overridden via the config.
 ---
+kind: auto.CI
+spec:
+  buildkitGithubActionsCache: true
+---
 kind: common.Image
 name: image-kres
 spec:

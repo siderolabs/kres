@@ -61,7 +61,7 @@ func (suite *GHWorkflowSuite) TestDefaultWorkflows() {
 		customSlackChannel = "ci-failure-custom"
 	)
 
-	o := ghworkflow.NewOutput(defaultBranch, withDefaultJob, withStaleJob, customSlackChannel) //nolint:typecheck
+	o := ghworkflow.NewOutput(defaultBranch, withDefaultJob, withStaleJob, false, customSlackChannel) //nolint:typecheck
 	o.SetRunnerGroup(ghworkflow.GenericRunner)
 
 	var ciBuf bytes.Buffer
@@ -130,7 +130,7 @@ func TestMatrixStrategy(t *testing.T) {
 		Steps: []*ghworkflow.JobStep{buildStep},
 	}
 
-	o := ghworkflow.NewOutput("main", false, false, "")
+	o := ghworkflow.NewOutput("main", false, false, false, "")
 	o.AddWorkflow("integration-provision-triggered", &ghworkflow.Workflow{
 		Name: "integration-provision-triggered",
 		Concurrency: ghworkflow.Concurrency{

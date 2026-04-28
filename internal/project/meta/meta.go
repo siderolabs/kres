@@ -87,6 +87,9 @@ type Options struct { //nolint:govet
 	// CompileGithubWorkflowsOnly indicates that only GitHub workflows should be compiled.
 	CompileGithubWorkflowsOnly bool
 
+	// BuildkitGithubActionsCache indicates whether to use GitHub Actions cache for Buildkit.
+	BuildkitGithubActionsCache bool
+
 	// EnforcedContexts is the list of required status checks for GitHub branch protection.
 	ExtraEnforcedContexts []string
 

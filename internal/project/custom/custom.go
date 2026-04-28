@@ -332,6 +332,7 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		output.AddStepInParallelJob(
 			step.GHAction.ParallelJob.Name,
 			step.GHAction.ParallelJob.RunnerGroup,
+			step.meta.BuildkitGithubActionsCache,
 			step.GHAction.ParallelJob.NeedsOverride,
 			steps...,
 		)
@@ -407,7 +408,7 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 			}
 		}
 
-		defaultSteps := ghworkflow.DefaultSteps()
+		defaultSteps := ghworkflow.DefaultSteps(step.meta.BuildkitGithubActionsCache)
 
 		if step.GHAction.SOPS {
 			defaultSteps = append(
@@ -482,7 +483,7 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 			steps := []*ghworkflow.JobStep{workflowStep}
 			steps = append(steps, additionalArtifactsSteps...)
 
-			defaultSteps := ghworkflow.DefaultSteps()
+			defaultSteps := ghworkflow.DefaultSteps(step.meta.BuildkitGithubActionsCache)
 
 			if step.GHAction.SOPS {
 				defaultSteps = append(
