@@ -75,8 +75,9 @@ type ProtoSpec struct {
 
 // GoGenerateSpec describes a set of go generate specs to be compiled.
 type GoGenerateSpec struct {
-	Source string   `yaml:"source"`
-	Copy   []string `yaml:"copy"`
+	Source      string   `yaml:"source"`
+	ExtraInputs []string `yaml:"extraInputs"`
+	Copy        []string `yaml:"copy"`
 }
 
 // NewGenerate builds Generate node.
@@ -194,6 +195,12 @@ func (generate *Generate) ToolchainBuild(stage *dockerfile.Stage) error {
 func (generate *Generate) CompileDockerignore(output *dockerignore.Output) error {
 	if len(generate.GoGenerateSpecs) > 0 {
 		output.AllowLocalPath(license.Header)
+	}
+
+	for _, spec := range generate.GoGenerateSpecs {
+		for _, path := range spec.ExtraInputs {
+			output.AllowLocalPath(filepath.Clean(path))
+		}
 	}
 
 	return nil
@@ -345,11 +352,18 @@ func (generate *Generate) CompileDockerfile(output *dockerfile.Output) error {
 	}
 
 	for index, spec := range generate.GoGenerateSpecs {
-		output.Stage(fmt.Sprintf("go-generate-%d", index)).
+		stage := output.Stage(fmt.Sprintf("go-generate-%d", index)).
 			Description("run go generate").
 			From("base").
 			Step(step.WorkDir("/src")).
-			Step(step.Copy(license.Header, filepath.Join("./hack/", license.Header))).
+			Step(step.Copy(license.Header, filepath.Join("./hack/", license.Header)))
+
+		for _, path := range spec.ExtraInputs {
+			path = filepath.Clean(path)
+			stage.Step(step.Copy(path, path))
+		}
+
+		stage.
 			Step(step.Script(fmt.Sprintf("go generate %s/...", spec.Source)).
 				MountCache(filepath.Join(generate.meta.CachePath, "go-build"), generate.meta.GitHubRepository).
 				MountCache(filepath.Join(generate.meta.GoPath, "pkg"), generate.meta.GitHubRepository),
