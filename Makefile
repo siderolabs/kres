@@ -50,7 +50,7 @@ BUILD := docker buildx build
 PLATFORM ?= linux/amd64
 PROGRESS ?= auto
 PUSH ?= false
-CI_ARGS ?= $(shell [[ -n $${GITHUB_ENV} ]] && echo '--export-cache=type=gha,mode=max --import-cache=type=gha')
+CI_ARGS ?= "--cache-to=type=gha,mode=max --cache-from=type=gha"
 WITH_BUILD_DEBUG ?=
 BUILDKIT_MULTI_PLATFORM ?=
 COMMON_ARGS = --file=Dockerfile
