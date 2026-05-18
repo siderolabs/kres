@@ -56,7 +56,6 @@ func (tests *UnitTests) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	output.AddStepInParallelJob(
 		"unit-tests",
 		ghworkflow.GenericRunner,
-		tests.meta.BuildkitGithubActionsCache,
 		nil,
 		ghworkflow.Step(tests.Name()).SetMakeStep(tests.Name()),
 	)

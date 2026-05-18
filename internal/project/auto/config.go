@@ -39,8 +39,6 @@ type CI struct {
 	Provider string `yaml:"provider"`
 	// CompileGHWorkflowsOnly is a flag to generate only GitHub Actions.
 	CompileGHWorkflowsOnly bool `yaml:"compileGHWorkflowsOnly"`
-	// BuildkitGithubActionsCache indicates whether to use GitHub Actions cache for Buildkit.
-	BuildkitGithubActionsCache bool `yaml:"buildkitGithubActionsCache"`
 }
 
 // Helm defines helm settings.

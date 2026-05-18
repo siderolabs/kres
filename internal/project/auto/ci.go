@@ -18,7 +18,6 @@ func (builder *builder) DetectCI() (bool, error) {
 	}
 
 	builder.meta.CompileGithubWorkflowsOnly = ci.CompileGHWorkflowsOnly
-	builder.meta.BuildkitGithubActionsCache = ci.BuildkitGithubActionsCache
 
 	return true, nil
 }
