@@ -21,6 +21,7 @@ import (
 
 const (
 	renovateMatchStringPkgfile = `# renovate: datasource=(?<datasource>.*?)(?:\s+extractVersion=(?<extractVersion>.+?))?(?:\s+versioning=(?<versioning>.+?))?\s+depName=(?<depName>.+?)?\s(?:.*_(?:version|VERSION):\s+(?<currentValue>.*))?(?:(\s)?.*_(?:ref|REF):\s+(?<currentDigest>.*))?` //nolint:lll
+	customTypeRegex            = "regex"
 )
 
 // Build provides common pkgfile build environment settings.
@@ -327,7 +328,7 @@ func (pkgfile *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 func (pkgfile *Build) CompileRenovate(output *renovate.Output) error {
 	customManagers := []renovate.CustomManager{
 		{
-			CustomType:          "regex",
+			CustomType:          customTypeRegex,
 			ManagerFilePatterns: []string{"/Pkgfile/"},
 			MatchStrings: []string{
 				renovateMatchStringPkgfile,
@@ -335,7 +336,7 @@ func (pkgfile *Build) CompileRenovate(output *renovate.Output) error {
 			VersioningTemplate: "{{#if versioning}}{{versioning}}{{else}}semver{{/if}}",
 		},
 		{
-			CustomType:          "regex",
+			CustomType:          customTypeRegex,
 			ManagerFilePatterns: []string{"/Pkgfile/"},
 			MatchStrings: []string{
 				"ghcr.io\\/siderolabs\\/bldr:(?<currentValue>v.*)",
@@ -349,7 +350,7 @@ func (pkgfile *Build) CompileRenovate(output *renovate.Output) error {
 	if pkgfile.UseBldrPkgTagResolver {
 		customManagers = slices.Concat(customManagers, []renovate.CustomManager{
 			{
-				CustomType:          "regex",
+				CustomType:          customTypeRegex,
 				ManagerFilePatterns: []string{"/vars.yaml/"},
 				MatchStrings: []string{
 					renovateMatchStringPkgfile,

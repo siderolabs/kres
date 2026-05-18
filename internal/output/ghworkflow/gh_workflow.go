@@ -65,7 +65,8 @@ for OUTPUT in "${OUTPUTS[@]}";do
 done
 `
 
-	workflowDir = ".github/workflows"
+	workflowDir  = ".github/workflows"
+	slackJobName = "slack-notify"
 	// CiWorkflow is the default CI workflow.
 	CiWorkflow    = workflowDir + "/" + "ci.yaml"
 	slackWorkflow = workflowDir + "/" + "slack-notify.yaml"
@@ -78,6 +79,13 @@ done
 
 	// DefaultJobName is the name of the default job.
 	DefaultJobName = "default"
+)
+
+type PermissionAction string
+
+const (
+	PermissionActionWrite PermissionAction = "write"
+	PermissionActionRead  PermissionAction = "read"
 )
 
 var (
@@ -124,7 +132,7 @@ func NewOutput(mainBranch string, withDefaultJob, withStaleJob bool, slackChanne
 			},
 		},
 		slackWorkflow: {
-			Name: "slack-notify",
+			Name: slackJobName,
 			On: On{
 				WorkFlowRun: WorkFlowRun{
 					Workflows: []string{DefaultJobName},
@@ -132,7 +140,7 @@ func NewOutput(mainBranch string, withDefaultJob, withStaleJob bool, slackChanne
 				},
 			},
 			Jobs: map[string]*Job{
-				"slack-notify": {
+				slackJobName: {
 					RunsOn: RunsOn{value: RunsOnGroupLabel{
 						Group: GenericRunner,
 					}},
@@ -165,7 +173,7 @@ func NewOutput(mainBranch string, withDefaultJob, withStaleJob bool, slackChanne
 				},
 			},
 			Jobs: map[string]*Job{
-				"slack-notify": {
+				slackJobName: {
 					RunsOn: RunsOn{value: RunsOnGroupLabel{
 						Group: GenericRunner,
 					}},
@@ -195,8 +203,8 @@ func NewOutput(mainBranch string, withDefaultJob, withStaleJob bool, slackChanne
 					},
 				},
 			},
-			Permissions: map[string]string{
-				"issues": "write",
+			Permissions: map[string]PermissionAction{
+				"issues": PermissionActionWrite, //nolint:goconst
 			},
 			Jobs: map[string]*Job{
 				"action": {
@@ -228,9 +236,9 @@ func NewOutput(mainBranch string, withDefaultJob, withStaleJob bool, slackChanne
 					},
 				},
 			},
-			Permissions: map[string]string{
-				"issues":        "write",
-				"pull-requests": "write",
+			Permissions: map[string]PermissionAction{
+				"issues":        PermissionActionWrite,
+				"pull-requests": PermissionActionWrite,
 			},
 			Jobs: map[string]*Job{
 				"stale": {
@@ -370,7 +378,7 @@ func (o *Output) CheckIfStepExists(jobName, stepID string) bool {
 
 // AddJobPermissions adds permissions to the job.
 func (o *Output) AddJobPermissions(jobName, permission, value string) {
-	o.workflows[CiWorkflow].Jobs[jobName].Permissions[permission] = value
+	o.workflows[CiWorkflow].Jobs[jobName].Permissions[permission] = PermissionAction(value)
 }
 
 // AddStepBefore adds step before another step in the job.
@@ -473,13 +481,13 @@ func CommonSteps() []*JobStep {
 }
 
 // DefaultJobPermissions returns default job permissions.
-func DefaultJobPermissions() map[string]string {
-	return map[string]string{
-		"packages":      "write",
-		"contents":      "write",
-		"actions":       "read",
-		"pull-requests": "read",
-		"issues":        "read",
+func DefaultJobPermissions() map[string]PermissionAction {
+	return map[string]PermissionAction{
+		"packages":      PermissionActionWrite,
+		"contents":      PermissionActionWrite,
+		"actions":       PermissionActionRead,
+		"pull-requests": PermissionActionRead,
+		"issues":        PermissionActionRead,
 	}
 }
 

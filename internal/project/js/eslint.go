@@ -57,9 +57,10 @@ func (lint *EsLint) CompileDockerfile(output *dockerfile.Output) error {
 	output.Stage(lint.Name() + "-fmt").
 		Description(fmt.Sprintf("trim down %s output to contain only source files", lint.Name()+"-fmt-run")).
 		From("scratch").
-		Step(step.Copy("/src", "/frontend").
-			From(lint.Name() + "-fmt-run").
-			Exclude("node_modules"),
+		Step(
+			step.Copy("/src", "/frontend").
+				From(lint.Name() + "-fmt-run").
+				Exclude("node_modules"),
 		)
 
 	return nil

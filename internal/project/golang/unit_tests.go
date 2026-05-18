@@ -114,10 +114,12 @@ func (tests *UnitTests) CompileDockerfile(output *dockerfile.Output) error {
 		Step(step.Arg("TESTPKGS")).
 		Step(wrapAsInsecure(
 			step.Script(
-				fmt.Sprintf(`go test %s-covermode=atomic -coverprofile=coverage.txt -coverpkg=${TESTPKGS} %s%s${TESTPKGS}`, verboseArg, countArg, extraArgs)).
+				fmt.Sprintf(`go test %s-covermode=atomic -coverprofile=coverage.txt -coverpkg=${TESTPKGS} %s%s${TESTPKGS}`, verboseArg, countArg, extraArgs),
+			).
 				MountCache(filepath.Join(tests.meta.CachePath, "go-build"), tests.meta.GitHubRepository).
 				MountCache(filepath.Join(tests.meta.GoPath, "pkg"), tests.meta.GitHubRepository).
-				MountCache("/tmp", tests.meta.GitHubRepository)))
+				MountCache("/tmp", tests.meta.GitHubRepository),
+		))
 
 	output.Stage(tests.Name()).
 		From("scratch").
@@ -138,7 +140,8 @@ func (tests *UnitTests) CompileDockerfile(output *dockerfile.Output) error {
 				MountCache(filepath.Join(tests.meta.CachePath, "go-build"), tests.meta.GitHubRepository).
 				MountCache(filepath.Join(tests.meta.GoPath, "pkg"), tests.meta.GitHubRepository).
 				MountCache("/tmp", tests.meta.GitHubRepository).
-				Env("CGO_ENABLED", "1")))
+				Env("CGO_ENABLED", "1"),
+		))
 
 	if tests.RunFIPS {
 		testRunFIPSStage := output.Stage(tests.Name() + "-fips").
@@ -157,7 +160,8 @@ func (tests *UnitTests) CompileDockerfile(output *dockerfile.Output) error {
 					MountCache(filepath.Join(tests.meta.GoPath, "pkg"), tests.meta.GitHubRepository).
 					MountCache("/tmp", tests.meta.GitHubRepository).
 					Env("GOFIPS140", "latest").
-					Env("GODEBUG", "fips140=only,tlsmlkem=0")))
+					Env("GODEBUG", "fips140=only,tlsmlkem=0"),
+			))
 	}
 
 	return nil

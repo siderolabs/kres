@@ -174,8 +174,9 @@ func (gh *GHWorkflow) CollectEnforceContexts() []string {
 		// Skip jobs that can never produce a PR status check:
 		//   - cronOnly: scheduled-only, not in ci.yaml
 		//   - Dispatchable: workflow_dispatch only (dispatch.yaml, not ci.yaml)
+		//   - TriggerLabels: optional, only run when explicitly labeled
 		//   - Conditions that explicitly exclude PRs (only-on-*, except-pull-request)
-		if job.CronOnly || job.Dispatchable {
+		if job.CronOnly || job.Dispatchable || len(job.TriggerLabels) > 0 {
 			continue
 		}
 
@@ -494,7 +495,8 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 
 						jobDef.Steps = append(jobDef.Steps, signStep)
 
-						releaseStep.SetWith("files",
+						releaseStep.SetWith(
+							"files",
 							strings.Join(artifacts, "\n")+
 								"\n"+
 								filepath.Join(step.ReleaseStep.BaseDirectory, "sha*.txt")+"\n"+
@@ -573,7 +575,8 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 
 			if slices.Contains(job.Depends, labelProvider) {
 				if _, ok := touchedJobs[labelProvider]; !ok {
-					o.AddStep(labelProvider,
+					o.AddStep(
+						labelProvider,
 						ghworkflow.Step("Retrieve PR labels").
 							SetID("retrieve-pr-labels").
 							SetUsesWithComment(
@@ -673,15 +676,6 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 							}),
 						},
 					}
-
-					if len(job.Matrix.LabelKeys) > 0 {
-						parts := make([]string, 0, len(job.Matrix.LabelKeys))
-						for _, k := range job.Matrix.LabelKeys {
-							parts = append(parts, "${{ matrix."+k+" }}")
-						}
-
-						jobDef.Name = strings.Join(parts, "-")
-					}
 				}
 			}
 		}
@@ -715,8 +709,8 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 			triggeredJob := &ghworkflow.Job{
 				If:     "github.event.workflow_run.conclusion == 'success'",
 				RunsOn: ghworkflow.NewRunsOnGroupLabel(job.RunnerGroup, ""),
-				Permissions: map[string]string{
-					"actions": "read",
+				Permissions: map[string]ghworkflow.PermissionAction{
+					"actions": ghworkflow.PermissionActionRead,
 				},
 				Services: jobDef.Services,
 				Steps:    injectTriggeredRunID(triggeredJobSteps),
@@ -813,24 +807,7 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 		}
 
 		if flatMatrixGateCondition != "" {
-			const gateRef = "steps.check-pr-labels.conclusion == 'success'"
-
-			for _, step := range jobDef.Steps {
-				if step.If == "" {
-					step.If = gateRef
-				} else {
-					step.If = step.If + " && " + gateRef
-				}
-			}
-
-			gateStep := &ghworkflow.JobStep{
-				Name: "check-pr-labels",
-				ID:   "check-pr-labels",
-				If:   flatMatrixGateCondition,
-				Run:  "true",
-			}
-
-			jobDef.Steps = append([]*ghworkflow.JobStep{gateStep}, jobDef.Steps...)
+			jobDef.If = flatMatrixGateCondition
 		}
 
 		if !job.CronOnly && !flatJobsAdded {
@@ -997,40 +974,43 @@ func compileFlatJobSteps(job Job, entry MatrixEntry, baseSteps []*ghworkflow.Job
 		}
 
 		if step.CheckoutStep != nil {
-			result = append(result, ghworkflow.Step(step.Name).
-				SetUsesWithComment(
-					"actions/checkout@"+config.CheckOutActionRef,
-					"version: "+config.CheckOutActionVersion,
-				).
-				SetWith("repository", step.CheckoutStep.Repository).
-				SetWith("ref", step.CheckoutStep.Ref).
-				SetWith("path", step.CheckoutStep.Path),
+			result = append(
+				result, ghworkflow.Step(step.Name).
+					SetUsesWithComment(
+						"actions/checkout@"+config.CheckOutActionRef,
+						"version: "+config.CheckOutActionVersion,
+					).
+					SetWith("repository", step.CheckoutStep.Repository).
+					SetWith("ref", step.CheckoutStep.Ref).
+					SetWith("path", step.CheckoutStep.Path),
 			)
 
 			continue
 		}
 
 		if step.CoverageStep != nil {
-			result = append(result, ghworkflow.Step(step.Name).
-				SetUsesWithComment(
-					"codecov/codecov-action@"+config.CodeCovActionRef,
-					"version: "+config.CodeCovActionVersion,
-				).
-				SetWith("files", strings.Join(step.CoverageStep.Files, ",")).
-				SetWith("token", "${{ secrets.CODECOV_TOKEN }}").
-				SetTimeoutMinutes(step.TimeoutMinutes),
+			result = append(
+				result, ghworkflow.Step(step.Name).
+					SetUsesWithComment(
+						"codecov/codecov-action@"+config.CodeCovActionRef,
+						"version: "+config.CodeCovActionVersion,
+					).
+					SetWith("files", strings.Join(step.CoverageStep.Files, ",")).
+					SetWith("token", "${{ secrets.CODECOV_TOKEN }}").
+					SetTimeoutMinutes(step.TimeoutMinutes),
 			)
 
 			continue
 		}
 
 		if step.TerraformStep {
-			result = append(result, ghworkflow.Step(step.Name).
-				SetUsesWithComment(
-					"hashicorp/setup-terraform@"+config.SetupTerraformActionRef,
-					"version: "+config.SetupTerraformActionVersion,
-				).
-				SetWith("terraform_wrapper", "false"),
+			result = append(
+				result, ghworkflow.Step(step.Name).
+					SetUsesWithComment(
+						"hashicorp/setup-terraform@"+config.SetupTerraformActionRef,
+						"version: "+config.SetupTerraformActionVersion,
+					).
+					SetWith("terraform_wrapper", "false"),
 			)
 
 			continue

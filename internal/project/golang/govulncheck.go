@@ -96,11 +96,12 @@ func (lint *GoVulnCheck) CompileDockerfile(output *dockerfile.Output) error {
 		stage.Step(step.Copy(disvulncheckConfigPath, "."))
 	}
 
-	stage.Step(step.Script(
-		script,
-	).
-		MountCache(filepath.Join(lint.meta.CachePath, "go-build"), lint.meta.GitHubRepository).
-		MountCache(filepath.Join(lint.meta.GoPath, "pkg"), lint.meta.GitHubRepository),
+	stage.Step(
+		step.Script(
+			script,
+		).
+			MountCache(filepath.Join(lint.meta.CachePath, "go-build"), lint.meta.GitHubRepository).
+			MountCache(filepath.Join(lint.meta.GoPath, "pkg"), lint.meta.GitHubRepository),
 	)
 
 	return nil

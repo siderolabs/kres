@@ -69,13 +69,16 @@ func (coverage *CodeCov) CompileGitHubWorkflow(output *ghworkflow.Output) error 
 					fmt.Sprintf("codecov/codecov-action@%s", config.CodeCovActionRef),
 					"version: "+config.CodeCovActionVersion,
 				).
-				SetWith("files",
+				SetWith(
+					"files",
 					strings.Join(
-						xslices.Map(paths,
+						xslices.Map(
+							paths,
 							func(p string) string {
 								return fmt.Sprintf("%s/%s", coverage.meta.ArtifactsPath, p)
 							},
-						), ","),
+						), ",",
+					),
 				).
 				SetWith("flags", job.flags).
 				SetWith("token", "${{ secrets.CODECOV_TOKEN }}").

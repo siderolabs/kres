@@ -6,12 +6,10 @@
 package github
 
 import (
-	"context"
 	"fmt"
 	"os"
 
-	"github.com/google/go-github/v85/github"
-	"golang.org/x/oauth2"
+	"github.com/google/go-github/v87/github"
 )
 
 // Output implements interface to GitHub API.
@@ -30,12 +28,14 @@ func NewOutput() *Output {
 		return output
 	}
 
-	ctx := context.Background()
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: token},
-	)
+	ghclient, err := github.NewClient(github.WithAuthToken(token))
+	if err != nil {
+		fmt.Printf("Failed to create GitHub client: %v\n", err)
 
-	output.client = github.NewClient(oauth2.NewClient(ctx, ts))
+		return output
+	}
+
+	output.client = ghclient
 
 	return output
 }

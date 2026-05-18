@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2026-04-27T17:45:57Z by kres b96cd16-dirty.
+# Generated on 2026-05-18T08:01:34Z by kres 85aa5ad-dirty.
 
 # common variables
 
@@ -20,16 +20,16 @@ REGISTRY ?= ghcr.io
 USERNAME ?= siderolabs
 REGISTRY_AND_USERNAME ?= $(REGISTRY)/$(USERNAME)
 PROTOBUF_GO_VERSION ?= 1.36.11
-GRPC_GO_VERSION ?= 1.6.1
+GRPC_GO_VERSION ?= 1.6.2
 GRPC_GATEWAY_VERSION ?= 2.29.0
 VTPROTOBUF_VERSION ?= 0.6.0
-GOIMPORTS_VERSION ?= 0.44.0
+GOIMPORTS_VERSION ?= 0.45.0
 GOMOCK_VERSION ?= 0.6.0
 DEEPCOPY_VERSION ?= v0.5.8
-GOLANGCILINT_VERSION ?= v2.11.4
-GOFUMPT_VERSION ?= v0.9.2
-GO_VERSION ?= 1.26.2
-DIS_VULNCHECK_VERSION ?= v0.0.0-20260409114749-05440f84fe69
+GOLANGCILINT_VERSION ?= v2.12.2
+GOFUMPT_VERSION ?= v0.10.0
+GO_VERSION ?= 1.26.3
+DIS_VULNCHECK_VERSION ?= v0.0.0-20260430093434-b73e0972e2fb
 GO_BUILDFLAGS ?=
 GO_BUILDTAGS ?= ,
 GO_LDFLAGS ?=
@@ -291,8 +291,8 @@ chart-lint:  ## Lint helm chart
 
 .PHONY: helm-plugin-install
 helm-plugin-install:  ## Install helm plugins
-	-helm plugin install https://github.com/helm-unittest/helm-unittest.git --verify=false --version=v1.0.3
-	-helm plugin install https://github.com/losisin/helm-values-schema-json.git --verify=false --version=v2.3.1
+	-helm plugin install https://github.com/helm-unittest/helm-unittest.git --verify=false --version=v1.1.0
+	-helm plugin install https://github.com/losisin/helm-values-schema-json.git --verify=false --version=v2.4.0
 
 .PHONY: kuttl-plugin-install
 kuttl-plugin-install:  ## Install kubectl kuttl plugin

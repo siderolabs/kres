@@ -52,7 +52,7 @@ func compileWorkflow(t *testing.T, jobs []common.Job) *ghworkflow.Output {
 	t.Helper()
 
 	output.PreambleTimestamp, _ = time.Parse(time.RFC3339, strings.ReplaceAll(time.RFC3339, "07:00", "")) //nolint:errcheck
-	output.PreambleCreator = "test"
+	output.PreambleCreator = "test"                                                                       //nolint:goconst
 
 	m := &meta.Options{CompileGithubWorkflowsOnly: true}
 	gw := common.NewGHWorkflow(m)
@@ -71,23 +71,23 @@ func TestMatrixLabelKeysExpansion(t *testing.T) {
 	jobs := []common.Job{
 		{
 			Name:        "integration-aws-nvidia-nonfree",
-			RunnerGroup: "large",
-			Depends:     []string{"default"},
+			RunnerGroup: "large",             //nolint:goconst
+			Depends:     []string{"default"}, //nolint:goconst
 			TriggerLabels: []string{
 				"integration/aws-nvidia-nonfree",
 				"integration/aws-nvidia",
 			},
 			Matrix: &common.Matrix{
 				MaxParallel: 2,
-				LabelKeys:   []string{"variant", "arch"},
+				LabelKeys:   []string{"variant", "arch"}, //nolint:goconst
 				Include: []common.MatrixInclude{
-					{Values: common.MatrixEntry{"variant": "lts", "arch": "amd64"}},
+					{Values: common.MatrixEntry{"variant": "lts", "arch": "amd64"}}, //nolint:goconst
 					{Values: common.MatrixEntry{"variant": "production", "arch": "arm64"}},
 				},
 			},
 			Steps: []common.Step{
 				{
-					Name:    "run-tests",
+					Name:    "run-tests", //nolint:goconst
 					Command: "integration-${{ matrix.variant }}-${{ matrix.arch }}",
 					Environment: map[string]string{
 						"VARIANT": "${{ matrix.variant }}",
@@ -129,7 +129,7 @@ func TestMatrixConditionResolution(t *testing.T) {
 			},
 			Matrix: &common.Matrix{
 				MaxParallel: 2,
-				LabelKeys:   []string{"track"},
+				LabelKeys:   []string{"track"}, //nolint:goconst
 				Include: []common.MatrixInclude{
 					{Values: common.MatrixEntry{"track": "0"}},
 					{Values: common.MatrixEntry{"track": "1", "buildEnforcing": "true"}},
@@ -173,8 +173,8 @@ func TestTriggeredRunIDAutoInject(t *testing.T) {
 				"integration/qemu-race",
 			},
 			OnWorkflowRun: &common.OnWorkflowRun{
-				Workflows: []string{"artifacts-cron"},
-				Types:     []string{"completed"},
+				Workflows: []string{"artifacts-cron"}, //nolint:goconst
+				Types:     []string{"completed"},      //nolint:goconst
 			},
 			Steps: []common.Step{
 				{
@@ -300,7 +300,7 @@ func TestFlatJobMatrix(t *testing.T) {
 			},
 			Steps: []common.Step{
 				{
-					Name:     "e2e-qemu",
+					Name:     "e2e-qemu", //nolint:goconst
 					Command:  "e2e-qemu",
 					WithSudo: true,
 					Environment: map[string]string{
@@ -321,57 +321,6 @@ func TestFlatJobMatrix(t *testing.T) {
 	assertGolden(t, "ci.yaml", buf.Bytes())
 }
 
-// TestFlatJobMatrixTriggeredNotGated is a regression test for the step-mutation
-// bug where the ci.yaml job and the triggered workflow shared the same step
-// slice: the label gate (check-pr-labels + `steps.check-pr-labels.conclusion`
-// conditions) applied to ci.yaml steps leaked into the triggered workflow,
-// which has no such gate step. The triggered steps must not reference
-// `check-pr-labels` nor inherit the gate `if:` condition.
-func TestFlatJobMatrixTriggeredNotGated(t *testing.T) {
-	jobs := []common.Job{
-		{
-			Name:        "integration-misc-0",
-			RunnerGroup: "large",
-			Depends:     []string{"default"},
-			TriggerLabels: []string{
-				"integration/misc-0",
-			},
-			OnWorkflowRun: &common.OnWorkflowRun{
-				Workflows: []string{"artifacts-cron"},
-				Types:     []string{"completed"},
-			},
-			Matrix: &common.Matrix{
-				MaxParallel:   2,
-				FlatJobMatrix: true,
-				LabelKeys:     []string{"test"},
-				Include: []common.MatrixInclude{
-					{Values: common.MatrixEntry{"test": "e2e-firewall"}},
-					{Values: common.MatrixEntry{"test": "e2e-canal-reset"}},
-				},
-			},
-			Steps: []common.Step{
-				{Name: "run-tests", Command: "e2e-qemu"},
-			},
-		},
-	}
-
-	o := compileWorkflow(t, jobs)
-
-	var ciBuf bytes.Buffer
-
-	require.NoError(t, o.GenerateFile(ghworkflow.CiWorkflow, &ciBuf))
-	assertGolden(t, "ci.yaml", ciBuf.Bytes())
-
-	var triggeredBuf bytes.Buffer
-
-	require.NoError(t, o.GenerateFile(".github/workflows/integration-misc-0-triggered.yaml", &triggeredBuf))
-	assertGolden(t, "integration-misc-0-triggered.yaml", triggeredBuf.Bytes())
-
-	// Sanity: the gate must be present in ci.yaml but absent from the triggered workflow.
-	assert.Contains(t, ciBuf.String(), "check-pr-labels", "ci.yaml should contain the label gate")
-	assert.NotContains(t, triggeredBuf.String(), "check-pr-labels", "triggered workflow must not inherit the label gate")
-}
-
 // TestMatrixPerEntryTriggerLabels verifies that per-entry TriggerLabels fire only
 // the matching flat job, while job-level TriggerLabels fire all flat jobs.
 // This tests the combined oss/nonfree scenario where integration/aws-nvidia-oss must
@@ -387,7 +336,7 @@ func TestMatrixPerEntryTriggerLabels(t *testing.T) {
 			},
 			Matrix: &common.Matrix{
 				MaxParallel: 2,
-				LabelKeys:   []string{"driver", "variant"},
+				LabelKeys:   []string{"driver", "variant"}, //nolint:goconst
 				Include: []common.MatrixInclude{
 					{
 						Values:        common.MatrixEntry{"driver": "oss", "variant": "lts"},

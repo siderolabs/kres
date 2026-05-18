@@ -12,7 +12,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/google/go-github/v85/github"
+	"github.com/google/go-github/v87/github"
 	"github.com/siderolabs/gen/xslices"
 
 	"github.com/siderolabs/kres/internal/config"
@@ -332,7 +332,8 @@ func (r *Repository) buildEnforceContexts(base []string) []string {
 	enforceContexts = append(enforceContexts, r.meta.ExtraEnforcedContexts...)
 
 	if r.EnableConform {
-		enforceContexts = append(enforceContexts,
+		enforceContexts = append(
+			enforceContexts,
 			"conform/commit/commit-body",
 			"conform/commit/conventional-commit",
 			"conform/commit/dco",
@@ -348,7 +349,8 @@ func (r *Repository) buildEnforceContexts(base []string) []string {
 		}
 
 		if r.ConformLicenseCheck {
-			enforceContexts = append(enforceContexts,
+			enforceContexts = append(
+				enforceContexts,
 				"conform/license/file-header",
 			)
 		}
@@ -408,7 +410,8 @@ func (r *Repository) applyBranchProtection(client *github.Client, branch string,
 				xslices.Map(*branchProtection.GetRequiredStatusChecks().Checks,
 					func(s *github.RequiredStatusCheck) string {
 						return s.Context
-					}), enforceContexts) &&
+					}), enforceContexts,
+			) &&
 			sigProtected.GetEnabled() {
 			return nil
 		}

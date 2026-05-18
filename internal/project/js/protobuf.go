@@ -50,7 +50,8 @@ type ProtoSpec struct {
 
 // NewProtobuf builds Protobuf node.
 func NewProtobuf(meta *meta.Options, name string) *Protobuf {
-	meta.BuildArgs = append(meta.BuildArgs,
+	meta.BuildArgs = append(
+		meta.BuildArgs,
 		"PROTOBUF_GRPC_GATEWAY_TS_VERSION",
 	)
 
@@ -89,9 +90,10 @@ func (proto *Protobuf) ToolchainBuild(stage *dockerfile.Stage) error {
 
 	stage.
 		Step(step.Arg("PROTOBUF_GRPC_GATEWAY_TS_VERSION")).
-		Step(step.Script("go install github.com/siderolabs/protoc-gen-grpc-gateway-ts@v${PROTOBUF_GRPC_GATEWAY_TS_VERSION}").
-			MountCache(filepath.Join(proto.meta.CachePath, "go-build"), proto.meta.GitHubRepository).
-			MountCache(filepath.Join(proto.meta.GoPath, "pkg"), proto.meta.GitHubRepository),
+		Step(
+			step.Script("go install github.com/siderolabs/protoc-gen-grpc-gateway-ts@v${PROTOBUF_GRPC_GATEWAY_TS_VERSION}").
+				MountCache(filepath.Join(proto.meta.CachePath, "go-build"), proto.meta.GitHubRepository).
+				MountCache(filepath.Join(proto.meta.GoPath, "pkg"), proto.meta.GitHubRepository),
 		).
 		Step(step.Run("mv", filepath.Join(proto.meta.GoPath, "bin", "protoc-gen-grpc-gateway-ts"), proto.meta.BinPath))
 
@@ -153,7 +155,8 @@ func (proto *Protobuf) CompileDockerfile(output *dockerfile.Output) error {
 			"-I" + dir,
 		}
 
-		args = append(args,
+		args = append(
+			args,
 			"--grpc-gateway-ts_out=source_relative:"+dir,
 			"--grpc-gateway-ts_opt=use_proto_names=true",
 		)
@@ -168,7 +171,8 @@ func (proto *Protobuf) CompileDockerfile(output *dockerfile.Output) error {
 		)
 
 		if !strings.HasPrefix(spec.Source, "http") {
-			cleanupSteps = append(cleanupSteps,
+			cleanupSteps = append(
+				cleanupSteps,
 				step.Script("rm "+source),
 			)
 		}

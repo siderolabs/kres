@@ -76,7 +76,8 @@ func (lint *Lint) CompileMakefile(output *makefile.Output) error {
 				func(name string) string {
 					return name + "-fmt"
 				},
-			)...).
+			)...,
+		).
 		Phony()
 
 	return nil

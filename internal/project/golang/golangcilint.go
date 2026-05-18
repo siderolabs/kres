@@ -76,10 +76,11 @@ func (lint *GolangciLint) CompileDockerfile(output *dockerfile.Output) error {
 		Step(step.WorkDir(filepath.Join("/src", lint.projectPath))).
 		Step(step.Copy(filepath.Join(lint.projectPath, ".golangci.yml"), ".")).
 		Step(step.Env("GOGC", "50")).
-		Step(step.Run("golangci-lint", "run", "--config", ".golangci.yml").
-			MountCache(filepath.Join(lint.meta.CachePath, "go-build"), lint.meta.GitHubRepository).
-			MountCache(filepath.Join(lint.meta.CachePath, "golangci-lint"), lint.meta.GitHubRepository, step.CacheLocked).
-			MountCache(filepath.Join(lint.meta.GoPath, "pkg"), lint.meta.GitHubRepository),
+		Step(
+			step.Run("golangci-lint", "run", "--config", ".golangci.yml").
+				MountCache(filepath.Join(lint.meta.CachePath, "go-build"), lint.meta.GitHubRepository).
+				MountCache(filepath.Join(lint.meta.CachePath, "golangci-lint"), lint.meta.GitHubRepository, step.CacheLocked).
+				MountCache(filepath.Join(lint.meta.GoPath, "pkg"), lint.meta.GitHubRepository),
 		)
 
 	output.Stage(lint.Name() + "-fmt-run").
@@ -88,15 +89,17 @@ func (lint *GolangciLint) CompileDockerfile(output *dockerfile.Output) error {
 		Step(step.WorkDir(filepath.Join("/src", lint.projectPath))).
 		Step(step.Copy(filepath.Join(lint.projectPath, ".golangci.yml"), ".")).
 		Step(step.Env("GOGC", "50")).
-		Step(step.Run("golangci-lint", "fmt", "--config", ".golangci.yml").
-			MountCache(filepath.Join(lint.meta.CachePath, "go-build"), lint.meta.GitHubRepository).
-			MountCache(filepath.Join(lint.meta.CachePath, "golangci-lint"), lint.meta.GitHubRepository, step.CacheLocked).
-			MountCache(filepath.Join(lint.meta.GoPath, "pkg"), lint.meta.GitHubRepository),
+		Step(
+			step.Run("golangci-lint", "fmt", "--config", ".golangci.yml").
+				MountCache(filepath.Join(lint.meta.CachePath, "go-build"), lint.meta.GitHubRepository).
+				MountCache(filepath.Join(lint.meta.CachePath, "golangci-lint"), lint.meta.GitHubRepository, step.CacheLocked).
+				MountCache(filepath.Join(lint.meta.GoPath, "pkg"), lint.meta.GitHubRepository),
 		).
-		Step(step.Run("golangci-lint", "run", "--fix", "--issues-exit-code", "0", "--config", ".golangci.yml").
-			MountCache(filepath.Join(lint.meta.CachePath, "go-build"), lint.meta.GitHubRepository).
-			MountCache(filepath.Join(lint.meta.CachePath, "golangci-lint"), lint.meta.GitHubRepository, step.CacheLocked).
-			MountCache(filepath.Join(lint.meta.GoPath, "pkg"), lint.meta.GitHubRepository),
+		Step(
+			step.Run("golangci-lint", "run", "--fix", "--issues-exit-code", "0", "--config", ".golangci.yml").
+				MountCache(filepath.Join(lint.meta.CachePath, "go-build"), lint.meta.GitHubRepository).
+				MountCache(filepath.Join(lint.meta.CachePath, "golangci-lint"), lint.meta.GitHubRepository, step.CacheLocked).
+				MountCache(filepath.Join(lint.meta.GoPath, "pkg"), lint.meta.GitHubRepository),
 		)
 
 	output.Stage(lint.Name() + "-fmt").

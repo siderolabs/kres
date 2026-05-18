@@ -82,7 +82,8 @@ type GoGenerateSpec struct {
 
 // NewGenerate builds Generate node.
 func NewGenerate(meta *meta.Options) *Generate {
-	meta.BuildArgs = append(meta.BuildArgs,
+	meta.BuildArgs = append(
+		meta.BuildArgs,
 		"PROTOBUF_GO_VERSION",
 		"GRPC_GO_VERSION",
 		"GRPC_GATEWAY_VERSION",
@@ -139,17 +140,19 @@ func (generate *Generate) ToolchainBuild(stage *dockerfile.Stage) error {
 
 	stage.
 		Step(step.Arg("GOIMPORTS_VERSION")).
-		Step(step.Script("go install golang.org/x/tools/cmd/goimports@v${GOIMPORTS_VERSION}").
-			MountCache(filepath.Join(generate.meta.CachePath, "go-build"), generate.meta.GitHubRepository).
-			MountCache(filepath.Join(generate.meta.GoPath, "pkg"), generate.meta.GitHubRepository),
+		Step(
+			step.Script("go install golang.org/x/tools/cmd/goimports@v${GOIMPORTS_VERSION}").
+				MountCache(filepath.Join(generate.meta.CachePath, "go-build"), generate.meta.GitHubRepository).
+				MountCache(filepath.Join(generate.meta.GoPath, "pkg"), generate.meta.GitHubRepository),
 		).
 		Step(step.Run("mv", filepath.Join(generate.meta.GoPath, "bin", "goimports"), generate.meta.BinPath))
 
 	stage.
 		Step(step.Arg("GOMOCK_VERSION")).
-		Step(step.Script("go install go.uber.org/mock/mockgen@v${GOMOCK_VERSION}").
-			MountCache(filepath.Join(generate.meta.CachePath, "go-build"), generate.meta.GitHubRepository).
-			MountCache(filepath.Join(generate.meta.GoPath, "pkg"), generate.meta.GitHubRepository),
+		Step(
+			step.Script("go install go.uber.org/mock/mockgen@v${GOMOCK_VERSION}").
+				MountCache(filepath.Join(generate.meta.CachePath, "go-build"), generate.meta.GitHubRepository).
+				MountCache(filepath.Join(generate.meta.GoPath, "pkg"), generate.meta.GitHubRepository),
 		).
 		Step(step.Run("mv", filepath.Join(generate.meta.GoPath, "bin", "mockgen"), generate.meta.BinPath))
 
@@ -160,30 +163,34 @@ func (generate *Generate) ToolchainBuild(stage *dockerfile.Stage) error {
 
 	stage.
 		Step(step.Arg("PROTOBUF_GO_VERSION")).
-		Step(step.Script("go install google.golang.org/protobuf/cmd/protoc-gen-go@v${PROTOBUF_GO_VERSION}").
-			MountCache(filepath.Join(generate.meta.CachePath, "go-build"), generate.meta.GitHubRepository).
-			MountCache(filepath.Join(generate.meta.GoPath, "pkg"), generate.meta.GitHubRepository),
+		Step(
+			step.Script("go install google.golang.org/protobuf/cmd/protoc-gen-go@v${PROTOBUF_GO_VERSION}").
+				MountCache(filepath.Join(generate.meta.CachePath, "go-build"), generate.meta.GitHubRepository).
+				MountCache(filepath.Join(generate.meta.GoPath, "pkg"), generate.meta.GitHubRepository),
 		).
 		Step(step.Run("mv", filepath.Join(generate.meta.GoPath, "bin", "protoc-gen-go"), generate.meta.BinPath)).
 		Step(step.Arg("GRPC_GO_VERSION")).
-		Step(step.Script("go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v${GRPC_GO_VERSION}").
-			MountCache(filepath.Join(generate.meta.CachePath, "go-build"), generate.meta.GitHubRepository).
-			MountCache(filepath.Join(generate.meta.GoPath, "pkg"), generate.meta.GitHubRepository),
+		Step(
+			step.Script("go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v${GRPC_GO_VERSION}").
+				MountCache(filepath.Join(generate.meta.CachePath, "go-build"), generate.meta.GitHubRepository).
+				MountCache(filepath.Join(generate.meta.GoPath, "pkg"), generate.meta.GitHubRepository),
 		).
 		Step(step.Run("mv", filepath.Join(generate.meta.GoPath, "bin", "protoc-gen-go-grpc"), generate.meta.BinPath)).
 		Step(step.Arg("GRPC_GATEWAY_VERSION")).
-		Step(step.Script("go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v${GRPC_GATEWAY_VERSION}").
-			MountCache(filepath.Join(generate.meta.CachePath, "go-build"), generate.meta.GitHubRepository).
-			MountCache(filepath.Join(generate.meta.GoPath, "pkg"), generate.meta.GitHubRepository),
+		Step(
+			step.Script("go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v${GRPC_GATEWAY_VERSION}").
+				MountCache(filepath.Join(generate.meta.CachePath, "go-build"), generate.meta.GitHubRepository).
+				MountCache(filepath.Join(generate.meta.GoPath, "pkg"), generate.meta.GitHubRepository),
 		).
 		Step(step.Run("mv", filepath.Join(generate.meta.GoPath, "bin", "protoc-gen-grpc-gateway"), generate.meta.BinPath))
 
 	if generate.VTProtobufEnabled {
 		stage.
 			Step(step.Arg("VTPROTOBUF_VERSION")).
-			Step(step.Script("go install github.com/planetscale/vtprotobuf/cmd/protoc-gen-go-vtproto@v${VTPROTOBUF_VERSION}").
-				MountCache(filepath.Join(generate.meta.CachePath, "go-build"), generate.meta.GitHubRepository).
-				MountCache(filepath.Join(generate.meta.GoPath, "pkg"), generate.meta.GitHubRepository),
+			Step(
+				step.Script("go install github.com/planetscale/vtprotobuf/cmd/protoc-gen-go-vtproto@v${VTPROTOBUF_VERSION}").
+					MountCache(filepath.Join(generate.meta.CachePath, "go-build"), generate.meta.GitHubRepository).
+					MountCache(filepath.Join(generate.meta.GoPath, "pkg"), generate.meta.GitHubRepository),
 			).
 			Step(step.Run("mv", filepath.Join(generate.meta.GoPath, "bin", "protoc-gen-go-vtproto"), generate.meta.BinPath))
 	}
@@ -261,26 +268,30 @@ func (generate *Generate) CompileDockerfile(output *dockerfile.Output) error {
 			}
 
 			if spec.GenGateway {
-				flags = append(flags,
+				flags = append(
+					flags,
 					"--grpc-gateway_out=paths=source_relative:"+generate.BaseSpecPath,
 					"--grpc-gateway_opt=generate_unbound_methods=true",
 				)
 
 				if spec.external {
-					flags = append(flags,
+					flags = append(
+						flags,
 						"--grpc-gateway_opt=standalone=true",
 					)
 				}
 			}
 
 			if !spec.GenGateway || !spec.external {
-				flags = append(flags,
+				flags = append(
+					flags,
 					"--go_out=paths=source_relative:"+generate.BaseSpecPath,
 					"--go-grpc_out=paths=source_relative:"+generate.BaseSpecPath,
 				)
 
 				if generate.VTProtobufEnabled {
-					flags = append(flags,
+					flags = append(
+						flags,
 						"--go-vtproto_out=paths=source_relative:"+generate.BaseSpecPath,
 						"--go-vtproto_opt=features=marshal+unmarshal+size+equal+clone",
 					)
@@ -364,9 +375,10 @@ func (generate *Generate) CompileDockerfile(output *dockerfile.Output) error {
 		}
 
 		stage.
-			Step(step.Script(fmt.Sprintf("go generate %s/...", spec.Source)).
-				MountCache(filepath.Join(generate.meta.CachePath, "go-build"), generate.meta.GitHubRepository).
-				MountCache(filepath.Join(generate.meta.GoPath, "pkg"), generate.meta.GitHubRepository),
+			Step(
+				step.Script(fmt.Sprintf("go generate %s/...", spec.Source)).
+					MountCache(filepath.Join(generate.meta.CachePath, "go-build"), generate.meta.GitHubRepository).
+					MountCache(filepath.Join(generate.meta.GoPath, "pkg"), generate.meta.GitHubRepository),
 			).
 			Step(step.Run(
 				"goimports",

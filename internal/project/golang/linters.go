@@ -39,31 +39,38 @@ func NewLinters(meta *meta.Options) *Linters {
 func (linters *Linters) ToolchainBuild(stage *dockerfile.Stage) error {
 	stage.
 		Step(step.Arg("GOLANGCILINT_VERSION")).
-		Step(step.Script(
-			fmt.Sprintf(
-				"go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@${GOLANGCILINT_VERSION} \\\n"+
-					"\t&& mv /go/bin/golangci-lint %s/golangci-lint", linters.meta.BinPath),
+		Step(
+			step.Script(
+				fmt.Sprintf(
+					"go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@${GOLANGCILINT_VERSION} \\\n"+
+						"\t&& mv /go/bin/golangci-lint %s/golangci-lint", linters.meta.BinPath,
+				),
+			).
+				MountCache(filepath.Join(linters.meta.CachePath, "go-build"), linters.meta.GitHubRepository).
+				MountCache(filepath.Join(linters.meta.GoPath, "pkg"), linters.meta.GitHubRepository),
 		).
-			MountCache(filepath.Join(linters.meta.CachePath, "go-build"), linters.meta.GitHubRepository).
-			MountCache(filepath.Join(linters.meta.GoPath, "pkg"), linters.meta.GitHubRepository),
-		).
-		Step(step.Script(fmt.Sprintf(
-			`go install golang.org/x/vuln/cmd/govulncheck@latest \
-	&& mv /go/bin/govulncheck %s/govulncheck`, linters.meta.BinPath)).
-			MountCache(filepath.Join(linters.meta.CachePath, "go-build"), linters.meta.GitHubRepository).
-			MountCache(filepath.Join(linters.meta.GoPath, "pkg"), linters.meta.GitHubRepository),
+		Step(
+			step.Script(fmt.Sprintf(
+				`go install golang.org/x/vuln/cmd/govulncheck@latest \
+	&& mv /go/bin/govulncheck %s/govulncheck`, linters.meta.BinPath,
+			)).
+				MountCache(filepath.Join(linters.meta.CachePath, "go-build"), linters.meta.GitHubRepository).
+				MountCache(filepath.Join(linters.meta.GoPath, "pkg"), linters.meta.GitHubRepository),
 		).
 		Step(step.Arg("DIS_VULNCHECK_VERSION")).
-		Step(step.Script(fmt.Sprintf(
-			`go install github.com/shanduur/dis-vulncheck@${DIS_VULNCHECK_VERSION} \
-	&& mv /go/bin/dis-vulncheck %s/dis-vulncheck`, linters.meta.BinPath)).
-			MountCache(filepath.Join(linters.meta.CachePath, "go-build"), linters.meta.GitHubRepository).
-			MountCache(filepath.Join(linters.meta.GoPath, "pkg"), linters.meta.GitHubRepository),
+		Step(
+			step.Script(fmt.Sprintf(
+				`go install github.com/shanduur/dis-vulncheck@${DIS_VULNCHECK_VERSION} \
+	&& mv /go/bin/dis-vulncheck %s/dis-vulncheck`, linters.meta.BinPath,
+			)).
+				MountCache(filepath.Join(linters.meta.CachePath, "go-build"), linters.meta.GitHubRepository).
+				MountCache(filepath.Join(linters.meta.GoPath, "pkg"), linters.meta.GitHubRepository),
 		).
 		Step(step.Arg("GOFUMPT_VERSION")).
 		Step(step.Script(fmt.Sprintf(
 			`go install mvdan.cc/gofumpt@${GOFUMPT_VERSION} \
-	&& mv /go/bin/gofumpt %s/gofumpt`, linters.meta.BinPath)))
+	&& mv /go/bin/gofumpt %s/gofumpt`, linters.meta.BinPath,
+		)))
 
 	return nil
 }

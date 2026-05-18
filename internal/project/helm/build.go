@@ -46,13 +46,15 @@ func (helm *Build) CompileDockerfile(output *dockerfile.Output) error {
 		Description("helm toolchain").
 		From("--platform=${BUILDPLATFORM} ${TOOLCHAIN}").
 		Step(step.Arg("HELMDOCS_VERSION")).
-		Step(step.Script(
-			fmt.Sprintf(
-				"go install github.com/norwoodj/helm-docs/cmd/helm-docs@${HELMDOCS_VERSION} \\\n"+
-					"\t&& mv /go/bin/helm-docs %s/helm-docs", helm.meta.BinPath),
-		).
-			MountCache(filepath.Join(helm.meta.CachePath, "go-build"), helm.meta.GitHubRepository).
-			MountCache(filepath.Join(helm.meta.GoPath, "pkg"), helm.meta.GitHubRepository),
+		Step(
+			step.Script(
+				fmt.Sprintf(
+					"go install github.com/norwoodj/helm-docs/cmd/helm-docs@${HELMDOCS_VERSION} \\\n"+
+						"\t&& mv /go/bin/helm-docs %s/helm-docs", helm.meta.BinPath,
+				),
+			).
+				MountCache(filepath.Join(helm.meta.CachePath, "go-build"), helm.meta.GitHubRepository).
+				MountCache(filepath.Join(helm.meta.GoPath, "pkg"), helm.meta.GitHubRepository),
 		)
 
 	output.Stage("helm-docs-run").
@@ -199,7 +201,8 @@ func (helm *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	}
 
 	templateStep := ghworkflow.Step("Template chart").
-		SetCommand(fmt.Sprintf("helm template %s %s %s",
+		SetCommand(fmt.Sprintf(
+			"helm template %s %s %s",
 			strings.Join(helm.meta.HelmTemplateFlags, " "),
 			filepath.Base(helm.meta.HelmChartDir),
 			helm.meta.HelmChartDir,

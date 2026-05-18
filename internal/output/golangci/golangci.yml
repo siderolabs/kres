@@ -29,6 +29,7 @@ linters:
     - gochecknoinits
     - godox
     - gomoddirectives
+    - gomodguard
     - gosec
     - inamedparam
     - ireturn
@@ -76,7 +77,7 @@ linters:
       min-complexity: 20
     godot:
       scope: declarations
-    gomodguard: { }
+    gomodguard_v2: { }
     govet:
       enable-all: true
     lll:

@@ -164,7 +164,8 @@ func (builder *builder) processDirectory(path string) error {
 		}
 	}
 
-	builder.meta.SourceFiles = append(builder.meta.SourceFiles,
+	builder.meta.SourceFiles = append(
+		builder.meta.SourceFiles,
 		filepath.Join(dir, "go.mod"),
 		filepath.Join(dir, "go.sum"),
 	)

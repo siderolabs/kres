@@ -36,7 +36,8 @@ func (builder *builder) BuildIntegrationTests() error {
 	}
 
 	for _, spec := range integrationTests.Tests {
-		build := golang.NewBuild(builder.meta, spec.Name, spec.Path,
+		build := golang.NewBuild(
+			builder.meta, spec.Name, spec.Path,
 			fmt.Sprintf(
 				"go test -c -covermode=atomic -coverpkg=%s",
 				strings.Join(
