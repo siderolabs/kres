@@ -14,6 +14,7 @@ type Renovate struct {
 	CustomManagers     []CustomManager             `json:"customManagers,omitempty"`
 	PackageRules       []PackageRule               `json:"packageRules,omitempty"`
 	SeparateMajorMinor bool                        `json:"separateMajorMinor"`
+	DraftPR            bool                        `json:"draftPR"`
 }
 
 // CustomDatasource represents a custom datasource.
