@@ -9,8 +9,10 @@ import (
 	"bytes"
 	_ "embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"slices"
@@ -74,9 +76,6 @@ done
 	SlackCIFailureWorkflowName = "slack-notify-ci-failure"
 	// SlackCIFailureWorkflow is the Slack notify on CI failure workflow.
 	SlackCIFailureWorkflow = workflowDir + "/" + SlackCIFailureWorkflowName + ".yaml"
-	// DispatchableWorkflow is the workflow for workflow dispatch events.
-	DispatchableWorkflow = workflowDir + "/" + "dispatch.yaml"
-
 	// DefaultJobName is the name of the default job.
 	DefaultJobName = "default"
 )
@@ -302,11 +301,11 @@ func (o *Output) AddWorkflow(name string, workflow *Workflow) {
 func (o *Output) AddJob(name string, dispatch bool, job *Job, inputs []string) {
 	workflowName := CiWorkflow
 	if dispatch {
-		workflowName = DispatchableWorkflow
+		workflowName = dispatchableWorkflowFile(name)
 
 		if o.workflows[workflowName] == nil {
 			o.workflows[workflowName] = &Workflow{
-				Name: "dispatch",
+				Name: name,
 				On: On{
 					WorkFlowDispatch: &WorkFlowDispatch{
 						Inputs: map[string]WorkFlowDispatchInput{},
@@ -327,6 +326,48 @@ func (o *Output) AddJob(name string, dispatch bool, job *Job, inputs []string) {
 	}
 
 	o.workflows[workflowName].Jobs[name] = job
+}
+
+// dispatchableWorkflowFile returns the workflow file path for a dispatchable
+// job. The path is validated through [os.OpenRoot] against [workflowDir] so
+// the resulting file is guaranteed to live inside the workflows directory —
+// any name containing path separators, "..", or otherwise resolving outside
+// the root is rejected. It also guards against collisions with reserved
+// workflow filenames, which would overwrite managed workflows or nil-deref
+// when assigning workflow_dispatch inputs to a workflow that doesn't have
+// the dispatch trigger initialized.
+func dispatchableWorkflowFile(name string) string {
+	if name == "" {
+		panic("dispatchable job name must not be empty")
+	}
+
+	if err := os.MkdirAll(workflowDir, 0o755); err != nil {
+		panic(fmt.Sprintf("create %s: %v", workflowDir, err))
+	}
+
+	root, err := os.OpenRoot(workflowDir)
+	if err != nil {
+		panic(fmt.Sprintf("open %s as root: %v", workflowDir, err))
+	}
+	defer root.Close() //nolint:errcheck
+
+	relname := name + ".yaml"
+
+	// Root.Stat rejects names that escape the root (separators, "..",
+	// absolute paths, unsafe symlinks) without touching the filesystem
+	// beyond the safety check. fs.ErrNotExist is expected and acceptable.
+	if _, err := root.Stat(relname); err != nil && !errors.Is(err, fs.ErrNotExist) {
+		panic(fmt.Sprintf("dispatchable job name %q is not a valid filename: %v", name, err))
+	}
+
+	file := filepath.Join(workflowDir, relname)
+
+	switch file {
+	case CiWorkflow, slackWorkflow, SlackCIFailureWorkflow:
+		panic(fmt.Sprintf("dispatchable job name %q collides with reserved workflow %s", name, file))
+	}
+
+	return file
 }
 
 // AddStep adds step to the job.
@@ -780,9 +821,11 @@ func (o *Output) Compile(compiler Compiler) error {
 	return compiler.CompileGitHubWorkflow(o)
 }
 
-// Generate extends FileAdapter.Generate by removing stale -cron.yaml and
-// -triggered.yaml files in .github/workflows/ that are no longer part of the
-// current configuration.
+// Generate extends FileAdapter.Generate by removing stale kres-generated
+// workflow files in .github/workflows/ that are no longer part of the current
+// configuration. Files are considered kres-generated only when [isKresGenerated]
+// finds a kres-specific marker in the preamble (current or legacy + the kres
+// generator tag), so user-managed or non-kres workflows are left untouched.
 func (o *Output) Generate() error {
 	if err := o.FileAdapter.Generate(); err != nil {
 		return err
@@ -809,19 +852,71 @@ func (o *Output) Generate() error {
 		}
 
 		name := entry.Name()
-		if !strings.HasSuffix(name, "-cron.yaml") && !strings.HasSuffix(name, "-triggered.yaml") {
+		if !strings.HasSuffix(name, ".yaml") {
 			continue
 		}
 
 		fullPath := filepath.Join(workflowDir, name)
-		if _, ok := managed[fullPath]; !ok {
-			if err := os.Remove(fullPath); err != nil && !os.IsNotExist(err) {
-				return err
-			}
+		if _, ok := managed[fullPath]; ok {
+			continue
+		}
+
+		generated, err := isKresGenerated(fullPath)
+		if err != nil {
+			return err
+		}
+
+		if !generated {
+			continue
+		}
+
+		if err := os.Remove(fullPath); err != nil && !os.IsNotExist(err) {
+			return err
 		}
 	}
 
 	return nil
+}
+
+// isKresGenerated reports whether the file at path was produced by kres.
+//
+// A file matches when its preamble carries either:
+//   - the current [output.PreambleMarker] line (kres-specific on its own,
+//     because it contains "BY KRES"); or
+//   - the [output.PreambleLegacyMarker] line emitted by older kres releases
+//     together with the [output.PreambleCreatorTag] generator tag — the
+//     legacy marker text is also used by other code generators, so the kres
+//     tag is required to disambiguate and avoid deleting non-kres files.
+func isKresGenerated(path string) (bool, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
+		}
+
+		return false, err
+	}
+	defer f.Close() //nolint:errcheck
+
+	buf := make([]byte, 256)
+
+	n, err := io.ReadFull(f, buf)
+	if err != nil && !errors.Is(err, io.EOF) && !errors.Is(err, io.ErrUnexpectedEOF) {
+		return false, err
+	}
+
+	head := buf[:n]
+
+	if bytes.Contains(head, []byte(output.PreambleMarker)) {
+		return true, nil
+	}
+
+	if bytes.Contains(head, []byte(output.PreambleLegacyMarker)) &&
+		bytes.Contains(head, []byte(output.PreambleCreatorTag)) {
+		return true, nil
+	}
+
+	return false, nil
 }
 
 // Filenames implements output.FileWriter interface.
