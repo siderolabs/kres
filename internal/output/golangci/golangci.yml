@@ -27,6 +27,7 @@ linters:
     - funlen
     - gochecknoglobals
     - gochecknoinits
+    - goconst # complains about repeated values without understanding code context, it checks comments and logger variables and gives false positives for all of those
     - godox
     - gomoddirectives
     - gomodguard
@@ -68,9 +69,6 @@ linters:
       min-complexity: 30
     nestif:
       min-complexity: 5
-    goconst:
-      min-len: 3
-      min-occurrences: 3
     gocritic:
       disabled-checks: [ ]
     gocyclo:
