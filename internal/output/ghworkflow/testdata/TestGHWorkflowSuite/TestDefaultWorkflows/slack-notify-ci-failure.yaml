@@ -11,6 +11,7 @@
     branches:
       - main
 name: slack-notify-failure
+permissions: {}
 jobs:
   slack-notify:
     runs-on:
@@ -33,7 +34,7 @@ jobs:
                             {
                                 "fields": [
                                     {
-                                        "text": "${{ github.event.workflow_run.event == 'pull_request' && format('*Pull Request:* {0} (`{1}`)\n<{2}/pull/{3}|{4}>', github.repository, github.ref_name, github.event.repository.html_url, steps.get-pr-number.outputs.pull_request_number, github.event.workflow_run.display_title) || format('*Build:* {0} (`{1}`)\n<{2}/commit/{3}|{4}>', github.repository, github.ref_name, github.event.repository.html_url, github.sha, github.event.workflow_run.display_title) }}",
+                                        "text": "${{ format('*Build:* {0} (`{1}`)\n<{2}/commit/{3}|{4}>', github.repository, github.ref_name, github.event.repository.html_url, github.sha, github.event.workflow_run.display_title) }}",
                                         "type": "mrkdwn"
                                     },
                                     {

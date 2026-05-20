@@ -17,10 +17,10 @@ type Workflow struct {
 	Concurrency `yaml:"concurrency,omitempty"`
 	On          `yaml:"on"`
 
-	Name        string                      `yaml:"name"`
-	Permissions map[string]PermissionAction `yaml:"permissions,omitempty"`
-	Env         map[string]string           `yaml:"env,omitempty"`
-	Jobs        map[string]*Job             `yaml:"jobs"`
+	Name        string            `yaml:"name"`
+	Permissions Permissions       `yaml:"permissions,omitempty"`
+	Env         map[string]string `yaml:"env,omitempty"`
+	Jobs        map[string]*Job   `yaml:"jobs"`
 }
 
 // Concurrency represents GitHub Actions concurrency.
@@ -100,15 +100,15 @@ type StrategyMatrix struct {
 
 // Job represents GitHub Actions job.
 type Job struct {
-	Name        string                      `yaml:"name,omitempty"`
-	Permissions map[string]PermissionAction `yaml:"permissions,omitempty"`
-	RunsOn      RunsOn                      `yaml:"runs-on"`
-	If          string                      `yaml:"if,omitempty"`
-	Strategy    *Strategy                   `yaml:"strategy,omitempty"`
-	Needs       []string                    `yaml:"needs,omitempty"`
-	Outputs     map[string]string           `yaml:"outputs,omitempty"`
-	Services    map[string]Service          `yaml:"services,omitempty"`
-	Steps       []*JobStep                  `yaml:"steps"`
+	Name        string             `yaml:"name,omitempty"`
+	Permissions Permissions        `yaml:"permissions,omitempty"`
+	RunsOn      RunsOn             `yaml:"runs-on"`
+	If          string             `yaml:"if,omitempty"`
+	Strategy    *Strategy          `yaml:"strategy,omitempty"`
+	Needs       []string           `yaml:"needs,omitempty"`
+	Outputs     map[string]string  `yaml:"outputs,omitempty"`
+	Services    map[string]Service `yaml:"services,omitempty"`
+	Steps       []*JobStep         `yaml:"steps"`
 }
 
 // RunsOn represents GitHub Actions runs-on field which can be a string, slice, or type with Group/Label structure.

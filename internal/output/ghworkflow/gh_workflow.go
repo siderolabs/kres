@@ -45,6 +45,24 @@ const resp = await github.rest.issues.get({
 
 return resp.data.labels.map(label => label.name)
 `
+	// prNumberRetrieveScript looks up the PR number associated with a
+	// workflow_run via the REST API. Using github-script avoids interpolating
+	// the attacker-controlled head branch name into a shell command.
+	prNumberRetrieveScript = `
+const prs = await github.rest.pulls.list({
+    owner: context.repo.owner,
+    repo: context.repo.repo,
+    head: ` + "`${context.payload.workflow_run.head_repository.owner.login}:${context.payload.workflow_run.head_branch}`" + `,
+    state: 'all',
+    sort: 'updated',
+    direction: 'desc',
+    per_page: 1,
+})
+
+if (prs.data.length > 0) {
+    core.setOutput('pull_request_number', prs.data[0].number)
+}
+`
 	// SystemInfoPrintScript is the script to print system info.
 	SystemInfoPrintScript = `
 MEMORY_GB=$((${{ steps.system-info.outputs.totalmem }}/1024/1024/1024))
@@ -86,6 +104,23 @@ const (
 	PermissionActionWrite PermissionAction = "write"
 	PermissionActionRead  PermissionAction = "read"
 )
+
+// Permissions is the GitHub Actions permissions map used by Workflow and Job.
+//
+// A nil map is treated as "not set" by yaml's omitempty and is omitted from
+// output (so callers that never touch Permissions inherit GitHub's defaults).
+// A non-nil empty map renders as `permissions: {}` — the GitHub-recommended
+// way to explicitly deny all permissions for that scope. Distinguishing the
+// two requires the [IsZero] method below; without it yaml v4's omitempty
+// drops both nil and empty maps.
+type Permissions map[string]PermissionAction
+
+// IsZero reports whether the permissions map should be considered absent for
+// the purposes of yaml's omitempty. Only nil maps are absent; an explicit
+// empty map is preserved so it renders as `permissions: {}`.
+func (p Permissions) IsZero() bool {
+	return p == nil
+}
 
 var (
 	//go:embed files/slack-notify-payload.json
@@ -138,6 +173,9 @@ func NewOutput(mainBranch string, withDefaultJob, withStaleJob bool, slackChanne
 					Types:     []string{"completed"},
 				},
 			},
+			Permissions: map[string]PermissionAction{
+				"pull-requests": PermissionActionRead, //nolint:goconst
+			},
 			Jobs: map[string]*Job{
 				slackJobName: {
 					RunsOn: RunsOn{value: RunsOnGroupLabel{
@@ -147,8 +185,11 @@ func NewOutput(mainBranch string, withDefaultJob, withStaleJob bool, slackChanne
 					Steps: []*JobStep{
 						Step("Get PR number").
 							SetID("get-pr-number").
-							SetEnv("GH_TOKEN", "${{ github.token }}").
-							SetCommand("echo pull_request_number=$(gh pr view -R ${{ github.repository }} ${{ github.event.workflow_run.head_repository.owner.login }}:${{ github.event.workflow_run.head_branch }} --json number --jq .number) >> $GITHUB_OUTPUT"). //nolint:lll
+							SetUsesWithComment(
+								"actions/github-script@"+config.GitHubScriptActionRef,
+								"version: "+config.GitHubScriptActionVersion,
+							).
+							SetWith("script", strings.TrimPrefix(prNumberRetrieveScript, "\n")).
 							SetCustomCondition("github.event.workflow_run.event == 'pull_request'"),
 						Step("Slack Notify").
 							SetUsesWithComment(
@@ -157,7 +198,7 @@ func NewOutput(mainBranch string, withDefaultJob, withStaleJob bool, slackChanne
 							).
 							SetWith("token", "${{ secrets.SLACK_BOT_TOKEN_V2 }}").
 							SetWith("method", "chat.postMessage").
-							SetWith("payload", DefaultSlackNotifyPayload("")),
+							SetWith("payload", DefaultSlackNotifyPayload("", true)),
 					},
 				},
 			},
@@ -171,6 +212,7 @@ func NewOutput(mainBranch string, withDefaultJob, withStaleJob bool, slackChanne
 					Branches:  []string{mainBranch},
 				},
 			},
+			Permissions: map[string]PermissionAction{},
 			Jobs: map[string]*Job{
 				slackJobName: {
 					RunsOn: RunsOn{value: RunsOnGroupLabel{
@@ -185,7 +227,7 @@ func NewOutput(mainBranch string, withDefaultJob, withStaleJob bool, slackChanne
 							).
 							SetWith("token", "${{ secrets.SLACK_BOT_TOKEN_V2 }}").
 							SetWith("method", "chat.postMessage").
-							SetWith("payload", DefaultSlackNotifyPayload(slackChannel)),
+							SetWith("payload", DefaultSlackNotifyPayload(slackChannel, false)),
 					},
 				},
 			},
@@ -591,8 +633,24 @@ func SOPSSteps() []*JobStep {
 	}
 }
 
-// DefaultSlackNotifyPayload returns the default Slack notify payload with an optional custom channel.
-func DefaultSlackNotifyPayload(customChannel string) string {
+// slackNotifyTextWithPR is the ternary expression in [slackNotifyPayload]
+// that picks between *Pull Request:* and *Build:* formatting. The PR branch
+// references steps.get-pr-number.outputs.pull_request_number, which only
+// exists in the slack-notify workflow.
+const slackNotifyTextWithPR = "${{ github.event.workflow_run.event == 'pull_request' && format('*Pull Request:* {0} (`{1}`)\\n<{2}/pull/{3}|{4}>', github.repository, github.ref_name, github.event.repository.html_url, steps.get-pr-number.outputs.pull_request_number, github.event.workflow_run.display_title) || format('*Build:* {0} (`{1}`)\\n<{2}/commit/{3}|{4}>', github.repository, github.ref_name, github.event.repository.html_url, github.sha, github.event.workflow_run.display_title) }}" //nolint:lll
+
+// slackNotifyTextBuildOnly is the *Build:*-only replacement used by workflows
+// that never see pull_request events (so the PR branch above is dead code and
+// the step reference would be unresolved if read).
+const slackNotifyTextBuildOnly = "${{ format('*Build:* {0} (`{1}`)\\n<{2}/commit/{3}|{4}>', github.repository, github.ref_name, github.event.repository.html_url, github.sha, github.event.workflow_run.display_title) }}" //nolint:lll
+
+// DefaultSlackNotifyPayload returns the default Slack notify payload.
+//
+// customChannel overrides the channel when non-empty. When supportsPRLookup is
+// false, the *Pull Request:*/*Build:* ternary in the payload is collapsed to a
+// build-only expression — used for workflows whose job condition excludes
+// pull_request events and therefore cannot resolve the get-pr-number step.
+func DefaultSlackNotifyPayload(customChannel string, supportsPRLookup bool) string {
 	var payload SlackNotifyPayload
 
 	err := json.Unmarshal([]byte(slackNotifyPayload), &payload)
@@ -615,7 +673,18 @@ func DefaultSlackNotifyPayload(customChannel string) string {
 		panic(fmt.Sprintf("failed to marshal slack notify payload: %v", err))
 	}
 
-	return finalPayload.String()
+	out := finalPayload.String()
+
+	if !supportsPRLookup {
+		replaced := strings.Replace(out, slackNotifyTextWithPR, slackNotifyTextBuildOnly, 1)
+		if replaced == out {
+			panic("slack notify payload: PR-aware text expression not found — template drifted")
+		}
+
+		out = replaced
+	}
+
+	return out
 }
 
 // Step creates a step with name.
