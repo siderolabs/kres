@@ -219,10 +219,13 @@ func (gh *GHWorkflow) CollectEnforceContexts() []string {
 }
 
 // CollectTriggerLabels returns the deduplicated set of PR labels referenced as
-// job-level TriggerLabels or per-entry matrix TriggerLabels, mapped to their
-// description (taken from GHWorkflow.LabelDescriptions; empty string if none).
-// The result is suitable for provisioning the corresponding labels on the
-// GitHub repository.
+// job-level TriggerLabels, per-entry matrix TriggerLabels, and per-entry
+// auto-derived labels for label-triggered non-FlatJobMatrix matrices (which the
+// workflow renderer emits at CompileGitHubWorkflow time; see the entryLabel
+// computation inside the flat-job expansion branch). Each label is mapped to
+// its description from GHWorkflow.LabelDescriptions (empty string if none). The
+// result is suitable for provisioning the corresponding labels on the GitHub
+// repository.
 func (gh *GHWorkflow) CollectTriggerLabels() map[string]string {
 	labels := map[string]string{}
 
@@ -238,6 +241,38 @@ func (gh *GHWorkflow) CollectTriggerLabels() map[string]string {
 		for _, entry := range job.Matrix.Include {
 			for _, l := range entry.TriggerLabels {
 				labels[l] = gh.LabelDescriptions[l]
+			}
+		}
+
+		// Only label-triggered, non-flat matrices with LabelKeys undergo the
+		// flat-job expansion in CompileGitHubWorkflow that derives per-entry
+		// labels; gating on the same conditions here avoids provisioning
+		// labels that no generated workflow ever references.
+		if len(job.TriggerLabels) == 0 || len(job.Matrix.LabelKeys) == 0 || job.Matrix.FlatJobMatrix {
+			continue
+		}
+
+		// Mirror the per-entry label derivation done by the flat-job
+		// expansion in CompileGitHubWorkflow so these labels exist on the
+		// GitHub repository (otherwise users can't apply them to a PR to
+		// trigger a specific matrix entry). The derivation must match the
+		// renderer exactly — including entries where no LabelKeys resolve to
+		// a value (yielding a flatJobName with a trailing "-") — so the
+		// provisioned labels never drift from the generated conditions.
+		for _, entry := range job.Matrix.Include {
+			parts := make([]string, 0, len(job.Matrix.LabelKeys))
+
+			for _, k := range job.Matrix.LabelKeys {
+				if v := entry.Values[k]; v != "" {
+					parts = append(parts, v)
+				}
+			}
+
+			flatJobName := job.Name + "-" + strings.Join(parts, "-")
+			entryLabel := "integration/" + strings.TrimPrefix(flatJobName, "integration-")
+
+			if _, ok := labels[entryLabel]; !ok {
+				labels[entryLabel] = gh.LabelDescriptions[entryLabel]
 			}
 		}
 	}

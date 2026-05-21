@@ -321,6 +321,127 @@ func TestFlatJobMatrix(t *testing.T) {
 	assertGolden(t, "ci.yaml", buf.Bytes())
 }
 
+// TestCollectTriggerLabels verifies that CollectTriggerLabels gathers job-level
+// and per-entry matrix TriggerLabels, and auto-derives per-entry labels for
+// label-triggered non-flat matrices exactly as the flat-job expansion in
+// CompileGitHubWorkflow does — while leaving non-triggered and flat matrices
+// alone.
+func TestCollectTriggerLabels(t *testing.T) {
+	for _, tc := range []struct {
+		name              string
+		labelDescriptions map[string]string
+		want              map[string]string
+		jobs              []common.Job
+	}{
+		{
+			name: "job-level and per-entry trigger labels",
+			labelDescriptions: map[string]string{
+				"integration/qemu": "run qemu tests",
+			},
+			jobs: []common.Job{
+				{
+					Name:          "integration-qemu",
+					TriggerLabels: []string{"integration/qemu"},
+					Matrix: &common.Matrix{
+						Include: []common.MatrixInclude{
+							{
+								Values:        common.MatrixEntry{"variant": "default"},
+								TriggerLabels: []string{"integration/qemu-default"},
+							},
+						},
+					},
+				},
+			},
+			want: map[string]string{
+				"integration/qemu":         "run qemu tests",
+				"integration/qemu-default": "",
+			},
+		},
+		{
+			name: "derives per-entry labels for label-triggered non-flat matrix",
+			jobs: []common.Job{
+				{
+					Name:          "integration-aws-nvidia",
+					TriggerLabels: []string{"integration/aws-nvidia"},
+					Matrix: &common.Matrix{
+						LabelKeys: []string{"driver", "variant"},
+						Include: []common.MatrixInclude{
+							{Values: common.MatrixEntry{"driver": "oss", "variant": "lts"}},
+							{Values: common.MatrixEntry{"driver": "nonfree", "variant": "lts"}},
+						},
+					},
+				},
+			},
+			want: map[string]string{
+				"integration/aws-nvidia":             "",
+				"integration/aws-nvidia-oss-lts":     "",
+				"integration/aws-nvidia-nonfree-lts": "",
+			},
+		},
+		{
+			name: "no derivation for matrix without trigger labels",
+			jobs: []common.Job{
+				{
+					Name: "integration-aws-nvidia",
+					Matrix: &common.Matrix{
+						LabelKeys: []string{"driver"},
+						Include: []common.MatrixInclude{
+							{Values: common.MatrixEntry{"driver": "oss"}},
+						},
+					},
+				},
+			},
+			want: map[string]string{},
+		},
+		{
+			name: "no derivation for flat job matrix",
+			jobs: []common.Job{
+				{
+					Name:          "integration-misc-0",
+					TriggerLabels: []string{"integration/misc-0"},
+					Matrix: &common.Matrix{
+						FlatJobMatrix: true,
+						LabelKeys:     []string{"test"},
+						Include: []common.MatrixInclude{
+							{Values: common.MatrixEntry{"test": "e2e-firewall"}},
+						},
+					},
+				},
+			},
+			want: map[string]string{
+				"integration/misc-0": "",
+			},
+		},
+		{
+			name: "entry with no resolving label keys derives trailing-dash label",
+			jobs: []common.Job{
+				{
+					Name:          "integration-aws-nvidia",
+					TriggerLabels: []string{"integration/aws-nvidia"},
+					Matrix: &common.Matrix{
+						LabelKeys: []string{"driver"},
+						Include: []common.MatrixInclude{
+							{Values: common.MatrixEntry{"arch": "amd64"}},
+						},
+					},
+				},
+			},
+			want: map[string]string{
+				"integration/aws-nvidia":  "",
+				"integration/aws-nvidia-": "",
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			gw := common.NewGHWorkflow(&meta.Options{})
+			gw.Jobs = tc.jobs
+			gw.LabelDescriptions = tc.labelDescriptions
+
+			assert.Equal(t, tc.want, gw.CollectTriggerLabels())
+		})
+	}
+}
+
 // TestMatrixPerEntryTriggerLabels verifies that per-entry TriggerLabels fire only
 // the matching flat job, while job-level TriggerLabels fire all flat jobs.
 // This tests the combined oss/nonfree scenario where integration/aws-nvidia-oss must

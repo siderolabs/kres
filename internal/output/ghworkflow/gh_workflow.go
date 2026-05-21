@@ -807,6 +807,17 @@ func (step *JobStep) SetConditions(conditions ...string) error {
 			continue
 		}
 
+		if expr, ok := strings.CutPrefix(condition, "raw:"); ok {
+			expr = strings.TrimSpace(expr)
+			if expr == "" {
+				return fmt.Errorf("raw condition expression must not be empty")
+			}
+
+			step.appendIf(expr)
+
+			continue
+		}
+
 		switch condition {
 		case "except-pull-request":
 			step.appendIf("github.event_name != 'pull_request'")
@@ -846,10 +857,30 @@ func (job *Job) appendIf(condition string) {
 }
 
 // SetConditions sets job conditions.
+//
+// In addition to the named keyword conditions (e.g. "on-pull-request",
+// "only-on-tag"), a condition prefixed with "raw:" is appended verbatim as
+// a GitHub Actions expression. Use this to gate a job on workflow-runtime
+// state for which there is no dedicated keyword — for example:
+//
+//	conditions:
+//	  - on-pull-request
+//	  - "raw:startsWith(github.event.pull_request.title, 'release(')"
 func (job *Job) SetConditions(conditions ...string) error {
 	for _, condition := range conditions {
 		if strings.HasPrefix(condition, "matrix.") {
 			job.appendIf(fmt.Sprintf("${{ %s }}", condition))
+
+			continue
+		}
+
+		if expr, ok := strings.CutPrefix(condition, "raw:"); ok {
+			expr = strings.TrimSpace(expr)
+			if expr == "" {
+				return fmt.Errorf("raw condition expression must not be empty")
+			}
+
+			job.appendIf(expr)
 
 			continue
 		}

@@ -103,6 +103,61 @@ func TestSetConditionsNotCancelled(t *testing.T) {
 	}
 }
 
+func TestSetConditionsRaw(t *testing.T) {
+	for _, tc := range []struct {
+		name       string
+		wantIf     string
+		wantErr    string
+		conditions []string
+	}{
+		{
+			name:       "raw alone",
+			conditions: []string{"raw:startsWith(github.event.pull_request.title, 'release(')"},
+			wantIf:     "startsWith(github.event.pull_request.title, 'release(')",
+		},
+		{
+			name:       "raw combined with keyword",
+			conditions: []string{"on-pull-request", "raw:github.actor != 'dependabot[bot]'"},
+			wantIf:     "github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'",
+		},
+		{
+			name:       "raw expression is trimmed",
+			conditions: []string{"raw:   github.actor != 'bot'   "},
+			wantIf:     "github.actor != 'bot'",
+		},
+		{
+			name:       "empty raw expression rejected",
+			conditions: []string{"raw:"},
+			wantErr:    "raw condition expression must not be empty",
+		},
+		{
+			name:       "whitespace-only raw expression rejected",
+			conditions: []string{"raw:    "},
+			wantErr:    "raw condition expression must not be empty",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			job := &ghworkflow.Job{}
+			step := ghworkflow.Step("test")
+
+			jobErr := job.SetConditions(tc.conditions...)
+			stepErr := step.SetConditions(tc.conditions...)
+
+			if tc.wantErr != "" {
+				require.EqualError(t, jobErr, tc.wantErr)
+				require.EqualError(t, stepErr, tc.wantErr)
+
+				return
+			}
+
+			require.NoError(t, jobErr)
+			require.NoError(t, stepErr)
+			assert.Equal(t, tc.wantIf, job.If)
+			assert.Equal(t, tc.wantIf, step.If)
+		})
+	}
+}
+
 func TestMatrixStrategy(t *testing.T) {
 	output.PreambleTimestamp, _ = time.Parse(time.RFC3339, strings.ReplaceAll(time.RFC3339, "07:00", "")) //nolint:errcheck
 	output.PreambleCreator = "test"
