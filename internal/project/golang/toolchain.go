@@ -71,6 +71,7 @@ func NewToolchain(meta *meta.Options) *Toolchain {
 		"TOOLCHAIN",
 		"CGO_ENABLED",
 		"GO_BUILDFLAGS",
+		"GO_GCFLAGS",
 		"GO_LDFLAGS",
 		"GOTOOLCHAIN",
 		"GOEXPERIMENT",
@@ -143,9 +144,11 @@ func (toolchain *Toolchain) CompileMakefile(output *makefile.Output) error {
 		Variable(makefile.OverridableVariable("GO_BUILDFLAGS", "")).
 		Variable(makefile.OverridableVariable("GO_BUILDTAGS", strings.Join(toolchain.DefaultBuildTags, ",")+",")).
 		Variable(makefile.OverridableVariable("GO_LDFLAGS", "")).
+		Variable(makefile.OverridableVariable("GO_GCFLAGS", "")).
 		Variable(makefile.OverridableVariable("CGO_ENABLED", "0")).
 		Variable(makefile.OverridableVariable("GOTOOLCHAIN", "local")).
-		Variable(makefile.OverridableVariable("GOEXPERIMENT", ""))
+		Variable(makefile.OverridableVariable("GOEXPERIMENT", "")).
+		Variable(makefile.OverridableVariable("WITH_DEBUG", ""))
 
 	// add github token only if necessary
 	if toolchain.PrivateRepos != nil {
@@ -161,6 +164,7 @@ func (toolchain *Toolchain) CompileMakefile(output *makefile.Output) error {
 
 	output.IfTrueCondition("WITH_DEBUG").
 		Then(
+			makefile.AppendVariable("GO_GCFLAGS", "-N -l"),
 			makefile.SimpleVariable("GO_BUILDTAGS", "$(GO_BUILDTAGS)sidero.debug,"),
 		).
 		Else(
@@ -277,7 +281,10 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 		base.Step(step.Copy("./"+file, "./"+file))
 	}
 
-	base.Step(step.Script(`go list -mod=readonly all >/dev/null`).MountCache(filepath.Join(toolchain.meta.GoPath, "pkg"), toolchain.meta.GitHubRepository))
+	base.Step(
+		step.Script(`go list -mod=readonly all >/dev/null`).
+			MountCache(filepath.Join(toolchain.meta.GoPath, "pkg"), toolchain.meta.GitHubRepository),
+	)
 
 	return nil
 }

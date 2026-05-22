@@ -96,6 +96,7 @@ func (build *Build) CompileDockerfile(output *dockerfile.Output) error {
 		stage.
 			Step(step.WorkDir(filepath.Join("/src", build.sourcePath))).
 			Step(step.Arg("GO_BUILDFLAGS")).
+			Step(step.Arg("GO_GCFLAGS")).
 			Step(step.Arg("GO_LDFLAGS"))
 
 		ldflags := "${GO_LDFLAGS}"
@@ -110,13 +111,14 @@ func (build *Build) CompileDockerfile(output *dockerfile.Output) error {
 			ldflags += " -X ${VERSION_PKG}.SHA=${SHA} -X ${VERSION_PKG}.Tag=${TAG}"
 		}
 
+		gcflags := "${GO_GCFLAGS}"
 		buildFlags := " ${GO_BUILDFLAGS}"
 
 		if build.BuildFlags != nil {
 			buildFlags = " " + strings.Join(build.BuildFlags, " ")
 		}
 
-		script := step.Script(fmt.Sprintf(`%s%s -ldflags "%s" -o /%s`, build.command, buildFlags, ldflags, name)).
+		script := step.Script(fmt.Sprintf(`%s%s -gcflags "%s" -ldflags "%s" -o /%s`, build.command, buildFlags, gcflags, ldflags, name)).
 			MountCache(filepath.Join(build.meta.CachePath, "go-build"), build.meta.GitHubRepository).
 			MountCache(filepath.Join(build.meta.GoPath, "pkg"), build.meta.GitHubRepository)
 
