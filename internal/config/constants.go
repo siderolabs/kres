@@ -116,6 +116,9 @@ const (
 	// renovate: datasource=github-tags depName=hashicorp/setup-terraform
 	SetupTerraformActionVersion = "v4.0.1"
 	SetupTerraformActionRef     = "dfe3c3f87815947d99a8997f908cb6525fc44e9e"
+	// SyftVersion is the version of syft used for SBOM generation.
+	// renovate: datasource=go depName=github.com/anchore/syft
+	SyftVersion = "v1.42.3"
 	// SlackNotifyActionVersion is the version of slack notify github action.
 	// renovate: datasource=github-tags depName=slackapi/slack-github-action
 	SlackNotifyActionVersion = "v3.0.3"

@@ -7,6 +7,7 @@ package common
 import (
 	"fmt"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/siderolabs/gen/xslices"
@@ -17,6 +18,11 @@ import (
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/project/meta"
 )
+
+// ReleaseArtifactsProvider is implemented by nodes that contribute additional files to the release upload and checksums.
+type ReleaseArtifactsProvider interface {
+	ReleaseArtifacts() []string
+}
 
 // Release provides common release target.
 type Release struct {
@@ -57,14 +63,20 @@ func (release *Release) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		SetWith("draft", "true")
 
 	if len(release.meta.Commands) > 0 {
-		artifacts := xslices.Map(release.Artifacts, func(artifact string) string {
+		releaseArtifacts := slices.Clone(release.Artifacts)
+		// gather extra artifacts contributed by input nodes
+		for _, node := range dag.GatherMatchingInputs(release, dag.Implements[ReleaseArtifactsProvider]()) {
+			releaseArtifacts = append(releaseArtifacts, node.(ReleaseArtifactsProvider).ReleaseArtifacts()...) //nolint:forcetypeassert,errcheck
+		}
+
+		artifacts := xslices.Map(releaseArtifacts, func(artifact string) string {
 			return filepath.Join(release.meta.ArtifactsPath, artifact)
 		})
 
 		checkSumCommands := []string{
 			fmt.Sprintf("cd %s", release.meta.ArtifactsPath),
-			fmt.Sprintf("sha256sum %s > %s", strings.Join(release.Artifacts, " "), "sha256sum.txt"),
-			fmt.Sprintf("sha512sum %s > %s", strings.Join(release.Artifacts, " "), "sha512sum.txt"),
+			fmt.Sprintf("sha256sum %s > %s", strings.Join(releaseArtifacts, " "), "sha256sum.txt"),
+			fmt.Sprintf("sha512sum %s > %s", strings.Join(releaseArtifacts, " "), "sha512sum.txt"),
 		}
 
 		checkSumStep := ghworkflow.Step("Generate Checksums").

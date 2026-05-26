@@ -235,7 +235,13 @@ func (builder *builder) BuildGolang() error {
 	// add common linter tools
 	linters := golang.NewLinters(builder.meta)
 
-	toolchain.AddInput(generate, deepcopy, linters)
+	// add syft for SBOM generation
+	sbom := golang.NewSBOM(builder.meta)
+
+	toolchain.AddInput(generate, deepcopy, linters, sbom)
+
+	// expose SBOM as a release input so its CI step is ordered before the release upload and its artifacts are gathered into the release upload/checksums
+	builder.targets = append(builder.targets, sbom)
 
 	builder.lintInputs = append(builder.lintInputs, toolchain, linters)
 
