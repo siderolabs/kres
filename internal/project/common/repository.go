@@ -46,6 +46,7 @@ type Repository struct { //nolint:govet
 	// GITHUB_TOKEN is unset, GitHub API integration is skipped entirely.
 	DryRun bool `yaml:"dryRun,omitempty"`
 
+	EnableImmutableReleases   bool     `yaml:"enableImmutableReleases"`
 	EnableConform             bool     `yaml:"enableConform"`
 	ConformWebhookURL         string   `yaml:"conformWebhookURL"`
 	ConformTypes              []string `yaml:"conformTypes"`
@@ -83,6 +84,8 @@ func NewRepository(meta *meta.Options) *Repository {
 		meta: meta,
 
 		MainBranch: meta.MainBranch,
+
+		EnableImmutableReleases: true,
 
 		EnableConform:     true,
 		ConformWebhookURL: "https://conform.dev.talos-systems.io/github",
@@ -196,6 +199,12 @@ func (r *Repository) CompileGitHub(client *github.Client) error {
 
 	if err := r.enableLabels(client); err != nil {
 		return err
+	}
+
+	if r.EnableImmutableReleases {
+		if err := r.enableImmutableReleases(client); err != nil {
+			return err
+		}
 	}
 
 	if r.DryRun {
@@ -314,6 +323,34 @@ func (r *Repository) enableLabels(client *github.Client) error {
 			}
 		}
 	}
+
+	return nil
+}
+
+// enableImmutableReleases turns on immutable releases for the repository so that published release assets and tags can no longer be altered. Existing
+// releases stay mutable until republished; the setting only affects new ones.
+func (r *Repository) enableImmutableReleases(client *github.Client) error {
+	if r.DryRun {
+		fmt.Println("dry-run: repository would enable immutable releases")
+
+		return nil
+	}
+
+	status, _, err := client.Repositories.AreImmutableReleasesEnabled(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository)
+	if err != nil {
+		return fmt.Errorf("failed to check immutable releases status: %w", err)
+	}
+
+	// Already enabled directly or enforced by the org policy: nothing to do.
+	if status.GetEnabled() || status.GetEnforcedByOwner() {
+		return nil
+	}
+
+	if _, err = client.Repositories.EnableImmutableReleases(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository); err != nil {
+		return fmt.Errorf("failed to enable immutable releases: %w", err)
+	}
+
+	fmt.Println("immutable releases enabled")
 
 	return nil
 }
