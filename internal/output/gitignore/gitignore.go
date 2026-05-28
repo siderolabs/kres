@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	filename = ".gitignore"
+	configFile = ".gitignore"
 )
 
 // Output implements .gitignore generation.
@@ -44,13 +44,13 @@ func (o *Output) IgnorePath(paths ...string) {
 
 // Filenames implements output.FileWriter interface.
 func (o *Output) Filenames() []string {
-	return []string{filename}
+	return []string{configFile}
 }
 
 // GenerateFile implements output.FileWriter interface.
 func (o *Output) GenerateFile(filename string, w io.Writer) error {
 	switch filename {
-	case filename:
+	case configFile:
 		return o.gitignore(w)
 	default:
 		panic("unexpected filename: " + filename)

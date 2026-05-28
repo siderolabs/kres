@@ -12,6 +12,7 @@ import (
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/output/dockerfile"
 	"github.com/siderolabs/kres/internal/output/dockerfile/step"
+	"github.com/siderolabs/kres/internal/output/lefthook"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/project/meta"
 )
@@ -184,6 +185,16 @@ func (proto *Protobuf) CompileDockerfile(output *dockerfile.Output) error {
 
 	generate.Step(step.Copy(filepath.Clean(proto.Name())+"/", filepath.Clean(proto.Name())+"/").
 		From(compileContainer))
+
+	return nil
+}
+
+// CompileLefthook implements lefthook.Compiler.
+func (proto *Protobuf) CompileLefthook(output *lefthook.Output) error {
+	output.Hook(lefthook.HookGroupPreCommit).
+		Group(lefthook.PreCommitFixStage).
+		WithParallel(false).
+		Job().WithName("generate " + proto.Name()).WithRun("make generate-" + proto.Name()).WithStageFixed()
 
 	return nil
 }

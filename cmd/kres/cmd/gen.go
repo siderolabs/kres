@@ -19,6 +19,7 @@ import (
 	"github.com/siderolabs/kres/internal/output/github"
 	"github.com/siderolabs/kres/internal/output/gitignore"
 	"github.com/siderolabs/kres/internal/output/golangci"
+	"github.com/siderolabs/kres/internal/output/lefthook"
 	"github.com/siderolabs/kres/internal/output/license"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/output/markdownlint"
@@ -91,6 +92,7 @@ func runGen() error {
 			output.Wrap(release.NewOutput()),
 			output.Wrap(markdownlint.NewOutput()),
 			output.Wrap(template.NewOutput()),
+			output.Wrap(lefthook.NewOutput()),
 		)
 	}
 

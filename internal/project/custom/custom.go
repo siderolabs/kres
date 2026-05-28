@@ -17,6 +17,7 @@ import (
 	"github.com/siderolabs/kres/internal/output/dockerfile"
 	dockerstep "github.com/siderolabs/kres/internal/output/dockerfile/step"
 	"github.com/siderolabs/kres/internal/output/ghworkflow"
+	"github.com/siderolabs/kres/internal/output/lefthook"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/project/meta"
 	"github.com/siderolabs/kres/internal/project/service"
@@ -98,6 +99,8 @@ type Step struct {
 	SudoInCI bool `yaml:"sudoInCI"`
 
 	MakeTarget string `yaml:"makeTarget"`
+
+	Lefthook lefthook.Config `yaml:"lefthook"`
 }
 
 type Artifacts struct { //nolint:govet
@@ -548,3 +551,8 @@ func (step *Step) CompileMakefile(output *makefile.Output) error {
 
 // SkipAsMakefileDependency marks step as skipped in Makefile dependency graph.
 func (step *Step) SkipAsMakefileDependency() {}
+
+// CompileLefthook implements lefthook.Compiler.
+func (step *Step) CompileLefthook(output *lefthook.Output) error {
+	return step.Lefthook.Compile(output)
+}

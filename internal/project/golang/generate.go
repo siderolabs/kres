@@ -15,6 +15,7 @@ import (
 	"github.com/siderolabs/kres/internal/output/dockerfile"
 	"github.com/siderolabs/kres/internal/output/dockerfile/step"
 	"github.com/siderolabs/kres/internal/output/dockerignore"
+	"github.com/siderolabs/kres/internal/output/lefthook"
 	"github.com/siderolabs/kres/internal/output/license"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/output/template"
@@ -427,6 +428,16 @@ func (generate *Generate) CompileTemplates(output *template.Output) error {
 			WithLicenseText(generate.LicenseText).
 			NoOverwrite()
 	}
+
+	return nil
+}
+
+// CompileLefthook implements lefthook.Compiler.
+func (generate *Generate) CompileLefthook(output *lefthook.Output) error {
+	output.Hook(lefthook.HookGroupPreCommit).
+		Group(lefthook.PreCommitFixStage).
+		WithParallel(false).
+		Job().WithName("generate").WithRun("make generate").WithStageFixed()
 
 	return nil
 }

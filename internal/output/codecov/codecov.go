@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	filename = ".codecov.yml"
+	configFile = ".codecov.yml"
 )
 
 //go:embed codecov.yml
@@ -60,13 +60,13 @@ func (o *Output) Filenames() []string {
 		return nil
 	}
 
-	return []string{filename}
+	return []string{configFile}
 }
 
 // GenerateFile implements output.FileWriter interface.
 func (o *Output) GenerateFile(filename string, w io.Writer) error {
 	switch filename {
-	case filename:
+	case configFile:
 		return o.config(w)
 	default:
 		panic("unexpected filename: " + filename)

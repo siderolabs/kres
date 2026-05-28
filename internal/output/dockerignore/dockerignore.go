@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	filename = ".dockerignore"
+	configFile = ".dockerignore"
 )
 
 // Output implements .dockerignore generation.
@@ -39,7 +39,7 @@ func (o *Output) Compile(compiler Compiler) error {
 
 // Filenames implements output.FileWriter interface.
 func (o *Output) Filenames() []string {
-	return []string{filename}
+	return []string{configFile}
 }
 
 // AllowLocalPath adds path to the list of paths to be copied into the context.
@@ -52,7 +52,7 @@ func (o *Output) AllowLocalPath(paths ...string) *Output {
 // GenerateFile implements output.FileWriter interface.
 func (o *Output) GenerateFile(filename string, w io.Writer) error {
 	switch filename {
-	case filename:
+	case configFile:
 		return o.dockerignore(w)
 	default:
 		panic("unexpected filename: " + filename)

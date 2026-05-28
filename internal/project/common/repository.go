@@ -20,6 +20,7 @@ import (
 	"github.com/siderolabs/kres/internal/output"
 	"github.com/siderolabs/kres/internal/output/conform"
 	"github.com/siderolabs/kres/internal/output/conform/licensepolicy"
+	"github.com/siderolabs/kres/internal/output/lefthook"
 	"github.com/siderolabs/kres/internal/output/license"
 	"github.com/siderolabs/kres/internal/project/meta"
 )
@@ -65,6 +66,8 @@ type Repository struct { //nolint:govet
 	BotName string `yaml:"botName"`
 
 	SkipStaleWorkflow bool `yaml:"skipStaleWorkflow"`
+
+	EnableLefthook bool `yaml:"enableLefthook"`
 }
 
 // LicenseConfig configures the license.
@@ -114,6 +117,8 @@ func NewRepository(meta *meta.Options) *Repository {
 		},
 
 		BotName: "talos-bot",
+
+		EnableLefthook: true,
 	}
 }
 
@@ -121,6 +126,17 @@ func NewRepository(meta *meta.Options) *Repository {
 func (r *Repository) AfterLoad() error {
 	r.meta.MainBranch = r.MainBranch
 	r.meta.SkipStaleWorkflow = r.SkipStaleWorkflow
+
+	return nil
+}
+
+// CompileLefthook implements lefthook.Compiler.
+func (r *Repository) CompileLefthook(o *lefthook.Output) error {
+	if !r.EnableLefthook {
+		return nil
+	}
+
+	o.Enable()
 
 	return nil
 }
@@ -231,7 +247,11 @@ func (r *Repository) enableBranchProtection(client *github.Client) error {
 	enforceContexts := r.buildEnforceContexts(nil)
 
 	if r.DryRun {
-		fmt.Printf("dry-run: branch protection for %s would require %d contexts:\n", targetBranch, len(enforceContexts))
+		fmt.Printf(
+			"dry-run: branch protection for %s would require %d contexts:\n",
+			targetBranch,
+			len(enforceContexts),
+		)
 
 		for _, c := range enforceContexts {
 			fmt.Printf("  - %s\n", c)
@@ -290,17 +310,27 @@ func (r *Repository) enableLabels(client *github.Client) error {
 	for _, name := range names {
 		desc := labels[name]
 
-		existing, resp, err := client.Issues.GetLabel(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, name)
+		existing, resp, err := client.Issues.GetLabel(
+			context.Background(),
+			r.meta.GitHubOrganization,
+			r.meta.GitHubRepository,
+			name,
+		)
 		if err != nil {
 			if resp == nil || resp.StatusCode != http.StatusNotFound {
 				return fmt.Errorf("failed to check label %q: %w", name, err)
 			}
 
-			if _, _, err := client.Issues.CreateLabel(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, &github.Label{
-				Name:        new(name),
-				Color:       new(autoLabelColor),
-				Description: new(desc),
-			}); err != nil {
+			if _, _, err := client.Issues.CreateLabel(
+				context.Background(),
+				r.meta.GitHubOrganization,
+				r.meta.GitHubRepository,
+				&github.Label{
+					Name:        new(name),
+					Color:       new(autoLabelColor),
+					Description: new(desc),
+				},
+			); err != nil {
 				return fmt.Errorf("failed to create label %q: %w", name, err)
 			}
 
@@ -318,7 +348,13 @@ func (r *Repository) enableLabels(client *github.Client) error {
 		}
 
 		if patch.Description != nil || patch.Color != nil {
-			if _, _, err := client.Issues.EditLabel(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, name, patch); err != nil {
+			if _, _, err := client.Issues.EditLabel(
+				context.Background(),
+				r.meta.GitHubOrganization,
+				r.meta.GitHubRepository,
+				name,
+				patch,
+			); err != nil {
 				return fmt.Errorf("failed to update label %q: %w", name, err)
 			}
 		}
@@ -336,7 +372,11 @@ func (r *Repository) enableImmutableReleases(client *github.Client) error {
 		return nil
 	}
 
-	status, _, err := client.Repositories.AreImmutableReleasesEnabled(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository)
+	status, _, err := client.Repositories.AreImmutableReleasesEnabled(
+		context.Background(),
+		r.meta.GitHubOrganization,
+		r.meta.GitHubRepository,
+	)
 	if err != nil {
 		return fmt.Errorf("failed to check immutable releases status: %w", err)
 	}
@@ -346,7 +386,11 @@ func (r *Repository) enableImmutableReleases(client *github.Client) error {
 		return nil
 	}
 
-	if _, err = client.Repositories.EnableImmutableReleases(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository); err != nil {
+	if _, err = client.Repositories.EnableImmutableReleases(
+		context.Background(),
+		r.meta.GitHubOrganization,
+		r.meta.GitHubRepository,
+	); err != nil {
 		return fmt.Errorf("failed to enable immutable releases: %w", err)
 	}
 
@@ -397,8 +441,17 @@ func (r *Repository) buildEnforceContexts(base []string) []string {
 }
 
 //nolint:gocyclo,cyclop
-func (r *Repository) applyBranchProtection(client *github.Client, branch string, enforceContexts []string) error {
-	branchProtection, resp, err := client.Repositories.GetBranchProtection(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, branch)
+func (r *Repository) applyBranchProtection(
+	client *github.Client,
+	branch string,
+	enforceContexts []string,
+) error {
+	branchProtection, resp, err := client.Repositories.GetBranchProtection(
+		context.Background(),
+		r.meta.GitHubOrganization,
+		r.meta.GitHubRepository,
+		branch,
+	)
 	if err != nil {
 		if resp == nil || resp.StatusCode != http.StatusNotFound {
 			return err
@@ -428,7 +481,12 @@ func (r *Repository) applyBranchProtection(client *github.Client, branch string,
 	}
 
 	if branchProtection != nil {
-		sigProtected, _, sigErr := client.Repositories.GetSignaturesProtectedBranch(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, branch)
+		sigProtected, _, sigErr := client.Repositories.GetSignaturesProtectedBranch(
+			context.Background(),
+			r.meta.GitHubOrganization,
+			r.meta.GitHubRepository,
+			branch,
+		)
 		if sigErr != nil {
 			return nil //nolint:nilerr
 		}
@@ -454,7 +512,13 @@ func (r *Repository) applyBranchProtection(client *github.Client, branch string,
 		}
 	}
 
-	_, updateResp, err := client.Repositories.UpdateBranchProtection(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, branch, &req)
+	_, updateResp, err := client.Repositories.UpdateBranchProtection(
+		context.Background(),
+		r.meta.GitHubOrganization,
+		r.meta.GitHubRepository,
+		branch,
+		&req,
+	)
 	if err != nil {
 		if updateResp != nil && updateResp.StatusCode == http.StatusNotFound {
 			fmt.Printf("branch %s not found, skipping protection\n", branch)
@@ -465,7 +529,12 @@ func (r *Repository) applyBranchProtection(client *github.Client, branch string,
 		return err
 	}
 
-	if _, _, err = client.Repositories.RequireSignaturesOnProtectedBranch(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, branch); err != nil {
+	if _, _, err = client.Repositories.RequireSignaturesOnProtectedBranch(
+		context.Background(),
+		r.meta.GitHubOrganization,
+		r.meta.GitHubRepository,
+		branch,
+	); err != nil {
 		return err
 	}
 
@@ -475,7 +544,12 @@ func (r *Repository) applyBranchProtection(client *github.Client, branch string,
 }
 
 func (r *Repository) enableConform(client *github.Client) error {
-	hooks, _, err := client.Repositories.ListHooks(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, &github.ListOptions{})
+	hooks, _, err := client.Repositories.ListHooks(
+		context.Background(),
+		r.meta.GitHubOrganization,
+		r.meta.GitHubRepository,
+		&github.ListOptions{},
+	)
 	if err != nil {
 		return err
 	}
@@ -486,18 +560,23 @@ func (r *Repository) enableConform(client *github.Client) error {
 		}
 	}
 
-	_, _, err = client.Repositories.CreateHook(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, &github.Hook{
-		Active: new(true),
-		Config: &github.HookConfig{
-			URL:         &r.ConformWebhookURL,
-			ContentType: new("json"),
-			InsecureSSL: new("0"),
+	_, _, err = client.Repositories.CreateHook(
+		context.Background(),
+		r.meta.GitHubOrganization,
+		r.meta.GitHubRepository,
+		&github.Hook{
+			Active: new(true),
+			Config: &github.HookConfig{
+				URL:         &r.ConformWebhookURL,
+				ContentType: new("json"),
+				InsecureSSL: new("0"),
+			},
+			Events: []string{
+				"push",
+				"pull_request",
+			},
 		},
-		Events: []string{
-			"push",
-			"pull_request",
-		},
-	})
+	)
 	if err != nil {
 		return err
 	}
@@ -508,7 +587,12 @@ func (r *Repository) enableConform(client *github.Client) error {
 }
 
 func (r *Repository) inviteBot(client *github.Client) error {
-	users, _, err := client.Repositories.ListCollaborators(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, &github.ListCollaboratorsOptions{})
+	users, _, err := client.Repositories.ListCollaborators(
+		context.Background(),
+		r.meta.GitHubOrganization,
+		r.meta.GitHubRepository,
+		&github.ListCollaboratorsOptions{},
+	)
 	if err != nil {
 		return err
 	}
@@ -519,9 +603,15 @@ func (r *Repository) inviteBot(client *github.Client) error {
 		}
 	}
 
-	_, resp, err := client.Repositories.AddCollaborator(context.Background(), r.meta.GitHubOrganization, r.meta.GitHubRepository, r.BotName, &github.RepositoryAddCollaboratorOptions{
-		Permission: "maintain",
-	})
+	_, resp, err := client.Repositories.AddCollaborator(
+		context.Background(),
+		r.meta.GitHubOrganization,
+		r.meta.GitHubRepository,
+		r.BotName,
+		&github.RepositoryAddCollaboratorOptions{
+			Permission: "maintain",
+		},
+	)
 	if err != nil {
 		if resp.StatusCode == http.StatusNoContent {
 			return nil

@@ -8,13 +8,40 @@ import (
 	"bytes"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/siderolabs/kres/internal/output/dockerfile"
 	"github.com/siderolabs/kres/internal/output/dockerignore"
+	"github.com/siderolabs/kres/internal/output/lefthook"
 	"github.com/siderolabs/kres/internal/project/golang"
 	"github.com/siderolabs/kres/internal/project/meta"
 )
+
+func TestGenerateInterfaces(t *testing.T) {
+	assert.Implements(t, (*dockerfile.Compiler)(nil), new(golang.Generate))
+	assert.Implements(t, (*dockerignore.Compiler)(nil), new(golang.Generate))
+	assert.Implements(t, (*lefthook.Compiler)(nil), new(golang.Generate))
+}
+
+func TestGenerateLefthook(t *testing.T) {
+	generate := golang.NewGenerate(&meta.Options{})
+
+	// `make generate` joins the shared fix stage as a named job.
+	output := lefthook.NewOutput()
+	output.Enable()
+
+	require.NoError(t, generate.CompileLefthook(output))
+
+	var buf bytes.Buffer
+
+	require.NoError(t, output.GenerateFile("lefthook.yml", &buf))
+
+	rendered := buf.String()
+	assert.Contains(t, rendered, "name: generate")
+	assert.Contains(t, rendered, "run: make generate")
+	assert.Contains(t, rendered, "stage_fixed: true")
+}
 
 func TestGenerateExtraInputs(t *testing.T) {
 	generate := golang.NewGenerate(&meta.Options{

@@ -21,7 +21,7 @@ type Output struct {
 }
 
 const (
-	filename = ".sops.yaml"
+	configFile = ".sops.yaml"
 )
 
 // NewOutput initializes Output.
@@ -54,13 +54,13 @@ func (o *Output) Filenames() []string {
 		return nil
 	}
 
-	return []string{filename}
+	return []string{configFile}
 }
 
 // GenerateFile implements output.FileWriter interface.
 func (o *Output) GenerateFile(filename string, w io.Writer) error {
 	switch filename {
-	case filename:
+	case configFile:
 		return o.sops(w)
 	default:
 		panic("unexpected filename: " + filename)

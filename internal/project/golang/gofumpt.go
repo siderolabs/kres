@@ -11,6 +11,7 @@ import (
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/output/dockerfile"
 	"github.com/siderolabs/kres/internal/output/dockerfile/step"
+	"github.com/siderolabs/kres/internal/output/lefthook"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/project/meta"
 )
@@ -54,7 +55,7 @@ func (lint *Gofumpt) CompileMakefile(output *makefile.Output) error {
 		output.Target("fmt").Description("Formats the source code").
 			Phony().
 			Script(
-				`@docker run --rm -it -v $(PWD):/src -w /src golang:$(GO_VERSION) \
+				`@docker run --rm -v $(PWD):/src -w /src golang:$(GO_VERSION) \
 	bash -c "export GOTOOLCHAIN=local; \
 	export GO111MODULE=on; export GOPROXY=https://proxy.golang.org; \
 	go install mvdan.cc/gofumpt@$(GOFUMPT_VERSION) && \
@@ -77,6 +78,18 @@ func (lint *Gofumpt) CompileDockerfile(output *dockerfile.Output) error {
 				lint.projectPath,
 			),
 		))
+
+	return nil
+}
+
+// CompileLefthook implements lefthook.Compiler.
+func (lint *Gofumpt) CompileLefthook(output *lefthook.Output) error {
+	// stage 1: gofumpt rewrites files, so it joins the shared fix group (alongside
+	// lint-fmt) and re-stages what it changes.
+	output.Hook(lefthook.HookGroupPreCommit).
+		Group(lefthook.PreCommitFixStage).
+		WithParallel(false).
+		Job().WithName("fmt").WithRun("make fmt").WithStageFixed()
 
 	return nil
 }

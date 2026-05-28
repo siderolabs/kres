@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	filename = ".conform.yaml"
+	configFile = ".conform.yaml"
 )
 
 // Output implements .conform.yaml generation.
@@ -96,13 +96,13 @@ func (o *Output) Filenames() []string {
 		return nil
 	}
 
-	return []string{filename}
+	return []string{configFile}
 }
 
 // GenerateFile implements output.FileWriter interface.
 func (o *Output) GenerateFile(filename string, w io.Writer) error {
 	switch filename {
-	case filename:
+	case configFile:
 		return o.config(w)
 	default:
 		panic("unexpected filename: " + filename)

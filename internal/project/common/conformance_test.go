@@ -9,10 +9,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/siderolabs/kres/internal/output/lefthook"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/project/common"
 )
 
 func TestConformanceInterfaces(t *testing.T) {
 	assert.Implements(t, (*makefile.Compiler)(nil), new(common.Conformance))
+	assert.Implements(t, (*lefthook.Compiler)(nil), new(common.Conformance))
 }

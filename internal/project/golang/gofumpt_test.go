@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/siderolabs/kres/internal/output/dockerfile"
+	"github.com/siderolabs/kres/internal/output/lefthook"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/project/golang"
 )
@@ -17,4 +18,5 @@ import (
 func TestGofumptInterfaces(t *testing.T) {
 	assert.Implements(t, (*dockerfile.Compiler)(nil), new(golang.Gofumpt))
 	assert.Implements(t, (*makefile.Compiler)(nil), new(golang.Gofumpt))
+	assert.Implements(t, (*lefthook.Compiler)(nil), new(golang.Gofumpt))
 }

@@ -17,8 +17,8 @@ import (
 )
 
 const (
-	filename = "Dockerfile"
-	syntax   = "docker/dockerfile-upstream:" + config.DockerfileFrontendImageVersion
+	configFile = "Dockerfile"
+	syntax     = "docker/dockerfile-upstream:" + config.DockerfileFrontendImageVersion
 )
 
 // Output implements Dockerfile and .dockerignore generation.
@@ -55,13 +55,13 @@ func (o *Output) Filenames() []string {
 		return nil
 	}
 
-	return []string{filename}
+	return []string{configFile}
 }
 
 // GenerateFile implements output.FileWriter interface.
 func (o *Output) GenerateFile(filename string, w io.Writer) error {
 	switch filename {
-	case filename:
+	case configFile:
 		return o.dockerfile(w)
 	default:
 		panic("unexpected filename: " + filename)

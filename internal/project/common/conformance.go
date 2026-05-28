@@ -6,6 +6,7 @@ package common
 
 import (
 	"github.com/siderolabs/kres/internal/dag"
+	"github.com/siderolabs/kres/internal/output/lefthook"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/project/meta"
 )
@@ -39,8 +40,16 @@ func (conformance *Conformance) CompileMakefile(output *makefile.Output) error {
 
 	output.Target(conformance.Name()).
 		Script("@docker pull $(" + conformanceImageEnvVarName + ")").
-		Script("@docker run --rm -it -v $(PWD):/src -w /src $(" + conformanceImageEnvVarName + ") enforce").
+		Script("@docker run --rm -v $(PWD):/src -w /src $(" + conformanceImageEnvVarName + ") enforce").
 		Phony()
+
+	return nil
+}
+
+// CompileLefthook implements lefthook.Compiler.
+func (conformance *Conformance) CompileLefthook(output *lefthook.Output) error {
+	output.Hook(lefthook.HookGroupCommitMsg).WithParallel(false).
+		Command("conformance").WithRun("make conformance")
 
 	return nil
 }

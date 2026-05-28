@@ -11,6 +11,7 @@ import (
 
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/output/ghworkflow"
+	"github.com/siderolabs/kres/internal/output/lefthook"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/project/meta"
 )
@@ -79,6 +80,23 @@ func (lint *Lint) CompileMakefile(output *makefile.Output) error {
 			)...,
 		).
 		Phony()
+
+	return nil
+}
+
+// CompileLefthook implements lefthook.Compiler.
+func (lint *Lint) CompileLefthook(output *lefthook.Output) error {
+	hookPreCommit := output.Hook(lefthook.HookGroupPreCommit)
+
+	// stage 1: mutating formatters (shared group — generate/fmt blocks append here too).
+	hookPreCommit.Group(lefthook.PreCommitFixStage).
+		WithParallel(false).
+		Job().WithName("lint-fmt").WithRun("make lint-fmt").WithStageFixed()
+
+	// stage 2: lint runs after, against the formatted tree.
+	hookPreCommit.Group(lefthook.PreCommitLintStage).
+		WithParallel(false).
+		Job().WithName("lint").WithRun("make lint")
 
 	return nil
 }
