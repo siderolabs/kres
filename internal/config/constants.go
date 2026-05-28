@@ -20,8 +20,8 @@ const (
 	CheckOutActionRef     = "de0fac2e4500dabe0009e67214ff5f5447ce83dd"
 	// CodeCovActionVersion is the version of codecov github action.
 	// renovate: datasource=github-tags depName=codecov/codecov-action
-	CodeCovActionVersion = "v6.0.0"
-	CodeCovActionRef     = "57e3a136b779b570ffcdbf80b3bdc90e7fab3de2"
+	CodeCovActionVersion = "v6.0.1"
+	CodeCovActionRef     = "e79a6962e0d4c0c17b229090214935d2e33f8354"
 	// DeepCopyVersion is the version of deepcopy.
 	// renovate: datasource=go depName=github.com/siderolabs/deep-copy
 	DeepCopyVersion = "v0.5.8"
@@ -77,8 +77,8 @@ const (
 	HelmDocsVersion = "v1.14.2"
 	// LoginActionVersion is the version of login github action.
 	// renovate: datasource=github-tags depName=docker/login-action
-	LoginActionVersion = "v4.1.0"
-	LoginActionRef     = "4907a6ddec9925e35a0a9e82d7399ccc52663121"
+	LoginActionVersion = "v4.2.0"
+	LoginActionRef     = "650006c6eb7dba73a995cc03b0b2d7f5ca915bee"
 	// MarkdownLintCLIVersion is the version of markdownlint.
 	// renovate: datasource=npm depName=markdownlint-cli
 	MarkdownLintCLIVersion = "0.48.0"
@@ -91,7 +91,7 @@ const (
 	// As a rule of thumb, we bump only to the versions promoted to be LTS (even [not odd] major versions get promoted after a while, always check).
 	//
 	// renovate: datasource=docker versioning=docker depName=node
-	NodeContainerImageVersion = "24.15.0-alpine"
+	NodeContainerImageVersion = "24.16.0-alpine"
 	// PkgsVersion is the version of pkgs.
 	// renovate: datasource=github-tags depName=siderolabs/pkgs
 	PkgsVersion = "v1.13.0"
@@ -110,15 +110,15 @@ const (
 	SentencesPerLineVersion = "0.5.2"
 	// SetupBuildxActionVersion is the version of setup-buildx github action.
 	// renovate: datasource=github-tags depName=docker/setup-buildx-action
-	SetupBuildxActionVersion = "v4.0.0"
-	SetupBuildxActionRef     = "4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd"
+	SetupBuildxActionVersion = "v4.1.0"
+	SetupBuildxActionRef     = "d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5"
 	// SetupTerraformActionVersion is the version of setup terraform github action.
 	// renovate: datasource=github-tags depName=hashicorp/setup-terraform
 	SetupTerraformActionVersion = "v4.0.1"
 	SetupTerraformActionRef     = "dfe3c3f87815947d99a8997f908cb6525fc44e9e"
 	// SyftVersion is the version of syft used for SBOM generation.
 	// renovate: datasource=go depName=github.com/anchore/syft
-	SyftVersion = "v1.42.3"
+	SyftVersion = "v1.44.0"
 	// SlackNotifyActionVersion is the version of slack notify github action.
 	// renovate: datasource=github-tags depName=slackapi/slack-github-action
 	SlackNotifyActionVersion = "v3.0.3"
@@ -136,10 +136,10 @@ const (
 	VTProtobufVersion = "v0.6.0"
 	// StaleActionVersion is the version of stale github action.
 	// renovate: datasource=github-tags depName=actions/stale
-	StaleActionVersion = "v10.2.0"
-	StaleActionRef     = "b5d41d4e1d5dceea10e7104786b73624c18a190f"
+	StaleActionVersion = "v10.3.0"
+	StaleActionRef     = "eb5cf3af3ac0a1aa4c9c45633dd1ae542a27a899"
 	// LockThreadsActionVersion is the version of lock threads github action.
 	// renovate: datasource=github-tags depName=dessant/lock-threads
-	LockThreadsActionVersion = "v6.0.0"
-	LockThreadsActionRef     = "7266a7ce5c1df01b1c6db85bf8cd86c737dadbe7"
+	LockThreadsActionVersion = "v6.0.2"
+	LockThreadsActionRef     = "89ae32b08ed1a541efecbab17912962a5e38981c"
 )
