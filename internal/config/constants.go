@@ -12,7 +12,7 @@ const (
 
 	// BldrImageVersion is the version of bldr image.
 	// renovate: datasource=github-releases depName=siderolabs/bldr
-	BldrImageVersion = "v0.5.6"
+	BldrImageVersion = "v0.6.0"
 
 	// CheckOutActionVersion is the version of checkout github action.
 	// renovate: datasource=github-tags depName=actions/checkout
