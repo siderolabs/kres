@@ -88,5 +88,7 @@ func (builder *builder) BuildJS() error {
 	builder.targets = append(builder.targets, build)
 	builder.commonInputs = append(builder.commonInputs, build)
 
+	builder.proj.AddTarget(js.NewChromatic(builder.meta))
+
 	return nil
 }

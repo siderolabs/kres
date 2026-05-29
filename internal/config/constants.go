@@ -112,6 +112,14 @@ const (
 	// renovate: datasource=github-tags depName=docker/setup-buildx-action
 	SetupBuildxActionVersion = "v4.1.0"
 	SetupBuildxActionRef     = "d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5"
+	// SetupNodeActionVersion is the version of setup-node github action.
+	// renovate: datasource=github-tags depName=actions/setup-node
+	SetupNodeActionVersion = "v6.4.0"
+	SetupNodeActionRef     = "48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e"
+	// ChromaticActionVersion is the version of the chromaui/action github action.
+	// renovate: datasource=github-tags depName=chromaui/action
+	ChromaticActionVersion = "v17.1.0"
+	ChromaticActionRef     = "8ad69a40dea06755a3c6db290f300a39e011433b"
 	// SetupTerraformActionVersion is the version of setup terraform github action.
 	// renovate: datasource=github-tags depName=hashicorp/setup-terraform
 	SetupTerraformActionVersion = "v4.0.1"

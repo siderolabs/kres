@@ -98,6 +98,12 @@ type StrategyMatrix struct {
 	Include []map[string]string `yaml:"include"`
 }
 
+// JobEnvironment represents a GitHub Actions job-level deployment environment.
+type JobEnvironment struct {
+	Name string `yaml:"name"`
+	URL  string `yaml:"url,omitempty"`
+}
+
 // Job represents GitHub Actions job.
 type Job struct {
 	Name        string             `yaml:"name,omitempty"`
@@ -108,6 +114,7 @@ type Job struct {
 	Needs       []string           `yaml:"needs,omitempty"`
 	Outputs     map[string]string  `yaml:"outputs,omitempty"`
 	Services    map[string]Service `yaml:"services,omitempty"`
+	Environment *JobEnvironment    `yaml:"environment,omitempty"`
 	Steps       []*JobStep         `yaml:"steps"`
 }
 
@@ -203,15 +210,16 @@ type Service struct {
 
 // JobStep represents GitHub Actions job step.
 type JobStep struct {
-	Name            string            `yaml:"name"`
-	ID              string            `yaml:"id,omitempty"`
-	If              string            `yaml:"if,omitempty"`
-	Uses            ActionRef         `yaml:"uses,omitempty"`
-	With            map[string]string `yaml:"with,omitempty"`
-	Env             map[string]string `yaml:"env,omitempty"`
-	Run             string            `yaml:"run,omitempty"`
-	ContinueOnError bool              `yaml:"continue-on-error,omitempty"`
-	TimeoutMinutes  int               `yaml:"timeout-minutes,omitempty"`
+	Name             string            `yaml:"name"`
+	ID               string            `yaml:"id,omitempty"`
+	If               string            `yaml:"if,omitempty"`
+	Uses             ActionRef         `yaml:"uses,omitempty"`
+	With             map[string]string `yaml:"with,omitempty"`
+	Env              map[string]string `yaml:"env,omitempty"`
+	Run              string            `yaml:"run,omitempty"`
+	WorkingDirectory string            `yaml:"working-directory,omitempty"`
+	ContinueOnError  bool              `yaml:"continue-on-error,omitempty"`
+	TimeoutMinutes   int               `yaml:"timeout-minutes,omitempty"`
 }
 
 type SlackNotifyPayload struct {
