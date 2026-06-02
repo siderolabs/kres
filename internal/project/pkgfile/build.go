@@ -94,6 +94,7 @@ func (pkgfile *Build) CompileMakefile(output *makefile.Output) error {
 
 	commonArgs := makefile.RecursiveVariable("COMMON_ARGS", "--file=Pkgfile").
 		Push("--provenance=false").
+		Push("--sbom=false").
 		Push("--progress=$(PROGRESS)").
 		Push("--platform=$(PLATFORM)").
 		Push("$(BUILD_ARGS)")

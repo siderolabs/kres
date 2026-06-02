@@ -46,6 +46,7 @@ func (docker *Docker) CompileMakefile(output *makefile.Output) error {
 
 	buildArgs := makefile.RecursiveVariable("COMMON_ARGS", "--file=Dockerfile").
 		Push("--provenance=false").
+		Push("--sbom=false").
 		Push("--progress=$(PROGRESS)").
 		Push("--platform=$(PLATFORM)").
 		Push("--build-arg=BUILDKIT_MULTI_PLATFORM=$(BUILDKIT_MULTI_PLATFORM)").
