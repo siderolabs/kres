@@ -76,9 +76,14 @@ func (proto *Protobuf) CompileMakefile(output *makefile.Output) error {
 		return nil
 	}
 
-	output.Target("generate-" + proto.Name()).
+	targetName := "generate-" + proto.Name()
+	output.Target(targetName).
 		Description("Generate .proto definitions.").
 		Script("@$(MAKE) local-$@ DEST=./")
+
+	if output.HasTarget("generate") {
+		output.Target("generate").Depends(targetName)
+	}
 
 	return nil
 }
@@ -194,7 +199,9 @@ func (proto *Protobuf) CompileLefthook(output *lefthook.Output) error {
 	output.Hook(lefthook.HookGroupPreCommit).
 		Group(lefthook.PreCommitFixStage).
 		WithParallel(false).
-		Job().WithName("generate " + proto.Name()).WithRun("make generate-" + proto.Name()).WithStageFixed()
+		Job().
+		WithName("generate " + proto.Name()).
+		WithRun("make generate-" + proto.Name()).WithStageFixed()
 
 	return nil
 }

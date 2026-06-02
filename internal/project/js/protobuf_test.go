@@ -24,6 +24,51 @@ func TestProtobufInterfaces(t *testing.T) {
 	assert.Implements(t, (*lefthook.Compiler)(nil), new(js.Protobuf))
 }
 
+func TestProtobufMakefileGenerateDepends(t *testing.T) {
+	for _, tt := range []struct {
+		name               string
+		registerCheckDirty bool
+		wantDepends        bool
+	}{
+		{
+			name:               "generate target depends on generate-frontend",
+			registerCheckDirty: true,
+			wantDepends:        true,
+		},
+		{
+			name:               "no generate target leaves generate-frontend orphan",
+			registerCheckDirty: false,
+			wantDepends:        false,
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			proto := js.NewProtobuf(&meta.Options{}, "frontend")
+			proto.Specs = []js.ProtoSpec{{Source: "api.proto"}}
+
+			output := makefile.NewOutput()
+
+			if tt.registerCheckDirty {
+				output.Target("generate")
+			}
+
+			require.NoError(t, proto.CompileMakefile(output))
+
+			var buf bytes.Buffer
+
+			require.NoError(t, output.GenerateFile("Makefile", &buf))
+
+			rendered := buf.String()
+			assert.Contains(t, rendered, "generate-frontend:")
+
+			if tt.wantDepends {
+				assert.Contains(t, rendered, "generate: generate-frontend")
+			} else {
+				assert.NotContains(t, rendered, "generate:")
+			}
+		})
+	}
+}
+
 func TestProtobufLefthook(t *testing.T) {
 	proto := js.NewProtobuf(&meta.Options{}, "frontend")
 
