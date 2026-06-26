@@ -128,8 +128,8 @@ linters:
       - builtin$
       - examples$
 issues:
-  max-issues-per-linter: 10
-  max-same-issues: 3
+  max-issues-per-linter: 1024
+  max-same-issues: 1024
   uniq-by-line: true
   new: false
 
