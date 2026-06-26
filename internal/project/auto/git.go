@@ -16,7 +16,9 @@ import (
 
 // DetectGit detects if current directory is git repository.
 func (builder *builder) DetectGit() (bool, error) {
-	repo, err := git.PlainOpen(".")
+	repo, err := git.PlainOpenWithOptions(".", &git.PlainOpenOptions{
+		EnableDotGitCommonDir: true,
+	})
 	if err != nil {
 		// not a git repo, ignore
 		return false, nil //nolint:nilerr
