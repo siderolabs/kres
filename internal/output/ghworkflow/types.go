@@ -105,17 +105,20 @@ type JobEnvironment struct {
 }
 
 // Job represents GitHub Actions job.
+//
+//nolint:govet // field alignment doesn't matter here
 type Job struct {
-	Name        string             `yaml:"name,omitempty"`
-	Permissions Permissions        `yaml:"permissions,omitempty"`
-	RunsOn      RunsOn             `yaml:"runs-on"`
-	If          string             `yaml:"if,omitempty"`
-	Strategy    *Strategy          `yaml:"strategy,omitempty"`
-	Needs       []string           `yaml:"needs,omitempty"`
-	Outputs     map[string]string  `yaml:"outputs,omitempty"`
-	Services    map[string]Service `yaml:"services,omitempty"`
-	Environment *JobEnvironment    `yaml:"environment,omitempty"`
-	Steps       []*JobStep         `yaml:"steps"`
+	Name           string             `yaml:"name,omitempty"`
+	Permissions    Permissions        `yaml:"permissions,omitempty"`
+	RunsOn         RunsOn             `yaml:"runs-on"`
+	If             string             `yaml:"if,omitempty"`
+	Strategy       *Strategy          `yaml:"strategy,omitempty"`
+	Needs          []string           `yaml:"needs,omitempty"`
+	Outputs        map[string]string  `yaml:"outputs,omitempty"`
+	Services       map[string]Service `yaml:"services,omitempty"`
+	Environment    *JobEnvironment    `yaml:"environment,omitempty"`
+	TimeoutMinutes int                `yaml:"timeout-minutes,omitempty"`
+	Steps          []*JobStep         `yaml:"steps"`
 }
 
 // RunsOn represents GitHub Actions runs-on field which can be a string, slice, or type with Group/Label structure.

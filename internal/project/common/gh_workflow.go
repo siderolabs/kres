@@ -22,20 +22,21 @@ import (
 
 // Job defines options for jobs.
 type Job struct {
-	BuildxOptions *BuildxOptions `yaml:"buildxOptions,omitempty"`
-	Matrix        *Matrix        `yaml:"matrix,omitempty"`
-	OnWorkflowRun *OnWorkflowRun `yaml:"onWorkflowRun,omitempty"`
-	Name          string         `yaml:"name"`
-	RunnerGroup   string         `yaml:"runnerGroup,omitempty"`
-	TriggerLabels []string       `yaml:"triggerLabels,omitempty"`
-	Depends       []string       `yaml:"depends,omitempty"`
-	Steps         []Step         `yaml:"steps,omitempty"`
-	Inputs        []string       `yaml:"inputs,omitempty"`
-	Crons         []string       `yaml:"crons,omitempty"`
-	Conditions    []string       `yaml:"conditions,omitempty"`
-	Dispatchable  bool           `yaml:"dispatchable"`
-	SOPS          bool           `yaml:"sops"`
-	CronOnly      bool           `yaml:"cronOnly"`
+	BuildxOptions  *BuildxOptions `yaml:"buildxOptions,omitempty"`
+	Matrix         *Matrix        `yaml:"matrix,omitempty"`
+	OnWorkflowRun  *OnWorkflowRun `yaml:"onWorkflowRun,omitempty"`
+	Name           string         `yaml:"name"`
+	RunnerGroup    string         `yaml:"runnerGroup,omitempty"`
+	TriggerLabels  []string       `yaml:"triggerLabels,omitempty"`
+	Depends        []string       `yaml:"depends,omitempty"`
+	Steps          []Step         `yaml:"steps,omitempty"`
+	Inputs         []string       `yaml:"inputs,omitempty"`
+	Crons          []string       `yaml:"crons,omitempty"`
+	Conditions     []string       `yaml:"conditions,omitempty"`
+	TimeoutMinutes int            `yaml:"timeoutMinutes,omitempty"`
+	Dispatchable   bool           `yaml:"dispatchable"`
+	SOPS           bool           `yaml:"sops"`
+	CronOnly       bool           `yaml:"cronOnly"`
 }
 
 // MatrixEntry is one row of key-value pairs for a matrix include entry.
@@ -298,11 +299,12 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 
 	for _, job := range gh.Jobs {
 		jobDef := &ghworkflow.Job{
-			If:          ghworkflow.DefaultSkipCondition,
-			RunsOn:      ghworkflow.NewRunsOnGroupLabel(job.RunnerGroup, ""),
-			Permissions: ghworkflow.DefaultJobPermissions(),
-			Needs:       job.Depends,
-			Steps:       ghworkflow.CommonSteps(),
+			If:             ghworkflow.DefaultSkipCondition,
+			RunsOn:         ghworkflow.NewRunsOnGroupLabel(job.RunnerGroup, ""),
+			Permissions:    ghworkflow.DefaultJobPermissions(),
+			Needs:          job.Depends,
+			TimeoutMinutes: job.TimeoutMinutes,
+			Steps:          ghworkflow.CommonSteps(),
 		}
 
 		if err := jobDef.SetConditions(job.Conditions...); err != nil {
@@ -664,11 +666,12 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 					}
 
 					flatJob := &ghworkflow.Job{
-						If:          strings.Join(allConditions, " || "),
-						RunsOn:      ghworkflow.NewRunsOnGroupLabel(job.RunnerGroup, ""),
-						Permissions: ghworkflow.DefaultJobPermissions(),
-						Needs:       job.Depends,
-						Steps:       flatSteps,
+						If:             strings.Join(allConditions, " || "),
+						RunsOn:         ghworkflow.NewRunsOnGroupLabel(job.RunnerGroup, ""),
+						Permissions:    ghworkflow.DefaultJobPermissions(),
+						Needs:          job.Depends,
+						TimeoutMinutes: job.TimeoutMinutes,
+						Steps:          flatSteps,
 					}
 
 					o.AddJob(flatJobName, job.Dispatchable, flatJob, job.Inputs)
@@ -747,8 +750,9 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 				Permissions: map[string]ghworkflow.PermissionAction{
 					"actions": ghworkflow.PermissionActionRead,
 				},
-				Services: jobDef.Services,
-				Steps:    injectTriggeredRunID(triggeredJobSteps),
+				Services:       jobDef.Services,
+				TimeoutMinutes: job.TimeoutMinutes,
+				Steps:          injectTriggeredRunID(triggeredJobSteps),
 			}
 
 			if job.Matrix != nil {
