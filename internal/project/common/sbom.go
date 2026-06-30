@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package golang
+package common
 
 import (
 	"fmt"
@@ -101,20 +101,27 @@ func (sbom *SBOM) CompileDockerfile(output *dockerfile.Output) error {
 		return nil
 	}
 
-	output.Stage("sbom-generate").
+	stage := output.Stage("sbom-generate").
 		Description("generates the SBOM").
 		From("base").
 		Step(step.Arg("TAG")).
-		Step(step.WorkDir("/src")).
-		Step(
-			step.Script(fmt.Sprintf(
-				`SYFT_FORMAT_PRETTY=1 SYFT_FORMAT_SPDX_JSON_DETERMINISTIC_UUID=1 SYFT_GOLANG_SEARCH_LOCAL_MOD_CACHE_LICENSES=1 SYFT_GOLANG_LOCAL_MOD_CACHE_DIR=%s `+
-					`syft scan dir:/src --source-name %s --source-version "${TAG}" -o spdx-json=/%s -o cyclonedx-json=/%s`,
-				filepath.Join(sbom.meta.GoPath, "pkg", "mod"), sbom.sourceName(), sbomSPDXFile, sbomCycloneDXFile,
-			)).
-				MountCache(filepath.Join(sbom.meta.CachePath, "go-build"), sbom.meta.GitHubRepository).
-				MountCache(filepath.Join(sbom.meta.GoPath, "pkg"), sbom.meta.GitHubRepository),
-		)
+		Step(step.WorkDir("/src"))
+
+	if sbom.meta.JSEnabled {
+		stage.
+			Step(step.Copy("/src/package.json", "/src/frontend/package.json").From("js")).
+			Step(step.Copy("/src/package-lock.json", "/src/frontend/package-lock.json").From("js"))
+	}
+
+	stage.Step(
+		step.Script(fmt.Sprintf(
+			`SYFT_FORMAT_PRETTY=1 SYFT_FORMAT_SPDX_JSON_DETERMINISTIC_UUID=1 SYFT_GOLANG_SEARCH_LOCAL_MOD_CACHE_LICENSES=1 SYFT_GOLANG_LOCAL_MOD_CACHE_DIR=%s `+
+				`syft scan dir:/src --source-name %s --source-version "${TAG}" -o spdx-json=/%s -o cyclonedx-json=/%s`,
+			filepath.Join(sbom.meta.GoPath, "pkg", "mod"), sbom.sourceName(), sbomSPDXFile, sbomCycloneDXFile,
+		)).
+			MountCache(filepath.Join(sbom.meta.CachePath, "go-build"), sbom.meta.GitHubRepository).
+			MountCache(filepath.Join(sbom.meta.GoPath, "pkg"), sbom.meta.GitHubRepository),
+	)
 
 	output.Stage("sbom").
 		From("scratch").

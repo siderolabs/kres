@@ -236,7 +236,7 @@ func (builder *builder) BuildGolang() error {
 	linters := golang.NewLinters(builder.meta)
 
 	// add syft for SBOM generation
-	sbom := golang.NewSBOM(builder.meta)
+	sbom := common.NewSBOM(builder.meta)
 
 	toolchain.AddInput(generate, deepcopy, linters, sbom)
 

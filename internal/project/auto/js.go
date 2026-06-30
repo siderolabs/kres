@@ -28,6 +28,8 @@ func (builder *builder) DetectJS() (bool, error) {
 
 	defer packageConfig.Close() //nolint:errcheck
 
+	builder.meta.JSEnabled = true
+
 	for _, srcDir := range []string{"frontend"} {
 		exists, err := directoryExists(builder.rootPath, srcDir)
 		if err != nil {

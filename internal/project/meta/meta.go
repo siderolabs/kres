@@ -39,6 +39,9 @@ type Options struct { //nolint:govet
 	// JSDirectories which contain JS source code.
 	JSDirectories []string
 
+	// JSEnabled is set when the project has a JS/frontend component.
+	JSEnabled bool
+
 	// GoDirectories are directories containing Go source code.
 	GoDirectories []string
 
