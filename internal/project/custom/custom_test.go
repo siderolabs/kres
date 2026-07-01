@@ -135,7 +135,7 @@ func TestCompileLefthookCommands(t *testing.T) {
 	step := custom.NewStep(&meta.Options{}, "custom")
 	step.Lefthook.Enabled = true
 	step.Lefthook.Hooks = map[string]*lefthook.Hook{
-		"commit-msg": {
+		"post-commit": {
 			Parallel: new(false),
 			Commands: map[string]*lefthook.Command{
 				"conformance": {Run: "make conformance"},
@@ -143,7 +143,7 @@ func TestCompileLefthookCommands(t *testing.T) {
 		},
 	}
 
-	hook := decodeLefthook(t, step)["commit-msg"]
+	hook := decodeLefthook(t, step)["post-commit"]
 
 	require.NotNil(t, hook.Parallel)
 	assert.False(t, *hook.Parallel)

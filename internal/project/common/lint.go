@@ -91,12 +91,19 @@ func (lint *Lint) CompileLefthook(output *lefthook.Output) error {
 	// stage 1: mutating formatters (shared group — generate/fmt blocks append here too).
 	hookPreCommit.Group(lefthook.PreCommitFixStage).
 		WithParallel(false).
-		Job().WithName("lint-fmt").WithRun("make lint-fmt").WithStageFixed()
+		Job().
+		WithName("lint-fmt").
+		WithRun("make lint-fmt").
+		WithEnv("USERNAME", lint.meta.GitHubOrganization).
+		WithStageFixed()
 
 	// stage 2: lint runs after, against the formatted tree.
 	hookPreCommit.Group(lefthook.PreCommitLintStage).
 		WithParallel(false).
-		Job().WithName("lint").WithRun("make lint")
+		Job().
+		WithName("lint").
+		WithRun("make lint").
+		WithEnv("USERNAME", lint.meta.GitHubOrganization)
 
 	return nil
 }

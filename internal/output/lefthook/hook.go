@@ -15,8 +15,8 @@ const (
 
 	// HookGroupPreCommit is the lefthook "pre-commit" hook name.
 	HookGroupPreCommit = "pre-commit"
-	// HookGroupCommitMsg is the lefthook "commit-msg" hook name.
-	HookGroupCommitMsg = "commit-msg"
+	// HookGroupPostCommit is the lefthook "post-commit" hook name.
+	HookGroupPostCommit = "post-commit"
 )
 
 // Hook represents the configuration for a single git hook (e.g. pre-commit)

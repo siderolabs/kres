@@ -200,8 +200,10 @@ func (proto *Protobuf) CompileLefthook(output *lefthook.Output) error {
 		Group(lefthook.PreCommitFixStage).
 		WithParallel(false).
 		Job().
-		WithName("generate " + proto.Name()).
-		WithRun("make generate-" + proto.Name()).WithStageFixed()
+		WithName("generate "+proto.Name()).
+		WithRun("make generate-"+proto.Name()).
+		WithEnv("USERNAME", proto.meta.GitHubOrganization).
+		WithStageFixed()
 
 	return nil
 }

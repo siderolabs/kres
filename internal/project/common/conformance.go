@@ -48,8 +48,8 @@ func (conformance *Conformance) CompileMakefile(output *makefile.Output) error {
 
 // CompileLefthook implements lefthook.Compiler.
 func (conformance *Conformance) CompileLefthook(output *lefthook.Output) error {
-	output.Hook(lefthook.HookGroupCommitMsg).WithParallel(false).
-		Command("conformance").WithRun("make conformance")
+	output.Hook(lefthook.HookGroupPostCommit).WithParallel(false).
+		Command("conformance").WithRun("make conformance").WithEnv("USERNAME", conformance.meta.GitHubOrganization)
 
 	return nil
 }

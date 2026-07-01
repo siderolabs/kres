@@ -47,7 +47,7 @@ func (o *Output) Enable() {
 }
 
 // Hook returns the configuration for the named git hook (e.g. "pre-commit",
-// "commit-msg"), creating it on first access. New hooks are blank — set the
+// "post-commit"), creating it on first access. New hooks are blank — set the
 // execution model via WithParallel/WithPiped, and populate either Commands
 // or Jobs depending on which lefthook style you want.
 func (o *Output) Hook(name string) *Hook {

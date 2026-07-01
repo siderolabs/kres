@@ -6,15 +6,16 @@ package lefthook
 
 // Command represents a single named command under a hook's commands: map.
 type Command struct { //nolint:govet
-	Run         string   `yaml:"run"`
-	Tags        []string `yaml:"tags,omitempty"`
-	Glob        string   `yaml:"glob,omitempty"`
-	Files       string   `yaml:"files,omitempty"`
-	Skip        []string `yaml:"skip,omitempty"`
-	Only        []string `yaml:"only,omitempty"`
-	Interactive bool     `yaml:"interactive,omitempty"`
-	StageFixed  bool     `yaml:"stage_fixed,omitempty"`
-	Priority    int      `yaml:"priority,omitempty"`
+	Run         string            `yaml:"run"`
+	Tags        []string          `yaml:"tags,omitempty"`
+	Glob        string            `yaml:"glob,omitempty"`
+	Files       string            `yaml:"files,omitempty"`
+	Env         map[string]string `yaml:"env,omitempty"`
+	Skip        []string          `yaml:"skip,omitempty"`
+	Only        []string          `yaml:"only,omitempty"`
+	Interactive bool              `yaml:"interactive,omitempty"`
+	StageFixed  bool              `yaml:"stage_fixed,omitempty"`
+	Priority    int               `yaml:"priority,omitempty"`
 }
 
 // WithRun sets the shell command lefthook executes for this command.
@@ -41,6 +42,17 @@ func (c *Command) WithGlob(glob string) *Command {
 // WithFiles overrides the default file source (e.g. "git diff --name-only ...").
 func (c *Command) WithFiles(files string) *Command {
 	c.Files = files
+
+	return c
+}
+
+// WithEnv sets an environment variable on the command; safe to call multiple times.
+func (c *Command) WithEnv(name, value string) *Command {
+	if c.Env == nil {
+		c.Env = map[string]string{}
+	}
+
+	c.Env[name] = value
 
 	return c
 }

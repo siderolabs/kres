@@ -437,7 +437,10 @@ func (generate *Generate) CompileLefthook(output *lefthook.Output) error {
 	output.Hook(lefthook.HookGroupPreCommit).
 		Group(lefthook.PreCommitFixStage).
 		WithParallel(false).
-		Job().WithName("generate").WithRun("make generate").WithStageFixed()
+		Job().WithName("generate").
+		WithRun("make generate").
+		WithEnv("USERNAME", generate.meta.GitHubOrganization).
+		WithStageFixed()
 
 	return nil
 }

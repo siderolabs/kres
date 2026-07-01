@@ -89,7 +89,11 @@ func (lint *Gofumpt) CompileLefthook(output *lefthook.Output) error {
 	output.Hook(lefthook.HookGroupPreCommit).
 		Group(lefthook.PreCommitFixStage).
 		WithParallel(false).
-		Job().WithName("fmt").WithRun("make fmt").WithStageFixed()
+		Job().
+		WithName("fmt").
+		WithRun("make fmt").
+		WithEnv("USERNAME", lint.meta.GitHubOrganization).
+		WithStageFixed()
 
 	return nil
 }

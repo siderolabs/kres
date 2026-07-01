@@ -29,7 +29,7 @@ func TestCommandsRoundTrip(t *testing.T) {
 	preCommit.Command("fmt").WithRun("make fmt")
 	preCommit.Command("lint").WithRun("make lint")
 
-	o.Hook("commit-msg").Command("conformance").WithRun("make conformance")
+	o.Hook("post-commit").Command("conformance").WithRun("make conformance")
 
 	require.Equal(t, []string{"lefthook.yml"}, o.Filenames())
 
@@ -46,11 +46,11 @@ func TestCommandsRoundTrip(t *testing.T) {
 	require.NoError(t, yaml.Unmarshal(buf.Bytes(), &decoded))
 
 	require.Contains(t, decoded, "pre-commit")
-	require.Contains(t, decoded, "commit-msg")
+	require.Contains(t, decoded, "post-commit")
 
 	assert.Equal(t, "make fmt", decoded["pre-commit"].Commands["fmt"].Run)
 	assert.Equal(t, "make lint", decoded["pre-commit"].Commands["lint"].Run)
-	assert.Equal(t, "make conformance", decoded["commit-msg"].Commands["conformance"].Run)
+	assert.Equal(t, "make conformance", decoded["post-commit"].Commands["conformance"].Run)
 }
 
 func TestParallelDefaultIsOmitted(t *testing.T) {
@@ -70,7 +70,7 @@ func TestParallelFalseIsEmitted(t *testing.T) {
 	o := lefthook.NewOutput()
 	o.Enable()
 
-	o.Hook("commit-msg").
+	o.Hook("post-commit").
 		WithParallel(false).
 		Command("conformance").WithRun("make conformance")
 
@@ -252,6 +252,8 @@ func TestCommandBuilders(t *testing.T) {
 		WithTags("format", "go").
 		WithGlob("*.go").
 		WithFiles("git diff --name-only").
+		WithEnv("GOFMT_OPTS", "-s").
+		WithEnv("DEBUG", "1").
 		WithSkip("merge", "rebase").
 		WithOnly("ref: main").
 		WithInteractive().
@@ -265,15 +267,16 @@ func TestCommandBuilders(t *testing.T) {
 	var decoded map[string]struct { //nolint:govet
 		Parallel *bool               `yaml:"parallel"`
 		Commands map[string]struct { //nolint:govet
-			Run         string   `yaml:"run"`
-			Tags        []string `yaml:"tags"`
-			Glob        string   `yaml:"glob"`
-			Files       string   `yaml:"files"`
-			Skip        []string `yaml:"skip"`
-			Only        []string `yaml:"only"`
-			Interactive bool     `yaml:"interactive"`
-			StageFixed  bool     `yaml:"stage_fixed"`
-			Priority    int      `yaml:"priority"`
+			Run         string            `yaml:"run"`
+			Tags        []string          `yaml:"tags"`
+			Glob        string            `yaml:"glob"`
+			Files       string            `yaml:"files"`
+			Env         map[string]string `yaml:"env"`
+			Skip        []string          `yaml:"skip"`
+			Only        []string          `yaml:"only"`
+			Interactive bool              `yaml:"interactive"`
+			StageFixed  bool              `yaml:"stage_fixed"`
+			Priority    int               `yaml:"priority"`
 		} `yaml:"commands"`
 	}
 
@@ -288,6 +291,7 @@ func TestCommandBuilders(t *testing.T) {
 	assert.Equal(t, []string{"format", "go"}, cmd.Tags)
 	assert.Equal(t, "*.go", cmd.Glob)
 	assert.Equal(t, "git diff --name-only", cmd.Files)
+	assert.Equal(t, map[string]string{"GOFMT_OPTS": "-s", "DEBUG": "1"}, cmd.Env)
 	assert.Equal(t, []string{"merge", "rebase"}, cmd.Skip)
 	assert.Equal(t, []string{"ref: main"}, cmd.Only)
 	assert.True(t, cmd.Interactive)
