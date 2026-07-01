@@ -77,6 +77,7 @@ func runGen() error {
 		output.Wrap(sops.NewOutput()),
 		output.Wrap(renovate.NewOutput()),
 		output.Wrap(conform.NewOutput()),
+		output.Wrap(lefthook.NewOutput()),
 	}
 
 	if !options.CompileGithubWorkflowsOnly {
@@ -92,7 +93,6 @@ func runGen() error {
 			output.Wrap(release.NewOutput()),
 			output.Wrap(markdownlint.NewOutput()),
 			output.Wrap(template.NewOutput()),
-			output.Wrap(lefthook.NewOutput()),
 		)
 	}
 
