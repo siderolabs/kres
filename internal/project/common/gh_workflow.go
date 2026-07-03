@@ -315,7 +315,7 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 			jobDef.Steps = ghworkflow.DefaultSteps()
 
 			if job.BuildxOptions.CrossBuilder {
-				jobDef.Steps = ghworkflow.DefaultPkgsSteps()
+				jobDef.Steps = ghworkflow.DefaultPkgsSteps(true)
 			}
 		}
 

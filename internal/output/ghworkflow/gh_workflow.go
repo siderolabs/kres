@@ -532,10 +532,10 @@ func (o *Output) SetRunnerGroup(runner string) {
 
 // SetOptionsForPkgs overwrites default job steps and services for pkgs.
 // Note that calling this method will overwrite any existing steps.
-func (o *Output) SetOptionsForPkgs() {
+func (o *Output) SetOptionsForPkgs(enableCrossBuilder bool) {
 	o.SetRunnerGroup(PkgsRunner)
 
-	o.workflows[CiWorkflow].Jobs[DefaultJobName].Steps = DefaultPkgsSteps()
+	o.workflows[CiWorkflow].Jobs[DefaultJobName].Steps = DefaultPkgsSteps(enableCrossBuilder)
 }
 
 // SetWorkflowOn sets the workflow on event.
@@ -600,7 +600,16 @@ func DefaultSteps() []*JobStep {
 }
 
 // DefaultPkgsSteps returns default pkgs steps for the workflow.
-func DefaultPkgsSteps() []*JobStep {
+func DefaultPkgsSteps(withCrossBuilder bool) []*JobStep {
+	withMap := map[string]string{
+		"driver":   "remote",
+		"endpoint": "tcp://buildkit-amd64.ci.svc.cluster.local:1234",
+	}
+
+	if withCrossBuilder {
+		withMap["append"] = strings.TrimPrefix(armbuildkitdEnpointConfig, "\n")
+	}
+
 	return append(
 		CommonSteps(),
 		&JobStep{
@@ -610,11 +619,7 @@ func DefaultPkgsSteps() []*JobStep {
 				Image:   "docker/setup-buildx-action@" + config.SetupBuildxActionRef,
 				Comment: "version: " + config.SetupBuildxActionVersion,
 			},
-			With: map[string]string{
-				"driver":   "remote",
-				"endpoint": "tcp://buildkit-amd64.ci.svc.cluster.local:1234",
-				"append":   strings.TrimPrefix(armbuildkitdEnpointConfig, "\n"),
-			},
+			With: withMap,
 		},
 	)
 }

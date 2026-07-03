@@ -41,6 +41,7 @@ type Build struct {
 		} `yaml:"extraVariables"`
 	} `yaml:"makefile"`
 	UseBldrPkgTagResolver bool `yaml:"useBldrPkgTagResolver"`
+	DisableCrossBuilder   bool `yaml:"disableCrossBuilder"`
 }
 
 var (
@@ -204,7 +205,7 @@ func (pkgfile *Build) CompileMakefile(output *makefile.Output) error {
 
 // CompileGitHubWorkflow implements ghworkflow.Compiler.
 func (pkgfile *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
-	output.SetOptionsForPkgs()
+	output.SetOptionsForPkgs(!pkgfile.DisableCrossBuilder)
 
 	loginStep := ghworkflow.Step("Login to registry").
 		SetUsesWithComment(
@@ -288,7 +289,7 @@ func (pkgfile *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 			RunsOn: ghworkflow.NewRunsOnGroupLabel(ghworkflow.PkgsRunner, ""),
 			If:     "contains(fromJSON(needs.default.outputs.labels || '[]'), 'integration/reproducibility')",
 			Needs:  []string{ghworkflow.DefaultJobName},
-			Steps:  ghworkflow.DefaultPkgsSteps(),
+			Steps:  ghworkflow.DefaultPkgsSteps(!pkgfile.DisableCrossBuilder),
 		}, nil)
 		output.AddStep("reproducibility", ghworkflow.Step("reproducibility-test").SetMakeStep("reproducibility-test"))
 
@@ -313,7 +314,7 @@ func (pkgfile *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 					"reproducibility": {
 						RunsOn: ghworkflow.NewRunsOnGroupLabel(ghworkflow.PkgsRunner, ""),
 						Steps: append(
-							ghworkflow.DefaultPkgsSteps(),
+							ghworkflow.DefaultPkgsSteps(!pkgfile.DisableCrossBuilder),
 							ghworkflow.Step("reproducibility-test").SetMakeStep("reproducibility-test"),
 						),
 					},
