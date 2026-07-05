@@ -17,6 +17,8 @@ import (
 )
 
 // Document is a part of config.
+//
+//nolint:govet
 type Document struct {
 	// Class name and package name, e.g. `golang.Toolchain`.
 	Kind string `yaml:"kind"`

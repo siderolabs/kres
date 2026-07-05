@@ -5,7 +5,7 @@
 concurrency:
   group: ${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
-"on":
+'on':
   workflow_run:
     workflows:
       - artifacts-cron
@@ -55,7 +55,7 @@ jobs:
           done
         continue-on-error: true
       - name: checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # version: v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # version: v7.0.0
       - name: Unshallow
         run: |
           git fetch --prune --unshallow
