@@ -26,14 +26,13 @@ const (
 
 // Build provides common pkgfile build environment settings.
 type Build struct {
+	meta              *meta.Options
+	AdditionalTargets map[string][]string `yaml:"additionalTargets"`
 	dag.BaseNode
-
-	meta *meta.Options
-
-	ReproducibleTargetName string              `yaml:"reproducibleTargetName"`
-	AdditionalTargets      map[string][]string `yaml:"additionalTargets"`
-	Targets                []string            `yaml:"targets"`
-	ExtraBuildArgs         []string            `yaml:"extraBuildArgs"`
+	ReproducibleTargetName string   `yaml:"reproducibleTargetName"`
+	BldrImageVersion       string   `yaml:"bldrImageVersion"`
+	Targets                []string `yaml:"targets"`
+	ExtraBuildArgs         []string `yaml:"extraBuildArgs"`
 	Makefile               struct {
 		ExtraVariables []struct {
 			Name         string `yaml:"name"`
@@ -65,6 +64,8 @@ func NewBuild(meta *meta.Options) *Build {
 	return &Build{
 		meta: meta,
 
+		BldrImageVersion: config.BldrImageVersion,
+
 		BaseNode: dag.NewBaseNode("pkgfile"),
 	}
 }
@@ -83,7 +84,7 @@ func (pkgfile *Build) CompileMakefile(output *makefile.Output) error {
 		Variable(makefile.SimpleVariable("SOURCE_DATE_EPOCH", "$(shell git log $(INITIAL_COMMIT_SHA) --pretty=%ct)"))
 
 	output.VariableGroup("sync bldr image with pkgfile").
-		Variable(makefile.SimpleVariable("BLDR_RELEASE", config.BldrImageVersion)).
+		Variable(makefile.SimpleVariable("BLDR_RELEASE", pkgfile.BldrImageVersion)).
 		Variable(makefile.SimpleVariable("BLDR_IMAGE", "ghcr.io/siderolabs/bldr:$(BLDR_RELEASE)")).
 		Variable(makefile.SimpleVariable("BLDR", "docker run --rm --user $(shell id -u):$(shell id -g) --volume $(PWD):/src --entrypoint=/bldr $(BLDR_IMAGE) --root=/src"))
 
