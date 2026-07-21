@@ -106,6 +106,13 @@ fi`).
 func (build *Build) CompileGitignore(output *gitignore.Output) error {
 	output.IgnorePath(build.ArtifactsPath)
 
+	// Ignore per-developer personal agent instruction files, so they are never
+	// committed. Kept untracked, they are also excluded from generated output by
+	// markdown auto-detection. This covers the "*.local.md" convention (for
+	// example CLAUDE.local.md) and the "*.override.md" convention (for example
+	// Codex's AGENTS.override.md).
+	output.IgnorePath("*.local.md", "*.override.md")
+
 	for _, ignoredPath := range build.IgnoredPaths {
 		output.IgnorePath(ignoredPath)
 	}
