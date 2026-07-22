@@ -57,7 +57,7 @@ func (c *Chromatic) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 
 	installStep := &ghworkflow.JobStep{
 		Name:             "Install dependencies",
-		Run:              "npm ci\n",
+		Run:              "npm ci --strict-allow-scripts\n",
 		WorkingDirectory: "frontend/",
 	}
 
