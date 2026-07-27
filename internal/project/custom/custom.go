@@ -527,10 +527,19 @@ func (step *Step) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	return nil
 }
 
+// legacySignImagesStepName is the name repositories used for their hand-rolled image signing step
+// before kres generated a signing target per image.
+const legacySignImagesStepName = "sign-images"
+
 // CompileMakefile implements makefile.Compiler.
 func (step *Step) CompileMakefile(output *makefile.Output) error {
 	if !step.Makefile.Enabled {
 		return nil
+	}
+
+	if step.Name() == legacySignImagesStepName {
+		fmt.Printf("note: custom step %q found, kres now generates a sign-image-<name> target for every image it builds, "+
+			"so this step can be dropped unless it signs images kres does not build\n", legacySignImagesStepName)
 	}
 
 	for _, variable := range step.Makefile.Variables {

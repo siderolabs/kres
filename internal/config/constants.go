@@ -75,6 +75,9 @@ const (
 	// HelmDocsVersion is the version of helm-docs tool.
 	// renovate: datasource=github-tags depName=norwoodj/helm-docs
 	HelmDocsVersion = "v1.14.2"
+	// ImageSignerVersion is the version of the image-signer tool.
+	// renovate: datasource=github-releases depName=siderolabs/go-tools
+	ImageSignerVersion = "v0.3.2"
 	// LoginActionVersion is the version of login github action.
 	// renovate: datasource=github-tags depName=docker/login-action
 	LoginActionVersion = "v4.4.0"

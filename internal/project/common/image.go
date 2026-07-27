@@ -37,6 +37,26 @@ const FixLocalDestLocationsScript = `
   done'
 `
 
+// signImageScriptPrefix signs an image with the Siderolabs image-signer, which drives a Sigstore
+// keyless signature through an interactive Google authentication flow.
+//
+// The signer runs in a container, so it gets a throwaway DOCKER_CONFIG built from GITHUB_TOKEN
+// instead of the host credentials, and 127.0.0.1:8585 is published for the OAuth redirect.
+//
+// The prefix ends mid-reference, at the registry and username: callers complete it with
+// "<image name>:$(IMAGE_TAG)" by concatenation, never through a Go format string, because the
+// shell printf below has a %s of its own.
+const signImageScriptPrefix = `@test -n "$$GITHUB_TOKEN" || { \
+  echo 'GITHUB_TOKEN with write:packages scope must be set: gh auth refresh -s write:packages, then GITHUB_TOKEN=$$(gh auth token) make' $@; \
+  exit 1; \
+}
+@TMP=$$(mktemp -d) && trap 'rm -rf "$$TMP"' EXIT && \
+  printf '{"auths":{"$(REGISTRY)":{"username":"x","password":"%s"}}}' "$$GITHUB_TOKEN" > "$$TMP/config.json" && \
+  docker run --rm -p 127.0.0.1:8585:8585 \
+    -v "$$TMP:/dc:ro" -e DOCKER_CONFIG=/dc \
+    $(IMAGE_SIGNER_IMAGE) sign --timeout=15m \
+    $(REGISTRY)/$(USERNAME)/`
+
 // Image provides common image build target.
 type Image struct {
 	dag.BaseNode
@@ -150,6 +170,16 @@ func (image *Image) CompileMakefile(output *makefile.Output) error {
 	for _, dependsOn := range image.DependsOn {
 		target.Depends(dependsOn)
 	}
+
+	output.VariableGroup(makefile.VariableGroupCommon).
+		Variable(makefile.OverridableVariable("IMAGE_SIGNER_IMAGE", "ghcr.io/siderolabs/image-signer:"+config.ImageSignerVersion))
+
+	// signing is always driven by a human going through the Google authentication flow, so this
+	// target is never wired into CI or into any other target.
+	output.Target("sign-" + image.Name()).
+		Description(fmt.Sprintf("Signs the image for %s. Requires interactive Google authentication.", image.ImageName)).
+		Script(signImageScriptPrefix + image.ImageName + ":$(IMAGE_TAG)").
+		Phony()
 
 	return nil
 }
