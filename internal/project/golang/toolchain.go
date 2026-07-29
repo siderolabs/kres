@@ -281,6 +281,14 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 		base.Step(step.Copy("./"+file, "./"+file))
 	}
 
+	// inject the source assets into the source tree. They must be present before any Go loading
+	// below, since the sources may reference them via go:embed.
+	for _, input := range dag.GatherMatchingInputs(toolchain, dag.Implements[common.SourceTreeBuilder]()) {
+		if err := input.(common.SourceTreeBuilder).SourceTreeBuild(base); err != nil { //nolint:forcetypeassert,errcheck
+			return err
+		}
+	}
+
 	base.Step(
 		step.Script(`go list -mod=readonly all >/dev/null`).
 			MountCache(filepath.Join(toolchain.meta.GoPath, "pkg"), toolchain.meta.GitHubRepository),

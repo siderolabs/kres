@@ -226,6 +226,18 @@ func (builder *builder) BuildGolang() error {
 	toolchain := golang.NewToolchain(builder.meta)
 	toolchain.AddInput(builder.commonInputs...)
 
+	// source assets are consumed by the golang base stage, so they are only wired for Go projects
+	if builder.meta.Config != nil {
+		sourceAssets := common.NewSourceAssets(builder.meta)
+		if err := builder.meta.Config.Load(sourceAssets); err != nil {
+			return err
+		}
+
+		if len(sourceAssets.Images) > 0 {
+			toolchain.AddInput(sourceAssets)
+		}
+	}
+
 	// add protobufs and go generate
 	generate := golang.NewGenerate(builder.meta)
 

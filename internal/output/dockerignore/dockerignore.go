@@ -21,6 +21,7 @@ type Output struct {
 	output.FileAdapter
 
 	allowedLocalPaths []string
+	deniedLocalPaths  []string
 }
 
 // NewOutput creates new dockerignore output.
@@ -49,6 +50,14 @@ func (o *Output) AllowLocalPath(paths ...string) *Output {
 	return o
 }
 
+// DenyLocalPath excludes path from the context even when it is inside an allowed path, since the
+// deny rules are written after the allow rules.
+func (o *Output) DenyLocalPath(paths ...string) *Output {
+	o.deniedLocalPaths = append(o.deniedLocalPaths, paths...)
+
+	return o
+}
+
 // GenerateFile implements output.FileWriter interface.
 func (o *Output) GenerateFile(filename string, w io.Writer) error {
 	switch filename {
@@ -70,6 +79,12 @@ func (o *Output) dockerignore(w io.Writer) error {
 
 	for _, path := range o.allowedLocalPaths {
 		if _, err := fmt.Fprintf(w, "!%s\n", path); err != nil {
+			return err
+		}
+	}
+
+	for _, path := range o.deniedLocalPaths {
+		if _, err := fmt.Fprintln(w, path); err != nil {
 			return err
 		}
 	}

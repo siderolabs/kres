@@ -10,3 +10,9 @@ import "github.com/siderolabs/kres/internal/output/dockerfile"
 type ToolchainBuilder interface {
 	ToolchainBuild(*dockerfile.Stage) error
 }
+
+// SourceTreeBuilder is implemented by nodes which inject content into the source tree of the
+// golang base stage, before any Go package loading happens there.
+type SourceTreeBuilder interface {
+	SourceTreeBuild(*dockerfile.Stage) error
+}
