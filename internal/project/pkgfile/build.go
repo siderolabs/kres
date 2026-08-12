@@ -157,7 +157,7 @@ func (pkgfile *Build) CompileMakefile(output *makefile.Output) error {
 		Depends("$(ARTIFACTS)/bldr").
 		Phony().
 		Description("Updates the checksums in the Pkgfile/vars.yaml based on the changed version variables.").
-		Script(`@git diff -U0 | $(ARTIFACTS)/bldr update`)
+		Script(`@git diff -U0 | $(ARTIFACTS)/bldr update $(BUILD_ARGS)`)
 
 	output.VariableGroup(makefile.VariableGroupTargets).
 		Variable(makefile.RecursiveVariable("TARGETS", strings.Join(pkgfile.Targets, "\n")))
