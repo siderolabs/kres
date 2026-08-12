@@ -41,7 +41,7 @@ func NewOutput() *Output {
 			":dependencyDashboard",
 			":gitSignOff",
 			":semanticCommitScopeDisabled",
-			"schedule:earlyMondays",
+			"schedule:nonOfficeHours",
 		},
 		PRHeader:           "Update Request | Renovate Bot",
 		SeparateMajorMinor: false,
