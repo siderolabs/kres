@@ -54,9 +54,6 @@ const (
 	// DisVulnCheckVersion is the version of dis-vulncheck.
 	// renovate: datasource=go versioning=loose depName=github.com/shanduur/dis-vulncheck
 	DisVulnCheckVersion = "v0.0.0-20260430093434-b73e0972e2fb"
-	// GolangContainerImageVersion is the default golang container image.
-	// renovate: datasource=docker versioning=docker depName=golang
-	GolangContainerImageVersion = "1.26-alpine"
 	// GoVersion is the version of Go.
 	// renovate: datasource=github-tags extractVersion=^go(?<version>.*)$ depName=golang/go
 	GoVersion = "1.26.6"

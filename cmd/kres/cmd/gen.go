@@ -54,7 +54,7 @@ func runGen() error {
 	var err error
 
 	options := meta.Options{
-		GoContainerVersion:     config.GolangContainerImageVersion,
+		GoContainerVersion:     fmt.Sprintf("%s-alpine", config.GoVersion),
 		ContainerImageFrontend: config.ContainerImageFrontendDockerfile,
 	}
 
