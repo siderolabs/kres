@@ -140,11 +140,12 @@ func (builder *builder) build() error {
 	conformance := common.NewConformance(builder.meta)
 	sops := common.NewSOPS(builder.meta)
 	renovate := common.NewRenovate(builder.meta)
+	gitattributes := common.NewGitattributes(builder.meta)
 
 	release.AddInput(builder.targets...)
 
 	builder.proj.AddTarget(builder.targets...)
-	builder.proj.AddTarget(rekres, all, makeHelp, release, conformance, sops, renovate)
+	builder.proj.AddTarget(rekres, all, makeHelp, release, conformance, sops, renovate, gitattributes)
 
 	return nil
 }

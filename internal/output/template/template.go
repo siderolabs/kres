@@ -164,6 +164,25 @@ func (o *Output) Filenames() []string {
 	return files
 }
 
+// ManagedFilenames returns the list of template files which are continuously managed by kres,
+// excluding files marked NoOverwrite (created once on project initialization and left untouched
+// afterwards, e.g. eslint.config.ts).
+func (o *Output) ManagedFilenames() []string {
+	files := make([]string, 0, len(o.templates))
+
+	for name, t := range o.templates {
+		if t.noOverwrite {
+			continue
+		}
+
+		files = append(files, name)
+	}
+
+	slices.Sort(files)
+
+	return files
+}
+
 // GenerateFile implements output.FileWriter interface.
 func (o *Output) GenerateFile(filename string, w io.Writer) error {
 	if t, ok := o.templates[filename]; ok {

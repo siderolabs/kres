@@ -16,6 +16,7 @@ import (
 	"github.com/siderolabs/kres/internal/output/dockerfile"
 	"github.com/siderolabs/kres/internal/output/dockerignore"
 	"github.com/siderolabs/kres/internal/output/ghworkflow"
+	"github.com/siderolabs/kres/internal/output/gitattributes"
 	"github.com/siderolabs/kres/internal/output/github"
 	"github.com/siderolabs/kres/internal/output/gitignore"
 	"github.com/siderolabs/kres/internal/output/golangci"
@@ -72,36 +73,39 @@ func runGen() error {
 		return err
 	}
 
+	gitattributesOutput := gitattributes.NewOutput()
+
 	outputs := []output.Writer{
-		output.Wrap(github.NewOutput()),
-		output.Wrap(sops.NewOutput()),
-		output.Wrap(renovate.NewOutput()),
-		output.Wrap(conform.NewOutput()),
+		output.Wrap(gitattributes.Manage(gitattributesOutput, github.NewOutput())),
+		output.Wrap(gitattributes.Manage(gitattributesOutput, sops.NewOutput())),
+		output.Wrap(gitattributes.Manage(gitattributesOutput, renovate.NewOutput())),
+		output.Wrap(gitattributes.Manage(gitattributesOutput, conform.NewOutput())),
 	}
 
 	if !options.CompileGithubWorkflowsOnly {
 		outputs = append(
 			outputs,
-			output.Wrap(dockerfile.NewOutput()),
-			output.Wrap(dockerignore.NewOutput()),
-			output.Wrap(makefile.NewOutput()),
-			output.Wrap(golangci.NewOutput()),
-			output.Wrap(license.NewOutput()),
-			output.Wrap(gitignore.NewOutput()),
-			output.Wrap(codecov.NewOutput()),
-			output.Wrap(release.NewOutput()),
-			output.Wrap(markdownlint.NewOutput()),
-			output.Wrap(template.NewOutput()),
-			output.Wrap(lefthook.NewOutput()),
+			output.Wrap(gitattributes.Manage(gitattributesOutput, dockerfile.NewOutput())),
+			output.Wrap(gitattributes.Manage(gitattributesOutput, dockerignore.NewOutput())),
+			output.Wrap(gitattributes.Manage(gitattributesOutput, makefile.NewOutput())),
+			output.Wrap(gitattributes.Manage(gitattributesOutput, golangci.NewOutput())),
+			output.Wrap(gitattributes.Manage(gitattributesOutput, license.NewOutput())),
+			output.Wrap(gitattributes.Manage(gitattributesOutput, gitignore.NewOutput())),
+			output.Wrap(gitattributes.Manage(gitattributesOutput, codecov.NewOutput())),
+			output.Wrap(gitattributes.Manage(gitattributesOutput, release.NewOutput())),
+			output.Wrap(gitattributes.Manage(gitattributesOutput, markdownlint.NewOutput())),
+			output.Wrap(gitattributes.Manage(gitattributesOutput, template.NewOutput())),
+			output.Wrap(gitattributes.Manage(gitattributesOutput, lefthook.NewOutput())),
 		)
 	}
 
-	outputs = append(outputs, output.Wrap(ghworkflow.NewOutput(
+	outputs = append(outputs, output.Wrap(gitattributes.Manage(gitattributesOutput, ghworkflow.NewOutput(
 		options.MainBranch,
 		!options.CompileGithubWorkflowsOnly,
 		!options.SkipStaleWorkflow,
 		options.CIFailureSlackNotifyChannel,
-	)))
+	))))
+	outputs = append(outputs, output.Wrap(gitattributes.Manage(gitattributesOutput, gitattributesOutput)))
 
 	if err := proj.Compile(outputs); err != nil {
 		return err
