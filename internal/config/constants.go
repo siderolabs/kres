@@ -56,7 +56,7 @@ const (
 	DisVulnCheckVersion = "v0.0.0-20260430093434-b73e0972e2fb"
 	// GoVersion is the version of Go.
 	// renovate: datasource=github-tags extractVersion=^go(?<version>.*)$ depName=golang/go
-	GoVersion = "1.26.6"
+	GoVersion = "1.26.7"
 	// GrpcGatewayVersion is the version of grpc-gateway.
 	// renovate: datasource=go depName=github.com/grpc-ecosystem/grpc-gateway
 	GrpcGatewayVersion = "v2.29.0"
