@@ -16,8 +16,8 @@ const (
 
 	// CheckOutActionVersion is the version of checkout github action.
 	// renovate: datasource=github-tags depName=actions/checkout
-	CheckOutActionVersion = "v7.0.0"
-	CheckOutActionRef     = "9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0"
+	CheckOutActionVersion = "v7.0.1"
+	CheckOutActionRef     = "3d3c42e5aac5ba805825da76410c181273ba90b1"
 	// CodeCovActionVersion is the version of codecov github action.
 	// renovate: datasource=github-tags depName=codecov/codecov-action
 	CodeCovActionVersion = "v7.0.0"
@@ -27,10 +27,10 @@ const (
 	DeepCopyVersion = "v0.5.8"
 	// DindContainerImageVersion is the version of the dind container image.
 	// renovate: datasource=docker versioning=docker depName=docker
-	DindContainerImageVersion = "29.6-dind"
+	DindContainerImageVersion = "29.7-dind"
 	// DockerfileFrontendImageVersion is the version of the dockerfile frontend image.
 	// renovate: datasource=docker versioning=docker depName=docker/dockerfile-upstream
-	DockerfileFrontendImageVersion = "1.25.0-labs"
+	DockerfileFrontendImageVersion = "1.26.0-labs"
 	// DownloadArtifactActionVersion is the version of download artifact github action.
 	// renovate: datasource=github-tags depName=actions/download-artifact
 	DownloadArtifactActionVersion = "v8.0.1"
@@ -41,31 +41,31 @@ const (
 	GitHubScriptActionRef     = "3a2844b7e9c422d3c10d287c895573f7108da1b3"
 	// GoFmtVersion is the version of gofmt.
 	// renovate: datasource=go depName=github.com/mvdan/gofumpt
-	GoFmtVersion = "v0.10.0"
+	GoFmtVersion = "v0.11.0"
 	// GoImportsVersion is the version of goimports.
 	// renovate: datasource=go depName=golang.org/x/tools
-	GoImportsVersion = "v0.45.0"
+	GoImportsVersion = "v0.49.0"
 	// GoMockVersion is the version of gomock.
 	// renovate: datasource=go depName=github.com/uber-go/mock
 	GoMockVersion = "v0.6.0"
 	// GolangCIlintVersion is the version of golangci-lint.
 	// renovate: datasource=go depName=github.com/golangci/golangci-lint
-	GolangCIlintVersion = "v2.12.2"
+	GolangCIlintVersion = "v2.13.1"
 	// DisVulnCheckVersion is the version of dis-vulncheck.
 	// renovate: datasource=go versioning=loose depName=github.com/shanduur/dis-vulncheck
-	DisVulnCheckVersion = "v0.0.0-20260430093434-b73e0972e2fb"
+	DisVulnCheckVersion = "v0.0.0-20260708185140-0c30eb543ad8"
 	// GoVersion is the version of Go.
 	// renovate: datasource=github-tags extractVersion=^go(?<version>.*)$ depName=golang/go
-	GoVersion = "1.26.7"
+	GoVersion = "1.27.0"
 	// GrpcGatewayVersion is the version of grpc-gateway.
 	// renovate: datasource=go depName=github.com/grpc-ecosystem/grpc-gateway
-	GrpcGatewayVersion = "v2.29.0"
+	GrpcGatewayVersion = "v2.30.0"
 	// GrpcGoVersion is the version of grpc.
 	// renovate: datasource=go depName=google.golang.org/grpc/cmd/protoc-gen-go-grpc
 	GrpcGoVersion = "v1.6.2"
 	// HelmUnitTestVersion is the version of helm unit test plugin.
 	// renovate: datasource=github-tags depName=helm-unittest/helm-unittest
-	HelmUnitTestVersion = "v1.1.1"
+	HelmUnitTestVersion = "v1.1.2"
 	// HelmValuesSchemaJSONVersion is the version of helm values-schema-json plugin.
 	// renovate: datasource=github-tags depName=losisin/helm-values-schema-json
 	HelmValuesSchemaJSONVersion = "v2.5.0"
@@ -77,60 +77,60 @@ const (
 	ImageSignerVersion = "v0.3.2"
 	// LoginActionVersion is the version of login github action.
 	// renovate: datasource=github-tags depName=docker/login-action
-	LoginActionVersion = "v4.4.0"
-	LoginActionRef     = "af1e73f918a031802d376d3c8bbc3fe56130a9b0"
+	LoginActionVersion = "v4.6.0"
+	LoginActionRef     = "dbcb813823bdd20940b903addbd779551569679f"
 	// MarkdownLintCLIVersion is the version of markdownlint.
 	// renovate: datasource=npm depName=markdownlint-cli
-	MarkdownLintCLIVersion = "0.49.0"
+	MarkdownLintCLIVersion = "0.49.1"
 	// BunContainerImageVersion is the default bun container image.
 	// renovate: datasource=docker versioning=docker depName=oven/bun
-	BunContainerImageVersion = "1.3.14-alpine"
+	BunContainerImageVersion = "1.4.0-alpine"
 	// NodeContainerImageVersion is the default node container image.
 	//
 	// NOTE: Check renovate.json for the rules on this before bumping, e.g., pinned versions.
 	// As a rule of thumb, we bump only to the versions promoted to be LTS (even [not odd] major versions get promoted after a while, always check).
 	//
 	// renovate: datasource=docker versioning=docker depName=node
-	NodeContainerImageVersion = "24.18.1-alpine"
+	NodeContainerImageVersion = "24.19.0-alpine"
 	// PkgsVersion is the version of pkgs.
 	// renovate: datasource=github-tags depName=siderolabs/pkgs
-	PkgsVersion = "v1.13.0"
+	PkgsVersion = "v1.14.0"
 	// ProtobufGoVersion is the version of protobuf.
 	// renovate: datasource=go depName=google.golang.org/protobuf/cmd/protoc-gen-go
-	ProtobufGoVersion = "v1.36.11"
+	ProtobufGoVersion = "v1.36.12"
 	// ProtobufTSGatewayVersion is the version of protoc-gen-grpc-gateway-ts.
 	// renovate: datasource=go depName=github.com/siderolabs/protoc-gen-grpc-gateway-ts
 	ProtobufTSGatewayVersion = "v1.4.1"
 	// ReleaseActionVersion is the version of release github action.
 	// renovate: datasource=github-tags depName=softprops/action-gh-release
-	ReleaseActionVersion = "v3.0.1"
-	ReleaseActionRef     = "718ea10b132b3b2eba29c1007bb80653f286566b"
+	ReleaseActionVersion = "v3.0.2"
+	ReleaseActionRef     = "3d0d9888cb7fd7b750713d6e236d1fcb99157228"
 	// SentencesPerLineVersion is the version of sentences-per-line.
 	// renovate: datasource=npm depName=sentences-per-line
 	SentencesPerLineVersion = "0.5.3"
 	// SetupBuildxActionVersion is the version of setup-buildx github action.
 	// renovate: datasource=github-tags depName=docker/setup-buildx-action
-	SetupBuildxActionVersion = "v4.2.0"
-	SetupBuildxActionRef     = "bb05f3f5519dd87d3ba754cc423b652a5edd6d2c"
+	SetupBuildxActionVersion = "v4.3.0"
+	SetupBuildxActionRef     = "37fe631027851001ddb9b187196cc803df7f5f0e"
 	// SetupNodeActionVersion is the version of setup-node github action.
 	// renovate: datasource=github-tags depName=actions/setup-node
-	SetupNodeActionVersion = "v6.4.0"
-	SetupNodeActionRef     = "48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e"
+	SetupNodeActionVersion = "v7.0.0"
+	SetupNodeActionRef     = "820762786026740c76f36085b0efc47a31fe5020"
 	// ChromaticActionVersion is the version of the chromaui/action github action.
 	// renovate: datasource=github-tags depName=chromaui/action
-	ChromaticActionVersion = "v18.0.1"
-	ChromaticActionRef     = "94713c544284a14195de3b50ef24301579f1877e"
+	ChromaticActionVersion = "v18.5.0"
+	ChromaticActionRef     = "534eebfc19023579541d106f7b61d5ad70ed65c7"
 	// SetupTerraformActionVersion is the version of setup terraform github action.
 	// renovate: datasource=github-tags depName=hashicorp/setup-terraform
 	SetupTerraformActionVersion = "v4.0.1"
 	SetupTerraformActionRef     = "dfe3c3f87815947d99a8997f908cb6525fc44e9e"
 	// SyftVersion is the version of syft used for SBOM generation.
 	// renovate: datasource=go depName=github.com/anchore/syft
-	SyftVersion = "v1.46.0"
+	SyftVersion = "v1.51.0"
 	// SlackNotifyActionVersion is the version of slack notify github action.
 	// renovate: datasource=github-tags depName=slackapi/slack-github-action
-	SlackNotifyActionVersion = "v3.0.3"
-	SlackNotifyActionRef     = "45a88b9581bfab2566dc881e2cd66d334e621e2c"
+	SlackNotifyActionVersion = "v4.0.0"
+	SlackNotifyActionRef     = "dcb1066f776dd043e64d0e8ba94ca15cc7e1875d"
 	// SystemInfoActionVersion is the version of system info github action.
 	// renovate: datasource=github-tags depName=kenchan0130/actions-system-info
 	SystemInfoActionVersion = "v1.4.0"
@@ -144,8 +144,8 @@ const (
 	VTProtobufVersion = "v0.6.0"
 	// StaleActionVersion is the version of stale github action.
 	// renovate: datasource=github-tags depName=actions/stale
-	StaleActionVersion = "v10.3.0"
-	StaleActionRef     = "eb5cf3af3ac0a1aa4c9c45633dd1ae542a27a899"
+	StaleActionVersion = "v11.0.0"
+	StaleActionRef     = "4391f3da665fdf50b6810c1a66712fb9ba21aa93"
 	// LockThreadsActionVersion is the version of lock threads github action.
 	// renovate: datasource=github-tags depName=dessant/lock-threads
 	LockThreadsActionVersion = "v6.0.2"
