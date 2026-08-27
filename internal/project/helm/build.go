@@ -97,13 +97,18 @@ func (helm *Build) CompileMakefile(output *makefile.Output) error {
 		generateTarget := output.Target("generate")
 		generateTarget.Depends("helm-plugin-install")
 
-		// Only update Chart.yaml for final releases (vX.Y.Z, no pre-release suffix).
-		// This prevents dirty tags, dev builds, and pre-releases from polluting the chart.
+		// Chart.yaml only ever tracks final releases (vX.Y.Z), never dirty tags, dev builds or pre-releases.
 		if helm.meta.ChartVersionMajor != nil {
 			// The chart version mirrors the app's minor.patch with the configured
 			// major, e.g. app v1.5.9 -> chart 2.5.9.
+			// A release branch carries the version being prepared in the version data file, but a
+			// project whose release commits never land on main only ever holds a pre-release there,
+			// so fall back to the newest release tag to keep the chart from going stale.
 			generateTarget.Script(fmt.Sprintf(`@TAG=$$(cat internal/version/data/tag); \
-if echo "$$TAG" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+$$'; then \
+if ! echo "$$TAG" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+$$'; then \
+  TAG=$$(git tag --list 'v*' --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$$' | head -1); \
+fi; \
+if [ -n "$$TAG" ]; then \
   sed -i "s/^appVersion: .*/appVersion: \"$$TAG\"/" %[1]s/Chart.yaml; \
   MINOR_PATCH=$$(echo "$$TAG" | sed 's/^v[0-9]*\.//'); \
   sed -i "s/^version: .*/version: %[2]d.$$MINOR_PATCH/" %[1]s/Chart.yaml; \
