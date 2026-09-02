@@ -5,7 +5,10 @@
 package golang
 
 import (
+	"errors"
 	"path/filepath"
+
+	"go.yaml.in/yaml/v4"
 
 	"github.com/siderolabs/kres/internal/config"
 	"github.com/siderolabs/kres/internal/dag"
@@ -22,10 +25,19 @@ type GolangciLint struct {
 
 	meta *meta.Options
 
+	// DepguardExtraRules is removed, kept to fail with a hint if it is still set.
 	DepguardExtraRules map[string]any `yaml:"depguardExtraRules"`
 
 	Version     string
 	projectPath string
+
+	// Config is a golangci-lint configuration fragment merged into the configuration kres generates.
+	//
+	// It follows the layout of .golangci.yml itself: mappings are merged key by key, lists are appended
+	// to the generated ones, and other values replace them. Linters listed under linters.enable are
+	// removed from the generated linters.disable list, as the generated configuration enables all
+	// linters by default and only lists the disabled ones.
+	Config yaml.Node `yaml:"config"`
 
 	BuildTags []string `yaml:"buildTags"`
 }
@@ -47,9 +59,32 @@ func NewGolangciLint(meta *meta.Options, projectPath string) *GolangciLint {
 // CompileGolangci implements golangci.Compiler.
 func (lint *GolangciLint) CompileGolangci(output *golangci.Output) error {
 	output.Enable()
-	output.SetDepguardExtraRules(lint.DepguardExtraRules)
-	output.SetBuildTags(lint.BuildTags)
-	output.NewFile(lint.projectPath)
+
+	var configs []yaml.Node
+
+	if len(lint.BuildTags) > 0 {
+		var buildTags yaml.Node
+
+		if err := buildTags.Encode(map[string]any{"run": map[string]any{"build-tags": lint.BuildTags}}); err != nil {
+			return err
+		}
+
+		configs = append(configs, buildTags)
+	}
+
+	if lint.DepguardExtraRules != nil {
+		return errors.New("golang.GolangciLint: depguardExtraRules is no more supported, move the rules to config.linters.settings.depguard.rules in .kres.yaml and rekres")
+	}
+
+	if lint.Config.Kind != 0 {
+		if lint.Config.Kind != yaml.MappingNode {
+			return errors.New("golang.GolangciLint: config must be a mapping following the layout of .golangci.yml")
+		}
+
+		configs = append(configs, lint.Config)
+	}
+
+	output.NewFile(lint.projectPath, configs...)
 
 	return nil
 }

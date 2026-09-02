@@ -54,21 +54,34 @@ spec:
 ---
 kind: golang.GolangciLint
 spec:
-  depguardExtraRules:
-    test_kres_depguard_extra_rule_1:
-      list-mode: lax
-      files:
-        - test_1.go
-      deny:
-        - pkg: io/ioutil
-          desc: Test rule 1
-    test_kres_depguard_extra_rule_2:
-      list-mode: lax
-      files:
-        - test_2.go
-      deny:
-        - pkg: io/ioutil
-          desc: Test rule 2
+  # dummy rules to see the config merging in action
+  config:
+    linters:
+      settings:
+        errcheck:
+          exclude-functions:
+            - github.com/siderolabs/kres/test_errcheck_exclude.Function1
+        depguard:
+          rules:
+            test_kres_depguard_extra_rule_1:
+              list-mode: lax
+              files:
+                - test_1.go
+              deny:
+                - pkg: io/ioutil
+                  desc: Test rule 1
+            test_kres_depguard_extra_rule_2:
+              list-mode: lax
+              files:
+                - test_2.go
+              deny:
+                - pkg: io/ioutil
+                  desc: Test rule 2
+      exclusions:
+        rules:
+          - linters:
+              - lll
+            path: ^test_exclusions/
 ---
 kind: common.Renovate
 spec:

@@ -7,11 +7,10 @@ package golangci
 
 import (
 	_ "embed"
-	"encoding/json"
+	"fmt"
 	"io"
 	"path/filepath"
-	"strings"
-	"text/template"
+	"slices"
 
 	"github.com/siderolabs/gen/xslices"
 	"go.yaml.in/yaml/v4"
@@ -24,21 +23,19 @@ const (
 )
 
 //go:embed golangci.yml
-var configTemplate []byte
+var baseConfig []byte
 
 // Output implements .golangci.yml generation.
 type Output struct {
 	output.FileAdapter
-
-	depguardExtraRules map[string]any
-	buildTags          []string
 
 	files   []file
 	enabled bool
 }
 
 type file struct {
-	path string
+	path    string
+	configs []yaml.Node
 }
 
 // NewOutput creates new Makefile output.
@@ -60,20 +57,11 @@ func (o *Output) Enable() {
 	o.enabled = true
 }
 
-// SetDepguardExtraRules sets extra rules for depguard linter.
-func (o *Output) SetDepguardExtraRules(rules map[string]any) {
-	o.depguardExtraRules = rules
-}
-
-// SetBuildTags sets build tags for golangci-lint.
-func (o *Output) SetBuildTags(tags []string) {
-	o.buildTags = tags
-}
-
-// NewFile sets project path.
-func (o *Output) NewFile(path string) {
+// NewFile adds the config of a project, with the configuration fragments to merge into the base configuration, in order.
+func (o *Output) NewFile(path string, configs ...yaml.Node) {
 	o.files = append(o.files, file{
-		path: filepath.Join(path, filename),
+		path:    filepath.Join(path, filename),
+		configs: configs,
 	})
 }
 
@@ -87,76 +75,102 @@ func (o *Output) Filenames() []string {
 }
 
 // GenerateFile implements output.FileWriter interface.
-func (o *Output) GenerateFile(_ string, w io.Writer) error {
-	return o.config(w)
-}
+func (o *Output) GenerateFile(path string, w io.Writer) error {
+	idx := slices.IndexFunc(o.files, func(f file) bool { return f.path == path })
+	if idx < 0 {
+		return fmt.Errorf("unexpected file %q", path)
+	}
 
-func (o *Output) config(w io.Writer) error {
+	configs := o.files[idx].configs
+
 	if _, err := w.Write([]byte(output.Preamble("# "))); err != nil {
 		return err
 	}
 
-	tmpl, err := template.New("config").Parse(string(configTemplate))
-	if err != nil {
+	var doc yaml.Node
+
+	if err := yaml.Unmarshal(baseConfig, &doc); err != nil {
+		return fmt.Errorf("error parsing the base golangci-lint config: %w", err)
+	}
+
+	root := doc.Content[0]
+
+	for i := range configs {
+		merge(root, &configs[i])
+	}
+
+	if len(configs) > 0 {
+		enableLinters(root)
+	}
+
+	encoder := yaml.NewEncoder(w)
+	encoder.SetIndent(2)
+
+	if err := encoder.Encode(&doc); err != nil {
 		return err
 	}
 
-	templateData, err := o.buildTemplateData()
-	if err != nil {
-		return err
-	}
-
-	if err = tmpl.Execute(w, templateData); err != nil {
-		return err
-	}
-
-	return nil
+	return encoder.Close()
 }
 
-type golangciLintTemplateData struct {
-	DepguardExtraRules string
-	BuildTags          string
-}
+// merge merges src into dst: mappings are merged key by key, sequences are appended, anything else is replaced.
+func merge(dst, src *yaml.Node) {
+	switch {
+	case dst.Kind == yaml.MappingNode && src.Kind == yaml.MappingNode:
+		for i := 0; i+1 < len(src.Content); i += 2 {
+			key, value := src.Content[i], src.Content[i+1]
 
-func (o *Output) buildTemplateData() (golangciLintTemplateData, error) {
-	depGuardExtraRules := ""
-
-	if len(o.depguardExtraRules) > 0 {
-		var sb strings.Builder
-
-		encoder := yaml.NewEncoder(&sb)
-		encoder.SetIndent(2)
-
-		if err := encoder.Encode(o.depguardExtraRules); err != nil {
-			return golangciLintTemplateData{}, err
-		}
-
-		var indented strings.Builder
-
-		for line := range strings.Lines(sb.String()) {
-			if line != "" {
-				indented.WriteString("        ")
-				indented.WriteString(strings.TrimRight(line, "\n")) // ensure no double newlines
-				indented.WriteByte('\n')
+			if existing := lookup(dst, key.Value); existing != nil {
+				merge(existing, value)
+			} else {
+				dst.Content = append(dst.Content, key, value)
 			}
 		}
 
-		depGuardExtraRules = indented.String()
+		dst.Style = 0 // an empty flow mapping ({}) which received keys is rendered as a block
+	case dst.Kind == yaml.SequenceNode && src.Kind == yaml.SequenceNode:
+		dst.Content = append(dst.Content, src.Content...)
+		dst.Style = 0
+	default:
+		*dst = *src
+	}
+}
+
+// enableLinters removes the linters listed under linters.enable from linters.disable.
+//
+// The base config enables all linters by default and disables some of them, and golangci-lint silently
+// keeps a linter disabled if it is listed in both, so enabling one means taking it off the disabled list.
+func enableLinters(root *yaml.Node) {
+	linters := lookup(root, "linters")
+	if linters == nil {
+		return
 	}
 
-	if o.buildTags == nil {
-		o.buildTags = []string{}
+	enable, disable := lookup(linters, "enable"), lookup(linters, "disable")
+	if enable == nil || disable == nil {
+		return
 	}
 
-	buildTags, err := json.Marshal(o.buildTags)
-	if err != nil {
-		return golangciLintTemplateData{}, err
+	enabled := xslices.Map(enable.Content, func(n *yaml.Node) string { return n.Value })
+
+	disable.Content = slices.DeleteFunc(disable.Content, func(n *yaml.Node) bool {
+		return slices.Contains(enabled, n.Value)
+	})
+}
+
+// lookup returns the value node for the key in the mapping node, or nil.
+func lookup(mapping *yaml.Node, key string) *yaml.Node {
+	if mapping.Kind != yaml.MappingNode {
+		return nil
 	}
 
-	return golangciLintTemplateData{
-		DepguardExtraRules: depGuardExtraRules,
-		BuildTags:          string(buildTags),
-	}, nil
+	for i := 0; i+1 < len(mapping.Content); i += 2 {
+		if mapping.Content[i].Value == key {
+			return mapping.Content[i+1]
+		}
+	}
+
+	return nil
 }
 
 // Compiler is implemented by project blocks which support Dockerfile generate.
