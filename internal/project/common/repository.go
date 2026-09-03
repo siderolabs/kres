@@ -12,7 +12,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/google/go-github/v88/github"
+	"github.com/google/go-github/v91/github"
 	"github.com/siderolabs/gen/xslices"
 
 	"github.com/siderolabs/kres/internal/config"
@@ -325,8 +325,8 @@ func (r *Repository) enableLabels(client *github.Client) error {
 				context.Background(),
 				r.meta.GitHubOrganization,
 				r.meta.GitHubRepository,
-				&github.Label{
-					Name:        new(name),
+				github.CreateIssueLabelRequest{
+					Name:        name,
 					Color:       new(autoLabelColor),
 					Description: new(desc),
 				},
@@ -337,7 +337,7 @@ func (r *Repository) enableLabels(client *github.Client) error {
 			continue
 		}
 
-		patch := &github.Label{}
+		patch := github.UpdateIssueLabelRequest{}
 
 		if desc != "" && existing.GetDescription() != desc {
 			patch.Description = new(desc)
@@ -348,7 +348,7 @@ func (r *Repository) enableLabels(client *github.Client) error {
 		}
 
 		if patch.Description != nil || patch.Color != nil {
-			if _, _, err := client.Issues.EditLabel(
+			if _, _, err := client.Issues.UpdateLabel(
 				context.Background(),
 				r.meta.GitHubOrganization,
 				r.meta.GitHubRepository,

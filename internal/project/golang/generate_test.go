@@ -107,8 +107,10 @@ func TestGenerateExtraInputs(t *testing.T) {
 
 	dockerfile := dockerfileBuffer.String()
 
-	require.Contains(t, dockerfile, "COPY deploy/helm/omni/config-overrides.yaml deploy/helm/omni/config-overrides.yaml\n")
-	require.Contains(t, dockerfile, "COPY deploy/helm/omni/values.yaml deploy/helm/omni/values.yaml\n")
+	for _, path := range []string{"deploy/helm/omni/config-overrides.yaml", "deploy/helm/omni/values.yaml"} {
+		require.Contains(t, dockerfile, "COPY "+path+" "+path+"\n")
+	}
+
 	require.Contains(t, dockerfile, "RUN --mount=type=cache,target=/root/.cache/go-build,id=example/root/.cache/go-build "+
 		"--mount=type=cache,target=/go/pkg,id=example/go/pkg go generate ./internal/...\n")
 

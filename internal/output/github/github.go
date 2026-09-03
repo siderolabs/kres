@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/google/go-github/v88/github"
+	"github.com/google/go-github/v91/github"
 )
 
 // Output implements interface to GitHub API.

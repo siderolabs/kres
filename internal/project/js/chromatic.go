@@ -94,24 +94,20 @@ func (c *Chromatic) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 	o.AddWorkflow(
 		"chromatic",
 		&ghworkflow.Workflow{
-			Name: "chromatic",
-			Concurrency: ghworkflow.Concurrency{
-				Group:            "${{ github.workflow }}-${{ github.head_ref || github.run_id }}",
-				CancelInProgress: true,
-			},
-			On: ghworkflow.On{
-				Push: ghworkflow.Push{
-					Branches: ghworkflow.Branches{
-						c.meta.MainBranch,
-						"release-*",
-					},
-					Tags: []string{"v*"},
+			Name:             "chromatic",
+			Group:            "${{ github.workflow }}-${{ github.head_ref || github.run_id }}",
+			CancelInProgress: true,
+			Push: ghworkflow.Push{
+				Branches: ghworkflow.Branches{
+					c.meta.MainBranch,
+					"release-*",
 				},
-				PullRequest: ghworkflow.PullRequest{
-					Branches: ghworkflow.Branches{
-						c.meta.MainBranch,
-						"release-*",
-					},
+				Tags: []string{"v*"},
+			},
+			PullRequest: ghworkflow.PullRequest{
+				Branches: ghworkflow.Branches{
+					c.meta.MainBranch,
+					"release-*",
 				},
 			},
 			// https://www.chromatic.com/docs/github-actions/

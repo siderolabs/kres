@@ -287,7 +287,7 @@ func (builder *builder) BuildGolang() error {
 
 	// process commands
 	for _, cmd := range builder.meta.Commands {
-		cfg := CommandConfig{NamedConfig: NamedConfig{name: cmd.Name}}
+		cfg := CommandConfig{name: cmd.Name}
 		if err := builder.meta.Config.Load(&cfg); err != nil {
 			return err
 		}

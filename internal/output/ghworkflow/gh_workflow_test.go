@@ -187,16 +187,12 @@ func TestMatrixStrategy(t *testing.T) {
 
 	o := ghworkflow.NewOutput("main", false, false, "")
 	o.AddWorkflow("integration-provision-triggered", &ghworkflow.Workflow{
-		Name: "integration-provision-triggered",
-		Concurrency: ghworkflow.Concurrency{
-			Group:            "${{ github.head_ref || github.run_id }}",
-			CancelInProgress: true,
-		},
-		On: ghworkflow.On{
-			WorkFlowRun: ghworkflow.WorkFlowRun{
-				Workflows: []string{"artifacts-cron"},
-				Types:     []string{"completed"},
-			},
+		Name:             "integration-provision-triggered",
+		Group:            "${{ github.head_ref || github.run_id }}",
+		CancelInProgress: true,
+		WorkFlowRun: ghworkflow.WorkFlowRun{
+			Workflows: []string{"artifacts-cron"},
+			Types:     []string{"completed"},
 		},
 		Jobs: map[string]*ghworkflow.Job{
 			ghworkflow.DefaultJobName: job,

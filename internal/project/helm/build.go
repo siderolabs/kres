@@ -294,22 +294,16 @@ func (helm *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 	jobSteps = append(jobSteps, []*ghworkflow.JobStep{helmLoginStep, helmReleaseStep}...)
 
 	output.AddWorkflow("helm", &ghworkflow.Workflow{
-		Name: "helm",
-		Concurrency: ghworkflow.Concurrency{
-			Group:            "helm-${{ github.head_ref || github.run_id }}",
-			CancelInProgress: true,
-		},
-		On: ghworkflow.On{
-			Push: ghworkflow.Push{
-				Tags: []string{"v*"},
+		Name:             "helm",
+		Group:            "helm-${{ github.head_ref || github.run_id }}",
+		CancelInProgress: true,
+		Tags:             []string{"v*"},
+		PullRequest: ghworkflow.PullRequest{
+			Branches: ghworkflow.Branches{
+				"main",
+				"release-*",
 			},
-			PullRequest: ghworkflow.PullRequest{
-				Branches: ghworkflow.Branches{
-					"main",
-					"release-*",
-				},
-				Paths: []string{fmt.Sprintf("%s/**", filepath.Dir(helm.meta.HelmChartDir))},
-			},
+			Paths: []string{fmt.Sprintf("%s/**", filepath.Dir(helm.meta.HelmChartDir))},
 		},
 		Jobs: map[string]*ghworkflow.Job{
 			ghworkflow.DefaultJobName: {

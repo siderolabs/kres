@@ -94,7 +94,12 @@ linters:
     - forbidigo
 `)
 
-	assert.Contains(t, config, "  disable:\n    - exhaustruct\n    - err113\n    - funcorder\n", "forbidigo is gone from between err113 and funcorder, the rest stays disabled")
+	assert.Contains(
+		t,
+		config,
+		"  disable:\n    - exhaustruct # replaced by exhaustruct_v5\n    - exhaustruct_v5\n    - err113\n    - funcorder\n",
+		"forbidigo is gone from between err113 and funcorder, the rest stays disabled",
+	)
 	assert.Contains(t, config, "  enable:\n    - forbidigo\n")
 }
 

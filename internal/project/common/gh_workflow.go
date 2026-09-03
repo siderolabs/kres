@@ -795,15 +795,11 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 				&ghworkflow.Workflow{
 					Name: workflowName,
 					// https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-a-fallback-value
-					Concurrency: ghworkflow.Concurrency{
-						Group:            "${{ github.head_ref || github.run_id }}",
-						CancelInProgress: true,
-					},
-					On: ghworkflow.On{
-						WorkFlowRun: ghworkflow.WorkFlowRun{
-							Workflows: job.OnWorkflowRun.Workflows,
-							Types:     job.OnWorkflowRun.Types,
-						},
+					Group:            "${{ github.head_ref || github.run_id }}",
+					CancelInProgress: true,
+					WorkFlowRun: ghworkflow.WorkFlowRun{
+						Workflows: job.OnWorkflowRun.Workflows,
+						Types:     job.OnWorkflowRun.Types,
 					},
 					Jobs: map[string]*ghworkflow.Job{
 						ghworkflow.DefaultJobName: triggeredJob,
@@ -823,17 +819,13 @@ func (gh *GHWorkflow) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 				&ghworkflow.Workflow{
 					Name: workflowName,
 					// https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-a-fallback-value
-					Concurrency: ghworkflow.Concurrency{
-						Group:            "${{ github.head_ref || github.run_id }}",
-						CancelInProgress: true,
-					},
-					On: ghworkflow.On{
-						Schedule: xslices.Map(job.Crons, func(cron string) ghworkflow.Schedule {
-							return ghworkflow.Schedule{
-								Cron: cron,
-							}
-						}),
-					},
+					Group:            "${{ github.head_ref || github.run_id }}",
+					CancelInProgress: true,
+					Schedule: xslices.Map(job.Crons, func(cron string) ghworkflow.Schedule {
+						return ghworkflow.Schedule{
+							Cron: cron,
+						}
+					}),
 					Jobs: map[string]*ghworkflow.Job{
 						ghworkflow.DefaultJobName: {
 							RunsOn:   ghworkflow.NewRunsOnGroupLabel(job.RunnerGroup, ""),

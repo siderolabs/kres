@@ -300,15 +300,11 @@ func (pkgfile *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 			&ghworkflow.Workflow{
 				Name: "weekly",
 				// https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-a-fallback-value
-				Concurrency: ghworkflow.Concurrency{
-					Group:            "${{ github.head_ref || github.run_id }}",
-					CancelInProgress: true,
-				},
-				On: ghworkflow.On{
-					Schedule: []ghworkflow.Schedule{
-						{
-							Cron: "30 1 * * 1",
-						},
+				Group:            "${{ github.head_ref || github.run_id }}",
+				CancelInProgress: true,
+				Schedule: []ghworkflow.Schedule{
+					{
+						Cron: "30 1 * * 1",
 					},
 				},
 				Jobs: map[string]*ghworkflow.Job{

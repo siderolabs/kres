@@ -237,11 +237,9 @@ func NewOutput(mainBranch string, withDefaultJob, withStaleJob bool, slackChanne
 	if withStaleJob {
 		workflows[".github/workflows/lock.yml"] = &Workflow{
 			Name: "Lock old issues",
-			On: On{
-				Schedule: []Schedule{
-					{
-						Cron: "0 2 * * *", // Every day at 2 AM
-					},
+			Schedule: []Schedule{
+				{
+					Cron: "0 2 * * *", // Every day at 2 AM
 				},
 			},
 			Permissions: map[string]PermissionAction{
@@ -270,11 +268,9 @@ func NewOutput(mainBranch string, withDefaultJob, withStaleJob bool, slackChanne
 
 		workflows[".github/workflows/stale.yml"] = &Workflow{
 			Name: "Close stale issues and PRs",
-			On: On{
-				Schedule: []Schedule{
-					{
-						Cron: "30 1 * * *", // Every day at 1:30 AM
-					},
+			Schedule: []Schedule{
+				{
+					Cron: "30 1 * * *", // Every day at 1:30 AM
 				},
 			},
 			Permissions: map[string]PermissionAction{
@@ -348,10 +344,8 @@ func (o *Output) AddJob(name string, dispatch bool, job *Job, inputs []string) {
 		if o.workflows[workflowName] == nil {
 			o.workflows[workflowName] = &Workflow{
 				Name: name,
-				On: On{
-					WorkFlowDispatch: &WorkFlowDispatch{
-						Inputs: map[string]WorkFlowDispatchInput{},
-					},
+				WorkFlowDispatch: &WorkFlowDispatch{
+					Inputs: map[string]WorkFlowDispatchInput{},
 				},
 			}
 		}
