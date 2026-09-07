@@ -92,7 +92,7 @@ func (builder *builder) DetectGit() (bool, error) {
 		return true, errors.New("neither 'origin' or 'upstream' remote found")
 	}
 
-	remoteURLregexp := `((?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,})[:/]+([^/:]+)/([^/]+)\.git$`
+	remoteURLregexp := `((?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,})[:/]+([^/:]+)/([^/]+?)(?:\.git)?$`
 	for _, remoteURL := range upstreamRemote.Config().URLs {
 		matches := regexp.MustCompile(remoteURLregexp).FindStringSubmatch(remoteURL)
 		if len(matches) == 4 {

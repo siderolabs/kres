@@ -17,7 +17,7 @@ name: image-kres
 spec:
   extraEnvironment:
     PLATFORM: linux/amd64,linux/arm64
-  entrypointArgs: ['gen']
+  entrypointArgs: ["gen"]
 ---
 kind: common.Release
 spec:

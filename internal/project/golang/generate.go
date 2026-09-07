@@ -123,8 +123,14 @@ func (generate *Generate) CompileMakefile(output *makefile.Output) error {
 		return nil
 	}
 
-	output.Target("generate").Description("Generate .proto definitions.").
+	target := output.Target("generate").Description("Generate .proto definitions.").
 		Script(`@$(MAKE) local-$@ DEST=./`)
+
+	if generate.meta.GitHubRepository == "kres" {
+		// Kres should be kept up to date with itself, so re-run kres on itself
+		// using the local sources whenever generate runs.
+		target.Script("@docker run --rm -v $(PWD):/src -w /src -e GITHUB_TOKEN golang:$(GO_VERSION) go run ./cmd/kres gen")
+	}
 
 	if output.HasTarget("check-dirty") {
 		output.Target("check-dirty").Depends("generate")

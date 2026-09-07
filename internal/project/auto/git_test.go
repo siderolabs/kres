@@ -23,33 +23,51 @@ func TestDetectGitWorktree(t *testing.T) {
 		t.Skip("git not found")
 	}
 
-	root := filepath.Join(t.TempDir(), "repo")
-	worktree := filepath.Join(t.TempDir(), "worktree")
+	for _, tt := range []struct {
+		name      string
+		remoteURL string
+	}{
+		{
+			name:      "ssh with .git suffix",
+			remoteURL: "git@github.com:siderolabs/example.git",
+		},
+		{
+			// actions/checkout sets the "origin" remote URL without a ".git"
+			// suffix, e.g. "https://github.com/siderolabs/example".
+			name:      "https without .git suffix",
+			remoteURL: "https://github.com/siderolabs/example",
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			root := filepath.Join(t.TempDir(), "repo")
+			worktree := filepath.Join(t.TempDir(), "worktree")
 
-	runGit(t, "", "init", root)
-	runGit(t, root, "config", "user.email", "test@example.com")
-	runGit(t, root, "config", "user.name", "Test")
-	runGit(t, root, "config", "commit.gpgsign", "false")
-	runGit(t, root, "commit", "--allow-empty", "-m", "init")
-	runGit(t, root, "branch", "-M", "main")
-	runGit(t, root, "remote", "add", "origin", "git@github.com:siderolabs/example.git")
-	runGit(t, root, "config", "branch.main.remote", "origin")
-	runGit(t, root, "config", "branch.main.merge", "refs/heads/main")
-	runGit(t, root, "worktree", "add", "-b", "feature", worktree)
+			runGit(t, "", "init", root)
+			runGit(t, root, "config", "user.email", "test@example.com")
+			runGit(t, root, "config", "user.name", "Test")
+			runGit(t, root, "config", "commit.gpgsign", "false")
+			runGit(t, root, "commit", "--allow-empty", "-m", "init")
+			runGit(t, root, "branch", "-M", "main")
+			runGit(t, root, "remote", "add", "origin", tt.remoteURL)
+			runGit(t, root, "config", "branch.main.remote", "origin")
+			runGit(t, root, "config", "branch.main.merge", "refs/heads/main")
+			runGit(t, root, "worktree", "add", "-b", "feature", worktree)
 
-	t.Chdir(worktree)
+			t.Chdir(worktree)
 
-	options := &meta.Options{
-		CompileGithubWorkflowsOnly: true,
+			options := &meta.Options{
+				CompileGithubWorkflowsOnly: true,
+			}
+
+			_, err := auto.Build(options)
+			require.NoError(t, err)
+
+			assert.Equal(t, "main", options.MainBranch)
+			assert.Equal(t, "feature", options.CurrentBranch)
+			assert.Equal(t, "siderolabs", options.GitHubOrganization)
+			assert.Equal(t, "example", options.GitHubRepository)
+		})
 	}
-
-	_, err := auto.Build(options)
-	require.NoError(t, err)
-
-	assert.Equal(t, "main", options.MainBranch)
-	assert.Equal(t, "feature", options.CurrentBranch)
-	assert.Equal(t, "siderolabs", options.GitHubOrganization)
-	assert.Equal(t, "example", options.GitHubRepository)
 }
 
 func runGit(t *testing.T, dir string, args ...string) {
