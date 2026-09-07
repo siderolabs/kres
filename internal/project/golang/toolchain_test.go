@@ -39,7 +39,7 @@ func TestToolchainSourceAssets(t *testing.T) {
 	require.NoError(t, assets.AfterLoad())
 
 	toolchain := golang.NewToolchain(&meta.Options{
-		GoContainerVersion: "1.26",
+		GoContainerVersion: "1.27",
 		Directories:        []string{"internal"},
 		GoRootDirectories:  []string{"."},
 		GoDirectories:      []string{"internal"},
