@@ -47,6 +47,13 @@ type Repository struct { //nolint:govet
 	// GITHUB_TOKEN is unset, GitHub API integration is skipped entirely.
 	DryRun bool `yaml:"dryRun,omitempty"`
 
+	// AllowPushesToMain relaxes the branch protection rules so that commits can
+	// be pushed directly to the protected branch, bypassing pull requests: the
+	// required pull request reviews and required status checks are dropped,
+	// while the other protections (deletion, force pushes, linear history,
+	// signatures) stay in place.
+	AllowPushesToMain bool `yaml:"allowPushesToMain,omitempty"`
+
 	EnableImmutableReleases   bool     `yaml:"enableImmutableReleases"`
 	EnableConform             bool     `yaml:"enableConform"`
 	ConformWebhookURL         string   `yaml:"conformWebhookURL"`
@@ -240,13 +247,26 @@ func (r *Repository) enableBranchProtection(client *github.Client) error {
 	// When kres runs from a release-* branch, protect that branch; otherwise
 	// protect main.
 	targetBranch := r.MainBranch
+	targetBranchMain := true
+
 	if strings.HasPrefix(r.meta.CurrentBranch, "release-") {
 		targetBranch = r.meta.CurrentBranch
+		targetBranchMain = false
 	}
 
 	enforceContexts := r.buildEnforceContexts(nil)
 
 	if r.DryRun {
+		if r.AllowPushesToMain && targetBranchMain {
+			fmt.Printf(
+				"dry-run: branch protection for %s would allow direct pushes: "+
+					"no required pull request reviews, no required status checks\n",
+				targetBranch,
+			)
+
+			return nil
+		}
+
 		fmt.Printf(
 			"dry-run: branch protection for %s would require %d contexts:\n",
 			targetBranch,
@@ -260,7 +280,7 @@ func (r *Repository) enableBranchProtection(client *github.Client) error {
 		return nil
 	}
 
-	return r.applyBranchProtection(client, targetBranch, enforceContexts)
+	return r.applyBranchProtection(client, targetBranch, targetBranchMain, enforceContexts)
 }
 
 // SetAutoContextsFunc registers a callback that supplies auto-computed status
@@ -444,6 +464,7 @@ func (r *Repository) buildEnforceContexts(base []string) []string {
 func (r *Repository) applyBranchProtection(
 	client *github.Client,
 	branch string,
+	branchIsMain bool,
 	enforceContexts []string,
 ) error {
 	branchProtection, resp, err := client.Repositories.GetBranchProtection(
@@ -480,6 +501,14 @@ func (r *Repository) applyBranchProtection(
 		},
 	}
 
+	if r.AllowPushesToMain && branchIsMain {
+		// Required reviews block direct pushes outright, and required status
+		// checks reject any push whose commit doesn't already have them passing,
+		// so both have to go for pushes to the branch to be possible.
+		req.RequiredPullRequestReviews = nil
+		req.RequiredStatusChecks = nil
+	}
+
 	if branchProtection != nil {
 		sigProtected, _, sigErr := client.Repositories.GetSignaturesProtectedBranch(
 			context.Background(),
@@ -496,17 +525,8 @@ func (r *Repository) applyBranchProtection(
 			branchProtection.GetAllowForcePushes().Enabled == *req.AllowForcePushes &&
 			branchProtection.GetEnforceAdmins().Enabled == req.EnforceAdmins &&
 			branchProtection.GetRequireLinearHistory().Enabled == *req.RequireLinearHistory &&
-			branchProtection.GetRequiredPullRequestReviews() != nil &&
-			branchProtection.GetRequiredPullRequestReviews().DismissStaleReviews == req.RequiredPullRequestReviews.DismissStaleReviews &&
-			branchProtection.GetRequiredPullRequestReviews().RequiredApprovingReviewCount == req.RequiredPullRequestReviews.RequiredApprovingReviewCount &&
-			branchProtection.GetRequiredStatusChecks() != nil &&
-			branchProtection.GetRequiredStatusChecks().Strict == req.RequiredStatusChecks.Strict &&
-			equalStringSlices(
-				xslices.Map(*branchProtection.GetRequiredStatusChecks().Checks,
-					func(s *github.RequiredStatusCheck) string {
-						return s.Context
-					}), enforceContexts,
-			) &&
+			pullRequestReviewsMatch(branchProtection, req.RequiredPullRequestReviews) &&
+			statusChecksMatch(branchProtection, req.RequiredStatusChecks, enforceContexts) &&
 			sigProtected.GetEnabled() {
 			return nil
 		}
@@ -623,6 +643,48 @@ func (r *Repository) inviteBot(client *github.Client) error {
 	fmt.Println("invited bot", r.BotName)
 
 	return nil
+}
+
+// pullRequestReviewsMatch reports whether the pull request review enforcement
+// on the branch already matches what is requested (including the relaxed case
+// where no reviews are required at all).
+func pullRequestReviewsMatch(
+	branchProtection *github.Protection,
+	req *github.PullRequestReviewsEnforcementRequest,
+) bool {
+	current := branchProtection.GetRequiredPullRequestReviews()
+
+	if req == nil {
+		return current == nil
+	}
+
+	return current != nil &&
+		current.DismissStaleReviews == req.DismissStaleReviews &&
+		current.RequiredApprovingReviewCount == req.RequiredApprovingReviewCount
+}
+
+// statusChecksMatch reports whether the required status checks on the branch
+// already match what is requested (including the relaxed case where no checks
+// are required at all).
+func statusChecksMatch(
+	branchProtection *github.Protection,
+	req *github.RequiredStatusChecks,
+	enforceContexts []string,
+) bool {
+	current := branchProtection.GetRequiredStatusChecks()
+
+	if req == nil {
+		return current == nil
+	}
+
+	return current != nil &&
+		current.Strict == req.Strict &&
+		current.Checks != nil &&
+		equalStringSlices(
+			xslices.Map(*current.Checks, func(s *github.RequiredStatusCheck) string {
+				return s.Context
+			}), enforceContexts,
+		)
 }
 
 func equalStringSlices(a, b []string) bool {
