@@ -41,10 +41,10 @@ const (
 	GitHubScriptActionRef     = "3a2844b7e9c422d3c10d287c895573f7108da1b3"
 	// GoFmtVersion is the version of gofmt.
 	// renovate: datasource=go depName=github.com/mvdan/gofumpt
-	GoFmtVersion = "v0.11.0"
+	GoFmtVersion = "v0.12.0"
 	// GoImportsVersion is the version of goimports.
 	// renovate: datasource=go depName=golang.org/x/tools
-	GoImportsVersion = "v0.49.0"
+	GoImportsVersion = "v0.50.0"
 	// GoMockVersion is the version of gomock.
 	// renovate: datasource=go depName=github.com/uber-go/mock
 	GoMockVersion = "v0.6.0"
@@ -91,7 +91,7 @@ const (
 	// As a rule of thumb, we bump only to the versions promoted to be LTS (even [not odd] major versions get promoted after a while, always check).
 	//
 	// renovate: datasource=docker versioning=docker depName=node
-	NodeContainerImageVersion = "24.20.0-alpine"
+	NodeContainerImageVersion = "24.21.0-alpine"
 	// PkgsVersion is the version of pkgs.
 	// renovate: datasource=github-tags depName=siderolabs/pkgs
 	PkgsVersion = "v1.14.0"
@@ -118,8 +118,8 @@ const (
 	SetupNodeActionRef     = "820762786026740c76f36085b0efc47a31fe5020"
 	// ChromaticActionVersion is the version of the chromaui/action github action.
 	// renovate: datasource=github-tags depName=chromaui/action
-	ChromaticActionVersion = "v18.7.2"
-	ChromaticActionRef     = "2a0b63f30233c48591844a46d451b9cf68128186"
+	ChromaticActionVersion = "v18.8.1"
+	ChromaticActionRef     = "259eda5f0e44c0c1eab38b672f1c4c967cc969b7"
 	// SetupTerraformActionVersion is the version of setup terraform github action.
 	// renovate: datasource=github-tags depName=hashicorp/setup-terraform
 	SetupTerraformActionVersion = "v4.0.1"
