@@ -12,7 +12,7 @@ const (
 
 	// BldrImageVersion is the version of bldr image.
 	// renovate: datasource=github-releases depName=siderolabs/bldr
-	BldrImageVersion = "v0.6.3"
+	BldrImageVersion = "v0.6.4"
 
 	// CheckOutActionVersion is the version of checkout github action.
 	// renovate: datasource=github-tags depName=actions/checkout
@@ -20,8 +20,8 @@ const (
 	CheckOutActionRef     = "3d3c42e5aac5ba805825da76410c181273ba90b1"
 	// CodeCovActionVersion is the version of codecov github action.
 	// renovate: datasource=github-tags depName=codecov/codecov-action
-	CodeCovActionVersion = "v7.0.0"
-	CodeCovActionRef     = "fb8b3582c8e4def4969c97caa2f19720cb33a72f"
+	CodeCovActionVersion = "v7.1.1"
+	CodeCovActionRef     = "303a32d7a59b442fa8d48b6a1cc6825c09c847a5"
 	// DeepCopyVersion is the version of deepcopy.
 	// renovate: datasource=go depName=github.com/siderolabs/deep-copy
 	DeepCopyVersion = "v0.5.8"
@@ -41,10 +41,10 @@ const (
 	GitHubScriptActionRef     = "3a2844b7e9c422d3c10d287c895573f7108da1b3"
 	// GoFmtVersion is the version of gofmt.
 	// renovate: datasource=go depName=github.com/mvdan/gofumpt
-	GoFmtVersion = "v0.11.0"
+	GoFmtVersion = "v0.12.0"
 	// GoImportsVersion is the version of goimports.
 	// renovate: datasource=go depName=golang.org/x/tools
-	GoImportsVersion = "v0.49.0"
+	GoImportsVersion = "v0.50.0"
 	// GoMockVersion is the version of gomock.
 	// renovate: datasource=go depName=github.com/uber-go/mock
 	GoMockVersion = "v0.6.0"
@@ -107,11 +107,11 @@ const (
 	ReleaseActionRef     = "efb35369e0ad2afab669f228072c1b0d510eae64"
 	// SentencesPerLineVersion is the version of sentences-per-line.
 	// renovate: datasource=npm depName=sentences-per-line
-	SentencesPerLineVersion = "0.5.3"
+	SentencesPerLineVersion = "0.5.6"
 	// SetupBuildxActionVersion is the version of setup-buildx github action.
 	// renovate: datasource=github-tags depName=docker/setup-buildx-action
-	SetupBuildxActionVersion = "v4.3.0"
-	SetupBuildxActionRef     = "37fe631027851001ddb9b187196cc803df7f5f0e"
+	SetupBuildxActionVersion = "v4.4.1"
+	SetupBuildxActionRef     = "f87e5991a6d7451dcb8d9637bfbc97413f497069"
 	// SetupNodeActionVersion is the version of setup-node github action.
 	// renovate: datasource=github-tags depName=actions/setup-node
 	SetupNodeActionVersion = "v7.0.0"
@@ -126,7 +126,7 @@ const (
 	SetupTerraformActionRef     = "dfe3c3f87815947d99a8997f908cb6525fc44e9e"
 	// SyftVersion is the version of syft used for SBOM generation.
 	// renovate: datasource=go depName=github.com/anchore/syft
-	SyftVersion = "v1.51.1"
+	SyftVersion = "v1.52.0"
 	// SlackNotifyActionVersion is the version of slack notify github action.
 	// renovate: datasource=github-tags depName=slackapi/slack-github-action
 	SlackNotifyActionVersion = "v4.0.0"
