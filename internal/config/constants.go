@@ -91,7 +91,7 @@ const (
 	// As a rule of thumb, we bump only to the versions promoted to be LTS (even [not odd] major versions get promoted after a while, always check).
 	//
 	// renovate: datasource=docker versioning=docker depName=node
-	NodeContainerImageVersion = "24.20.0-alpine"
+	NodeContainerImageVersion = "24.21.0-alpine"
 	// PkgsVersion is the version of pkgs.
 	// renovate: datasource=github-tags depName=siderolabs/pkgs
 	PkgsVersion = "v1.14.0"
@@ -118,8 +118,8 @@ const (
 	SetupNodeActionRef     = "820762786026740c76f36085b0efc47a31fe5020"
 	// ChromaticActionVersion is the version of the chromaui/action github action.
 	// renovate: datasource=github-tags depName=chromaui/action
-	ChromaticActionVersion = "v18.7.2"
-	ChromaticActionRef     = "2a0b63f30233c48591844a46d451b9cf68128186"
+	ChromaticActionVersion = "v18.9.5"
+	ChromaticActionRef     = "6b3c2820222d23bad770d57a4ad5e2d1c91f92e9"
 	// SetupTerraformActionVersion is the version of setup terraform github action.
 	// renovate: datasource=github-tags depName=hashicorp/setup-terraform
 	SetupTerraformActionVersion = "v4.0.1"
