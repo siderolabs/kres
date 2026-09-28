@@ -36,6 +36,7 @@ func (builder *builder) BuildCI() error {
 		targets = append(targets, repo)
 		targets = append(targets, common.NewSOPS(builder.meta))
 		targets = append(targets, common.NewRenovate(builder.meta))
+		targets = append(targets, common.NewGitattributes(builder.meta))
 	}
 
 	builder.proj.AddTarget(targets...)
