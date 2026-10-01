@@ -102,7 +102,7 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 	output.Stage("js-toolchain").
 		Description("base toolchain image").
 		From("--platform=${BUILDPLATFORM} ${JS_TOOLCHAIN}").
-		Step(step.Run("apk", "--update", "--no-cache", "add", "bash", "curl", "protoc", "protobuf-dev", "go")).
+		Step(step.Run("apk", "--update", "--no-cache", "add", "bash", "curl", "protoc", "git", "protobuf-dev", "go")).
 		Step(step.Copy("./go.mod", ".")).
 		Step(step.Copy("./go.sum", ".")).
 		Step(step.Env("GOPATH", toolchain.meta.GoPath)).
