@@ -30,7 +30,7 @@ const (
 	DindContainerImageVersion = "29.8-dind"
 	// DockerfileFrontendImageVersion is the version of the dockerfile frontend image.
 	// renovate: datasource=docker versioning=docker depName=docker/dockerfile-upstream
-	DockerfileFrontendImageVersion = "1.27.0-labs"
+	DockerfileFrontendImageVersion = "1.27.1-labs"
 	// DownloadArtifactActionVersion is the version of download artifact github action.
 	// renovate: datasource=github-tags depName=actions/download-artifact
 	DownloadArtifactActionVersion = "v8.0.1"
@@ -44,13 +44,13 @@ const (
 	GoFmtVersion = "v0.12.0"
 	// GoImportsVersion is the version of goimports.
 	// renovate: datasource=go depName=golang.org/x/tools
-	GoImportsVersion = "v0.50.0"
+	GoImportsVersion = "v0.51.0"
 	// GoMockVersion is the version of gomock.
 	// renovate: datasource=go depName=github.com/uber-go/mock
 	GoMockVersion = "v0.6.0"
 	// GolangCIlintVersion is the version of golangci-lint.
 	// renovate: datasource=go depName=github.com/golangci/golangci-lint
-	GolangCIlintVersion = "v2.13.2"
+	GolangCIlintVersion = "v2.14.0"
 	// DisVulnCheckVersion is the version of dis-vulncheck.
 	// renovate: datasource=go versioning=loose depName=github.com/shanduur/dis-vulncheck
 	DisVulnCheckVersion = "v0.0.0-20260708185140-0c30eb543ad8"
@@ -59,13 +59,13 @@ const (
 	GoVersion = "1.27.1"
 	// GrpcGatewayVersion is the version of grpc-gateway.
 	// renovate: datasource=go depName=github.com/grpc-ecosystem/grpc-gateway
-	GrpcGatewayVersion = "v2.30.0"
+	GrpcGatewayVersion = "v2.31.0"
 	// GrpcGoVersion is the version of grpc.
 	// renovate: datasource=go depName=google.golang.org/grpc/cmd/protoc-gen-go-grpc
 	GrpcGoVersion = "v1.6.2"
 	// HelmUnitTestVersion is the version of helm unit test plugin.
 	// renovate: datasource=github-tags depName=helm-unittest/helm-unittest
-	HelmUnitTestVersion = "v1.1.2"
+	HelmUnitTestVersion = "v1.2.1"
 	// HelmValuesSchemaJSONVersion is the version of helm values-schema-json plugin.
 	// renovate: datasource=github-tags depName=losisin/helm-values-schema-json
 	HelmValuesSchemaJSONVersion = "v2.6.0"
@@ -91,7 +91,7 @@ const (
 	// As a rule of thumb, we bump only to the versions promoted to be LTS (even [not odd] major versions get promoted after a while, always check).
 	//
 	// renovate: datasource=docker versioning=docker depName=node
-	NodeContainerImageVersion = "24.20.0-alpine"
+	NodeContainerImageVersion = "24.21.0-alpine"
 	// PkgsVersion is the version of pkgs.
 	// renovate: datasource=github-tags depName=siderolabs/pkgs
 	PkgsVersion = "v1.14.0"
@@ -118,23 +118,23 @@ const (
 	SetupNodeActionRef     = "820762786026740c76f36085b0efc47a31fe5020"
 	// ChromaticActionVersion is the version of the chromaui/action github action.
 	// renovate: datasource=github-tags depName=chromaui/action
-	ChromaticActionVersion = "v18.7.2"
-	ChromaticActionRef     = "2a0b63f30233c48591844a46d451b9cf68128186"
+	ChromaticActionVersion = "v18.10.2"
+	ChromaticActionRef     = "a18e9f57b71eb05f941848c0b927aab2ee644e3e"
 	// SetupTerraformActionVersion is the version of setup terraform github action.
 	// renovate: datasource=github-tags depName=hashicorp/setup-terraform
 	SetupTerraformActionVersion = "v4.0.1"
 	SetupTerraformActionRef     = "dfe3c3f87815947d99a8997f908cb6525fc44e9e"
 	// SyftVersion is the version of syft used for SBOM generation.
 	// renovate: datasource=go depName=github.com/anchore/syft
-	SyftVersion = "v1.52.0"
+	SyftVersion = "v1.54.0"
 	// SlackNotifyActionVersion is the version of slack notify github action.
 	// renovate: datasource=github-tags depName=slackapi/slack-github-action
 	SlackNotifyActionVersion = "v4.0.0"
 	SlackNotifyActionRef     = "dcb1066f776dd043e64d0e8ba94ca15cc7e1875d"
 	// SystemInfoActionVersion is the version of system info github action.
 	// renovate: datasource=github-tags depName=kenchan0130/actions-system-info
-	SystemInfoActionVersion = "v1.4.0"
-	SystemInfoActionRef     = "59699597e84e80085a750998045983daa49274c4"
+	SystemInfoActionVersion = "v1.5.0"
+	SystemInfoActionRef     = "ceae9371bdbf9ff80acc78f28f7824a39c9648b3"
 	// UploadArtifactActionVersion is the version of upload artifact github action.
 	// renovate: datasource=github-tags depName=actions/upload-artifact
 	UploadArtifactActionVersion = "v7.0.1"
