@@ -6,6 +6,7 @@ package common
 
 import (
 	"context"
+	_ "embed"
 	"fmt"
 	"maps"
 	"net/http"
@@ -22,6 +23,7 @@ import (
 	"github.com/siderolabs/kres/internal/output/conform/licensepolicy"
 	"github.com/siderolabs/kres/internal/output/lefthook"
 	"github.com/siderolabs/kres/internal/output/license"
+	"github.com/siderolabs/kres/internal/output/template"
 	"github.com/siderolabs/kres/internal/project/meta"
 )
 
@@ -75,7 +77,14 @@ type Repository struct { //nolint:govet
 	SkipStaleWorkflow bool `yaml:"skipStaleWorkflow"`
 
 	EnableLefthook bool `yaml:"enableLefthook"`
+
+	EnableAIPolicy bool `yaml:"enableAIPolicy"`
 }
+
+// aiPolicy is the "Human Responsible" policy from https://github.com/43081j/ai-policy.
+//
+//go:embed resources/AI_POLICY.md
+var aiPolicy string
 
 // LicenseConfig configures the license.
 type LicenseConfig struct {
@@ -118,7 +127,7 @@ func NewRepository(meta *meta.Options) *Repository {
 		Licenses: []LicenseConfig{
 			{
 				ID:     "MPL-2.0",
-				Header: output.License(MPLHeader, "// "),
+				Header: output.License(license.MPLHeader, "// "),
 				Root:   ".",
 			},
 		},
@@ -126,6 +135,8 @@ func NewRepository(meta *meta.Options) *Repository {
 		BotName: "talos-bot",
 
 		EnableLefthook: true,
+
+		EnableAIPolicy: true,
 	}
 }
 
@@ -144,6 +155,17 @@ func (r *Repository) CompileLefthook(o *lefthook.Output) error {
 	}
 
 	o.Enable()
+
+	return nil
+}
+
+// CompileTemplates implements template.Compiler.
+func (r *Repository) CompileTemplates(o *template.Output) error {
+	if !r.EnableAIPolicy {
+		return nil
+	}
+
+	o.Define("AI_POLICY.md", aiPolicy).NoPreamble()
 
 	return nil
 }
@@ -696,8 +718,3 @@ func equalStringSlices(a, b []string) bool {
 
 	return slices.Equal(a, b)
 }
-
-// MPLHeader is the Mozilla Public License 2.0 header.
-const MPLHeader = `This Source Code Form is subject to the terms of the Mozilla Public
-License, v. 2.0. If a copy of the MPL was not distributed with this
-file, You can obtain one at http://mozilla.org/MPL/2.0/.`

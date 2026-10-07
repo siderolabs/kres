@@ -21,6 +21,11 @@ const (
 	Header = ".license-header.go.txt"
 )
 
+// MPLHeader is the Mozilla Public License 2.0 header.
+const MPLHeader = `This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at http://mozilla.org/MPL/2.0/.`
+
 //go:embed MPL-2.0.txt
 var mpl2 string
 

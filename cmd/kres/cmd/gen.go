@@ -80,6 +80,7 @@ func runGen() error {
 		output.Wrap(gitattributes.Manage(gitattributesOutput, sops.NewOutput())),
 		output.Wrap(gitattributes.Manage(gitattributesOutput, renovate.NewOutput())),
 		output.Wrap(gitattributes.Manage(gitattributesOutput, conform.NewOutput())),
+		output.Wrap(gitattributes.Manage(gitattributesOutput, template.NewOutput())),
 	}
 
 	if !options.CompileGithubWorkflowsOnly {
@@ -94,7 +95,6 @@ func runGen() error {
 			output.Wrap(gitattributes.Manage(gitattributesOutput, codecov.NewOutput())),
 			output.Wrap(gitattributes.Manage(gitattributesOutput, release.NewOutput())),
 			output.Wrap(gitattributes.Manage(gitattributesOutput, markdownlint.NewOutput())),
-			output.Wrap(gitattributes.Manage(gitattributesOutput, template.NewOutput())),
 			output.Wrap(gitattributes.Manage(gitattributesOutput, lefthook.NewOutput())),
 		)
 	}
