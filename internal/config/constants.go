@@ -50,13 +50,13 @@ const (
 	GoMockVersion = "v0.6.0"
 	// GolangCIlintVersion is the version of golangci-lint.
 	// renovate: datasource=go depName=github.com/golangci/golangci-lint
-	GolangCIlintVersion = "v2.13.2"
+	GolangCIlintVersion = "v2.14.0"
 	// DisVulnCheckVersion is the version of dis-vulncheck.
 	// renovate: datasource=go versioning=loose depName=github.com/shanduur/dis-vulncheck
 	DisVulnCheckVersion = "v0.0.0-20260708185140-0c30eb543ad8"
 	// GoVersion is the version of Go.
 	// renovate: datasource=github-tags extractVersion=^go(?<version>.*)$ depName=golang/go
-	GoVersion = "1.27.1"
+	GoVersion = "1.27.2"
 	// GrpcGatewayVersion is the version of grpc-gateway.
 	// renovate: datasource=go depName=github.com/grpc-ecosystem/grpc-gateway
 	GrpcGatewayVersion = "v2.30.0"
