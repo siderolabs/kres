@@ -27,14 +27,14 @@ const (
 	DeepCopyVersion = "v0.5.8"
 	// DindContainerImageVersion is the version of the dind container image.
 	// renovate: datasource=docker versioning=docker depName=docker
-	DindContainerImageVersion = "29.8-dind"
+	DindContainerImageVersion = "29.9-dind"
 	// DockerfileFrontendImageVersion is the version of the dockerfile frontend image.
 	// renovate: datasource=docker versioning=docker depName=docker/dockerfile-upstream
-	DockerfileFrontendImageVersion = "1.27.0-labs"
+	DockerfileFrontendImageVersion = "1.28.0-labs"
 	// DownloadArtifactActionVersion is the version of download artifact github action.
 	// renovate: datasource=github-tags depName=actions/download-artifact
-	DownloadArtifactActionVersion = "v8.0.1"
-	DownloadArtifactActionRef     = "3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c"
+	DownloadArtifactActionVersion = "v8.0.2"
+	DownloadArtifactActionRef     = "9000827ccba6bdab643e8b6fd33ac0654aef8333"
 	// GitHubScriptActionVersion is the version of github script action.
 	// renovate: datasource=github-tags depName=actions/github-script
 	GitHubScriptActionVersion = "v9.0.0"
@@ -44,7 +44,7 @@ const (
 	GoFmtVersion = "v0.12.0"
 	// GoImportsVersion is the version of goimports.
 	// renovate: datasource=go depName=golang.org/x/tools
-	GoImportsVersion = "v0.50.0"
+	GoImportsVersion = "v0.51.0"
 	// GoMockVersion is the version of gomock.
 	// renovate: datasource=go depName=github.com/uber-go/mock
 	GoMockVersion = "v0.6.0"
@@ -59,13 +59,13 @@ const (
 	GoVersion = "1.27.2"
 	// GrpcGatewayVersion is the version of grpc-gateway.
 	// renovate: datasource=go depName=github.com/grpc-ecosystem/grpc-gateway
-	GrpcGatewayVersion = "v2.30.0"
+	GrpcGatewayVersion = "v2.31.0"
 	// GrpcGoVersion is the version of grpc.
 	// renovate: datasource=go depName=google.golang.org/grpc/cmd/protoc-gen-go-grpc
 	GrpcGoVersion = "v1.6.2"
 	// HelmUnitTestVersion is the version of helm unit test plugin.
 	// renovate: datasource=github-tags depName=helm-unittest/helm-unittest
-	HelmUnitTestVersion = "v1.1.2"
+	HelmUnitTestVersion = "v1.2.1"
 	// HelmValuesSchemaJSONVersion is the version of helm values-schema-json plugin.
 	// renovate: datasource=github-tags depName=losisin/helm-values-schema-json
 	HelmValuesSchemaJSONVersion = "v2.6.0"
@@ -84,14 +84,14 @@ const (
 	MarkdownLintCLIVersion = "0.49.1"
 	// BunContainerImageVersion is the default bun container image.
 	// renovate: datasource=docker versioning=docker depName=oven/bun
-	BunContainerImageVersion = "1.4.2-alpine"
+	BunContainerImageVersion = "1.4.3-alpine"
 	// NodeContainerImageVersion is the default node container image.
 	//
 	// NOTE: Check renovate.json for the rules on this before bumping, e.g., pinned versions.
 	// As a rule of thumb, we bump only to the versions promoted to be LTS (even [not odd] major versions get promoted after a while, always check).
 	//
 	// renovate: datasource=docker versioning=docker depName=node
-	NodeContainerImageVersion = "24.20.0-alpine"
+	NodeContainerImageVersion = "24.21.0-alpine"
 	// PkgsVersion is the version of pkgs.
 	// renovate: datasource=github-tags depName=siderolabs/pkgs
 	PkgsVersion = "v1.14.0"
@@ -114,31 +114,31 @@ const (
 	SetupBuildxActionRef     = "f87e5991a6d7451dcb8d9637bfbc97413f497069"
 	// SetupNodeActionVersion is the version of setup-node github action.
 	// renovate: datasource=github-tags depName=actions/setup-node
-	SetupNodeActionVersion = "v7.0.0"
-	SetupNodeActionRef     = "820762786026740c76f36085b0efc47a31fe5020"
+	SetupNodeActionVersion = "v7.1.0"
+	SetupNodeActionRef     = "949feb2413d6458794dcd2491c4babbbce0c15c1"
 	// ChromaticActionVersion is the version of the chromaui/action github action.
 	// renovate: datasource=github-tags depName=chromaui/action
-	ChromaticActionVersion = "v18.7.2"
-	ChromaticActionRef     = "2a0b63f30233c48591844a46d451b9cf68128186"
+	ChromaticActionVersion = "v18.11.0"
+	ChromaticActionRef     = "38afd264ef2241136f12d039093c2724748bec08"
 	// SetupTerraformActionVersion is the version of setup terraform github action.
 	// renovate: datasource=github-tags depName=hashicorp/setup-terraform
 	SetupTerraformActionVersion = "v4.0.1"
 	SetupTerraformActionRef     = "dfe3c3f87815947d99a8997f908cb6525fc44e9e"
 	// SyftVersion is the version of syft used for SBOM generation.
 	// renovate: datasource=go depName=github.com/anchore/syft
-	SyftVersion = "v1.52.0"
+	SyftVersion = "v1.54.1"
 	// SlackNotifyActionVersion is the version of slack notify github action.
 	// renovate: datasource=github-tags depName=slackapi/slack-github-action
 	SlackNotifyActionVersion = "v4.0.0"
 	SlackNotifyActionRef     = "dcb1066f776dd043e64d0e8ba94ca15cc7e1875d"
 	// SystemInfoActionVersion is the version of system info github action.
 	// renovate: datasource=github-tags depName=kenchan0130/actions-system-info
-	SystemInfoActionVersion = "v1.4.0"
-	SystemInfoActionRef     = "59699597e84e80085a750998045983daa49274c4"
+	SystemInfoActionVersion = "v1.5.0"
+	SystemInfoActionRef     = "ceae9371bdbf9ff80acc78f28f7824a39c9648b3"
 	// UploadArtifactActionVersion is the version of upload artifact github action.
 	// renovate: datasource=github-tags depName=actions/upload-artifact
-	UploadArtifactActionVersion = "v7.0.1"
-	UploadArtifactActionRef     = "043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"
+	UploadArtifactActionVersion = "v7.0.2"
+	UploadArtifactActionRef     = "cf430e030ddbb5b0abf93d22962f4752f3646cd9"
 	// VTProtobufVersion is the version of vtprotobuf.
 	// renovate: datasource=go depName=github.com/planetscale/vtprotobuf
 	VTProtobufVersion = "v0.6.0"
