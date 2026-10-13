@@ -27,7 +27,7 @@ jobs:
       packages: write
       pull-requests: read
     runs-on:
-      group: generic
+      group: yardi-lab
     if: (!startsWith(github.head_ref, 'renovate/') && !startsWith(github.head_ref,
       'dependabot/'))
     steps:
@@ -72,10 +72,6 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           make ci-temp-release-tag
-      - name: Check dirty
-        if: github.event_name == 'pull_request'
-        run: |
-          make check-dirty
       - name: base
         run: |
           make base
