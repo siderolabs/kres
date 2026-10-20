@@ -31,13 +31,13 @@ func (builder *builder) DetectJS() (bool, error) {
 	builder.meta.JSEnabled = true
 
 	for _, srcDir := range []string{"frontend"} {
-		exists, err := directoryExists(builder.rootPath, srcDir)
-		if err != nil {
-			return false, err
-		}
-
 		for _, path := range []string{"src", "e2e", "public", "msw", ".storybook"} {
 			d := filepath.Join(srcDir, path)
+
+			exists, err := directoryExists(builder.rootPath, d)
+			if err != nil {
+				return false, err
+			}
 
 			if exists {
 				builder.meta.Directories = append(builder.meta.Directories, d)
