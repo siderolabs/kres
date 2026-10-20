@@ -6,6 +6,7 @@ package js_test
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -78,4 +79,32 @@ func TestToolchainPackages(t *testing.T) {
 			assert.Contains(t, buf.String(), test.want)
 		})
 	}
+}
+
+func TestToolchainInstallsBeforeSources(t *testing.T) {
+	options := &meta.Options{
+		JSDirectories: []string{"frontend/src"},
+	}
+
+	toolchain := js.NewToolchain(options, "frontend")
+
+	output := dockerfile.NewOutput()
+	require.NoError(t, toolchain.CompileDockerfile(output))
+
+	var buf bytes.Buffer
+
+	require.NoError(t, output.GenerateFile("Dockerfile", &buf))
+
+	generated := buf.String()
+
+	manifests := strings.Index(generated, "COPY frontend/package*.json ./")
+	install := strings.Index(generated, "npm ci")
+	sources := strings.Index(generated, "COPY ./frontend/src ./src")
+
+	require.NotEqual(t, -1, manifests)
+	require.NotEqual(t, -1, install)
+	require.NotEqual(t, -1, sources)
+
+	assert.Less(t, manifests, install)
+	assert.Less(t, install, sources)
 }

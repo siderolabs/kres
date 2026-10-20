@@ -167,11 +167,16 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 		return err
 	}
 
+	// Install dependencies from the manifests alone, so that the npm ci layer stays cached when only sources change.
+	base.Step(step.Copy(filepath.Join(toolchain.sourceDir, "package*.json"), "./")).
+		Step(step.Copy(filepath.Join(toolchain.sourceDir, ".npmrc"), "./")).
+		Step(step.Script("npm ci").
+			MountCache(toolchain.meta.JSCachePath, toolchain.meta.GitHubRepository, step.CacheLocked))
+
 	base.Step(step.Copy(filepath.Join(toolchain.sourceDir, "*.json"), "./")).
 		Step(step.Copy(filepath.Join(toolchain.sourceDir, "*.js"), "./")).
 		Step(step.Copy(filepath.Join(toolchain.sourceDir, "*.ts"), "./")).
 		Step(step.Copy(filepath.Join(toolchain.sourceDir, "*.html"), "./")).
-		Step(step.Copy(filepath.Join(toolchain.sourceDir, ".npmrc"), "./")).
 		Step(step.Copy(filepath.Join(toolchain.sourceDir, ".editorconfig"), "./")).
 		Step(step.Copy(filepath.Join(toolchain.sourceDir, ".gitignore"), "./")).
 		Step(step.Copy(filepath.Join(toolchain.sourceDir, ".prettier*"), "./"))
@@ -181,9 +186,6 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 
 		base.Step(step.Copy("./"+directory, "./"+strings.Trim(dest, "/")))
 	}
-
-	base.Step(step.Script("npm ci").
-		MountCache(toolchain.meta.JSCachePath, toolchain.meta.GitHubRepository, step.CacheLocked))
 
 	return nil
 }
