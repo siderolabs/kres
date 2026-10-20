@@ -11,6 +11,11 @@ type ToolchainBuilder interface {
 	ToolchainBuild(*dockerfile.Stage) error
 }
 
+// ToolchainPackager is implemented by nodes which need system packages installed in the toolchain image.
+type ToolchainPackager interface {
+	ToolchainPackages() []string
+}
+
 // SourceTreeBuilder is implemented by nodes which inject content into the source tree of the
 // golang base stage, before any Go package loading happens there.
 type SourceTreeBuilder interface {

@@ -27,9 +27,10 @@ type Toolchain struct {
 
 	meta *meta.Options
 
-	sourceDir string
-	Version   string
-	Image     string
+	sourceDir     string
+	Version       string
+	Image         string
+	ExtraPackages []string `yaml:"extraPackages"`
 }
 
 // NewToolchain builds Toolchain with default values.
@@ -93,16 +94,59 @@ func (toolchain *Toolchain) CompileGitHubWorkflow(output *ghworkflow.Output) err
 	return nil
 }
 
+// packages returns the system packages to install in the toolchain image: those the enabled features need,
+// followed by the extra packages from the configuration.
+func (toolchain *Toolchain) packages() ([]string, error) {
+	var packages []string
+
+	if err := dag.WalkNode(toolchain, func(node dag.Node) error {
+		if packager, ok := node.(common.ToolchainPackager); ok {
+			packages = append(packages, packager.ToolchainPackages()...)
+		}
+
+		return nil
+	}, nil, 1); err != nil {
+		return nil, err
+	}
+
+	packages = append(packages, toolchain.ExtraPackages...)
+
+	seen := make(map[string]struct{}, len(packages))
+	unique := make([]string, 0, len(packages))
+
+	for _, pkg := range packages {
+		if _, ok := seen[pkg]; ok {
+			continue
+		}
+
+		seen[pkg] = struct{}{}
+		unique = append(unique, pkg)
+	}
+
+	return unique, nil
+}
+
 // CompileDockerfile implements dockerfile.Compiler.
 func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 	output.Arg(step.Arg("JS_TOOLCHAIN"))
 
 	toolchain.meta.JSCachePath = "/root/.npm"
 
-	output.Stage("js-toolchain").
+	packages, err := toolchain.packages()
+	if err != nil {
+		return err
+	}
+
+	toolchainStage := output.Stage("js-toolchain").
 		Description("base toolchain image").
-		From("--platform=${BUILDPLATFORM} ${JS_TOOLCHAIN}").
-		Step(step.Run("apk", "--update", "--no-cache", "add", "bash", "curl", "protoc", "git", "protobuf-dev", "go")).
+		From("--platform=${BUILDPLATFORM} ${JS_TOOLCHAIN}")
+
+	// Without packages to install, the toolchain image may be any image with Node.js, not only an Alpine one.
+	if len(packages) > 0 {
+		toolchainStage.Step(step.Run("apk", append([]string{"--update", "--no-cache", "add"}, packages...)...))
+	}
+
+	toolchainStage.
 		Step(step.Copy("./go.mod", ".")).
 		Step(step.Copy("./go.sum", ".")).
 		Step(step.Env("GOPATH", toolchain.meta.GoPath)).

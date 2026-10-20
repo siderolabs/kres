@@ -88,6 +88,16 @@ func (proto *Protobuf) CompileMakefile(output *makefile.Output) error {
 	return nil
 }
 
+// ToolchainPackages implements common.ToolchainPackager hook.
+func (proto *Protobuf) ToolchainPackages() []string {
+	if len(proto.Specs) == 0 {
+		return nil
+	}
+
+	// go installs the protoc plugin, see ToolchainBuild.
+	return []string{"go", "protoc", "protobuf-dev"}
+}
+
 // ToolchainBuild implements common.ToolchainBuilder hook.
 func (proto *Protobuf) ToolchainBuild(stage *dockerfile.Stage) error {
 	if len(proto.Specs) == 0 {
