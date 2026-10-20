@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	renovateMatchStringPkgfile = `# renovate: datasource=(?<datasource>.*?)(?:\s+extractVersion=(?<extractVersion>.+?))?(?:\s+versioning=(?<versioning>.+?))?\s+depName=(?<depName>.+?)?\s(?:.*_(?:version|VERSION):\s+(?<currentValue>.*))?(?:(\s)?.*_(?:ref|REF):\s+(?<currentDigest>.*))?` //nolint:lll
+	renovateMatchStringPkgfile = `# renovate: datasource=(?<datasource>.*?)(?:\s+extractVersion=(?<extractVersion>.+?))?(?:\s+versioning=(?<versioning>.+?))?\s+depName=(?<depName>.+?)?\s(?:.*_(?:version|VERSION):\s+"?(?<currentValue>[^"\s]+)"?)?(?:(\s)?.*_(?:ref|REF):\s+(?<currentDigest>.*))?` //nolint:lll
 	customTypeRegex            = "regex"
 )
 
