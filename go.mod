@@ -1,6 +1,6 @@
 module github.com/siderolabs/kres
 
-go 1.27.2
+go 1.27.3
 
 require (
 	github.com/go-git/go-git/v5 v5.19.2
