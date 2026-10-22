@@ -35,9 +35,11 @@ func (rekres *ReKres) CompileMakefile(output *makefile.Output) error {
 	output.VariableGroup(makefile.VariableGroupCommon).
 		Variable(makefile.OverridableVariable("KRES_IMAGE", rekres.KresImage))
 
+	declareGitCommonDirMount(output)
+
 	output.Target(rekres.Name()).
 		Script("@docker pull $(KRES_IMAGE)").
-		Script("@docker run --rm --net=host --user $(shell id -u):$(shell id -g) -v $(PWD):/src -w /src -e GITHUB_TOKEN $(KRES_IMAGE)").
+		Script("@docker run --rm --net=host --user $(shell id -u):$(shell id -g) -v $(PWD):/src " + gitCommonDirMountRef + " -w /src -e GITHUB_TOKEN $(KRES_IMAGE)").
 		Phony()
 
 	return nil

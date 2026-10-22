@@ -38,9 +38,11 @@ func (conformance *Conformance) CompileMakefile(output *makefile.Output) error {
 	output.VariableGroup(makefile.VariableGroupCommon).
 		Variable(makefile.OverridableVariable(conformanceImageEnvVarName, conformance.ConformanceImage))
 
+	declareGitCommonDirMount(output)
+
 	output.Target(conformance.Name()).
 		Script("@docker pull $(" + conformanceImageEnvVarName + ")").
-		Script("@docker run --rm -v $(PWD):/src -w /src $(" + conformanceImageEnvVarName + ") enforce").
+		Script("@docker run --rm -v $(PWD):/src " + gitCommonDirMountRef + " -w /src $(" + conformanceImageEnvVarName + ") enforce").
 		Phony()
 
 	return nil
