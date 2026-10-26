@@ -80,10 +80,11 @@ func (builder *builder) BuildJS() error {
 
 	builder.lintInputs = append(builder.lintInputs, esLint)
 
-	// add protobufs
+	// add protobufs, and generated sources (compiled protobufs, and npm-generated sources)
 	protobuf := js.NewProtobuf(builder.meta, name)
+	generate := js.NewGenerate(builder.meta, name, protobuf)
 
-	toolchain.AddInput(protobuf)
+	toolchain.AddInput(protobuf, generate)
 
 	build := js.NewBuild(builder.meta, name)
 	build.AddInput(toolchain)

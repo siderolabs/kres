@@ -12,7 +12,6 @@ import (
 	"github.com/siderolabs/kres/internal/dag"
 	"github.com/siderolabs/kres/internal/output/dockerfile"
 	"github.com/siderolabs/kres/internal/output/dockerfile/step"
-	"github.com/siderolabs/kres/internal/output/lefthook"
 	"github.com/siderolabs/kres/internal/output/makefile"
 	"github.com/siderolabs/kres/internal/project/meta"
 )
@@ -72,25 +71,22 @@ func (proto *Protobuf) CompileMakefile(output *makefile.Output) error {
 	output.VariableGroup(makefile.VariableGroupCommon).
 		Variable(makefile.OverridableVariable("PROTOBUF_GRPC_GATEWAY_TS_VERSION", strings.TrimLeft(proto.ProtobufTSGatewayVersion, "v")))
 
-	if len(proto.Specs) == 0 {
-		return nil
-	}
-
-	targetName := "generate-" + proto.Name()
-	output.Target(targetName).
-		Description("Generate .proto definitions.").
-		Script("@$(MAKE) local-$@ DEST=./")
-
-	if output.HasTarget("generate") {
-		output.Target("generate").Depends(targetName)
-	}
-
 	return nil
+}
+
+// enabled reports whether there are specs to compile.
+func (proto *Protobuf) enabled() bool {
+	return len(proto.Specs) > 0
+}
+
+// compileContainer is the stage that holds the compiled specs, under the node's name.
+func (proto *Protobuf) compileContainer() string {
+	return "proto-compile-" + proto.Name()
 }
 
 // ToolchainPackages implements common.ToolchainPackager hook.
 func (proto *Protobuf) ToolchainPackages() []string {
-	if len(proto.Specs) == 0 {
+	if !proto.enabled() {
 		return nil
 	}
 
@@ -100,7 +96,7 @@ func (proto *Protobuf) ToolchainPackages() []string {
 
 // ToolchainBuild implements common.ToolchainBuilder hook.
 func (proto *Protobuf) ToolchainBuild(stage *dockerfile.Stage) error {
-	if len(proto.Specs) == 0 {
+	if !proto.enabled() {
 		return nil
 	}
 
@@ -118,22 +114,13 @@ func (proto *Protobuf) ToolchainBuild(stage *dockerfile.Stage) error {
 
 // CompileDockerfile implements dockerfile.Compiler.
 func (proto *Protobuf) CompileDockerfile(output *dockerfile.Output) error {
-	rootDir := "/" + proto.Name()
-	generateContainer := "generate-" + proto.Name()
-	specsContainer := "proto-specs-" + proto.Name()
-	compileContainer := "proto-compile-" + proto.Name()
-
-	generate := output.Stage(generateContainer).
-		Description("cleaned up specs and compiled versions").
-		From("scratch")
-
-	for _, file := range proto.Files {
-		generate.Step(step.Add(file.Source, file.Destination))
-	}
-
-	if len(proto.Specs) == 0 {
+	if !proto.enabled() {
 		return nil
 	}
+
+	rootDir := "/" + proto.Name()
+	specsContainer := "proto-specs-" + proto.Name()
+	compileContainer := proto.compileContainer()
 
 	specs := output.Stage(specsContainer).
 		Description("collects proto specs").
@@ -197,23 +184,6 @@ func (proto *Protobuf) CompileDockerfile(output *dockerfile.Output) error {
 	for _, s := range cleanupSteps {
 		compile.Step(s)
 	}
-
-	generate.Step(step.Copy(filepath.Clean(proto.Name())+"/", filepath.Clean(proto.Name())+"/").
-		From(compileContainer))
-
-	return nil
-}
-
-// CompileLefthook implements lefthook.Compiler.
-func (proto *Protobuf) CompileLefthook(output *lefthook.Output) error {
-	output.Hook(lefthook.HookGroupPreCommit).
-		Group(lefthook.PreCommitFixStage).
-		WithParallel(false).
-		Job().
-		WithName("generate "+proto.Name()).
-		WithRun("make generate-"+proto.Name()).
-		WithEnv("USERNAME", proto.meta.GitHubOrganization).
-		WithStageFixed()
 
 	return nil
 }

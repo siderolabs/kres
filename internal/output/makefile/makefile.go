@@ -27,6 +27,14 @@ type Output struct {
 	conditions []*Condition
 
 	targets []*Target
+
+	optionalDepends []optionalDependency
+}
+
+// optionalDependency is a dependency added to a target only if the target exists once every node has compiled.
+type optionalDependency struct {
+	target     string
+	dependency string
 }
 
 // NewOutput creates new Makefile output.
@@ -75,6 +83,13 @@ func (o *Output) HasTarget(name string) bool {
 	return slices.ContainsFunc(o.targets, func(t *Target) bool {
 		return t.name == name
 	})
+}
+
+// OptionalDepends makes target depend on dependency if target exists once every node has compiled.
+//
+// Unlike checking HasTarget during compilation, it doesn't depend on the order the nodes compile in.
+func (o *Output) OptionalDepends(target, dependency string) {
+	o.optionalDepends = append(o.optionalDepends, optionalDependency{target: target, dependency: dependency})
 }
 
 // IfTrueCondition creates new Makefile condition.
@@ -132,6 +147,12 @@ func (o *Output) makefile(w io.Writer) error {
 	})
 
 	for _, target := range o.targets {
+		for _, optional := range o.optionalDepends {
+			if optional.target == target.name && !slices.Contains(target.depends, optional.dependency) {
+				target.Depends(optional.dependency)
+			}
+		}
+
 		if err := target.Generate(w); err != nil {
 			return err
 		}
