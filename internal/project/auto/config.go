@@ -62,6 +62,13 @@ type HelmTemplate struct {
 	SetString   []string `yaml:"setString"`
 }
 
+// JS defines JS project settings.
+type JS struct {
+	// ExtraDirectories are additional directories (relative to the frontend root) to include as sources,
+	// on top of the default "src" and "public".
+	ExtraDirectories []string `yaml:"extraDirectories"`
+}
+
 // IntegrationTests defines integration tests builder to be generated.
 type IntegrationTests struct {
 	Tests []IntegrationTestConfig `yaml:"tests"`

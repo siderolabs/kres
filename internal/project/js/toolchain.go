@@ -182,7 +182,7 @@ func (toolchain *Toolchain) CompileDockerfile(output *dockerfile.Output) error {
 		Step(step.Copy(filepath.Join(toolchain.sourceDir, ".prettier*"), "./"))
 
 	for _, directory := range toolchain.meta.JSDirectories {
-		dest := strings.TrimLeft(directory, toolchain.sourceDir)
+		dest := strings.TrimPrefix(directory, toolchain.sourceDir)
 
 		base.Step(step.Copy("./"+directory, "./"+strings.Trim(dest, "/")))
 	}

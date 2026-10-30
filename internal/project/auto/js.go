@@ -5,6 +5,7 @@
 package auto
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -28,10 +29,16 @@ func (builder *builder) DetectJS() (bool, error) {
 
 	defer packageConfig.Close() //nolint:errcheck
 
+	var js JS
+
+	if err := builder.meta.Config.Load(&js); err != nil {
+		return false, err
+	}
+
 	builder.meta.JSEnabled = true
 
 	for _, srcDir := range []string{"frontend"} {
-		for _, path := range []string{"src", "e2e", "public", "msw", ".storybook"} {
+		for _, path := range []string{"src", "public"} {
 			d := filepath.Join(srcDir, path)
 
 			exists, err := directoryExists(builder.rootPath, d)
@@ -43,6 +50,22 @@ func (builder *builder) DetectJS() (bool, error) {
 				builder.meta.Directories = append(builder.meta.Directories, d)
 				builder.meta.JSDirectories = append(builder.meta.JSDirectories, d)
 			}
+		}
+
+		for _, path := range js.ExtraDirectories {
+			d := filepath.Join(srcDir, path)
+
+			exists, err := directoryExists(builder.rootPath, d)
+			if err != nil {
+				return false, err
+			}
+
+			if !exists {
+				return false, fmt.Errorf("extra JS directory %q does not exist", d)
+			}
+
+			builder.meta.Directories = append(builder.meta.Directories, d)
+			builder.meta.JSDirectories = append(builder.meta.JSDirectories, d)
 		}
 
 		builder.meta.SourceFiles = append(
