@@ -56,7 +56,7 @@
             ]
         },
         {
-            "allowedVersions": "/^24\\.\\d+\\.\\d+-alpine$/",
+            "allowedVersions": "/^26\\.\\d+\\.\\d+-alpine$/",
             "matchDatasources": [
                 "docker"
             ],

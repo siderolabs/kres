@@ -103,7 +103,7 @@ spec:
         - node
       matchDatasources:
         - docker
-      allowedVersions: /^24\.\d+\.\d+-alpine$/
+      allowedVersions: /^26\.\d+\.\d+-alpine$/
 ---
 kind: auto.Helm
 spec:
