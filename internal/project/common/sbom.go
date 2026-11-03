@@ -23,6 +23,11 @@ const (
 	sbomCycloneDXFile = "sbom.cyclonedx.json"
 )
 
+// golangStdlibCycloneDX is the printf template for the Go standard library SBOM, filled with the toolchain version.
+const golangStdlibCycloneDX = `{"bomFormat":"CycloneDX","specVersion":"1.6","components":[{` +
+	`"type":"library","name":"stdlib","version":"go%s","purl":"pkg:golang/stdlib@%s",` +
+	`"cpe":"cpe:2.3:a:golang:go:%s:-:*:*:*:*:*:*","licenses":[{"license":{"id":"BSD-3-Clause"}}]}]}`
+
 // SBOM generates a software bill of materials from the project's Go modules and ships it as a release artifact.
 type SBOM struct { //nolint:govet
 	dag.BaseNode
@@ -35,6 +40,12 @@ type SBOM struct { //nolint:govet
 	Version string `yaml:"version"`
 	// SourceName names the SBOM document; defaults to the repository name.
 	SourceName string `yaml:"sourceName"`
+	// IncludeStage is a Dockerfile stage holding SBOM documents (SPDX, CycloneDX or syft JSON) to merge into the generated SBOM,
+	// e.g. a custom step collecting the /usr/share/spdx files shipped by siderolabs/pkgs. Its contents are placed under the
+	// scanned source directory; only files named like an SBOM (e.g. *.spdx.json, *.cdx.json) are picked up.
+	//
+	// SBOM-named files in the project's own source tree (e.g. test fixtures) are merged as well.
+	IncludeStage string `yaml:"includeStage"`
 }
 
 // NewSBOM builds the SBOM node.
@@ -113,10 +124,21 @@ func (sbom *SBOM) CompileDockerfile(output *dockerfile.Output) error {
 			Step(step.Copy("/src/package-lock.json", "/src/frontend/package-lock.json").From("js"))
 	}
 
+	if sbom.IncludeStage != "" {
+		stage.Step(step.Copy("/", "/src/").From(sbom.IncludeStage))
+	}
+
+	// go.mod doesn't list the Go standard library compiled into the binaries, so describe it from the toolchain
+	// in this stage (the same one the binaries are built with), matching the package syft emits for Go binaries
+	stage.Step(step.Script(`GOVERSION="$(go env GOVERSION)" && GOVERSION="${GOVERSION#go}" \
+	&& printf '` + golangStdlibCycloneDX + `' "${GOVERSION}" "${GOVERSION}" "${GOVERSION}" > /src/golang-stdlib.cdx.json`))
+
+	// the SBOM cataloger is off by default for directory scans, enable it to merge the stdlib and included documents;
+	// it also merges any SBOM-named files in the source tree
 	stage.Step(
 		step.Script(fmt.Sprintf(
 			`SYFT_FORMAT_PRETTY=1 SYFT_FORMAT_SPDX_JSON_DETERMINISTIC_UUID=1 SYFT_GOLANG_SEARCH_LOCAL_MOD_CACHE_LICENSES=1 SYFT_GOLANG_LOCAL_MOD_CACHE_DIR=%s `+
-				`syft scan dir:/src --source-name %s --source-version "${TAG}" -o spdx-json=/%s -o cyclonedx-json=/%s`,
+				`syft scan dir:/src --select-catalogers +sbom-cataloger --source-name %s --source-version "${TAG}" -o spdx-json=/%s -o cyclonedx-json=/%s`,
 			filepath.Join(sbom.meta.GoPath, "pkg", "mod"), sbom.sourceName(), sbomSPDXFile, sbomCycloneDXFile,
 		)).
 			MountCache(filepath.Join(sbom.meta.CachePath, "go-build"), sbom.meta.GitHubRepository).
