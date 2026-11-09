@@ -269,6 +269,9 @@ func (r *Repository) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 							SetCommand(conformInstallScript),
 						ghworkflow.Step("conform").
 							SetEnv("BASE_REF", "${{ github.base_ref }}").
+							// the token is used for GitHub API calls in the GPG identity check (higher rate limits),
+							// it is read-only for pull requests from forks, which is sufficient
+							SetEnv("GITHUB_TOKEN", "${{ secrets.GITHUB_TOKEN }}").
 							SetCommand(`"${RUNNER_TEMP}/conform" enforce --base-branch="origin/${BASE_REF}" --commit-ref="refs/remotes/origin/${BASE_REF}"`),
 					},
 				},

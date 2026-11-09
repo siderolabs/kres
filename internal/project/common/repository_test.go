@@ -81,6 +81,7 @@ func TestRepositoryConformWorkflow(t *testing.T) {
 	assert.Contains(t, steps[1].Run, "sha256sum -c -")
 
 	assert.Equal(t, "${{ github.base_ref }}", steps[2].Env["BASE_REF"])
+	assert.Equal(t, "${{ secrets.GITHUB_TOKEN }}", steps[2].Env["GITHUB_TOKEN"])
 	assert.NotContains(t, steps[2].Run, "${{", "expressions must not be interpolated into the script")
 	assert.Contains(t, steps[2].Run, `--base-branch="origin/${BASE_REF}"`)
 	assert.Contains(t, steps[2].Run, `--commit-ref="refs/remotes/origin/${BASE_REF}"`)
