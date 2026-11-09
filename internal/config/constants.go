@@ -22,6 +22,9 @@ const (
 	// renovate: datasource=github-tags depName=codecov/codecov-action
 	CodeCovActionVersion = "v7.1.1"
 	CodeCovActionRef     = "303a32d7a59b442fa8d48b6a1cc6825c09c847a5"
+	// ConformVersion is the version of conform used in the conform GitHub workflow.
+	// renovate: datasource=github-releases depName=siderolabs/conform
+	ConformVersion = "v0.1.0-alpha.32"
 	// DeepCopyVersion is the version of deepcopy.
 	// renovate: datasource=go depName=github.com/siderolabs/deep-copy
 	DeepCopyVersion = "v0.5.8"

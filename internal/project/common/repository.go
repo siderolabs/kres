@@ -21,6 +21,7 @@ import (
 	"github.com/siderolabs/kres/internal/output"
 	"github.com/siderolabs/kres/internal/output/conform"
 	"github.com/siderolabs/kres/internal/output/conform/licensepolicy"
+	"github.com/siderolabs/kres/internal/output/ghworkflow"
 	"github.com/siderolabs/kres/internal/output/lefthook"
 	"github.com/siderolabs/kres/internal/output/license"
 	"github.com/siderolabs/kres/internal/output/template"
@@ -56,8 +57,11 @@ type Repository struct { //nolint:govet
 	// signatures) stay in place.
 	AllowPushesToMain bool `yaml:"allowPushesToMain,omitempty"`
 
-	EnableImmutableReleases   bool     `yaml:"enableImmutableReleases"`
-	EnableConform             bool     `yaml:"enableConform"`
+	EnableImmutableReleases bool `yaml:"enableImmutableReleases"`
+	EnableConform           bool `yaml:"enableConform"`
+	// ConformWebhookURL is the URL of the legacy conform webhook. Conform now
+	// runs as a GitHub Actions workflow, and a webhook matching this URL is
+	// removed from the repository.
 	ConformWebhookURL         string   `yaml:"conformWebhookURL"`
 	ConformTypes              []string `yaml:"conformTypes"`
 	ConformScopes             []string `yaml:"conformScopes"`
@@ -198,6 +202,83 @@ func (r *Repository) CompileConform(o *conform.Output) error {
 	return nil
 }
 
+// conformJobName is the name of the conform workflow and its job, which is also
+// the status check context required by branch protection.
+const conformJobName = "conform"
+
+// conformInstallScript downloads the conform release binary for the runner architecture
+// into $RUNNER_TEMP and verifies it against the release checksums.
+const conformInstallScript = `case "$(uname -m)" in
+  x86_64) arch=amd64 ;;
+  aarch64|arm64) arch=arm64 ;;
+  *) echo "unsupported architecture: $(uname -m)" >&2; exit 1 ;;
+esac
+
+cd "${RUNNER_TEMP}"
+
+url="https://github.com/siderolabs/conform/releases/download/${CONFORM_VERSION}"
+curl -fsSL --retry 3 -o "conform-linux-${arch}" "${url}/conform-linux-${arch}"
+curl -fsSL --retry 3 -o conform-sha256sum.txt "${url}/sha256sum.txt"
+grep " conform-linux-${arch}$" conform-sha256sum.txt | sha256sum -c -
+
+install -m 0755 "conform-linux-${arch}" conform`
+
+// CompileGitHubWorkflow implements ghworkflow.Compiler.
+//
+// It generates the conform workflow which enforces the policies from .conform.yaml
+// on every commit of a pull request. The workflow needs only read access, so it works
+// for pull requests from forks as well. The job fails if any policy check fails, so
+// the job itself is the single status check required by branch protection.
+func (r *Repository) CompileGitHubWorkflow(o *ghworkflow.Output) error {
+	if !r.EnableConform {
+		return nil
+	}
+
+	o.AddWorkflow(
+		conformJobName,
+		&ghworkflow.Workflow{
+			Name:             conformJobName,
+			Group:            "${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}",
+			CancelInProgress: true,
+			PullRequest: ghworkflow.PullRequest{
+				Branches: ghworkflow.Branches{
+					r.meta.MainBranch,
+					"release-*",
+				},
+			},
+			Permissions: ghworkflow.Permissions{
+				"contents": ghworkflow.PermissionActionRead,
+			},
+			Jobs: map[string]*ghworkflow.Job{
+				conformJobName: {
+					RunsOn: ghworkflow.NewRunsOnGroupLabel(ghworkflow.GenericRunner, ""),
+					Steps: []*ghworkflow.JobStep{
+						// Check out the PR head commit (not the synthetic merge commit) with full history,
+						// so that every commit of the PR can be checked against the base branch.
+						ghworkflow.Step("checkout").
+							SetUsesWithComment(
+								"actions/checkout@"+config.CheckOutActionRef,
+								"version: "+config.CheckOutActionVersion,
+							).
+							SetWith("ref", "${{ github.event.pull_request.head.sha }}").
+							SetWith("fetch-depth", "0").
+							SetWith("persist-credentials", "false"),
+						// conform releases are immutable, so the checksum file from the release pins the binary.
+						ghworkflow.Step("install conform").
+							SetEnv("CONFORM_VERSION", config.ConformVersion).
+							SetCommand(conformInstallScript),
+						ghworkflow.Step("conform").
+							SetEnv("BASE_REF", "${{ github.base_ref }}").
+							SetCommand(`"${RUNNER_TEMP}/conform" enforce --base-branch="origin/${BASE_REF}" --commit-ref="refs/remotes/origin/${BASE_REF}"`),
+					},
+				},
+			},
+		},
+	)
+
+	return nil
+}
+
 // CompileLicense implements license.Compiler.
 func (r *Repository) CompileLicense(o *license.Output) error {
 	if r.meta.ContainerImageFrontend != config.ContainerImageFrontendDockerfile {
@@ -252,14 +333,12 @@ func (r *Repository) CompileGitHub(client *github.Client) error {
 		}
 	}
 
-	if r.DryRun {
-		return nil
+	if err := r.removeConformWebhook(client); err != nil {
+		return err
 	}
 
-	if r.EnableConform {
-		if err := r.enableConform(client); err != nil {
-			return err
-		}
+	if r.DryRun {
+		return nil
 	}
 
 	return r.inviteBot(client)
@@ -455,28 +534,7 @@ func (r *Repository) buildEnforceContexts(base []string) []string {
 	enforceContexts = append(enforceContexts, r.meta.ExtraEnforcedContexts...)
 
 	if r.EnableConform {
-		enforceContexts = append(
-			enforceContexts,
-			"conform/commit/commit-body",
-			"conform/commit/conventional-commit",
-			"conform/commit/dco",
-			"conform/commit/header-case",
-			"conform/commit/header-last-character",
-			"conform/commit/header-length",
-			"conform/commit/imperative-mood",
-			"conform/commit/spellcheck",
-		)
-
-		if r.ConformMaximumOfOneCommit {
-			enforceContexts = append(enforceContexts, "conform/commit/number-of-commits")
-		}
-
-		if r.ConformLicenseCheck {
-			enforceContexts = append(
-				enforceContexts,
-				"conform/license/file-header",
-			)
-		}
+		enforceContexts = append(enforceContexts, conformJobName)
 	}
 
 	return slices.Compact(slices.Sorted(slices.Values(enforceContexts)))
@@ -585,47 +643,55 @@ func (r *Repository) applyBranchProtection(
 	return nil
 }
 
-func (r *Repository) enableConform(client *github.Client) error {
-	hooks, _, err := client.Repositories.ListHooks(
-		context.Background(),
-		r.meta.GitHubOrganization,
-		r.meta.GitHubRepository,
-		&github.ListOptions{},
-	)
-	if err != nil {
-		return err
+// removeConformWebhook removes the legacy conform webhook from the repository:
+// conform now runs as a GitHub Actions workflow (see CompileGitHubWorkflow).
+func (r *Repository) removeConformWebhook(client *github.Client) error {
+	if r.ConformWebhookURL == "" {
+		return nil
 	}
 
-	for _, hook := range hooks {
-		if *hook.Config.URL == r.ConformWebhookURL {
+	if r.DryRun {
+		fmt.Printf("dry-run: repository would remove conform webhook %s (if present)\n", r.ConformWebhookURL)
+
+		return nil
+	}
+
+	opts := &github.ListOptions{PerPage: 100}
+
+	for {
+		hooks, resp, err := client.Repositories.ListHooks(
+			context.Background(),
+			r.meta.GitHubOrganization,
+			r.meta.GitHubRepository,
+			opts,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to list webhooks: %w", err)
+		}
+
+		for _, hook := range hooks {
+			if hook.GetConfig().GetURL() != r.ConformWebhookURL {
+				continue
+			}
+
+			if _, err = client.Repositories.DeleteHook(
+				context.Background(),
+				r.meta.GitHubOrganization,
+				r.meta.GitHubRepository,
+				hook.GetID(),
+			); err != nil {
+				return fmt.Errorf("failed to delete conform webhook: %w", err)
+			}
+
+			fmt.Println("conform webhook removed")
+		}
+
+		if resp.NextPage == 0 {
 			return nil
 		}
+
+		opts.Page = resp.NextPage
 	}
-
-	_, _, err = client.Repositories.CreateHook(
-		context.Background(),
-		r.meta.GitHubOrganization,
-		r.meta.GitHubRepository,
-		&github.Hook{
-			Active: new(true),
-			Config: &github.HookConfig{
-				URL:         &r.ConformWebhookURL,
-				ContentType: new("json"),
-				InsecureSSL: new("0"),
-			},
-			Events: []string{
-				"push",
-				"pull_request",
-			},
-		},
-	)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println("conform webhook created")
-
-	return nil
 }
 
 func (r *Repository) inviteBot(client *github.Client) error {
