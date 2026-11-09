@@ -98,3 +98,100 @@ func TestRepositoryConformWorkflowDisabled(t *testing.T) {
 	require.NoError(t, repo.CompileGitHubWorkflow(o))
 	assert.NotContains(t, o.Filenames(), conformWorkflow)
 }
+
+const slashMergeWorkflow = ".github/workflows/slash-merge.yaml"
+
+func TestRepositorySlashMergeWorkflow(t *testing.T) {
+	repo := common.NewRepository(&meta.Options{
+		MainBranch: "main",
+	})
+	repo.SlashMerge = true
+
+	o := ghworkflow.NewOutput("main", true, false, "")
+
+	require.NoError(t, repo.CompileGitHubWorkflow(o))
+	require.Contains(t, o.Filenames(), slashMergeWorkflow)
+
+	var buf bytes.Buffer
+
+	require.NoError(t, o.GenerateFile(slashMergeWorkflow, &buf))
+
+	var workflow struct {
+		Permissions map[string]string `yaml:"permissions"`
+		Jobs        map[string]struct {
+			Permissions map[string]string `yaml:"permissions"`
+			RunsOn      map[string]string `yaml:"runs-on"`
+			Environment struct {
+				Name string `yaml:"name"`
+			} `yaml:"environment"`
+			If    string `yaml:"if"`
+			Steps []struct {
+				With map[string]string `yaml:"with"`
+				Env  map[string]string `yaml:"env"`
+				Name string            `yaml:"name"`
+				If   string            `yaml:"if"`
+				Run  string            `yaml:"run"`
+			} `yaml:"steps"`
+		} `yaml:"jobs"`
+		On struct {
+			IssueComment struct {
+				Types []string `yaml:"types"`
+			} `yaml:"issue_comment"`
+		} `yaml:"on"`
+	}
+
+	require.NoError(t, yaml.Unmarshal(buf.Bytes(), &workflow))
+
+	assert.Equal(t, []string{"created"}, workflow.On.IssueComment.Types)
+	assert.NotNil(t, workflow.Permissions)
+	assert.Empty(t, workflow.Permissions, "workflow-level permissions must deny everything")
+
+	require.Contains(t, workflow.Jobs, "slash-merge")
+
+	job := workflow.Jobs["slash-merge"]
+
+	assert.Equal(t, map[string]string{"group": ghworkflow.GenericRunner}, job.RunsOn)
+	assert.Contains(t, job.If, "github.event.issue.pull_request")
+	assert.Equal(t, "read", job.Permissions["contents"], "GITHUB_TOKEN must not be able to push")
+	assert.Equal(t, "slash-merge", job.Environment.Name, "push token must be an environment secret")
+
+	var appToken map[string]string
+
+	for _, step := range job.Steps {
+		if step.Name == "app token" {
+			appToken = step.With
+		}
+	}
+
+	require.NotNil(t, appToken)
+	assert.Equal(t, "${{ vars.SLASH_MERGE_APP_CLIENT_ID }}", appToken["client-id"])
+	assert.Equal(t, "${{ secrets.SLASH_MERGE_APP_PRIVATE_KEY }}", appToken["private-key"])
+	assert.Equal(t, "write", appToken["permission-contents"])
+	assert.Equal(t, "write", appToken["permission-workflows"])
+	assert.NotContains(t, appToken, "owner", "the token must be scoped to the current repository")
+	assert.NotContains(t, appToken, "repositories", "the token must be scoped to the current repository")
+
+	for _, step := range job.Steps {
+		assert.NotContains(t, step.With["script"], "${{", "expressions must not be interpolated into scripts: step %q", step.Name)
+		assert.NotContains(t, step.Run, "${{", "expressions must not be interpolated into scripts: step %q", step.Name)
+
+		if step.With["private-key"] != "" || step.With["token"] != "" {
+			assert.Equal(t, "steps.validate.outputs.sha != ''", step.If, "push token must be created and used only after validation: step %q", step.Name)
+		}
+
+		for _, value := range step.With {
+			assert.NotContains(t, value, "secrets.GITHUB_TOKEN", "step %q", step.Name)
+		}
+	}
+}
+
+func TestRepositorySlashMergeWorkflowDisabled(t *testing.T) {
+	repo := common.NewRepository(&meta.Options{
+		MainBranch: "main",
+	})
+
+	o := ghworkflow.NewOutput("main", true, false, "")
+
+	require.NoError(t, repo.CompileGitHubWorkflow(o))
+	assert.NotContains(t, o.Filenames(), slashMergeWorkflow)
+}

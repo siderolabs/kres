@@ -7,7 +7,10 @@ package github
 
 import (
 	"fmt"
+	"net/http"
 	"os"
+	"strings"
+	"sync"
 
 	"github.com/google/go-github/v92/github"
 )
@@ -28,7 +31,10 @@ func NewOutput() *Output {
 		return output
 	}
 
-	ghclient, err := github.NewClient(github.WithAuthToken(token))
+	ghclient, err := github.NewClient(
+		github.WithAuthToken(token),
+		github.WithTransport(&ssoHintTransport{base: http.DefaultTransport}),
+	)
 	if err != nil {
 		fmt.Printf("Failed to create GitHub client: %v\n", err)
 
@@ -57,4 +63,28 @@ func (o *Output) Compile(compiler Compiler) error {
 // Compiler is implemented by project blocks which support GitHub API interface.
 type Compiler interface {
 	CompileGitHub(*github.Client) error
+}
+
+// ssoHintTransport prints a hint how to authorize the GITHUB_TOKEN when GitHub rejects a request
+// because the token is not authorized for the organization SAML SSO.
+type ssoHintTransport struct {
+	base http.RoundTripper
+	once sync.Once
+}
+
+// RoundTrip implements http.RoundTripper.
+func (t *ssoHintTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	resp, err := t.base.RoundTrip(req)
+	if err != nil || resp.StatusCode != http.StatusForbidden {
+		return resp, err
+	}
+
+	// format: "required; url=https://github.com/orgs/<org>/sso?authorization_request=..."
+	if _, url, ok := strings.Cut(resp.Header.Get("X-Github-Sso"), "url="); ok {
+		t.once.Do(func() {
+			fmt.Fprintf(os.Stderr, "GITHUB_TOKEN is not authorized for the organization SSO, authorize it at: %s\n", url)
+		})
+	}
+
+	return resp, err
 }
