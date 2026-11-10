@@ -25,6 +25,10 @@ const (
 	// ConformVersion is the version of conform used in the conform GitHub workflow.
 	// renovate: datasource=github-releases depName=siderolabs/conform
 	ConformVersion = "v0.1.0-alpha.33"
+	// CreateGitHubAppTokenActionVersion is the version of create github app token action.
+	// renovate: datasource=github-tags depName=actions/create-github-app-token
+	CreateGitHubAppTokenActionVersion = "v3.3.0"
+	CreateGitHubAppTokenActionRef     = "64ab729a6294000f5aa4a4bc0b73d1f32bc45510"
 	// DeepCopyVersion is the version of deepcopy.
 	// renovate: datasource=go depName=github.com/siderolabs/deep-copy
 	DeepCopyVersion = "v0.5.8"

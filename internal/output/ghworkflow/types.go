@@ -33,6 +33,7 @@ type Concurrency struct {
 type On struct {
 	Push              `yaml:"push,omitempty"`
 	PullRequest       `yaml:"pull_request,omitempty"`
+	PullRequestTarget `yaml:"pull_request_target,omitempty"`
 	WorkFlowRun       `yaml:"workflow_run,omitempty"`
 	*WorkFlowDispatch `yaml:"workflow_dispatch,omitempty"`
 
@@ -77,7 +78,10 @@ type WorkFlowDispatchInput struct {
 }
 
 // PullRequestTarget represents GitHub Actions pull request target filters.
-type PullRequestTarget struct{}
+type PullRequestTarget struct {
+	Branches []string `yaml:"branches,omitempty"`
+	Types    []string `yaml:"types,omitempty"`
+}
 
 // Push represents GitHub Actions push filters.
 type Push struct {

@@ -10,7 +10,9 @@ import (
 	"fmt"
 	"maps"
 	"net/http"
+	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/google/go-github/v92/github"
@@ -83,12 +85,51 @@ type Repository struct { //nolint:govet
 	EnableLefthook bool `yaml:"enableLefthook"`
 
 	EnableAIPolicy bool `yaml:"enableAIPolicy"`
+
+	ProjectAutoAdd ProjectAutoAdd `yaml:"projectAutoAdd"`
+}
+
+// ProjectAutoAdd configures the workflow which adds pull requests to a GitHub organization project.
+//
+// The workflow authenticates as a GitHub App installed in the organization with
+// the "Projects: Read & write" organization permission and the "Pull requests: Read"
+// repository permission.
+type ProjectAutoAdd struct {
+	// Organization owning the project, defaults to the repository organization.
+	Organization string `yaml:"organization"`
+	// StatusField is the name of the single select field to set the status of the item.
+	StatusField string `yaml:"statusField"`
+	// DraftStatus is the status of draft pull requests.
+	DraftStatus string `yaml:"draftStatus"`
+	// ReadyStatus is the status of pull requests ready for review.
+	ReadyStatus string `yaml:"readyStatus"`
+	// IterationField is the name of the iteration field; opened pull requests are assigned the current iteration.
+	IterationField string `yaml:"iterationField"`
+	// AppClientIDSecret is the name of the secret with the GitHub App client ID.
+	AppClientIDSecret string `yaml:"appClientIDSecret"`
+	// AppPrivateKeySecret is the name of the secret with the GitHub App private key.
+	AppPrivateKeySecret string `yaml:"appPrivateKeySecret"`
+	// ProjectNumber is the number of the project in the organization.
+	ProjectNumber int `yaml:"projectNumber"`
+	// Enabled enables the workflow (enabled by default).
+	Enabled bool `yaml:"enabled"`
 }
 
 // aiPolicy is the "Human Responsible" policy from https://github.com/43081j/ai-policy.
 //
 //go:embed resources/AI_POLICY.md
 var aiPolicy string
+
+// projectAutoAddScript is the github-script which adds the pull request to the project.
+//
+//go:embed resources/project-auto-add.js
+var projectAutoAddScript string
+
+// secretNameRe matches valid GitHub Actions secret names (the reserved GITHUB_ prefix is checked separately).
+var secretNameRe = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
+
+// organizationNameRe matches valid GitHub organization names.
+var organizationNameRe = regexp.MustCompile(`^[A-Za-z0-9](?:-?[A-Za-z0-9]){0,38}$`)
 
 // LicenseConfig configures the license.
 type LicenseConfig struct {
@@ -141,6 +182,17 @@ func NewRepository(meta *meta.Options) *Repository {
 		EnableLefthook: true,
 
 		EnableAIPolicy: true,
+
+		ProjectAutoAdd: ProjectAutoAdd{
+			Enabled:             true,
+			ProjectNumber:       17,
+			StatusField:         "Status",
+			DraftStatus:         "In Progress",
+			ReadyStatus:         "In Review",
+			IterationField:      "Iteration",
+			AppClientIDSecret:   "PROJECT_APP_CLIENT_ID",
+			AppPrivateKeySecret: "PROJECT_APP_PRIVATE_KEY",
+		},
 	}
 }
 
@@ -223,6 +275,12 @@ grep " conform-linux-${arch}$" conform-sha256sum.txt | sha256sum -c -
 
 install -m 0755 "conform-linux-${arch}" conform`
 
+// skipBotPullRequests is the job condition which skips pull requests opened by the dependency update bots.
+//
+// The condition is based on the author of the pull request (not on github.actor), so that the result
+// is the same for every event of the pull request, no matter who triggered it.
+const skipBotPullRequests = "github.event.pull_request.user.login != 'dependabot[bot]' && github.event.pull_request.user.login != 'renovate[bot]'"
+
 // CompileGitHubWorkflow implements ghworkflow.Compiler.
 //
 // It generates the conform workflow which enforces the policies from .conform.yaml
@@ -230,6 +288,10 @@ install -m 0755 "conform-linux-${arch}" conform`
 // for pull requests from forks as well. The job fails if any policy check fails, so
 // the job itself is the single status check required by branch protection.
 func (r *Repository) CompileGitHubWorkflow(o *ghworkflow.Output) error {
+	if err := r.compileProjectAutoAddWorkflow(o); err != nil {
+		return err
+	}
+
 	if !r.EnableConform {
 		return nil
 	}
@@ -252,6 +314,8 @@ func (r *Repository) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 			Jobs: map[string]*ghworkflow.Job{
 				conformJobName: {
 					RunsOn: ghworkflow.NewRunsOnGroupLabel(ghworkflow.GenericRunner, ""),
+					// commits of the bots are not expected to follow the policies
+					If: skipBotPullRequests,
 					Steps: []*ghworkflow.JobStep{
 						// Check out the PR head commit (not the synthetic merge commit) with full history,
 						// so that every commit of the PR can be checked against the base branch.
@@ -273,6 +337,136 @@ func (r *Repository) CompileGitHubWorkflow(o *ghworkflow.Output) error {
 							// it is read-only for pull requests from forks, which is sufficient
 							SetEnv("GITHUB_TOKEN", "${{ secrets.GITHUB_TOKEN }}").
 							SetCommand(`"${RUNNER_TEMP}/conform" enforce --base-branch="origin/${BASE_REF}" --commit-ref="refs/remotes/origin/${BASE_REF}"`),
+					},
+				},
+			},
+		},
+	)
+
+	return nil
+}
+
+// projectAutoAddWorkflowName is the name of the project auto-add workflow and its job.
+const projectAutoAddWorkflowName = "project-auto-add"
+
+// compileProjectAutoAddWorkflow generates the workflow which adds pull requests to the
+// organization project, puts them into the current iteration and sets the status based
+// on the draft state of the pull request.
+//
+// The workflow runs on pull_request_target, so that the GitHub App secrets are available
+// for pull requests from forks as well: this is safe, as the workflow never checks out
+// or runs the code from the pull request.
+func (r *Repository) compileProjectAutoAddWorkflow(o *ghworkflow.Output) error {
+	cfg := r.ProjectAutoAdd
+
+	if !cfg.Enabled {
+		return nil
+	}
+
+	organization := cfg.Organization
+	if organization == "" {
+		organization = r.meta.GitHubOrganization
+	}
+
+	// not a GitHub repository
+	if organization == "" {
+		return nil
+	}
+
+	if cfg.ProjectNumber <= 0 {
+		return fmt.Errorf("projectAutoAdd: invalid project number %d", cfg.ProjectNumber)
+	}
+
+	// the values below are written into the workflow as is, so they should never be evaluated as expressions:
+	// the workflow runs on pull_request_target with the secrets available
+	if !organizationNameRe.MatchString(organization) {
+		return fmt.Errorf("projectAutoAdd: invalid organization %q", organization)
+	}
+
+	for _, field := range []struct{ name, value string }{
+		{"statusField", cfg.StatusField},
+		{"draftStatus", cfg.DraftStatus},
+		{"readyStatus", cfg.ReadyStatus},
+		{"iterationField", cfg.IterationField},
+	} {
+		if field.value == "" {
+			return fmt.Errorf("projectAutoAdd: %s is not set", field.name)
+		}
+
+		if strings.Contains(field.value, "${{") {
+			return fmt.Errorf("projectAutoAdd: %s %q should not contain expressions", field.name, field.value)
+		}
+	}
+
+	for _, secret := range []struct{ name, value string }{
+		{"appClientIDSecret", cfg.AppClientIDSecret},
+		{"appPrivateKeySecret", cfg.AppPrivateKeySecret},
+	} {
+		// GitHub reserves the GITHUB_ prefix, such secrets can't be created
+		if !secretNameRe.MatchString(secret.value) || strings.HasPrefix(strings.ToUpper(secret.value), "GITHUB_") {
+			return fmt.Errorf("projectAutoAdd: invalid %s %q", secret.name, secret.value)
+		}
+	}
+
+	tokenStep := ghworkflow.Step("generate token").
+		SetID("app-token").
+		SetUsesWithComment(
+			"actions/create-github-app-token@"+config.CreateGitHubAppTokenActionRef,
+			"version: "+config.CreateGitHubAppTokenActionVersion,
+		).
+		SetWith("client-id", "${{ secrets."+cfg.AppClientIDSecret+" }}").
+		SetWith("private-key", "${{ secrets."+cfg.AppPrivateKeySecret+" }}").
+		SetWith("owner", organization).
+		SetWith("permission-organization-projects", "write").
+		SetWith("permission-pull-requests", "read")
+
+	// Scope the token to the repository of the pull request instead of every repository the App is installed on.
+	//
+	// If the project is in a different organization, the token comes from the installation in that organization,
+	// which has no access to this repository: this works only for public repositories.
+	if strings.EqualFold(organization, r.meta.GitHubOrganization) {
+		tokenStep.SetWith("repositories", "${{ github.event.repository.name }}")
+	}
+
+	o.AddWorkflow(
+		projectAutoAddWorkflowName,
+		&ghworkflow.Workflow{
+			Name: projectAutoAddWorkflowName,
+			// every run is idempotent and reads the draft state from its own event, so the latest run wins
+			Group:            "${{ github.workflow }}-${{ github.event.pull_request.number }}",
+			CancelInProgress: true,
+			PullRequestTarget: ghworkflow.PullRequestTarget{
+				Types: []string{
+					"opened",
+					"reopened",
+					"ready_for_review",
+					"converted_to_draft",
+				},
+			},
+			// GITHUB_TOKEN is not used, the workflow authenticates as the GitHub App
+			Permissions: ghworkflow.Permissions{},
+			Jobs: map[string]*ghworkflow.Job{
+				projectAutoAddWorkflowName: {
+					RunsOn: ghworkflow.NewRunsOnGroupLabel(ghworkflow.GenericRunner, ""),
+					// Pull requests of the bots are not tracked in the project.
+					//
+					// Moreover, runs triggered by Dependabot get only Dependabot secrets, so the GitHub App secrets are not available.
+					If: skipBotPullRequests,
+					Steps: []*ghworkflow.JobStep{
+						tokenStep,
+						ghworkflow.Step("add to project").
+							SetUsesWithComment(
+								"actions/github-script@"+config.GitHubScriptActionRef,
+								"version: "+config.GitHubScriptActionVersion,
+							).
+							SetEnv("PROJECT_OWNER", organization).
+							SetEnv("PROJECT_NUMBER", strconv.Itoa(cfg.ProjectNumber)).
+							SetEnv("PROJECT_STATUS_FIELD", cfg.StatusField).
+							SetEnv("PROJECT_DRAFT_STATUS", cfg.DraftStatus).
+							SetEnv("PROJECT_READY_STATUS", cfg.ReadyStatus).
+							SetEnv("PROJECT_ITERATION_FIELD", cfg.IterationField).
+							SetWith("github-token", "${{ steps.app-token.outputs.token }}").
+							SetWith("script", projectAutoAddScript),
 					},
 				},
 			},
