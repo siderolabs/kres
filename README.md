@@ -1,5 +1,7 @@
 # Kres
 
+aaa
+
 Kres is a tool to automate generation of build instructions based on project structure.
 
 At the moment only Go projects are supported.
