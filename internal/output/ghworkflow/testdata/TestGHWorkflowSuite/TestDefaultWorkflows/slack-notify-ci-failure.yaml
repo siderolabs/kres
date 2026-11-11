@@ -2,7 +2,7 @@
 #
 # Generated on 2006-01-02T15:04:05Z by test.
 
-'on':
+"on":
   workflow_run:
     workflows:
       - default
