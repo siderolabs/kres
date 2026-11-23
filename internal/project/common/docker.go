@@ -86,7 +86,12 @@ func (docker *Docker) CompileMakefile(output *makefile.Output) error {
 
 	output.Target("registry-%").
 		Description("Builds the specified target defined in the Dockerfile and the output is an image. The image is pushed to the registry if PUSH=true.").
-		Script(`@$(MAKE) target-$* TARGET_ARGS="--tag=$(REGISTRY)/$(USERNAME)/$(IMAGE_NAME):$(IMAGE_TAG)" BUILDKIT_MULTI_PLATFORM=1`)
+		Script(`@if [ "$(PUSH)" = "true" ] && [ "$(GITHUB_REF_TYPE)" = "tag" ] && \
+	docker buildx imagetools inspect $(REGISTRY)/$(USERNAME)/$(IMAGE_NAME):$(IMAGE_TAG) >/dev/null 2>&1; then \
+	echo "$(REGISTRY)/$(USERNAME)/$(IMAGE_NAME):$(IMAGE_TAG) already exists, skipping push"; \
+else \
+	$(MAKE) target-$* TARGET_ARGS="--tag=$(REGISTRY)/$(USERNAME)/$(IMAGE_NAME):$(IMAGE_TAG)" BUILDKIT_MULTI_PLATFORM=1; \
+fi`)
 
 	output.Target("local-%").
 		Description("Builds the specified target defined in the Dockerfile using the local output type. The build result will be output to the specified local destination.").

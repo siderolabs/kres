@@ -240,11 +240,9 @@ func (helm *Build) CompileGitHubWorkflow(output *ghworkflow.Output) error {
 		return err
 	}
 
-	// When chartVersionMajor is set, only release stable (non-prerelease) charts.
-	releaseCondition := "only-on-tag"
-	if helm.meta.ChartVersionMajor != nil {
-		releaseCondition = "only-on-stable-tag"
-	}
+	// Only release charts on stable (non-prerelease) tags so pre-release tags do not
+	// re-push and overwrite the previous stable chart version.
+	const releaseCondition = "only-on-stable-tag"
 
 	helmLoginStep := ghworkflow.Step("helm login").
 		SetEnv("HELM_CONFIG_HOME", "/var/tmp/.config/helm").
