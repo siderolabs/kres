@@ -78,8 +78,6 @@ type Repository struct { //nolint:govet
 	Licenses      []LicenseConfig      `yaml:"licenses"`
 	LicenseChecks []licensepolicy.Spec `yaml:"licenseChecks"`
 
-	BotName string `yaml:"botName"`
-
 	SkipStaleWorkflow bool `yaml:"skipStaleWorkflow"`
 
 	EnableLefthook bool `yaml:"enableLefthook"`
@@ -176,8 +174,6 @@ func NewRepository(meta *meta.Options) *Repository {
 				Root:   ".",
 			},
 		},
-
-		BotName: "talos-bot",
 
 		EnableLefthook: true,
 
@@ -534,11 +530,7 @@ func (r *Repository) CompileGitHub(client *github.Client) error {
 		return err
 	}
 
-	if r.DryRun {
-		return nil
-	}
-
-	return r.inviteBot(client)
+	return r.removeLegacyBot(client)
 }
 
 func (r *Repository) enableBranchProtection(client *github.Client) error {
@@ -891,41 +883,72 @@ func (r *Repository) removeConformWebhook(client *github.Client) error {
 	}
 }
 
-func (r *Repository) inviteBot(client *github.Client) error {
-	users, _, err := client.Repositories.ListCollaborators(
-		context.Background(),
+// legacyBotName is the GitHub user which kres used to invite as a repository
+// collaborator; it is no longer needed and gets removed.
+const legacyBotName = "talos-bot"
+
+// removeLegacyBot removes the legacy bot from the repository collaborators,
+// and cancels any pending collaborator invitation for it.
+func (r *Repository) removeLegacyBot(client *github.Client) error {
+	if r.DryRun {
+		fmt.Printf("dry-run: repository would remove collaborator %s (if present)\n", legacyBotName)
+
+		return nil
+	}
+
+	ctx := context.Background()
+
+	for user, err := range client.Repositories.ListCollaboratorsIter(
+		ctx,
 		r.meta.GitHubOrganization,
 		r.meta.GitHubRepository,
-		&github.ListCollaboratorsOptions{},
-	)
-	if err != nil {
-		return err
-	}
-
-	for _, user := range users {
-		if user.GetLogin() == r.BotName {
-			return nil
+		&github.ListCollaboratorsOptions{Affiliation: "direct"},
+	) {
+		if err != nil {
+			return fmt.Errorf("failed to list collaborators: %w", err)
 		}
+
+		if !strings.EqualFold(user.GetLogin(), legacyBotName) {
+			continue
+		}
+
+		if _, err = client.Repositories.RemoveCollaborator(
+			ctx,
+			r.meta.GitHubOrganization,
+			r.meta.GitHubRepository,
+			user.GetLogin(),
+		); err != nil {
+			return fmt.Errorf("failed to remove collaborator %s: %w", legacyBotName, err)
+		}
+
+		fmt.Println("removed collaborator", legacyBotName)
 	}
 
-	_, resp, err := client.Repositories.AddCollaborator(
-		context.Background(),
+	for invitation, err := range client.Repositories.ListInvitationsIter(
+		ctx,
 		r.meta.GitHubOrganization,
 		r.meta.GitHubRepository,
-		r.BotName,
-		&github.RepositoryAddCollaboratorOptions{
-			Permission: "maintain",
-		},
-	)
-	if err != nil {
-		if resp.StatusCode == http.StatusNoContent {
-			return nil
+		&github.ListOptions{},
+	) {
+		if err != nil {
+			return fmt.Errorf("failed to list invitations: %w", err)
 		}
 
-		return err
-	}
+		if !strings.EqualFold(invitation.GetInvitee().GetLogin(), legacyBotName) {
+			continue
+		}
 
-	fmt.Println("invited bot", r.BotName)
+		if _, err = client.Repositories.DeleteInvitation(
+			ctx,
+			r.meta.GitHubOrganization,
+			r.meta.GitHubRepository,
+			invitation.GetID(),
+		); err != nil {
+			return fmt.Errorf("failed to delete invitation for %s: %w", legacyBotName, err)
+		}
+
+		fmt.Println("removed pending invitation for", legacyBotName)
+	}
 
 	return nil
 }
