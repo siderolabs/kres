@@ -5,6 +5,7 @@ go 1.27.4
 require (
 	github.com/go-git/go-git/v5 v5.19.3
 	github.com/google/go-github/v92 v92.0.0
+	github.com/google/go-github/v93 v93.0.0
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/siderolabs/gen v0.8.8
 	github.com/spf13/cobra v1.10.2
